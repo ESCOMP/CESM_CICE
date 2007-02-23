@@ -212,6 +212,8 @@ subroutine ice_prescribed_init
    call broadcast_scalar(model_year_align,master_task)
    call broadcast_scalar(prescribed_ice_fill,master_task)
 
+   if (.not.prescribed_ice) return
+
    if (my_task == master_task) then
       write(nu_diag,*) ' prescribed_ice            = ',prescribed_ice
       write(nu_diag,*) ' stream_info_file          = ', trim(adjustl(stream_info_file))

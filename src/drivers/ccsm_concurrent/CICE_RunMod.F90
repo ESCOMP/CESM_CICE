@@ -257,19 +257,7 @@
 
 ! 2D coupler variables (computed for each category, then aggregated)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block), save :: &
-         alvdrn      , & ! visible direct albedo           (fraction)
-         alidrn      , & ! near-ir direct albedo           (fraction)
-         alvdfn      , & ! visible diffuse albedo          (fraction)
-         alidfn      , & ! near-ir diffuse albedo          (fraction)
-         alvdrni     , & ! visible direct albedo (ice)     (fraction)
-         alidrni     , & ! near-ir direct albedo (ice)     (fraction)
-         alvdfni     , & ! visible diffuse albedo (ice)    (fraction)
-         alidfni     , & ! near-ir diffuse albedo (ice)    (fraction)
-         alvdrns     , & ! visible direct albedo (snow)    (fraction)
-         alidrns     , & ! near-ir direct albedo (snow)    (fraction)
-         alvdfns     , & ! visible diffuse albedo (snow)   (fraction)
-         alidfns     , & ! near-ir diffuse albedo (snow)   (fraction)
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          fsensn      , & ! surface downward sensible heat     (W/m^2)
          flatn       , & ! surface downward latent heat       (W/m^2)
          fswabsn     , & ! shortwave absorbed by ice          (W/m^2)
@@ -427,45 +415,23 @@
                                  vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk), &
                                  swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn,            alidrn,              &
-                                 alvdfn,            alidfn,              &
+                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
+                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
                                  fswsfcn,           fswintn,             &
                                  fswthrun,          Iswabsn)
 
             else
-
-               ! For CCSM compute albedos on initialization and just
-               ! before to_coupler call.
-
-               if (istep == 1) then
-
-               call compute_albedos (nx_block,   ny_block, &
-                               icells,               &
-                               indxi,      indxj,    &
-                               aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
-                               vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
-                               alvdrni,    alidrni,  &
-                               alvdfni,    alidfni,  &
-                               alvdrns,    alidrns,  &
-                               alvdfns,    alidfns,  &
-                               alvdrn,     alidrn,   &
-                               alvdfn,     alidfn)
-
-               endif
-
-               call absorbed_solar(nx_block,   ny_block,                 &
-                                   icells,                               &
-                                   indxi,      indxj,                    &
-                                   aicen(:,:,n,iblk),                    &
-                                   vicen(:,:,n,iblk), vsnon(:,:,n,iblk), &
-                                   swvdr(:,:,iblk),   swvdf(:,:,iblk),   &
-                                   swidr(:,:,iblk),   swidf(:,:,iblk),   &
-                                   alvdrni,           alvdfni,           &
-                                   alidrni,           alidfni,           &
-                                   alvdrns,           alvdfns,           &
-                                   alidrns,           alidfns,           &
-                                   fswsfcn,           fswintn,           &
-                                   fswthrun,          Iswabsn)
+               call shortwave_ccsm3(nx_block,       ny_block,            &
+                                 icells,                                 &
+                                 indxi,             indxj,               &
+                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                 vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk), &
+                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
+                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 fswsfcn,           fswintn,             &
+                                 fswthrun,          Iswabsn)
             endif
 
       !-----------------------------------------------------------------
@@ -555,8 +521,8 @@
                             indxi,              indxj,                &
                             aicen_init(:,:,n,iblk),                   &
                             flw(:,:,iblk),      coszen(:,:,iblk),     &
-                            alvdrn,             alidrn,               &
-                            alvdfn,             alidfn,               &
+                            alvdrn(:,:,n,iblk), alidrn(:,:,n,iblk),   &
+                            alvdfn(:,:,n,iblk), alidfn(:,:,n,iblk),   &
                             strairxn,           strairyn,             &
                             fsensn,             flatn,                &
                             fswabsn,            flwoutn,              &
@@ -575,20 +541,6 @@
                             fsalt   (:,:,iblk), fsalt_hist(:,:,iblk), &
                             fhocn   (:,:,iblk), fhocn_hist(:,:,iblk), &
                             fswthru (:,:,iblk), fswthru_hist(:,:,iblk))
-
-            ! Update albedos for to_coupler call
-
-            call compute_albedos (nx_block,   ny_block, &
-                            icells,               &
-                            indxi,      indxj,    &
-                            aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
-                            vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
-                            alvdrni,    alidrni,  &
-                            alvdfni,    alidfni,  &
-                            alvdrns,    alidrns,  &
-                            alvdfns,    alidfns,  &
-                            alvdrn,     alidrn,   &
-                            alvdfn,     alidfn)
 
          enddo                  ! ncat
 
