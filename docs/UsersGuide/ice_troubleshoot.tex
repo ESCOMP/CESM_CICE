@@ -1,0 +1,133 @@
+%=======================================================================
+% CVS: $Id: ice_troubleshoot.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+% Troubleshooting
+
+\subsection{Code does not Compile or Run }
+
+Check the {\bf ice.log.*} file in the executable directory, or
+the standard output and error files for information.  Also,
+try the following:
+
+\begin{itemize}
+  \item Delete the executable directory and rebuild the model.
+  \item Make sure that there is a {\bf Macros.$<$OS$>$} file for your
+        platform.  Modify the directory paths for the libraries.
+  \item Make sure all paths and file names are set correctly in the scripts.
+  \item If changes were made to the {\bf ice\_model\_size.F} file in the
+        source code directory, they will be overwritten by the file
+        in {\bf input\_templates}.  
+         
+\end{itemize}
+
+\subsection{Negative Ice Area in Horizontal Remapping}
+
+This error is written from {\bf ice\_transport\_remap.F} when the ice model
+is checking for negative ice areas. If it happens well into a model integration,
+it can be indicative of a CFL violation.  The output looks like:
+
+\begin{verbatim}
+  60: New area < 0, istep = 119588
+  60: (my_task,i,j,n) = 4 21 380 1
+  60: Old area = 0.960675000975677174E-05
+  60: New area = -0.161808948357841311E-06
+  60: Net flux = -0.976855895811461324E-05
+  60:(shr_sys_abort) ERROR: remap transport: negative area
+  60:(shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+  60:(shr_mpi_abort):remap transport: negative area 0
+\end{verbatim}
+
+The dynamics timestep should be reduced to integrate past this problem.  Set
+
+\begin{verbatim}
+ , ndyn_dt       = 2
+\end{verbatim}
+
+in the namelist and restart the model.  When the job completes set the value
+back to 1.
+
+\subsection{Conservation Error}
+
+This error is written from {\bf ice\_itd.F} when the ice model is checking
+that initial and final values of a conserved field are equal to within
+a small value. The output looks like:
+
+\begin{verbatim}
+  Conservation error: vice, add_new_ice
+  11  :  14  185
+  Initial value =  1362442.600400560
+  Final value =  1362442.600400561
+  Difference =  2.328306436538696D-10
+  (shr_sys_abort) ERROR: ice: Conservation error
+  (shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+  (shr_mpi_abort):ice: Conservation error  0
+\end{verbatim}
+
+Non-conservation can ocur if the ice model is receiving
+very bad forcing, and is not able to deal with it.  This has occurred
+after a CFL violation in the ocean.  The timestep in the ocean may
+be decreased to get around the problem.
+
+\subsection{MPDATA transport unstable}
+
+The ice model dynamics is subcycled {\tt ndte} times per timestep
+so that the elastic waves are damped before the next timestep. 
+When the value of {\tt ndte} is too small, an instability occurs,
+the model execution stops, and an error message similar to this
+example is written out to the log file:
+
+\begin{verbatim}
+mpdata phi =  -0.122707896960329384E-05  n =  5
+(shr_sys_abort) ERROR: (mpdata) transport unstable
+(shr_sys_abort) WARNING: calling mpi_abort() and stopping
+\end{verbatim}
+
+To get around this problem, increase the value of {\tt ndte} in 
+the namelist.  Reasonable values of this parameter
+are discussed in section \ref{nml_time_mgmt}.  The model
+run can be restarted from the last set of restart files
+that were written before the execution halted.
+
+\subsection{NX does not divide evenly into grid}
+
+If you modify the number of tasks used by the ice model, the model may stop
+with this error written to the log file:
+\begin{verbatim}
+'ERROR: NX must divide evenly into grid,100,8'
+\end{verbatim}
+
+The number of MPI processors used by the ice model must divide evenly into the grid
+dimensions.  For example, running the ice model with 8 tasks on the gx3v5
+grid will result in an error, since 8 does not divide evenly into the
+100 longitude points.  To fix this error, change the value of {\tt \$NTASKS} for the
+uncoupled ice model in the main script.  In this case, a value of 4 would work, and
+the task geometry would also have to be changed.
+
+\subsection{Enabling the Debugger}
+
+This section explains how to set some compiler options for debugging. For
+the coupled model, set {\tt DEBUG} to {\tt TRUE} in the {\bf env\_run} script.
+For the uncoupled ice model, set {\tt setenv DEBUG TRUE} in
+{\bf csim.setup.csh}.  Before running the model, be sure to delete the
+object files so that the source code will be recompiled.  If a core file
+is created, it will be in the executable directory.  Use dbx to look at
+the core file. Useful information may also appear in the standard error
+and output files.
+
+\subsection{Unit 50 Error}
+
+Unit 50 is the restart file.  If the path or file name in the {\bf rpointer.ice}
+file is incorrect, or the restart file does not exist in the {\bf /rest} directory
+below the executable directory, the model will stop with this message:
+
+\begin{verbatim}
+8:1525-014 The I/O operation on unit 50 cannot be completed because an errno value
+           of 2 (A file or directory in the path name does not exist.) was received
+           while opening the file.  The program will stop.
+\end{verbatim}
+
+Verify that the path and file name in the rpointer are correct and that the restart
+file exists in the correct location.
+

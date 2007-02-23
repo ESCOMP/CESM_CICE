@@ -1,0 +1,264 @@
+%=======================================================================
+% CVS: $Id: ice_quick_start.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+
+\subsection{What is needed to run CSIM?}
+   
+A number of target architectures are supported for CCSM including IBM SP,
+SGI Origin, SGI Altix, Linux, NEC Earth Simulator, Cray X1, and Compaq ES.
+The resources required to run CSIM coupled in CCSM are listed in the CCSM3
+User's Guide at: \\
+
+\begin{htmlonly}
+\htmladdnormallink{\tt http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}
+                      {http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}. \\
+\end{htmlonly}
+\begin{latexonly}
+  {\tt http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}.
+\end{latexonly}
+
+Two target architectures are supported for uncoupled CSIM: IBM and SGI.
+Below is a list of what is required to run CSIM uncoupled:
+
+\begin{itemize}
+
+\item Operating System: IBM AIX, or SGI IRIX64
+\item Tools: gunzip, gnumake 
+\item Compilers: Fortran90, C
+\item Permanent disk space
+\item Temporary disk space
+\item Libraries: MPI, netCDF
+\item Input Data  : 10.86 MB for gx3v5 grid
+\item CSIM source code: 0.83 MB
+\item Atmospheric Forcing Data  : 2.7 GB for gx3v5 grid
+
+\end{itemize}
+
+
+\subsection{Downloading Source Code and Input Datasets}
+  \label{get_code}
+
+The source code to run CSIM fully coupled or uncoupled and the required
+datasets can be obtained via a web download.  The source code, input
+datasets, and documentation for CCSM are available via the web at: \\
+
+\begin{htmlonly}
+  \htmladdnormallink{{\tt http://www.ccsm.ucar.edu/models/ccsm3.0}}
+                     {\tt http://www.ccsm.ucar.edu/models/ccsm3.0} \\
+\end{htmlonly}
+\begin{latexonly}
+  {\tt http://www.ccsm.ucar.edu/models/ccsm3.0} \\
+\end{latexonly}
+
+Instructions for downloading and untarring the CCSM3.0 distribution
+are in the 
+\begin{htmlonly}
+  \htmladdnormallink{CCSM3 User's Guide}{http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}.
+\end{htmlonly}
+\begin{latexonly}
+  CCSM3 User's Guide.
+\end{latexonly}
+If you have the source code for CCSM, you also have all the source code to
+run CSIM uncoupled.  If you only need the source code and input files for
+the uncoupled model, it is available at: \\
+
+\begin{htmlonly}
+\htmladdnormallink{{\tt http://www.ccsm.ucar.edu/models/ice-csim5/distribution}}
+                   {\tt http://www.ccsm.ucar.edu/models/ice-csim5/distribution} \\
+\end{htmlonly}
+\begin{latexonly}
+                   {\tt http://www.ccsm.ucar.edu/models/ice-csim5/distribution} \\
+\end{latexonly}
+
+\noindent{The source code, input data and atmospheric forcing for the uncoupled
+ice model come in the following form:}
+
+\begin{itemize}
+    \item {\bf csim5\_code.tar.gz}
+    \item {\bf csim5\_inputdata\_gx3v5.tar.gz} for the low resolution grid
+    \item {\bf csim5\_inputdata\_gx1v3.tar.gz} for the high resolution grid
+    \item {\bf csim5\_atmforcing\_gx3v5.tar.gz} 
+\end{itemize}
+
+\noindent{To uncompress and untar these files, use the following Unix gunzip
+and tar commands:} \\
+
+{\tt gunzip -c csim5\_code.tar.gz | tar -xf -}
+
+{\tt gunzip -c csim5\_inputdata\_gx3v5.tar.gz | tar -xf -} \\
+
+{\tt gunzip -c csim5\_atmforcing\_gx3v5.tar.gz | tar -xf -} \\
+
+The atmospheric forcing datasets for uncoupled CSIM5 are available at the
+same URL, but are not necessary to get the model set up and running.
+
+For both coupled and uncoupled models, the source code should be extracted from
+the tar file in a small, permanent disk, such as your home directory or a
+cross-mounted file system.  If possible, the data input files should also be
+extracted on a large, permanent cross-mounted disk. These files are copied
+to the temporary disk during the build stage.
+
+%=========================================================================
+
+\subsection{Running CSIM Coupled}
+
+The scripts for running CSIM coupled are documented in the CCSM3 User's Guide: \\
+
+\begin{htmlonly}
+  \htmladdnormallink{{\tt http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}}
+                    {http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}. \\
+\end{htmlonly}
+\begin{latexonly}
+                    {\tt http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}. \\
+\end{latexonly}
+
+There are several configurations that may be of interest to ice modelers.
+The B configuration is the fully coupled model with active atmosphere, ice,
+land and ocean components communicating through the flux coupler.  This
+configuration will result in the most realistic ice simulations.
+
+The D configuration consists of CSIM, coupled to the \\
+data atmosphere 
+\begin{htmlonly}
+\htmladdnormallink{(datm6)}{http://www.ccsm.ucar.edu/models/ccsm3.0/datm6}, \\
+\end{htmlonly}
+\begin{latexonly}
+datm6 ({\tt http://www.ccsm.ucar.edu/models/ccsm3.0/datm6}), \\
+\end{latexonly}
+data ocean
+\begin{htmlonly}
+\htmladdnormallink{(docn6)}{http://www.ccsm.ucar.edu/models/ccsm3.0/docn6}, \\
+\end{htmlonly}
+\begin{latexonly}
+docn6 ({\tt http://www.ccsm.ucar.edu/models/ccsm3.0/docn6}), \\
+\end{latexonly}
+and data land
+\begin{htmlonly}
+\htmladdnormallink{(dlnd6)}{http://www.ccsm.ucar.edu/models/ccsm3.0/dlnd6}, \\
+\end{htmlonly}
+\begin{latexonly}
+dlnd6 ({\tt http://www.ccsm.ucar.edu/models/ccsm3.0/dlnd6}), \\
+\end{latexonly}
+components.  This configuration runs quickly and is used for testing the
+software engineering aspects of the model.  This configuration will not
+result in the best sea ice simulation, since docn6 does not allow ice growth
+in open ocean regions or leads, and the data read in by datm6 is from previous
+atmospheric model simulations.
+
+The M configuration will result more realistic sea ice simulations than the
+D configuration.  This setup replaces datm6 in the D congifuration with the
+\begin{htmlonly}
+  \htmladdnormallink{latm6}{http://www.ccsm.ucar.edu/models/ccsm3.0/latm6},
+\end{htmlonly}
+\begin{latexonly}
+  latm6 ({\tt http://www.ccsm.ucar.edu/models/ccsm3.0/latm6}),
+\end{latexonly}
+data atmosphere model and the ocean mixed layer model within the ice model.
+The ocean mixed layer is a simple slab model which computes an ocean surface
+temperature and allows for ice formation due to ocean supercooling.  More
+information on the formulation of this model can be found in the Scientific
+Document.  latm6 runs on the T62 grid, and one year of NCEP forcing is
+included with this release. 
+
+%=========================================================================
+
+\subsection{Running CSIM Uncoupled}
+
+It is assumed that the user has downloaded the source code and input data
+from the web page described in Section \ref{get_code}.  This section is
+intended to get uncoupled CSIM running "out of the box" with a minimal
+amount of information. More information on modifying the scripts is given
+in Section \ref{uncoupled_scripts}.  The default configuration is a 10 day, startup
+run on the gx3v5 grid, using 8 processors and the message passing interface (MPI).
+The debugging option is turned on, history files are written out daily, and
+restart files are written out every 5 days.  The debugging option should be
+turned off, and the output frequency should be decreased before starting
+any production runs.  If your system does not have 8 available processors or MPI,
+see Section \ref{single_pe_no_mpi} on how to run the model on a single processor
+without MPI.
+
+Running this configuration will verify that the library and compiler options
+are properly set in the {\bf Macros.$<$OS$>$} file, all the input data is in the correct
+place and the environment variables are set correctly before any further
+changes are made to the scripts or the source code. This will also provide
+benchmark output.
+
+\begin{Ventry}{NOTE:}
+\item[NOTE]
+
+If you are running this model a machine other than an IBM running AIX or an
+SGI running IRIX, you may need to make an equivalent {\bf Macros.$<$OS$>$}
+file with the paths and settings modified for your system.
+\end{Ventry}
+
+Before you start, modifications will be needed in the run script {\bf csim\_run}
+to set the directories for the source code, input data, and executables.  The
+following is a list of the environment variables that will need to be changed
+by the user: 
+
+\begin{verbatim}
+setenv CSIMDIR  /home/$LOGNAME/csim5             # directory of scripts
+setenv CSIMDATA  /fs/cgd/csm/inputdata/ice/csim4 # dir for input data
+setenv CASE    test.me                           # Case name
+setenv EXEROOT  /ptmp/$LOGNAME/$CASE             # run model here
+setenv SHRCODE  $CSIMDIR                         # dir for share code
+\end{verbatim}
+
+{\tt \$CSIMDIR} is the top directory of the source code, where the scripts are
+located.  {\tt \$CSIMDATA} is the directory where the input data sets are located.
+{\tt \$CASE} is a string with a case name for the model run and should be kept 
+short since it is used in path and file names.  {\tt \$EXEROOT} is
+typically a large temporary disk where the executable files,
+and input data sets will reside during execution. Information output by the model
+will also be written to {\tt \$EXEROOT}.  
+
+The location of {\tt \$SHRCODE} will depend on where the source code was
+downloaded.  If it was obtained with CCSM3.0 distribution, the {\tt \$SHRCODE}
+directory will be under {\tt ccsm3/models/csm\_share}.  If you only have the
+source code for CSIM, the share code will be in the same directory as the
+rest of the ice model source code.
+
+\subsubsection{Multiple Processors with MPI}
+
+The default setting will use eight processors (two nodes with four processors
+each) and the Message Passing Interface (MPI), so simply submit the job.  To
+submit a run to the batch queue on the IBM, type 
+{\tt llsubmit csim\_run}.  To submit the job to the batch queue on an SGI, type
+{\tt qsub $<$ csim\_run}, {\tt bsub $<$ csim\_run} or the appropriate command
+depending on your batch queueing system.  On some systems it is possible to 
+run multiple processor jobs interactively.
+
+\subsubsection{Single Processor with MPI}
+
+In the run script {\bf csim\_run}, change {\tt \$NX} and {\tt \$NY} to 1.
+If you are submitting to a batch queue, the number of processors you are
+requesting will also need to be modified in the batch queue environment
+information at the top of the script.  For example, for the IBM, the
+following two lines should be modified to:
+
+\begin{verbatim}
+  # @ total_tasks = 1
+  # @ node = 1
+\end{verbatim}
+
+The model can also be run interactively by typing {\tt csim\_run}.  
+
+\begin{Ventry}{NOTE:}
+\item[NOTE]
+
+When you change the number of processors, the output you get in the log
+file will be slightly different from that calculated with a different
+number of processors.  This is due to changes in the order of operations
+in calculating the global sums.
+\end{Ventry}
+
+\subsubsection{Single Processor without MPI}
+\label{single_pe_no_mpi}
+
+In the run script {\bf csim\_run}, change {\tt \$NX} and {\tt \$NY} to 1,
+and {\tt \$BINTYPE} to '{\tt single}' (or anything except '{\tt MPI}').
+This value of {\tt \$BINTYPE} will automatically change the preprocessor
+flags and the compiler name where necessary in the {\bf Macros.$<$OS$>$}
+file.  The model can be run interactively by typing {\tt csim\_run}.  

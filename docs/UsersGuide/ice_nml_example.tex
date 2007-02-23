@@ -1,0 +1,198 @@
+%=======================================================================
+% CVS: $Id: ice_nml_example.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+
+This section shows several examples of namelists from the coupled and uncoupled
+ice models.  These examples are taken directly from {\bf csim.buildnml\_prestage.csh}
+for the coupled model and from {\bf csim.setup.csh} for the uncoupled model.  
+Most of the variables in the namelist are determined from environment variables
+set elsewhere in the scripts. Since the namelists from the coupled model are
+"resolved" by the scripts, meaning that the values of most of the shell script
+variables are put directly into the namelist, examples are shown for the most
+commonly used configurations.  Variables that are commonly changed directly in
+the namelist are the timestep {\tt dt} and the number of subcycles per timestep
+in the ice dynamics {\tt ndte}. 
+
+\subsubsection {Example 1: CCSM Fully Coupled}
+\label{example1_nml}
+
+The following example is the namelist used for CCSM fully coupled, or
+the B configuration.  The variables that are still set to shell script
+variables have been set at the top of {\bf csim.buildnml\_prestage.csh}
+or in other scripts.  A completely resolved version of the namelist will
+be written to {\bf ice\_in} in the executable directory.
+
+\begin{verbatim}
+cat << EOF >! ice_in
+  &ice_nml
+    runid         = 'TER.01a.T85_gx1v3.B.bluesky.105608'
+  , runtype       = '$runtype'
+  , istep0        = 0
+  , dt            = 3600.0
+  , ndte          = 120
+  , ndyn_dt       = 1
+  , npt           = 99999
+  , diagfreq      = 24
+  , histfreq      = 'm'
+  , dumpfreq      = 'y'
+  , dumpfreq_n    = 1
+  , hist_avg      = .true.
+  , restart       = $restart
+  , print_points  = .false.
+  , kitd          = 1
+  , kdyn          = 1
+  , kstrength     = 1
+  , evp_damping   = .false.
+  , snow_into_ocn = .true.
+  , advection     = 'remap'
+  , grid_type     = 'displaced_pole'
+  , grid_file     = 'data.domain.grid'
+  , kmt_file      = 'data.domain.kmt'
+  , incond_dir    = '$runinidir/'
+  , incond_file   = '$CASE.csim.i.'
+  , restart_dir   = '$runrstdir/'
+  , dump_file     = '$CASE.csim.r.'
+  , history_dir   = '$runhstdir/'
+  , history_file  = '$CASE.csim.h'
+  , albicev       = 0.73
+  , albicei       = 0.33
+  , albsnowv      = 0.96
+  , albsnowi      = 0.68
+  , no_ice_ic     = $no_ice_ic
+  , oceanmixed_ice             = .false.
+  , oceanmixed_ice_file        = 'oceanmixed_ice.nc'
+  , oceanmixed_ice_sst_init    = .false.
+  , prntdiag_oceanmixed        = .false.
+  , pointer_file  = 'rpointer.ice'
+/
+\end{verbatim}
+
+\subsubsection {Example 2: Coupled Ice Only Model}
+\label{example2_nml}
+
+This example is the M configuration.  It is CSIM with the latm data
+atmosphere model, data land model, and the ocean mixed layer model
+within the ice model all communicating through the coupler.  The 
+following modifications will be made to the namelist when the resolved
+scrips are created for the M configuration.  See the 
+\begin{htmlonly}
+  \htmladdnormallink{CCSM3 User's Guide}{http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}
+\end{htmlonly}
+\begin{latexonly}
+  CCSM3 User's Guide (http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm)
+\end{latexonly}
+on how to create scripts for the M configuration.
+
+\begin{verbatim}
+    runid         = 'TER.01a.T62_gx1v3.M.bluesky.095234'
+  , oceanmixed_ice             = .true.
+  , oceanmixed_ice_sst_init    = $oml_ice_sst_init
+\end{verbatim}
+
+\subsubsection {Example 3: Uncoupled Ice Model}
+\label{example3_nml}
+
+This example is the namelist from the uncoupled ice model that resides
+in the file {\bf csim.setup.csh}.  {\tt npt}  has been modified, since
+it determines the length of the uncoupled run.  The snow and ice albedos
+used by CCSM are not set in the name list. The default values set in
+{\bf ice\_init.F} are used.  
+
+\begin{verbatim}
+cat << EOF >! ice_in
+  &ice_nml
+    runid        = '$CASE $CASESTR'
+  , runtype      = '$RUNTYPE'
+  , istep0       = 0
+  , dt           = 3600.0
+  , ndyn_dt      = 1
+  , ndte         = 120
+  , npt          = 240
+  , diagfreq     = 24
+  , histfreq     = 'm'
+  , dumpfreq     = 'd'
+  , dumpfreq_n   = 5
+  , hist_avg     = .true.
+  , restart      = $RESTART
+  , print_points = .false.
+  , kitd         = 1
+  , kdyn         = 1
+  , kstrength    = 1
+  , evp_damping  = .false.
+  , snow_into_ocn = .true.
+  , advection    = 'remap'
+  , grid_type    = 'displaced_pole'
+  , grid_file    = 'data.domain.grid'
+  , kmt_file     = 'data.domain.kmt'
+  , incond_dir   = '$INIDIR/'
+  , incond_file  = '$CASE.csim.i.'
+  , restart_dir  = '$RSTDIR/'
+  , dump_file    = '$CASE.csim.r.'
+  , history_dir  = '$HSTDIR/'
+  , history_file = '$CASE.csim.h'
+  , pointer_file  = '$CSIMDIR/rpointer.ice'
+  , oceanmixed_ice             = $OCEANMIXED_ICE
+  , oceanmixed_ice_file        = 'oceanmixed_ice.nc'
+  , oceanmixed_ice_sst_init    = $OML_ICE_SST_INIT
+  , prntdiag_oceanmixed        = .false.
+/
+\end{verbatim}
+
+\subsubsection {Example 4: Uncoupled Ice Model with Atmospheric Forcing}
+\label{example4_nml}
+
+To run the uncoupled ice model with atmospheric forcing, the following
+options should be added to the above namelist:
+
+\begin{verbatim}
+  , ycycle       = 1
+  , year_init    = 1997
+  , fyear_init   = 1997
+  , atm_data_dir = '/ptmp/$LOGNAME/csim_forcing/atm/gx3v5/'
+
+\end{verbatim}
+
+
+\subsubsection {Example 5: History File Namelist}
+\label{example5_nml}
+
+The second namelist controls what variables are written to the history file.
+By default, all files are written to the history file.  Variables that
+are not output are set in the namelist {\tt icefields\_nml}.
+Some of the following fields are not written to the history file since
+they can be retrieved from the ocean history files.  The melt and freeze
+onset fields are not used, since the information they contain may not
+be correct if the model is restarted mid-year.  The ice areas and volumes
+for categories six through ten are not used, since the default thickness
+distribution consists of five ice categories.
+
+\begin{verbatim}
+  &icefields_nml
+    f_sst       = .false.
+  , f_sss       = .false.
+  , f_uocn      = .false.
+  , f_vocn      = .false.
+  , f_frzmlt    = .false.
+  , f_strtltx   = .false.
+  , f_strtlty   = .false.
+  , f_mlt_onset = .false.
+  , f_frz_onset = .false.
+  , f_aice6     = .false.
+  , f_aice7     = .false.
+  , f_aice8     = .false.
+  , f_aice9     = .false.
+  , f_aice10    = .false.
+  , f_vice1     = .false.
+  , f_vice2     = .false.
+  , f_vice3     = .false.
+  , f_vice4     = .false.
+  , f_vice5     = .false.
+  , f_vice6     = .false.
+  , f_vice7     = .false.
+  , f_vice8     = .false.
+  , f_vice9     = .false.
+  , f_vice10    = .false.
+  /
+\end{verbatim}

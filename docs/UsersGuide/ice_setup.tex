@@ -1,0 +1,62 @@
+%=======================================================================
+% CVS: $Id: ice_setup.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+
+The scripts for building the coupled and the uncoupled ice models are in
+separate directories. The setup scripts for the coupled model are 
+located in {\bf ccsm3/scripts}.  The setup scripts for the uncoupled model are
+located in {\bf ccsm3/models/ice/csim4/src}.  The directory structure of CSIM5
+within CCSM is shown below.
+
+\begin{verbatim}
+                                   ccsm3         (main directory)
+                                     |
+                                     |
+                       models--------+--------- scripts
+                          |                        |
+                          |               * * * * *|* * * * * 
+                 bld------+------ice      *build scripts for*
+                  |               |       *  coupled model  *
+              (Makefile           |       * * * * * * * * * *
+               macros)            |
+                                csim4         (active ice component)
+                                  |
+                      docs -------+------- src
+                       |                    |
+                     (CSIM                  |
+                  documentation)            |
+                                            |
+                                            |                  * * * * * * * **
+       bld ------------ input_templates ----+---- source ------*build scriptsr*
+       |                    |                       |          *for uncoupled *
+  (Makefile macros     (resolution-dependent    (F90 source    *ice model     *
+   for uncoupled         input files)              code)       * * * * * * * **
+    ice model)
+\end{verbatim}
+
+\subsection{Coupled Model Scripts}
+\label{uncoupled_scripts}
+
+The CCSM3 scripts have been significantly upgraded from CCSM2 and are
+based on a completely different design philosophy.  The new scripts will
+generate a set of "resolved scripts" for a specific configuration determined
+by the user. The configuration includes components, resolution, run type, and
+machine. The run and setup scripts that were previously in the {\bf /scripts}
+directory for CCSM2 are now generated automatically.  See the CCSM3 User's Guide for
+information on how to use the new scripts.  The file that contains the ice model
+namelist is now located in {\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage}. The
+script containing the environment variables used for building the executable
+file for the ice model is in {\bf ccsm3/scripts/\$CASE/Buildexe}.
+The contents of the ice model namelist are described in section \ref{namelist}.
+
+%--------------------------------------------------------------
+  \subsection{Uncoupled Run Script}
+%--------------------------------------------------------------
+  \input{ice_run_script}
+
+%--------------------------------------------------------------
+  \subsection{Uncoupled Setup Script}
+%--------------------------------------------------------------
+  \input{ice_uncpl_setup}

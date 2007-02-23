@@ -1,0 +1,509 @@
+%=======================================================================
+% CVS: $Id: ice_nml_var.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+% Namelist Variables
+
+CSIM uses the same namelists for both the coupled and uncoupled models.
+This section describes the namelist variables in the namelist {\tt ice\_nml},
+which determine time management, output frequency, model physics, filenames,
+and options for the mixed layer ocean model. 
+The ice namelists for the coupled model are now located in
+{\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage}.  Modifications to the
+uncoupled namelist can be made in {\bf ccsm3/models/ice/csim4/src/csim.setup.csh}.
+
+A script reads the input namelist at runtime, and writes the namelist
+information to the file {\bf ice\_in} in the directory where the model executable
+is located.  Therefore, the namelist will be updated even if the ice model
+is not recompiled.  The default values of {\tt ice\_nml} are set in 
+{\bf ice\_init.F}.  If they are not set in the namelist in the script, they will
+assume the default values listed in Tables \ref{table:nml_time}-\ref{table:nml_ocn},
+which list all available namelist parameters.  The default values shown here are
+for the coupled model, which is set up for a production run.  Several of the
+varialbes have different values for the uncoupeld, which is set up for a 10
+day test run with more frequent output.  Only a few of these variables are
+required to be set in the namelist; these values are noted in the paragraphs
+below.  An example of the default namelist is shown in Section \ref{example1_nml}.
+
+\begin{table}[ht]
+  \begin{center}
+  \caption{Namelist Variables for Time Management}
+  \label{table:nml_time}
+   \begin{tabular}{p{2.0cm}p{2.0cm}p{4.0cm}p{6.5cm}} \hline
+Varible  & Type & Default Value & Description               \\
+
+\hline \hline
+
+{\tt runid}   & Character &  'unknown\_runid' & Text used in netCDF
+                                     global attributes \\
+
+{\tt runtype} & Character &  'unknown\_runtype' & Determines if BASEDATE is
+                          received from coupler or restart file   \\
+
+{\tt istep0} &  Integer &   0   & Step counter, number of steps
+                                     taken in previous integration \\
+
+{\tt npt}    &  Integer & 99999 & Total number of timesteps in a model run,
+                                    model stops when istep exceeds npt (not
+                                    used in coupled runs)\\
+
+{\tt dt}     &  Double  & 3600. & Timestep in seconds \\
+
+{\tt ndyn\_dt}&  Integer  & 1 & Times to loop through ice dynamics \\
+
+{\tt ndte}   &  Integer & 120   & Number of subcycles per timestep in
+                                   ice dynamics \\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+The time management namelist options are shown in Table \ref{table:nml_time}.
+{\tt runid} is a character string that contains descriptive information gathered
+from the run script.  This information is written to the global attributes
+in the history files.  {\tt runtype} is determined from the value of {\tt \$RUNTYPE}
+set in the run script.  The options for this are discussed in section
+\ref{runtypes}.  {\tt istep0} is the number of steps taken in a previous integration
+and is written to the restart file. 
+
+\subsection{Changing the Length of the Model Run}
+
+The length of an uncoupled model run is controlled by the variable {\tt npt}.
+It is the total number of time steps taken in an integration.  The value
+of {\tt npt} is not used in a coupled run, since the point at which integration
+is stopped is determined by the coupler.  The length of a coupled run should be
+set in the 
+\begin{htmlonly}
+  \htmladdnormallink{CCSM scripts}{http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}.
+\end{htmlonly}
+\begin{htmlonly}
+  CCSM scripts (http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm).
+\end{htmlonly}
+
+\subsection{Changing the timestep}
+\label{nml_time_mgmt}
+
+{\tt dt} is the timestep in seconds for the ice model thermodynamics.
+The thermodynamics component is stable but not necessarily accurate for any value
+of the timestep.  The value chosen for {\tt dt} depends on the stability of the
+transport and the grid resolution.  A conservative estimate of {\tt dt} for the
+transport using the MPDATA advection scheme is
+
+\begin{equation}
+  \Delta t < \frac{min(\Delta x, \Delta y)}{4 max(u, v)} .
+\end{equation}
+Maximum values for {\tt dt} for the two standard CCSM POP grids, assuming 
+$max(u,v) = 0.5 m/s$, are shown in Table \ref{table:max_dt}.  The default
+timestep for CSIM is one hour.
+
+\begin{table}
+  \begin{center}
+  \caption{Maximum values for ice model timestep {\tt dt}}
+  \label{table:max_dt}
+  \begin{tabular}{lll} \hline
+  Grid & $min(\Delta x, \Delta y)$ & $max \Delta t$   \\
+  \hline \hline
+
+gx3v5   & 28845.9 m & 4.0 hr \\
+gx1v3   &  8558.2 m & 1.2 hr \\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+The calculation of the ice velocities is subcycled {\tt ndte} times per
+timestep so that the elastic waves are damped before the next timestep. The
+subcycling timestep is calculated as {\tt dte = dt/ndte}
+and must be sufficiently smaller than the damping timescale {\tt T},
+which needs to be sufficiently shorter than {\tt dt}
+\begin{equation}
+ dte < T < dt
+\end{equation}
+This relationship is discussed in \cite{hunk01}; also
+see \cite{cice02}, section 4.4.  The best ratio for
+[dte : T : dt] is [1 : 40 : 120]. Typical combinations of {\tt dt}
+and {\tt ndte} are (3600., 120), (7200., 240) (10800., 120).
+
+Occasionally, ice velocities are calculated that are larger than what is
+assumed when the model timestep is chosen.  This causes a CFL violation
+in the transport scheme.  A namelist option was added ({\tt ndyn\_dt})
+to subcycle the dynamics to get through these instabilities that arise
+during long integrations.  The default value for this variable is one,
+and is typically increased to two when the ice model reaches an instability.
+The value in the namelist should be returned to one by the user when the
+model integrates past that point.
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for Writing Output}
+  \label{table:nml_write}
+   \begin{tabular}{p{2.0cm}p{2.0cm}p{2.0cm}p{6cm}} \hline
+  Varible  & Type & Default  & Description               \\
+\hline \hline
+{\tt diagfreq} &  Integer &  24 & Frequency of diagnostics written
+                     (min, max, hemispheric sums) to standard output   \\
+         &          &     & 24  =$>$ writes once every 24 timesteps  \\
+         &          &     & 1  =$>$ diagnostics written each timestep \\
+         &          &     & 0  =$>$ no diagnostics written \\
+
+{\tt histfreq} & Character & 'm' & Frequency of output written to 
+                    history file \\
+         &          &     & 'D' or 'd' writes daily data \\
+         &          &     & 'W' or 'w' writes weekly data \\
+         &          &     & 'M' or 'm' writes monthly data \\
+         &          &     & 'Y' or 'y' writes yearly data \\
+         &          &     & '1' writes every timestep \\
+         &          &     & '0' no history data is written \\
+
+{\tt hist\_avg}  &  Logical & .true. & If true, averaged history
+                       information is written out at a frequency
+                       determined by histfreq.  If false, instantaneous
+                       values rather than time-averages are written. \\
+
+{\tt dumpfreq} & Character & 'y' &  Frequency restart data is written to file \\
+         &          &     & 'D' or 'd' writes restart every {\tt dumpfreq\_n} days \\
+         &          &     & 'M' or 'm' writes restart every {\tt dumpfreq\_n} months \\
+         &          &     & 'Y' or 'y' writes restart every {\tt dumpfreq\_n} years \\
+         &          &     & '0' no restart data is written \\
+
+{\tt dumpfreq\_n} & Integer & 1 & Frequency restart data is written to file \\
+
+{\tt \scriptsize{print\_points}} & Logical & .false. & print diagnostic data for two grid points \\
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{Writing Output}
+
+The namelist variables that control the frequency of the model diagnostics, netCDF
+history files, and binary restart files are shown in Table \ref{table:nml_write}.
+By default, diagnostics are written out once every 24 timesteps to the ascii file
+{\bf ice.log.\$LID} (see section \ref{stdout}). {\tt \$LID} is a time stamp that is
+set in the main script.   
+
+{\tt histfreq} controls the output frequency of the 
+netCDF history files; writing monthly averages is the default.  The content of the
+history files is described in section \ref{history}.  The value of {\tt hist\_avg}
+determines if instantaneous or averaged variables are written at the frequency set
+by {\tt histfreq}.  If {\tt histfreq} is set to '1' for instantaneous output,
+{\tt hist\_avg} is set to {\tt .false.} within the source code to avoid conflicts.
+{\tt dumpfreq} and {\tt dumpfreq\_n} control the output frequency of the binary
+restart files; writing one restart file per year is the default.
+
+If {\tt print\_points} is {\tt .true.}, diagnostic data is printed out for two
+grid points, one near the north pole and one near the Weddell Sea.  The points
+are set at the top of {\bf ice\_diagnostics.F}.  This option can be helpful for
+debugging.
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for Model Physics}
+  \label{nml_physics}
+  \begin{tabular}{p{3cm}p{2.0cm}p{3cm}p{6.5cm}} \hline
+  Varible Name & Type & Default Value & Description               \\
+\hline \hline
+
+{\tt restart} & Logical & .false. & If true, model is initialized using a
+   restart file, if false, model is initialized using initial conditions
+   in {\bf ice\_init.F}. \\
+
+{\tt kcolumn} &  Integer & 0 & Column model flag. \\
+        &          &   & 0 = off \\
+        &          &   & 1 = column model (not tested or supported)\\
+
+{\tt kitd} &  Integer & 1 & Determines ITD conversion \\
+     &          &   & 0 = delta scheme \\
+     &          &   & 1 = linear remapping \\
+
+{\tt kdyn} &  Integer & 1 & Determines ice dynamics \\
+     &          &   & 0 = No ice dynamics\\
+     &          &   & 1 = Elastic viscous plastic dynamics\\
+
+{\tt kstrength} &  Integer & 1 &  Determines pressure formulation \\
+          &          &   &  0 = \cite{hibl79} parameterization \\
+          &          &   &  1 = \cite{roth75b} parameterization \\
+
+{\tt evp\_damping} &  Logical & .false. & If true, use damping procedure
+                                             in evp dynamics (not supported). \\
+
+{\tt snow\_into\_ocn} &  Logical & .true. & If true, snow on ridged
+                                                ice falls into ocean. \\
+
+{\tt advection} &  Character & 'remap' &  Determines horizontal
+                                               advection scheme. \\
+          &            &   &  'remap' = incremental remapping \\
+          &            &   &  'mpdata2' = second order advection \\
+          &            &   &   'upwind' = first order advection \\
+
+{\tt grid\_type} &  Character & 'displaced\_pole' &  Determines grid type. \\
+          &            &   &  'displaced\_pole' or 'rectangular' (not supported) \\
+
+{\tt albicev} &  Double & 0.73 &  Visible ice albedo \\
+
+{\tt albicei} &  Double & 0.33 &  Near-infrared ice albedo \\
+
+{\tt albsnowv} &  Double & 0.96 &  Visible snow albedo \\
+
+{\tt albsnowi} &  Double & 0.68 &  Near-infrared snow albedo \\
+
+{\tt no\_ice\_ic} & Logical & .false. &  Initializes ice model with no ice \\
+ 
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{Model Physics}
+
+The namelist variables for the ice model physics are listed in Table 
+\ref{nml_physics}.  {\tt restart} is almost always true since most
+run types begin by reading in a binary restart file.  See section 
+\ref{runtypes} for a description of the run types and about using
+restart files and internally generated model data as initial conditions.
+{\tt kcolumn} is a flag that will run the model as a single column if is
+set to 1.  This option has not been thoroughly tested and is not supported. 
+
+{\tt kitd} determines the scheme used to redistribute sea ice within the ice thickness
+distribution (ITD) as the ice grows and melts.  The linear remapping scheme is the
+default and approximates the thickness distribution in each category as a linear 
+function (\cite{lips01}).  The delta function method represents {\it g(h)} in
+each category as a delta function (\cite{bitz01}).  This method can leave some
+categories mostly empty at any given time and cause jumps in the properties of
+{\it g(h)}.
+
+{\tt kdyn} determines the ice dynamics used in the model.  The default is the
+elastic-viscous-plastic (EVP) dynamics \cite{hunk97}.  If {\tt kdyn} is set to 0,
+the ice dynamics is inactive. In this case, ice velocities are not computed
+and ice is not transported.  Since the initial ice velocities are read in
+from the restart file, the maximum and minimum velocities written to the 
+log file will be non-zero in this case, but they are not used in any calculations.
+
+The value of {\tt kstrength} determines which formulation is used to
+calculate the strength of the pack ice.  The \cite{hibl79} calculation
+depends on mean ice thickness and open water fraction.  The calculation
+of \cite{roth75b} is based on energetics and should not be used if the
+ice that participates in ridging is not well resolved.  
+
+{\tt evp\_damping} is used to control the damping of elastic waves in
+the ice dynamics.  It is typically set to {\tt .true}. for high-resolution
+simulations where the elastic waves are not sufficiently damped out in a
+small timestep without a significant amount of subcycling.  This procedure
+works by reducing the effective ice strength that's used by the dynamics
+and is not a supported option.
+
+The value of {\tt snow\_into\_ocean} determines what happens to the snow
+on ice that is ridged.  The default value is {\tt .true.}, so the snow cover
+on ice that undergoes ridging is put into the ocean.  If this variable is
+{\tt .false.}, the snow on ice undergoing ridging remains on the ice.
+
+{\tt advection} determines the horizontal transport scheme used. The default
+scheme is the incremental remapping method (\cite{lipshunke04}).  This method
+is less diffusive and is computationally efficient for large numbers of categories
+or tracers.  The MPDATA scheme is also available.  It is second order accurate,
+and more computationally expensive than remapping. The upwind scheme is only first
+order accurate.
+ 
+For coupled runs, both supported grids (gx3v5 and gx1v3) are {\tt 'displaced\_pole'}.
+The 'rectangular' option for a regular grid with constant 
+latitude and longitude spacing is not supported.
+
+The values of the snow and ice albedos are now set in the namelist.  The ice albedos
+are those for ice thicker than {\tt ahmax}, which is currently set at 0.5 m.  This
+thickness is a parameter that can be changed in {\bf ice\_albedo.F}. The snow albedos
+are for cold snow.  {\tt no\_ice\_ic} provides an option to initialize the ice model
+with no ice cover.
+
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for File Names}
+  \label{table:nml_file_info}
+  \begin{tabular}{p{2.5cm}p{2.5cm}p{3cm}p{6.0cm}} \hline
+  Varible & Type & Default Value & Description               \\
+\hline \hline
+
+{\tt grid\_file} &  Character & 'data.domain.grid' &  Input filename
+                                           containing grid information. \\
+
+{\tt kmt\_file} &  Character & 'data.domain.kmt' &  Input filename
+                                       containing land mask information. \\
+
+{\tt pointer\_file} & Character & 'ice.restart\_file' & Pointer file that
+                                   contains the name of the restart file. \\
+
+{\tt incond\_dir} & Character & ' ' & Directory where netCDF
+           initial condition file is output. \\
+
+{\tt restart\_dir} & Character & ' ' & Directory where restart 
+           files are output. \\
+
+{\tt history\_dir} & Character & ' ' & Directory where history 
+           files are output. \\
+
+{\tt incond\_file} & Character & 'incond' & Root name of netCDF
+    output initial condition file. \\
+
+{\tt dump\_file} &  Character & 'iced' &  Prefix for output file
+                                             containing restart information. \\
+
+{\tt history\_file} & Character & 'iceh' & Root name of history 
+           files. \\
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{File Names}
+
+The namelist parameters listed in Table \ref{table:nml_file_info} are for
+initial condition, restart, and history file and directory information.
+During execution, the ice model reads grid and land mask information from
+the files {\tt grid\_file} and {\tt kmt\_file} that should be located in
+the executable directory. There are commands in the scripts that copy these
+files from the input data directory, rename them from 
+{\bf global\_\${ICE\_GRID}.grid} and {\bf global\_\${ICE\_GRID}.kmt} to the
+default filenames shown in Table \ref{table:nml_file_info}.
+
+The namelist variable {\tt pointer\_file} is set to the name of the pointer file
+containing the restart file name that will be read when model execution
+begins.  The pointer file resides in the scripts directory and is created initially
+by the ice setup script but is overwritten every time a new restart file is created.
+It will contain the name of the latest restart file.  The default filename 
+{\it ice.restart\_file} shown in Table \ref{table:nml_file_info} will not work
+unless some modifications are made to the ice setup script and a file is created
+with this name and contains the name of a valid restart file; this variable must
+be set in the namelist.  More information on restart pointer files can be found
+in section \ref{pointer_files}.
+
+{\tt incond\_dir}, {\tt restart\_dir} and {\tt history\_dir} are the directories
+where the initial condition file, the restart files and the history files will
+be written, respectively.  These values are set at the top of the setup script
+and have been modified from the default values to meet the requirements of the
+CCSM filenaming convention.  This allows each type of output file to be written
+to a separate directory.  If the default values are used, all of the output
+files will be written to the executable directory.
+
+{\tt incond\_file}, {\tt dump\_file} and {\tt history\_file} are the root
+filenames for the initial condition file, the restart files and the history files,
+respectively.  These strings have been determined by the requirements of the CCSM
+filenaming convention, so the default values listed in Table \ref{table:nml_file_info}
+are not the same as those shown in the namelist in Section \ref{example1_nml}.  See sections
+\ref{restart_files} and \ref{history_files} for an explanation of how the rest
+of the filename is created.
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for Ocean Mixed Layer Model}
+  \label{table:nml_ocn}
+  \begin{tabular}{p{4cm}p{2.0cm}p{3cm}p{5.5cm}} \hline
+  Varible Name & Type & Default Value & Description               \\
+
+  \hline \hline
+
+{\tt oceanmixed\_ice} &  Logical  & .false.  &  If true, run model with
+                                            ocean mixed layer model.  \\
+
+{\tt oceanmixed\_ice\_file} &  Character & \scriptsize{'oceanmixed\_ice.nc'}  &  Name of
+                                        file with ocean mixed layer data.  \\
+
+{\tt \scriptsize{oceanmixed\_ice\_sst\_init}} &  Logical & .false.  &  If true, 
+                             Jan 1 sst is read from forcing file.  \\
+
+{\tt prntdiag\_oceanmixed} &  Logical & .false.  &  If true, print ocean
+                                                mixed layer diagnostics.  \\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{Ocean Mixed Layer Model}
+
+An ocean mixed layer model has been incorporated into the ice model since
+the CCSM data ocean component does not allow frazil ice growth to occur.
+This is due to the minimum ocean mixed layer temperature being fixed at the
+freezing point.  It is a simple slab ocean mixed layer model that is forced
+using output from a POP ocean simulation.  More details on the physics of the
+ocean mixed layer model can be found in the Physics Documentation.  This
+option can be run with the gx3v5 or the gx1v3 grid. 
+
+The namelist variables for the ocean mixed layer model within the ice model
+are shown in Table \ref{table:nml_ocn}.  To use the slab ocean model,
+{\tt \$OCEANMIXED\_ICE} must be set to {\tt .true.} in the namelist.
+There are commands in the scripts that will copy the grid dependent forcing
+file from the input data directory to the executable directory and rename it
+{\bf oceanmixed\_ice.nc}.  This is generally not the best ocean forcing, but
+can be used as a template for creating an ocean forcing file appropriate
+for the application.
+
+The variable {\tt \$OML\_ICE\_SST\_INIT} determines the initial sea surface
+temperature.  For an initial or startup run, this variable should be
+set to true, and the January 1 value of the sea surface temperature
+will be read from the POP forcing file.  For continuation runs, the
+value of {\tt \$OML\_ICE\_SST\_INIT} should be set to false, and sea
+surface temperature and the freeze/melt potential will be read from a restart file.
+This variable will be automatically set in the scripts depending on the
+run type.  When the slab ocean mixed layer within the ice model is used,
+the data that is received from the coupler from the ocean component
+(docn or POP) is overwritten by the values calculated by the ocean mixed
+layer. Therefore, it is not appropriate to use the ocean mixed layer option
+coupled to an active ocean model.  Also, using the ice model with the slab ocean
+mixed layer turned on, coupled to an active atmosphere and a data ocean model
+will require changes to the coupler, since the ocean values calculated in the
+ice model will not be sent to the coupler and received by the atmosphere component.
+
+\subsection{Atmospheric Forcing}
+
+CSIM5 can be run uncoupled using atmospheric data from 1997, available from
+\begin{htmlonly}
+\htmladdnormallink{\tt http://www.ccsm.ucar.edu/models/ice_csim5/distribution}
+                      {http://www.ccsm.ucar.edu/models/ice-csim5/distribution}. \\
+\end{htmlonly}
+\begin{latexonly}
+  {\tt http://www.ccsm.ucar.edu/models/ice-csim5/distribution}.
+\end{latexonly}
+
+These data files are on the low resolution grid and were created for testing
+the ice model.  They will not produce the best sea ice simulation. Module
+{\it ice\_flux\_in.F} can be modified to change the forcing data.  Namelist
+options for using the atmospheric forcing data are shown in Table 
+\ref{table:nml_atm_for}. {\tt atm\_data\_dir} is the root directory where 
+the forcing resides. {\tt fyear\_init} and {\tt year\_init} should be set
+to 1997 and {\tt ycycle} should be set to 1 for the forcing provided.  
+{\tt ocn\_data\_dir} should not be set since no ocean forcing is provided.
+Subroutines in {\it ice\_flux\_in.F} are available for reading in ocean sea
+surface temperature and salinity data and may be used for initializing and/or
+restoring the mixed layer properties; these subroutines currently are commented
+out in {\it ice\_flux\_in.F}.  A sample namelist using these options is shown
+in section \ref{example4_nml}. A brief discussion of the atmospheric forcing
+files is given in section \ref{atm_forcing} as well as changes that should be
+made to {\it ice.F} to use this forcing.
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for Atmospheric Forcing}
+  \label{table:nml_atm_for}
+  \begin{tabular}{p{4cm}p{2.0cm}p{3cm}p{5.5cm}} \hline
+  Varible Name & Type & Default Value & Description               \\
+
+  \hline \hline
+
+{\tt atm\_data\_dir} &  Path  &   &  Directory for atmospheric forcing data \\
+
+{\tt fyear\_init} &  Integer &  First year of atmospheric forcing data \\
+
+{\tt ocn\_data\_dir} &  Path &   &  Directory for oceanic forcing data \\
+
+{\tt ycycle} &  Integer &   &  Number of years in forcing data cycle \\
+
+{\tt year\_init} &  Integer & 1  &  Initial year, if not using restart file \\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+

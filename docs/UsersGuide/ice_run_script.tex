@@ -1,0 +1,104 @@
+%=======================================================================
+% CVS: $Id: ice_run_script.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+% \subsection{Uncoupled Run Script}
+
+The run script for the uncoupled model is called {\bf csim\_run} and is
+located in {\bf /ccsm3/models/ice/csim4/src}.  Its purpose is to coordinate setting
+the batch system options, the environment variables, executing the CSIM
+setup script, setting up the stdout file, and submitting the model to run.
+
+At the top of the run script, the settings for the IBM SP and the SGI Origin
+2000 batch queue environments are set.  These commands are machine and
+site dependent.  Following this, the variables for the run environment
+are defined.  These variables are listed in Table \ref{table:main_environ_var}.
+
+{\tt \$CASE} is a character string that identifies a particular model run.
+It can be up to 16 characters long, but it is best kept short, since
+it is used as part of the restart, history, and initial filenames.
+{\tt \$CASESTR} is a longer string that describes a model case.
+
+{\tt \$RUNTYPE} is a character string that specifies the state in which
+the model is to begin a run.  {\tt startup} and {\tt continue} are the supported
+run types. A startup run can be initialized by reading input from a file
+or from initial conditions set within the ice model.  This option is
+controlled by the environment variable {\tt \$RESTART} in the setup script
+(see Section \ref{model_generated} ). Continue runs are described in
+Section \ref{continue_runs}.
+
+{\tt \$NCAT} is an integer that sets the number of ice
+thickness categories.  The default value is 5 categories.  If you are 
+considering changing {\tt \$NCAT} to values other than 3 or 10, read
+Section \ref{ncat}.  This is an involved process that deserves
+its own section.
+
+\subsubsection{Using the Ocean Mixed Layer Model within CSIM}
+
+{\tt \$OCEANMIXED\_ICE} is a logical variable, if {\tt .true.}, is used
+to implement the slab ocean mixed layer model in the ice model.
+It is a simple model that is forced using output from a POP ocean
+simulation.  More details on the physics of the ocean mixed layer model
+can be found in the Physics Documentation.  It can be run
+with the gx3v5 or the gx1v3 grid.  To use the mixed layer model, set
+
+  \begin{verbatim}
+    setenv \$OCEANMIXED\_ICE .true.
+  \end{verbatim}
+{\noindent in {\bf csim\_run}.}
+
+\subsubsection{Changing Grid Resolution}
+
+{\tt \$GRID} is a character string used to specify the horizontal grid.
+Presently, two resolutions are supported for the ice model: gx3v5 and
+gx1v3. In both of these grids, the North Pole has been displaced into 
+Greenland.  gx3v5 is the coarser grid, with longitudinal resolution of
+3.6 degrees. The latitudinal resolution varies, with a resolution of 
+approximately 0.9 degrees near the equator. gx1v3 is the finer
+resolution grid, with a longitudinal resolution of approximately one
+degree. Its latitudinal resolution is also variable, with a resolution
+of approximately 0.3 degrees near the equator. 
+
+\subsubsection{Changing the Number of Processors}
+
+{\tt \$NX} and {\tt \$NY} are the number of processors used by the
+ice model for internal parallelization.
+Currently, {\tt \$NX} and {\tt \$NY} MUST divide evenly into the grid dimensions.
+There are checks for this in the setup script and in the ice source
+code; the model will stop if these criteria are not met. {\tt \$NLAT} and
+{\tt \$NLON} are used for this purpose.  For load balancing purposes, {\tt \$NY}
+should be $<$=2.  If it is greater than this, the processors assigned
+subdomains near the equator will not be doing much work.
+
+For the gx3v5 grid, the ice model is typically run on 8 tasks, with {\tt NX}=4,
+{\tt NY}=2. Running the ice model with {\tt NX}=8 and {\tt NY}=1 tasks on the
+gx3v5 grid wil result in an error, since 8 does not divide evenly into the 100
+longitude points.  When this happens, the model will stop with an error message
+written to the log file.
+
+If you are submitting the model to a batch queue with the number of processors
+modified from the default, you will also have to modify the batch queue
+environment information at the top of the script.  The default setting for the IBM is:
+
+\begin{verbatim}
+  # @ total_tasks = 8
+  # @ node = 1
+\end{verbatim}
+
+These two lines request a total of eight MPI processes, on one 8-way node.
+For the NCAR SGI, the default setting is:
+
+\begin{verbatim}
+  # QSUB -l mpp_p=8           # request 8 processors
+\end{verbatim}
+
+and for other SGI's it may be
+
+\begin{verbatim}
+  # BSUB -n 8   .
+\end{verbatim}
+
+
+
+

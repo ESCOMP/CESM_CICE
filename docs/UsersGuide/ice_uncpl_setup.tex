@@ -1,0 +1,139 @@
+%=======================================================================
+% CVS: $Id: ice_uncpl_setup.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+
+%\subsection{Uncoupled Setup Script}
+
+The purpose of the setup script, {\bf csim.setup.csh}, is to build an
+executable version of the ice model, document what source code and data
+files are being used in the {\bf ice.log.\$LID} file, and gather or create
+any necessary input data files. {\tt \$LID} is a time stamp set in the run script.
+The environment variables set locally in the ice setup script are listed
+in Table \ref{table:environ_var}.
+
+\begin{Ventry}{NOTE:}
+\item[NOTE]
+The variables shown in Table \ref{table:environ_var} will rarely have to
+be modified by the user, since they depend on variables set in the run
+script.  The most common changes made in the script file will be to the
+namelist discussed in Section \ref{namelist}.
+
+\end{Ventry}
+
+\begin{table}
+  \begin{center}
+  \caption{Environment Variables Set in the Run Script ({\bf csim\_run})}
+  \label{table:main_environ_var}
+  \begin{tabular}{p{3.5cm}p{9cm}} \hline
+
+  Variable    & Description    \\ \hline \hline
+   {\tt CASE}     & case name   \\
+   {\tt CASESTR}  & short descriptive text string, used in history files  \\
+   {\tt OCEANMIXED\_ICE}  & logical variable used to implement ocean mixed layer model \\
+   {\tt ICE\_GRID}& ice model grid (gx3v5 or gx1v3)            \\
+   {\tt RUNTYPE}  & run type (startup or continue)\\
+   {\tt NCAT}     & number of thickness categories in the ice thickness distribution \\
+   {\tt NX}       & number of processors assigned in the x direction,
+              used for MPI grid decomposition  \\
+   {\tt NY}       & number of processors assigned in the y direction,
+              used for MPI grid decomposition  \\
+   {\tt BINTYPE}  & Set to MPI for internal parallelization, set to single for non-MPI runs  \\
+   {\tt CSIMDIR}  & source code base directory  \\
+   {\tt SHRCODE}  & share code directory  \\
+   {\tt CSIMDATA} & input data base directory   \\
+   {\tt CBLD}     & makefile and Macros directory  \\
+   {\tt EXEROOT}  & Run model, mv data, output put here  \\
+   {\tt LID}      & timestamp for file ID string  \\
+   {\tt OBJDIR}  & ice model code is built here  \\
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+{\tt \$HSTDIR}, {\tt \$RSTDIR} and {\tt \$INIDIR} are the directories in
+{\tt \$EXEROOT} where the history, restart, and initial condition
+files are output, respectively.  The ice model input templates are
+located in {\tt \$ICESRC}. These templates are fortran modules that contain
+information on grid dimensions, number of ice thickness categories and
+vertical resolution in the ice categories. The grid is determined in
+the run script and the resolution {\tt \$RES} is set in {\bf csim.setup.csh}:
+100x116 for the gx3v5 grid and 320x384 for gx1v3.  Depending on {\tt \$RES} and the
+number of ice thickness categories {\tt \$NCAT} set in {\bf csim\_run}, the
+appropriate input template {\bf ice\_model\_size.\$\{RES\}x\$\{NCAT\}} will
+be copied into the directory where the ice model is being built and renamed
+{\bf ice\_model\_size.F}.  Files exist for the following configurations:\\
+
+\noindent{\bf \$CSIMDIR/input\_templates/ice\_model\_size.F.100x116x1 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.100x116x3 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.100x116x5 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.100x116x10 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.320x384x1 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.320x384x3 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.320x384x5 \\
+\$CSIMDIR/input\_templates/ice\_model\_size.F.320x384x10} \\
+
+\begin{Ventry}{NOTE:}
+\item[NOTE]
+Files exist only for certain numbers of ice thickness categories 
+(1, 3, 5, and 10).  If you need a number of categories other than
+these, the model will not run as is.  See Section \ref{ncat} for
+information on how to change the number of ice thickness categories.
+\end{Ventry}
+
+The variable {\tt \$OML\_ICE\_SST\_INIT} is used if {\tt \$OCEANMIXED\_ICE} is
+set to {\tt .true.} in the run script and determines the initial sea surface
+temperature.  If the run is a startup run, this variable
+is set to true in the ice setup script, and the January 1 value of the sea
+surface temperature is read from the POP forcing file.  Thereafter, the
+value of {\tt \$OML\_ICE\_SST\_INIT} is set to {\tt .false.}, and sea surface temperature
+and the freeze/melt potential is read from a restart file.
+
+\begin{table}
+  \begin{center}
+  \caption{Environment Variables Set in the Ice Setup Script}
+  \label{table:environ_var}
+  \begin{tabular}{p{4cm}p{10cm}} \hline
+
+  Symbol              & Description    \\ \hline \hline
+   {\tt HSTDIR} & directory where history files are written  \\
+   {\tt RSTDIR} & directory where restart files are written  \\
+   {\tt INIDIR} & directory where initial condition files are written  \\
+   {\tt ICESRC} & directory where ice model input templates are located  \\
+   {\tt RES}    & grid dimensions used to select model resolution  \\
+   {\tt NLAT}   & number of latitudes in grid resolution \\
+   {\tt NLON}   & number of longitudes in grid resolution \\
+   {\tt OML\_ICE\_SST\_INIT}  & logical variable, if true initialize ocean mixed layer
+                          temperature from within ice model\\
+   {\tt RESTART} & logical variable used to initialize model from a restart file \\
+   {\tt RSTFILE} & name of restart file \\
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
+
+The ice model contains two namelists.  The variables for both
+lists are set in {\bf csim.setup.csh} and are written to the file {\bf ice\_in}
+in {\tt \$EXEROOT} when the setup script is executed.  Changes to the
+namelists must be made in the run or setup script, not in the {\bf ice\_in}
+file.  The ice model reads his file at runtime.  Therefore, the namelist
+will be updated even if the ice model is not recompiled.
+
+One namelist is called {\tt icefields\_nml} and is defined in
+{\bf  ice\_history.F}.  It contains a list of logical variables that
+correspond to ice fields that will be written to the history file.  By
+default, all these variables are set to {\tt .true.}, so leaving the namelist
+blank will result in all fields being written to the history file.
+The available fields are listed in Table \ref{table:history_fields}. Changing
+the content of the history files via the namelist is discussed in section
+\ref{change_content}.
+
+The other namelist is called {\tt ice\_nml} and is defined in
+{\bf ice\_init.F}. It contains variables that control the physics used in
+the model.  They are listed in Tables \ref{table:nml_time}-\ref{table:nml_ocn}.
+Some of the variables in the namelist are determined from environment variables
+set in the scripts.  Variables that are commonly changed directly in the
+namelist are the timestep {\tt dt}, the length of the model run {\tt npt}, and
+the number of subcycles per timestep in the ice dynamics {\tt ndte}.
+

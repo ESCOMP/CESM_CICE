@@ -1,0 +1,73 @@
+%=======================================================================
+% CVS: $Id: ice_input_data.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Source$
+% CVS: $Name$
+%=======================================================================
+
+Both the coupled and uncoupled CSIM require a minimum of three files to run:
+
+\begin{itemize}
+  \item {\bf global\_\$\{ICE\_GRID\}.grid} is a binary file containing
+        grid information and is renamed  \\
+        {\bf data.domain.grid}  \\
+        when it is copied to the executable directory.
+  \item {\bf global\_\$\{ICE\_GRID\}.kmt} is a binary file containing
+        land mask information and is renamed \\
+        {\bf data.domain.kmt}.
+  \item {\bf iced.0001-01-01.\$\{ICE\_GRID\}.20lay} or 
+        {\bf iced.0001-01-01.gx3v5.040213} are binary files containing
+         initial condition information for the gx1v3 and gx3v5 grids,
+         respectively. The thickness distribution in this
+         restart file contains 5 categories, each with 4 layers.
+\end{itemize}
+
+Depending on the grid selected in the scripts, the appropriate {\bf global*}
+and {\bf iced*} files will be copied and renamed in the executable directory.
+Currently, only gx3v5 and gx1v3 grids are supported for the ice and ocean
+models.\\
+
+An additional data file is necessary to use the ocean mixed layer within the
+ice model, depending on the specified grid:
+\begin{itemize}
+  \item {\bf pop\_frc\_gx1v3\_010815.nc} contains monthly averaged ocean forcing
+        from POP output.
+  \item {\bf pop\_frc\_gx3v5\_040212.nc} same as above, but for the gx3v5 grid.
+\end{itemize}
+
+This file is renamed {\bf oceanmixed\_ice.nc} when it is copied into the executable
+directory.
+
+\subsection{Atmospheric Forcing}
+\label{atm_forcing}
+
+The uncoupled ice model will run without atmospheric forcing.  It will use
+the fluxes set in subroutine {\it init\_flux}.  For atmospheric forcing, the following
+datasets are available on the gx3v5 grid, and can be read in using the module
+{\bf ice\_flux\_in.F}.  The directory where the data is located will have to be set
+in this module, and not in the scripts. The files are as follows: \\
+
+\noindent{\bf /wherever/you/put/it/atm/gx3v5/ISCCPM/MONTHLY/RADFLX/cldf.1997.dat} \\
+{\bf /wherever/you/put/it/atm/gx3v5/ISCCPM/MONTHLY/RADFLX/swdn.1997.dat} \\
+{\bf /wherever/you/put/it/atm/gx3v5/MXA/MONTHLY/PRECIP/prec.1997.dat}    \\
+{\bf /wherever/you/put/it/atm/gx3v5/NCEP/4XDAILY/STATES/dn10.1997.dat}   \\
+{\bf /wherever/you/put/it/atm/gx3v5/NCEP/4XDAILY/STATES/q\_10.1997.dat}  \\
+{\bf /wherever/you/put/it/atm/gx3v5/NCEP/4XDAILY/STATES/t\_10.1997.dat}  \\
+{\bf /wherever/you/put/it/atm/gx3v5/NCEP/4XDAILY/STATES/u\_10.1997.dat} \\
+{\bf /wherever/you/put/it/atm/gx3v5/NCEP/4XDAILY/STATES/v\_10.1997.dat} \\
+
+These files are in direct access binary files, and the source is evident
+from the path names.  {\bf cldf.1997.dat} and {\bf swdn.1997.dat} contain
+the monthly averaged cloud fraction and downwelling shortwave.
+{\bf prec.1997.dat} is the monthly averaged precipitation in mm/month.
+The remaining files are the atmospheric density, specific humidity,
+air temperature, and wind fields.
+Note that these datasets are meant for testing the model and are
+not the best observational data for research.  Users are advised not to
+publish results based on these datasets.  To use this forcing, the
+following lines in {\bf ice.F} need to be uncommented:
+
+\begin{verbatim}
+call init_getflux
+call getflux
+\end{verbatim}
+
