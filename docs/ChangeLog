@@ -1,5 +1,19 @@
 ===============================================================
-cice4_0
+cice4_0_6
+Originator: dbailey (David Bailey)
+Date: Wed Feb 28 09:46:02 MST 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Move to Community Ice Code
+CCSM Version compatible with: ccsm3_1_beta46
+Changes made:
+
+As of ccsm3_1_beta46, CICE 4.0 will be the default sea ice model
+in CCSM.
+
+===============================================================
+===============================================================
+cice4_0 -> cice4_0_5
 Originator: dbailey (David Bailey)
 Date: August 2006
 Model: CICE
