@@ -11,7 +11,7 @@
 ! Code originally based on constants.F in POP
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_constants.F90 51 2007-01-29 22:25:24Z eclare $
+!  SVN:$Id: ice_constants.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! author Elizabeth C. Hunke, LANL
 !

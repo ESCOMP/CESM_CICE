@@ -8,7 +8,7 @@
 ! Spatial grids, masks, and boundary conditions
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_grid.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: ice_grid.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
 !          Tony Craig, NCAR

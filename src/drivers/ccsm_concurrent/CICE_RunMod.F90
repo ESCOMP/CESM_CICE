@@ -717,8 +717,6 @@
                              aice0     (:,:,  iblk),   &
                              l_stop,                   &
                              istop,    jstop)
-         endif
-
          if (l_stop) then
             write (nu_diag,*) 'istep1, my_task, iblk =', &
                                istep1, my_task, iblk
@@ -728,6 +726,8 @@
                                   this_block%i_glob(istop), &
                                   this_block%j_glob(jstop) 
             call abort_ice ('ice: Linear ITD error')
+         endif
+
          endif
 
          call ice_timer_stop(timer_catconv)    ! category conversions

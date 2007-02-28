@@ -12,7 +12,7 @@
 !  routines in the block, distribution modules.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_domain.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: ice_domain.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL

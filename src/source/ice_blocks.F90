@@ -12,7 +12,7 @@
 !  querying the block decomposition for a global domain.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_blocks.F90 51 2007-01-29 22:25:24Z eclare $
+!  SVN:$Id: ice_blocks.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL

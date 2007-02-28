@@ -10,7 +10,7 @@
 !  blocks across processors.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_distribution.F90 20 2006-09-01 17:09:49Z  $
+!  SVN:$Id: ice_distribution.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL

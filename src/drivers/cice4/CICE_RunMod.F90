@@ -9,7 +9,7 @@
 !  Contains main driver routine for time stepping of CICE.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_RunMod.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: CICE_RunMod.F90 54 2007-02-26 21:19:41Z eclare $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          Philip W. Jones, LANL
@@ -820,6 +820,7 @@
             enddo
             enddo
 
+            if (icells > 0) &
             call linear_itd (nx_block, ny_block,       &
                              icells, indxi, indxj,     &
                              nghost,   trcr_depend,    &
@@ -912,8 +913,6 @@
                             eicen     (:,:,:,iblk), &
                             esnon     (:,:,:,iblk) )
 
-         call ice_timer_stop(timer_thermo) ! thermodynamics
-
       !-----------------------------------------------------------------
       ! For the special case of a single category, adjust the area and
       ! volume (assuming that half the volume change decreases the
@@ -989,6 +988,7 @@
       enddo                     ! iblk
 
 !      call ice_timer_stop(timer_tmp)  ! temporary timer
+      call ice_timer_stop(timer_thermo) ! thermodynamics
       call ice_timer_stop(timer_column)  ! column physics
 
       end subroutine step_therm2

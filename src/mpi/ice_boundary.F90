@@ -9,7 +9,7 @@
 !  boundaries using MPI calls
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_boundary.F90 25 2006-10-10 18:45:33Z eclare $
+!  SVN:$Id: ice_boundary.F90 54 2007-02-26 21:19:41Z eclare $
 !
 ! author: Phil Jones, LANL
 !
