@@ -9,7 +9,7 @@
 ! Output files: netCDF data, Fortran unformatted dumps
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_history.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: ice_history.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! authors Tony Craig and Bruce Briegleb, NCAR
 !         Elizabeth C. Hunke and William H. Lipscomb, LANL

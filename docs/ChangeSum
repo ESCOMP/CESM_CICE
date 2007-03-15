@@ -1,5 +1,9 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		03/15/07 cice4_0_7		Synching with latest
+						LANL version
+dbailey		02/28/07 cice4_0_6		Incorporated into
+						ccsm3_1_beta46
 dbailey		08/23/06 cice4_0		Import of CICE4.0 into
 						subversion
 dbailey         07/21/06 csim5_2_5              sys_shr_flush now used from

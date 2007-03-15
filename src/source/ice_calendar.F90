@@ -1,4 +1,4 @@
-! $Id: ice_calendar.F90 45 2006-12-14 20:57:54Z eclare $
+! $Id: ice_calendar.F90 56 2007-03-15 14:42:35Z dbailey $
 !=======================================================================
 !BOP
 !
@@ -216,11 +216,7 @@
 
       if (histfreq == '1') write_history=.true.
 
-#ifdef COUP_CAM 
-      if (istep >= 1) then
-#else
       if (istep > 1) then
-#endif
         select case (histfreq)
         case ("y", "Y")
           if (new_year  .and. mod(nyr, histfreq_n)==0) &

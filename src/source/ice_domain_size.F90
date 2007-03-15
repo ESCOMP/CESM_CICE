@@ -34,7 +34,7 @@
       integer (kind=int_kind), parameter :: &
         nx_global = NXGLOB    , & ! i-axis size
         ny_global = NYGLOB    , & ! j-axis size
-        ncat      = NCAT      , & ! number of categories
+        ncat      =   5       , & ! number of categories
         nilyr     =   4       , & ! number of ice layers per category
         ntilyr    = ncat*nilyr, & ! number of ice layers in all categories
         nslyr     =   1       , & ! number of snow layers per category

@@ -10,7 +10,7 @@
 !  and accumulates time for each individual block and node (task).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_timers.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_timers.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! 2005: Adapted from POP by William Lipscomb
 !       Replaced 'stdout' by 'nu_diag'

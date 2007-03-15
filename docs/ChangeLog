@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_7
+Originator: dbailey (David Bailey)
+Date: Thu Mar 15 10:09:31 MDT 2007
+Model: CICE
+Version: 4.0.7
+One-line Summary: Move to Community Ice Code
+CCSM Version compatible with: 
+Changes made:
+
+- Added Elizabeth's boundary update fixes and various bug fixes
+to get rid of values at land points.
+- Move ice_prescribed_mod to the ccsm driver subdirectories
+- Deleted COUP_CAM code and added SEQ_MCT ifdef in ice_constants
+
+===============================================================
+===============================================================
 cice4_0_6
 Originator: dbailey (David Bailey)
 Date: Wed Feb 28 09:46:02 MST 2007

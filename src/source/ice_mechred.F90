@@ -28,7 +28,7 @@
 !  80, 4501-4513. 
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_mechred.F90 41 2006-12-04 23:42:57Z eclare $
+!  SVN:$Id: ice_mechred.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! authors: William H. Lipscomb, LANL
 !          Elizabeth C. Hunke, LANL
@@ -73,8 +73,11 @@
          Cf = 17._dbl_kind   , & ! ratio of ridging work to PE change in ridging 
          Cs = p25            , & ! fraction of shear energy contrbtng to ridging 
          Cp = p5*gravit*(rhow-rhoi)*rhoi/rhow, & ! proport const for PE 
-!CICEmod fsnowrdg = p5       , & ! snow fraction that survives in ridging 
+#ifdef CCSM
          fsnowrdg = c0       , & ! snow fraction that survives in ridging 
+#else
+         fsnowrdg = p5       , & ! snow fraction that survives in ridging 
+#endif
          Gstar  = p15        , & ! max value of G(h) that participates 
                                  ! (krdg_partic = 0) 
          astar  = p05        , & ! e-folding scale for G(h) participation 

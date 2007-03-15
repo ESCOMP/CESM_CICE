@@ -34,7 +34,6 @@
 !
 ! Numerous others have contributed to this effort--thanks to all! 
 !=======================================================================
-#ifndef COUP_CAM
 #ifndef popcice
 !
 !BOP
@@ -48,7 +47,7 @@
 !  but not if CICE subroutines are called from another program (e.g., CAM).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: CICE.F90 56 2007-03-15 14:42:35Z dbailey $
 !
 ! authors Elizabeth C. Hunke and William H. Lipscomb, LANL
 !
@@ -196,7 +195,6 @@
 
       end program icemodel
 
-#endif
 #endif
 !=======================================================================
 !BOP

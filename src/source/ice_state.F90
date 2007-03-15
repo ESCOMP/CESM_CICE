@@ -88,15 +88,6 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-#ifdef CCSM
-      real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ncat,max_blocks) :: &
-         alvdrn      , & ! visible direct albedo           (fraction)
-         alidrn      , & ! near-ir direct albedo           (fraction)
-         alvdfn      , & ! visible diffuse albedo          (fraction)
-         alidfn          ! near-ir diffuse albedo          (fraction)
-#endif
-
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ntrcr,ncat,max_blocks) :: &
          trcrn     ! tracers

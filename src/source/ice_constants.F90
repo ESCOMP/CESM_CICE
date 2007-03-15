@@ -11,7 +11,7 @@
 ! Code originally based on constants.F in POP
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_constants.F90 54 2007-02-26 21:19:41Z eclare $
+!  SVN:$Id: ice_constants.F90 56 2007-03-15 14:42:35Z dbailey $
 !
 ! author Elizabeth C. Hunke, LANL
 !
@@ -21,7 +21,7 @@
 !
 ! !USES:
 !
-#if (defined CCSM) || (defined COUP_CAM)
+#if (defined CCSM) || (defined SEQ_MCT)
       use shr_const_mod
 #endif
       use ice_kinds_mod
@@ -35,7 +35,7 @@
       ! physical constants
       !-----------------------------------------------------------------
 
-#if (defined CCSM) || (defined COUP_CAM)
+#if (defined CCSM) || (defined SEQ_MCT)
       real (kind=dbl_kind), parameter :: &
          pi        = SHR_CONST_PI    ,&! pi
          gravit    = SHR_CONST_G     ,&! gravitational acceleration (m/s^2)
@@ -150,9 +150,10 @@
          qqqocn  = 627572.4_dbl_kind    ,&! for qsat over ocn
          TTTocn  = 5107.4_dbl_kind        ! for qsat over ocn
 
+      ! these are currently set so as to have no effect on the decomposition
       real (kind=dbl_kind), parameter :: &
-         shlat  = -30.0_dbl_kind   ,&! artificial masking edge (deg)
-         nhlat  =  30.0_dbl_kind     ! artificial masking edge (deg)
+         shlat  =  30.0_dbl_kind   ,&! artificial masking edge (deg)
+         nhlat  = -30.0_dbl_kind     ! artificial masking edge (deg)
    
       !-----------------------------------------------------------------
       ! numbers

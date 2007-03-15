@@ -702,6 +702,7 @@
             enddo
             enddo
 
+            if (icells > 0) &
             call linear_itd (nx_block, ny_block,       &
                              icells, indxi, indxj,     &
                              nghost,   trcr_depend,    &
@@ -717,16 +718,17 @@
                              aice0     (:,:,  iblk),   &
                              l_stop,                   &
                              istop,    jstop)
-         if (l_stop) then
-            write (nu_diag,*) 'istep1, my_task, iblk =', &
-                               istep1, my_task, iblk
-            write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0) &
-                 write(nu_diag,*) 'Global i and j:', &
-                                  this_block%i_glob(istop), &
-                                  this_block%j_glob(jstop) 
-            call abort_ice ('ice: Linear ITD error')
-         endif
+
+            if (l_stop) then
+               write (nu_diag,*) 'istep1, my_task, iblk =', &
+                                  istep1, my_task, iblk
+               write (nu_diag,*) 'Global block:', this_block%block_id
+               if (istop > 0 .and. jstop > 0) &
+                    write(nu_diag,*) 'Global i and j:', &
+                                     this_block%i_glob(istop), &
+                                     this_block%j_glob(jstop) 
+               call abort_ice ('ice: Linear ITD error')
+            endif
 
          endif
 

@@ -228,6 +228,7 @@
       call to_ugrid(tmass,umass)
       call to_ugrid(aice, aiu)
 
+#ifdef CCSM
       call update_ghost_cells (stressp_1,               bndy_info, &
                                field_loc_NEcorner, field_type_vector)
       call update_ghost_cells (stressm_1,               bndy_info, &
@@ -252,6 +253,7 @@
                                field_loc_NEcorner, field_type_vector)
       call update_ghost_cells (stress12_4,              bndy_info, &
                                field_loc_NEcorner, field_type_vector)
+#endif
 
       do iblk = 1, nblocks
 

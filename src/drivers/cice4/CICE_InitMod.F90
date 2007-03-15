@@ -10,7 +10,7 @@
 !  parameters and initializes the grid and CICE state variables.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_InitMod.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: CICE_InitMod.F90 56 2007-03-15 14:42:35Z dbailey $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          William H. Lipscomb, LANL
@@ -29,7 +29,6 @@
 #endif
       use ice_calendar
       use ice_communicate
-      use ice_coupling
       use ice_diagnostics
       use ice_domain
       use ice_dyn_evp
@@ -53,13 +52,6 @@
       use ice_transport_driver
       use ice_transport_remap
       use ice_work
-
-#ifdef CCSM
-      use shr_msg_mod           ! for CCSM coupled runs only
-#endif
-#if (defined CCSM) || (defined COUP_CAM)
-      use ice_prescribed_mod
-#endif
 #ifdef popcice
       use drv_forcing, only: sst_sss
 #endif
@@ -156,16 +148,6 @@
       errorCode = ESMF_SUCCESS
 #endif
 
-#ifdef CCSM
-   !--------------------------------------------------------------------
-   ! CCSM-specific stuff to redirect stdin,stdout
-   !--------------------------------------------------------------------
-
-      call shr_msg_chdir('ice')! change cwd
-
-#endif
-
-
    !--------------------------------------------------------------------
    ! model initialization
    !--------------------------------------------------------------------
@@ -176,11 +158,7 @@
    ! coupler communication or forcing data initialization
    !--------------------------------------------------------------------
 
-#ifdef CCSM
-      call init_cpl             ! initialize message passing (CCSM only)
-#else
       call init_forcing_atmo    ! initialize atmospheric forcing (standalone)
-#endif
 
 #ifdef USE_ESMF
    !--------------------------------------------------------------------
@@ -223,9 +201,6 @@
 !EOP
 !
       call init_communicate     ! initial setup for message passing
-#ifdef CCSM
-      if (my_task == master_task) call shr_msg_dirio('ice')    ! redirect stdin/stdout
-#endif
       call input_data           ! namelist variables
       call init_work            ! work arrays
 
@@ -252,15 +227,8 @@
       call init_itd             ! initialize ice thickness distribution
       call calendar(time)       ! determine the initial date
 
-#ifndef CCSM
       call init_forcing_ocn(dt) ! initialize sss and sst from data
-#endif
       call init_state           ! initialize the ice state
-#ifdef CCSM
-      if(prescribed_ice) then  ! initialize prescribed ice
-         call ice_prescribed_init
-      endif
-#endif
       if (restart) call restartfile      ! start from restart file
       call init_diags           ! initialize diagnostic output points
       call init_history_therm   ! initialize thermo history variables

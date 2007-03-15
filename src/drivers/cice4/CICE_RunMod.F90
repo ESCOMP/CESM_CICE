@@ -9,7 +9,7 @@
 !  Contains main driver routine for time stepping of CICE.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_RunMod.F90 54 2007-02-26 21:19:41Z eclare $
+!  SVN:$Id: CICE_RunMod.F90 56 2007-03-15 14:42:35Z dbailey $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          Philip W. Jones, LANL
@@ -32,7 +32,6 @@
       use ice_atmo
       use ice_calendar
       use ice_communicate
-      use ice_coupling
       use ice_diagnostics
       use ice_domain
       use ice_dyn_evp
@@ -57,9 +56,6 @@
       use ice_transport_driver
       use ice_transport_remap
       use ice_work
-#ifdef CCSM
-      use ice_prescribed_mod
-#endif
 #ifdef popcice
       use ice_to_drv, only: to_drv
 #endif
@@ -213,14 +209,9 @@
          istep1 = istep1 + 1
          time = time + dt       ! determine the time and date
          call calendar(time)    ! at the end of the timestep
-
-#ifdef CCSM
-         call from_coupler      ! get updated info from CCSM coupler
-#else
 #ifndef coupled
          call get_forcing_atmo     ! atmospheric forcing from data
          call get_forcing_ocn(dt)  ! ocean forcing from data
-#endif
 #endif
 
          if (stop_now >= 1) exit timeLoop
@@ -279,23 +270,12 @@
 
          call init_mass_diags   ! diagnostics per timestep
 
-#ifdef CCSM
-         if(prescribed_ice) then  ! read prescribed ice
-            call ice_prescribed_run(idate, sec)
-         endif
-
-#endif
       !-----------------------------------------------------------------
       ! thermodynamics
       !-----------------------------------------------------------------
 
          call step_therm1 (dt)  ! pre-coupler thermodynamics
 
-#ifdef CCSM
-         call to_coupler        ! collect/send data to CCSM coupler
-
-         if (.not.prescribed_ice) then
-#endif
 #ifdef popcice
          call to_drv
 #endif
@@ -309,11 +289,6 @@
          do k = 1, ndyn_dt
             call step_dynamics (dyn_dt)
          enddo
-
-#ifdef CCSM
-         endif ! not prescribed_ice
-#endif
-
 
       !-----------------------------------------------------------------
       ! write data

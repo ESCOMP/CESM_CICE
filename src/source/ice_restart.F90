@@ -9,7 +9,7 @@
 ! Read and write ice model restart files
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_restart.F90 41 2006-12-04 23:42:57Z eclare $
+!  SVN:$Id: ice_restart.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! authors Elizabeth C. Hunke, LANL
 !         William H. Lipscomb LANL
@@ -97,7 +97,7 @@
           i, j, k, n, it, iblk, & ! counting indices
           iyear, imonth, iday     ! year, month, day
 
-      character (len=char_len_long) :: filename
+      character(len=80) :: filename
 
       logical (kind=log_kind) :: diag
 
@@ -114,7 +114,7 @@
       ! write pointer (path/file)
       if (my_task == master_task) then
         open(nu_rst_pointer,file=pointer_file)
-        write(nu_rst_pointer,'(a)') filename
+        write(nu_rst_pointer,'(a80)') filename
         close(nu_rst_pointer)
       endif
 
@@ -250,7 +250,7 @@
       integer (kind=int_kind) :: &
          i, j, k, n, it, iblk ! counting indices
 
-      character (len=char_len_long) :: &
+      character(len=80) :: &
          filename, filename0
 
       logical (kind=log_kind) :: &

@@ -11,7 +11,7 @@
 !  finalize and run methods for CICE.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_ComponentMod.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: CICE_ComponentMod.F90 56 2007-03-15 14:42:35Z dbailey $
 !
 ! authors:  Philip W. Jones, LANL
 !

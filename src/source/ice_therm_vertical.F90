@@ -14,7 +14,7 @@
 !       needed for coupling.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_therm_vertical.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: ice_therm_vertical.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! authors: William H. Lipscomb, LANL
 !          C. M. Bitz, UW
@@ -55,8 +55,11 @@
       real (kind=dbl_kind), parameter, private :: &
          ferrmax = 1.0e-3_dbl_kind, & ! max allowed energy flux error (W m-2)
                                       ! recommend ferrmax < 0.01 W m-2
-!CICEmod hsnomin = 1.0e-6_dbl_kind    ! min thickness for which Tsno computed (m)
+#ifdef CCSM
          hsnomin = 1.0e-3_dbl_kind    ! min thickness for which Tsno computed (m)
+#else
+         hsnomin = 1.0e-6_dbl_kind    ! min thickness for which Tsno computed (m)
+#endif
 
       character (char_len) :: stoplabel
 
