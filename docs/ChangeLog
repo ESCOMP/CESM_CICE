@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_9
+Originator: dbailey (David Bailey)
+Date: Fri Mar 16 09:21:14 MDT 2007
+Model: CICE
+Version: 4.0.9
+One-line Summary: Bug fixes
+CCSM Version compatible with: 
+Changes made:
+
+A couple of CCSM specific things that got clobbered when synching
+with the LANL repo.
+===============================================================
+===============================================================
 cice4_0_7
 Originator: dbailey (David Bailey)
 Date: Thu Mar 15 10:09:31 MDT 2007
