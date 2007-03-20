@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_10
+Originator: dbailey (David Bailey)
+Date: Tue Mar 20 11:21:11 MDT 2007
+Model: CICE
+Version: 4.0.10
+One-line Summary: Meltponds and new DE radiation.
+CCSM Version compatible with: 
+Changes made:
+
+- Explicit meltpond code included
+- New Delta-Eddington radiation with stability fixes in thermo
+- initialized some arrays
+===============================================================
+===============================================================
 cice4_0_9
 Originator: dbailey (David Bailey)
 Date: Fri Mar 16 09:21:14 MDT 2007
