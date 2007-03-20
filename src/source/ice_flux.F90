@@ -180,6 +180,7 @@
          frazil, & ! frazil ice growth        (m/step-->cm/day)
          snoice, & ! snow-ice formation       (m/step-->cm/day)
          meltt , & ! top ice melt             (m/step-->cm/day)
+         melts , & ! snow melt                (m/step-->cm/day)
          meltb , & ! basal ice melt           (m/step-->cm/day)
          meltl , & ! lateral ice melt         (m/step-->cm/day)
          daidtt, & ! ice area tendency thermo.   (s^-1)
@@ -445,6 +446,7 @@
       frazil (:,:,:) = c0
       snoice (:,:,:) = c0
       meltt  (:,:,:) = c0
+      melts  (:,:,:) = c0
       meltb  (:,:,:) = c0
       meltl  (:,:,:) = c0
       daidtt (:,:,:) = aice(:,:,:) ! temporary initial area

@@ -9,7 +9,7 @@
 !  Contains main driver routine for time stepping of CICE.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_RunMod.F90 56 2007-03-15 14:42:35Z dbailey $
+!  SVN:$Id: CICE_RunMod.F90 52 2007-01-30 18:04:24Z eclare $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          Philip W. Jones, LANL
@@ -18,6 +18,7 @@
 ! 2006 ECH: moved exit timeLoop to prevent execution of unnecessary timestep
 ! 2006 ECH: Streamlined for efficiency 
 ! 2006 ECH: Converted to free source form (F90)
+! 2007 BPB: Modified Delta-Eddington shortwave interface
 !
 ! !INTERFACE:
 !
@@ -46,6 +47,7 @@
       use ice_itd
       use ice_kinds_mod
       use ice_mechred
+      use ice_meltpond
       use ice_ocean
       use ice_orbital
       use ice_shortwave
@@ -209,6 +211,7 @@
          istep1 = istep1 + 1
          time = time + dt       ! determine the time and date
          call calendar(time)    ! at the end of the timestep
+
 #ifndef coupled
          call get_forcing_atmo     ! atmospheric forcing from data
          call get_forcing_ocn(dt)  ! ocean forcing from data
@@ -334,7 +337,7 @@
 !EOP
 !
       integer (kind=int_kind) :: &
-         i, j        , & ! horizontal indices
+         i, j, ij    , & ! horizontal indices
          iblk        , & ! block index
          ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
          n           , & ! thickness category index
@@ -377,8 +380,32 @@
          fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
          fswintn         ! SW absorbed in ice interior, below surface (W m-2)
 
+      ! Local variables to keep track of melt for ponds
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         melts_old, &
+         meltt_old, &
+         melts_tmp, &
+         meltt_tmp
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr) :: &
          Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
+
+      ! snow variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fsn             ! snow horizontal fraction
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
+         rhosnwn     , & ! snow density (kg/m3)
+         rsnwn       , & ! snow grain radius (micro-meters)
+         Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
+
+      ! pond variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fpn         , & ! pond fraction
+         hpn             ! pond depth (m)
+
+! BPB 4 Jan 2007  daily mean coszen
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         coszen_mean     ! diurnal mean coszen
 
       type (block) :: &
          this_block      ! block information for current block
@@ -396,8 +423,6 @@
 
       if (oceanmixed_ice) &
            call ocean_mixed_layer (dt)   ! ocean surface fluxes and sst
-
-!      call ice_timer_start(timer_tmp)  ! temporary timer
 
       call init_flux_atm         ! initialize atmosphere fluxes sent to coupler
 
@@ -471,8 +496,37 @@
                                  icells,                           &
                                  indxi,            indxj,          &
                                  tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk))
+                                 coszen(:,:,iblk), dt,             &
+                                 coszen_mean)
 
+! BPB 27 December 2006
+! correct shortwave incident fluxes from diurnal means to hourly. Do this
+! by multiplying by the normalized cosine solar zenith angle (normalized
+! by diurnal mean):
+!           do ij = 1, icells
+!             i = indxi(ij)
+!             j = indxj(ij)
+!             if( coszen_mean(i,j) .gt. .01_dbl_kind ) then
+!               swvdr(i,j,iblk) = swvdr(i,j,iblk) * &
+!                      (coszen(i,j,iblk)/coszen_mean(i,j))
+!               swvdf(i,j,iblk) = swvdf(i,j,iblk) * &
+!                      (coszen(i,j,iblk)/coszen_mean(i,j))
+!               swidr(i,j,iblk) = swidr(i,j,iblk) * &
+!                      (coszen(i,j,iblk)/coszen_mean(i,j))
+!               swidf(i,j,iblk) = swidf(i,j,iblk) * &
+!                      (coszen(i,j,iblk)/coszen_mean(i,j))
+!             else
+!               swvdr(i,j,iblk) = c0
+!               swvdf(i,j,iblk) = c0
+!               swidr(i,j,iblk) = c0
+!               swidf(i,j,iblk) = c0
+!             endif
+! BPB 4 Jan 2007  update fsw for diurnal cycle
+!             fsw  (i,j,iblk) = swvdr(i,j,iblk) + swvdf(i,j,iblk) &
+!                             + swidr(i,j,iblk) + swidf(i,j,iblk)
+!             if( fsw(i,j,iblk) < c0 ) fsw(i,j,iblk) = 0.
+
+!           enddo  ! ij
          else                     ! basic (ccsm3) shortwave
             coszen(:,:,iblk) = p5 ! sun above the horizon
          endif
@@ -498,25 +552,80 @@
             enddo               ! j
 
       !-----------------------------------------------------------------
+      ! Melt pond initialization
+      !-----------------------------------------------------------------
+
+            apondn(:,:,n,iblk) = c0
+            hpondn(:,:,n,iblk) = c0
+
+            if (kpond == 1 .and. istep == 1) then
+
+               melts_tmp = melts(:,:,iblk)
+               meltt_tmp = meltt(:,:,iblk)
+
+               call compute_ponds(nx_block, ny_block, nghost,              &
+                                  meltt_tmp,          melts_tmp,           &
+                                  aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
+                                  vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
+                                  trcrn (:,:,2,n,iblk),                    &
+                                  apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
+
+            endif
+
+      !-----------------------------------------------------------------
       ! Solar radiation: albedo and absorbed shortwave
       !-----------------------------------------------------------------
 
             if (trim(shortwave) == 'dEdd') then   ! delta Eddington
 
+      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
+      ! BPB 19 Dec 2006
+
+               ! set snow properties
+               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                                 icells,                                  &
+                                 indxi,               indxj,              &
+                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                                 trcrn(:,:,1,n,iblk), fsn,                &
+                                 rhosnwn,             rsnwn)
+
+               if (kpond == 0) then
+
+               ! set pond properties
+               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
+                                 icells,                                   &
+                                 indxi,               indxj,               &
+                                 aicen(:,:,n,iblk),   trcrn(:,:,1,n,iblk), &
+                                 fsn,                 fpn,                 &
+                                 hpn)
+
+               else
+                  
+
+               fpn(:,:) = apondn(:,:,n,iblk)
+               hpn(:,:) = hpondn(:,:,n,iblk)
+
+               endif
+
                call shortwave_dEdd(nx_block,        ny_block,            &
                                  icells,                                 &
                                  indxi,             indxj,               &
-                                 tlat (:,:,  iblk), coszen(:,:, iblk),   &
+                                 coszen(:,:, iblk),                      &
                                  aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk), &
+                                 vsnon(:,:,n,iblk), fsn,                 &
+                                 rhosnwn,           rsnwn,               &
+                                 fpn,               hpn,                 &
                                  swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                                  alvdrn,            alidrn,              &
                                  alvdfn,            alidfn,              &
                                  fswsfcn,           fswintn,             &
-                                 fswthrun,          Iswabsn)
+                                 fswthrun,          Sswabsn,             &
+                                 Iswabsn)
 
             else
+               Sswabsn(:,:,:) = c0
+
                call shortwave_ccsm3(nx_block,       ny_block,            &
                                  icells,                                 &
                                  indxi,             indxj,               &
@@ -527,7 +636,8 @@
                                  alvdrn,            alidrn,              &
                                  alvdfn,            alidfn,              &
                                  fswsfcn,           fswintn,             &
-                                 fswthrun,          Iswabsn)
+                                 fswthrun,          Iswabsn,             &
+                                 apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
             endif
 
       !-----------------------------------------------------------------
@@ -569,6 +679,9 @@
             sl1 = slyr1(n)
             sl2 = slyrn(n)
 
+            melts_old = melts(:,:,iblk)
+            meltt_old = meltt(:,:,iblk)
+
             call thermo_vertical                                       &
                             (nx_block,            ny_block,            &
                              dt,                  icells,              &
@@ -583,12 +696,14 @@
                              fbot,                Tbot,                &
                              lhcoef,              shcoef,              &
                              fswsfcn,             fswintn,             &
-                             fswthrun,            Iswabsn,             &
+                             fswthrun,                                 &
+                             Sswabsn,             Iswabsn,             &
                              fsensn,              flatn,               &
                              fswabsn,             flwoutn,             &
                              evapn,               freshn,              &
                              fsaltn,              fhocnn,              &
-                             meltt   (:,:,iblk),  meltb   (:,:,iblk),  &
+                             meltt   (:,:,iblk),  melts(:,:,iblk),     &
+                             meltb   (:,:,iblk),                       &
                              congel  (:,:,iblk),  snoice  (:,:,iblk),  &
                              mlt_onset(:,:,iblk), frz_onset(:,:,iblk), &
                              yday,                l_stop,              &
@@ -602,7 +717,28 @@
                  write(nu_diag,*) 'Global i and j:', &
                                   this_block%i_glob(istop), &
                                   this_block%j_glob(jstop) 
+                 write(nu_diag,*) 'Lat, Lon:', &
+                                 TLAT(istop,jstop,iblk)*rad_to_deg, &
+                                 TLON(istop,jstop,iblk)*rad_to_deg
             call abort_ice ('ice: Vertical thermo error')
+         endif
+
+      !-----------------------------------------------------------------
+      ! Melt ponds
+      !-----------------------------------------------------------------
+
+         if (kpond == 1) then
+
+            melts_tmp = melts(:,:,iblk) - melts_old
+            meltt_tmp = meltt(:,:,iblk) - meltt_old
+
+            call compute_ponds(nx_block, ny_block, nghost,              &
+                               meltt_tmp,          melts_tmp,           &
+                               aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
+                               vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
+                               trcrn (:,:,2,n,iblk),                    &
+                               apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
+
          endif
 
       !-----------------------------------------------------------------
@@ -652,8 +788,6 @@
             enddo
             enddo
          endif
-
-!      call ice_timer_stop(timer_tmp)  ! temporary timer
 
       !-----------------------------------------------------------------
       ! Divide fluxes by ice area for the coupler, which assumes fluxes
@@ -738,7 +872,6 @@
 
       call ice_timer_start(timer_column)  ! column physics
       call ice_timer_start(timer_thermo)  ! thermodynamics
-!      call ice_timer_start(timer_tmp)  ! temporary timer
 
       call init_flux_ocn        ! initialize ocean fluxes sent to coupler
       
@@ -811,17 +944,18 @@
                              aice0     (:,:,  iblk),   &
                              l_stop,                   &
                              istop,    jstop)
-         endif
 
-         if (l_stop) then
-            write (nu_diag,*) 'istep1, my_task, iblk =', &
-                               istep1, my_task, iblk
-            write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0) &
-                 write(nu_diag,*) 'Global i and j:', &
-                                  this_block%i_glob(istop), &
-                                  this_block%j_glob(jstop) 
-            call abort_ice ('ice: Linear ITD error')
+            if (l_stop) then
+               write (nu_diag,*) 'istep1, my_task, iblk =', &
+                                  istep1, my_task, iblk
+               write (nu_diag,*) 'Global block:', this_block%block_id
+               if (istop > 0 .and. jstop > 0) &
+                    write(nu_diag,*) 'Global i and j:', &
+                                     this_block%i_glob(istop), &
+                                     this_block%j_glob(jstop) 
+               call abort_ice ('ice: Linear ITD error')
+            endif
+
          endif
 
          call ice_timer_stop(timer_catconv)    ! category conversions
@@ -962,9 +1096,8 @@
 
       enddo                     ! iblk
 
-!      call ice_timer_stop(timer_tmp)  ! temporary timer
-      call ice_timer_stop(timer_thermo) ! thermodynamics
       call ice_timer_stop(timer_column)  ! column physics
+      call ice_timer_stop(timer_thermo) ! thermodynamics
 
       end subroutine step_therm2
 
