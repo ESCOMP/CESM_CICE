@@ -231,7 +231,8 @@
                                alvdrns,           alidrns,  &
                                alvdfns,           alidfns,  &
                                alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
-                               alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk))
+                               alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
+                               apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
 
          ! Aggregate albedos for coupler
 
