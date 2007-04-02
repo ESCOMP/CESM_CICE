@@ -177,7 +177,7 @@
       kstrength = 1          ! 1 = Rothrock 75 strength, 0 = Hibler 79
       krdg_partic = 1        ! 1 = new participation, 0 = Thorndike et al 75
       krdg_redist = 1        ! 1 = new redistribution, 0 = Hibler 80
-      kpond       = 1        ! 1 = explicit melt ponds
+      kpond       = 0        ! 1 = explicit melt ponds
       advection  = 'remap'   ! incremental remapping transport scheme
       shortwave = 'default'  ! or 'dEdd' (delta-Eddington)
       albedo_type = 'default'! or 'constant'
