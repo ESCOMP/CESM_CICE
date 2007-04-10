@@ -1158,10 +1158,12 @@
             if (ULAT(i,j,iblk) <  -puny) lmask_s(i,j,iblk) = .true. ! S. Hem.
 
             ! N hemisphere area mask (m^2)
-            if (lmask_n(i,j,iblk)) tarean(i,j,iblk) = tarea(i,j,iblk)
+            if (lmask_n(i,j,iblk)) tarean(i,j,iblk) = tarea(i,j,iblk) &
+                                                    * hm(i,j,iblk)
 
             ! S hemisphere area mask (m^2)
-            if (lmask_s(i,j,iblk)) tareas(i,j,iblk) = tarea(i,j,iblk)
+            if (lmask_s(i,j,iblk)) tareas(i,j,iblk) = tarea(i,j,iblk) &
+                                                    * hm(i,j,iblk)
 
          enddo
          enddo
