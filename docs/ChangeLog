@@ -1,4 +1,94 @@
 ===============================================================
+cice4_0_20070411
+Originator: mvertens (Mariana Vertenstein)
+Date: Wed Apr 11 11:03:40 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Sequential CCSM changes
+CCSM Version compatible with: 
+Changes made:
+
+Put in changes for running cice4 through sequential ccsm. Tested this
+with only lat/lon grid capabilties.
+
+The following files were modified
+M      source/ice_init.F90
+M      source/ice_state.F90
+M      source/ice_restart.F90
+M      source/ice_grid.F90
+M      mpi/ice_communicate.F90
+M      drivers/ccsm_sequential/ice_comp_mct.F90
+M      drivers/ccsm_sequential/ice_prescribed_mod.F90
+M      drivers/ccsm_concurrent/ice_prescribed_mod.F90
+
+The following files were added
+A      drivers/ccsm_sequential/ice_communicate.F90
+A      drivers/ccsm_sequential/CICE_InitMod.F90
+A      drivers/ccsm_sequential/CICE_RunMod.F90
+A      drivers/ccsm_sequential/CICE_FinalMod.F90
+
+Summary of changes:
+- ice grid, area and land mask are now obtained in latlongrid from a
+netcdf kmt file (single column capability has not yet been upgraded)
+- ice_grid.F90 now returns after the call to latlongrid or columngrid
+since arrays since the following all arrays needed are now set in
+  latlongrid (many to 1.e36)
+- at this point, the columngrid capability will not work - this will be
+fixed in an upcoming tag
+- logic has been incorporated into ice_init.F90 to not have runtype or
+runid in the ice namelist since in SEQ_MCT mode, the
+  runid and runtype flags are obtained from the sequential driver and
+not form the cice namelist
+- bug fix for allocation on non-master processors was fixed in both
+sequential and concurrent ice_prescribed.F90
+- ice_communicate.F90 had to be added to ccsm_sequential in order to
+provide capability of running in serial mode (SPMD if-def is introduced
+  temporarily until mpi-serial can add features to support
+MPI_GROUP_CREATE and MPI_COMM_CREATE).
+
+===============================================================
+===============================================================
+cice4_0_20070410
+Originator: dbailey (David Bailey)
+Date: Tue Apr 10, 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Diagnostic bug fix.
+CCSM Version compatible with: 
+Changes made:
+
+   A /cice/trunk/src/drivers/cice4/ice_forcing.F90 (from /cice/trunk/src/source/ice_forcing.F90:3777)
+   D /cice/trunk/src/source/ice_forcing.F90
+   M /cice/trunk/src/source/ice_grid.F90
+
+===============================================================
+===============================================================
+cice4_0_12
+Originator: dbailey (David Bailey)
+Date: Mon Apr 2, 2007
+Model: CICE
+Version: 4.0.12
+One-line Summary: Pond related bugs.
+CCSM Version compatible with: 
+Changes made:
+
+M /cice/trunk/src/source/ice_init.F90
+M /cice/trunk/src/drivers/ccsm_concurrent/CICE_InitMod.F90
+
+===============================================================
+===============================================================
+cice4_0_11
+Originator: dbailey (David Bailey)
+Date: Tue Mar 20, 2007
+Model: CICE
+Version: 4.0.11
+One-line Summary: Fix ChangeLog
+CCSM Version compatible with: 
+Changes made:
+
+ChangeLog
+===============================================================
+===============================================================
 cice4_0_10
 Originator: dbailey (David Bailey)
 Date: Tue Mar 20 11:21:11 MDT 2007
