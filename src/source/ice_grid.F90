@@ -34,6 +34,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_timers
+      use ice_exit
 !
 !EOP
 !
@@ -273,8 +274,10 @@
          call panarctic_grid    ! pan-Arctic grid
       elseif (trim(grid_type) == 'latlon') then
          call latlongrid        ! lat lon grid for standalone CAM
+         return
       elseif (trim(grid_type) == 'column') then
          call columngrid        ! column model grid
+         return
       else
          call rectgrid          ! regular rectangular grid
       endif
@@ -452,6 +455,7 @@
       call ice_timer_stop(timer_bound)
 
       call makemask          ! velocity mask, hemisphere masks
+
       call Tlatlon           ! get lat, lon on the T grid
 
       !-----------------------------------------------------------------
@@ -692,139 +696,115 @@
 !     use ice_boundary
       use ice_domain_size
       use ice_gather_scatter
-      use ice_work, only: work1
 !
 ! !ARGUMENTS
+      include "netcdf.inc"
 
 ! !INPUT/OUTPUT PARAMETERS:
 !
 !EOP
 !
-      logical (kind=log_kind) :: diag  !print diagnostic info
-
       integer (kind=int_kind) :: &
-         i, j, iblk     , &
-         ilo,ihi,jlo,jhi, & ! beginning and end of physical domain        
-         irow           , & ! latitude pair counter ny_global/2 
-         lat                ! latitude counter             
+         i, j, iblk    
       
-      type (block) :: &
-         this_block       ! block information for current block
+      integer (kind=int_kind) :: &
+         ni, nj, ncid, dimid, varid, ier
 
       real (kind=dbl_kind), dimension (nx_global, ny_global):: &
-         clon   , & ! longitude (radians)
-         HTE_in , & ! length of E edge of grid cell in latxlon space
-         HTN_in , & ! length of N edge of grid cell in latxlon space
-         latin      ! latitude (radians) in global grid to scatter to TLAT
+         glob_in    ! global array
 
-      real (kind=dbl_kind), dimension (ny_global):: &
-         zsi    , & ! sin of latitudes
-         clat   , & ! latitude (radians)
-         rearth     ! radius of the earth along a line of latitude
+      character (len=char_len) :: &
+         subname='latlongrid' ! subroutine name
 
-      real (kind=dbl_kind):: &
-         xlat   , & ! latitude (radians)
-         slat   , & ! sin of latitudes
-         dx     , & ! cell width: E-W
-         dy         ! cell width: N-S
+      type (block) :: &
+         this_block           ! block information for current block
+      integer (kind=int_kind) :: &
+         ilo,ihi,jlo,jhi      ! beginning and end of physical domain
 
       !-----------------------------------------------------------------
-      ! First need to calculate latitude and longitude values in
-      ! radians from nx_global and ny_global.  Code is based on
-      ! initcom.F90 in CAM's dynamics/eul directory.  This *may* pose
-      ! problems if CICE is coupled to CAM and the user wants to use the
-      ! fv dynamical core.  BUT, eul is the default so we will do our
-      ! best to match that.
+      ! - kmt file is actually clm fractional land file
+      ! - Determine consistency of dimensions
+      ! - Read in lon/lat centers in degrees from kmt file
+      ! - Read in landfrac from "kmt" file which is actually just 0's and
+      !   1's and matches the CAM landmask.  NOTE: CAM's landmask includes
+      !   partial values (0-1).  In the translation to CICE *all* cells with
+      !   *any* ocean are set to 1 (ocean). 
       !-----------------------------------------------------------------
 
-      !
-      ! Latitude array
-      !
-      call sinlat(zsi ,ny_global)
-      do irow=1,ny_global/2
-         slat = zsi(irow)
-         xlat = asin(slat)
-         clat(irow) = -xlat
-         clat(ny_global - irow + 1) = xlat
-      end do
+      if (my_task == master_task) then
+         call check_ret( nf_open(kmt_file, 0, ncid), subname )
 
-      !
-      ! Longitude array
-      !
-      do lat=1,ny_global
-         do i=1,nx_global
-            clon(i,lat)   = (i-1)*2.0_r8*pi/nx_global
-         end do
-      end do
+         call check_ret(nf_inq_dimid (ncid, 'lon', dimid), subname)
+         call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
+         call check_ret(nf_inq_dimid (ncid, 'lat', dimid), subname)
+         call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+         if (ni /= nx_global .and. nj /= ny_global) then
+            call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+         end if
+      end if
 
-      !----------------------------------------------------------------
-      ! Now calculate the lengths of cell edges (HTE and HTN) based on
-      ! values (in radians) for latitude and longitude
-      !----------------------------------------------------------------
-
-      do j = 1, ny_global
-         rearth(j) = 6378140. * cos(clat(j))
-      end do
-
-      do j = 1, ny_global
+      if (my_task == master_task) then
+         call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         do j = 1, ny_global
          do i = 1, nx_global
-            if (i == nx_global) then
-            dx = clon(i,j) - clon(i-1,j)
-            else
-            dx = clon(i+1,j) - clon(i,j)
-            end if
-            if (j == ny_global) then
-            dy = sin(clat(j)) - sin(clat(j-1))  !s->n latitudes
-            else
-            dy = sin(clat(j+1)) - sin(clat(j))  !s->n latitudes
-            end if
-            HTN_in(i,j) = dx*rearth(j)
-            HTE_in(i,j) = dy*rearth(j)
+            ! Convert from degrees to radians
+            glob_in(i,j) = pi*glob_in(i,j)/180._dbl_kind 
          end do
-      end do
-
-      !----------------------------------------------------------------
-      ! Scatter HTE_in and HTN_in to blocks
-      !----------------------------------------------------------------
-
-      call scatter_global(HTE, HTE_in, master_task, distrb_info, &
-                          field_loc_Eface, field_type_scalar)
-
-      call scatter_global(HTN, HTN_in, master_task, distrb_info, &
-                          field_loc_Nface, field_type_scalar)
-
-      !-----------------------------------------------------------------
-      ! Translate clat and clon into TLAT and TLON
-      !-----------------------------------------------------------------
-
-      ! First fill latin so that there is a 2-D array of latitudes
-      do lat=1,ny_global
-         do i=1,nx_global
-            latin(i,lat)   = clat(lat)
-         end do
-      end do
-
-      call scatter_global(TLON, clon, master_task, distrb_info, &
+         end do 
+      end if
+      call scatter_global(TLON, glob_in, master_task, distrb_info, &
                           field_loc_center, field_type_scalar)
 
-      call scatter_global(TLAT, latin, master_task, distrb_info, &
+      if (my_task == master_task) then
+         call check_ret(nf_inq_varid(ncid, 'LATIXY' , varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         do j = 1, ny_global
+         do i = 1, nx_global
+            ! Convert from degrees to radians
+            glob_in(i,j) = pi*glob_in(i,j)/180._dbl_kind 
+         end do
+         end do 
+      end if
+      call scatter_global(TLAT, glob_in, master_task, distrb_info, &
                           field_loc_center, field_type_scalar)
+
+      if (my_task == master_task) then
+         call check_ret(nf_inq_varid(ncid, 'AREA' , varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         do j = 1, ny_global
+         do i = 1, nx_global
+            ! Convert from km^2 to m^2
+            glob_in(i,j) = glob_in(i,j) * 1.e6_dbl_kind
+         end do
+         end do 
+      end if
+      call scatter_global(tarea, glob_in, master_task, distrb_info, &
+                          field_loc_center, field_type_scalar)
+
+      if (my_task == master_task) then
+         call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         do j = 1, ny_global
+         do i = 1, nx_global
+            ! Determine ice mask
+            if (glob_in(i,j) < 1.) then
+               glob_in(i,j) = c1
+            else
+               glob_in(i,j) = c0
+            end if
+         end do
+         end do
+      end if
+      call scatter_global(hm, glob_in, master_task, distrb_info, &
+                          field_loc_center, field_type_scalar)
+
+      if (my_task == master_task) then
+         call check_ret(nf_close(ncid), subname)
+      end if
 
       !-----------------------------------------------------------------
       ! Calculate various geometric 2d arrays
-      !-----------------------------------------------------------------
-
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-            ULAT (i,j,iblk) = c0              ! remember to set Coriolis !
-            ULON (i,j,iblk) = c0
-            ANGLE(i,j,iblk) = c0              ! "square with the world"
-         enddo
-         enddo
-      enddo
-
-      !-----------------------------------------------------------------
       ! The U grid (velocity) is not used when run with sequential CAM
       ! because we only use thermodynamic sea ice.  However, ULAT is used
       ! in the defualt initialization of CICE so we calculate it here as 
@@ -837,36 +817,6 @@
       !-----------------------------------------------------------------
 
       do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-            ULAT (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)
-         enddo
-         enddo
-      enddo
-
-      !-----------------------------------------------------------------
-      ! Read in land mask from "kmt" file which is actually just 0's and
-      ! 1's and matches the CAM landmask.  NOTE: CAM's landmask includes
-      ! partial values (0-1).  In the translation to CICE *all* cells with
-      ! *any* ocean are set to 1 (ocean) so that CICE calculations are done
-      ! there.  The output from those values must be scaled by ocean
-      ! fraction of the cell when reported to CAM.  This is from the
-      ! land fraction in CAM which is also read in here.
-      !-----------------------------------------------------------------
-
-      call ice_open(nu_kmt,kmt_file,32)
-
-      diag = .true.       ! write diagnostic info
-
-      ! land mask
-      call ice_read(nu_kmt,1,work1,'ida4',diag)
-
-      if (my_task == master_task) then
-         close (nu_kmt)
-      endif
-
-      hm(:,:,:) = c0
-      do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
          ihi = this_block%ihi
@@ -875,13 +825,36 @@
 
          do j = jlo, jhi
          do i = ilo, ihi
-            hm(i,j,iblk) = work1(i,j,iblk)
-            if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
+
+            uarea(i,j,iblk)     = p25*  &
+                                 (tarea(i,j,  iblk) + tarea(i+1,j,  iblk) &
+                                + tarea(i,j+1,iblk) + tarea(i+1,j+1,iblk))
+            tarear(i,j,iblk)   = c1/tarea(i,j,iblk)
+            uarear(i,j,iblk)   = c1/uarea(i,j,iblk)
+            tinyarea(i,j,iblk) = puny*tarea(i,j,iblk)
+
+            ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+            ULON  (i,j,iblk) = c0
+            ANGLE (i,j,iblk) = c0                             
+
+            ANGLET(i,j,iblk) = c0                             
+            HTN   (i,j,iblk) = 1.e36_dbl_kind
+            HTE   (i,j,iblk) = 1.e36_dbl_kind
+            dxt   (i,j,iblk) = 1.e36_dbl_kind
+            dyt   (i,j,iblk) = 1.e36_dbl_kind
+            dxu   (i,j,iblk) = 1.e36_dbl_kind
+            dyu   (i,j,iblk) = 1.e36_dbl_kind
+            dxhy  (i,j,iblk) = 1.e36_dbl_kind
+            dyhx  (i,j,iblk) = 1.e36_dbl_kind
+            cyp   (i,j,iblk) = 1.e36_dbl_kind
+            cxp   (i,j,iblk) = 1.e36_dbl_kind
+            cym   (i,j,iblk) = 1.e36_dbl_kind
+            cxm   (i,j,iblk) = 1.e36_dbl_kind
          enddo
          enddo
       enddo
 
-      if (my_task == master_task) close (nu_grid)
+      call makemask
 
       end subroutine latlongrid
 
@@ -910,7 +883,6 @@
       use ice_gather_scatter
       use ice_work, only: work_g1
       use ice_exit      
-!jsewall Need to get rid of this cross model use but...
 #ifdef SCAM
       use scamMod, only: columnLat, columnLon
 #endif
@@ -940,7 +912,6 @@
             column_lon = columnLon
             write(nu_diag,*) '(columngrid) lat = ', column_lat
             write(nu_diag,*) '(columngrid) lon = ', column_lon
-            CAMFRAC (i,j,iblk) = c0
 #endif
 
             ! used to find hemisphere and init_state, need not be exact
@@ -1702,6 +1673,37 @@
 
       end subroutine bsslzr 
 
+!=======================================================================
+!BOP
+!
+! !IROUTINE: check_ret
+!
+! !INTERFACE:
+      subroutine check_ret(ret, calling)
+!
+! !DESCRIPTION:
+!     Check return status from netcdf call
+!
+! !ARGUMENTS:
+        implicit none
+        integer, intent(in) :: ret
+        character(len=*) :: calling
+!
+        include "netcdf.inc"
+!
+! !REVISION HISTORY:
+! author: Mariana Vertenstein
+!
+!EOP
+!
+      if (ret /= NF_NOERR) then
+         write(6,*)'netcdf error from ',trim(calling)
+         write(6,*)'netcdf strerror = ',trim(NF_STRERROR(ret))
+         call abort_ice('ice ice_grid: netcdf check_ret error')
+      end if
+        
+      end subroutine check_ret
+      
 !=======================================================================
 
       end module ice_grid

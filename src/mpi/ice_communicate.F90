@@ -86,22 +86,20 @@
 !-----------------------------------------------------------------------
 
 #ifdef CCSM
+
    ! CCSM standard coupled mode
    call cpl_interface_init(cpl_fields_icename, MPI_COMM_ICE)
+
 #else
 
 #ifdef popcice
-      ! LANL directly coupled POP and CICE
-      call MPI_COMM_DUP(MPI_COMM_WORLD, MPI_COMM_ICE, ierr)
+   ! LANL directly coupled POP and CICE
+   call MPI_COMM_DUP(MPI_COMM_WORLD, MPI_COMM_ICE, ierr)
 #else
-
-#ifndef  COUP_CAM
-         call MPI_INIT(ierr)
+   call MPI_INIT(ierr)
+   call create_ice_communicator
 #endif
 
-      call create_ice_communicator
-
-#endif
 #endif
 
    master_task = 0

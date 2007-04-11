@@ -126,9 +126,11 @@
         oceanmixed_ice, sss_data_type,   sst_data_type, &
         ocn_data_dir,   oceanmixed_file, restore_sst,   trestore, &
         latpnt,         lonpnt,          dbug,          kpond,    &
-#ifdef CCSM
+#if (defined CCSM)
         runid,          runtype, &
-        incond_dir,      incond_file
+        incond_dir,     incond_file
+#elif (defined SEQ_MCT)
+        incond_dir,     incond_file
 #else
         runid,          runtype
 #endif
@@ -210,8 +212,10 @@
       latpnt(2) = -65._dbl_kind   ! latitude of diagnostic point 2 (deg)
       lonpnt(2) = -45._dbl_kind   ! longitude of point 2 (deg)
 
+#ifdef CCSM
       runid   = 'unknown'   ! run ID, only used in CCSM
       runtype = 'unknown'   ! run type, only used in CCSM
+#endif
 
       !-----------------------------------------------------------------
       ! read from input file
@@ -237,7 +241,7 @@
       endif
 
       chartmp = advection(1:6)
-      if (chartmp /= 'upwind' .and. chartmp /= 'remap ') then
+      if (chartmp /= 'upwind' .and. chartmp /= 'remap ' .and. chartmp /= 'none') then
          if (my_task == master_task) &
          write (nu_diag,*) &
          'WARNING: ',chartmp,' advection unavailable, using remap' 
@@ -249,6 +253,18 @@
       else
          nu_diag = 6
       endif
+
+#ifdef SEQ_MCT
+      !
+      ! Note in SEQ_MCT mode the runid and runtype flag are obtained from the
+      ! sequential driver - not from the cice namelist 
+      !
+      if (my_task == master_task) then
+         restart = .true.
+         if (runtype == "initial") restart = .false.
+         history_file = trim(runid)//"_iceh"
+      endif
+#endif
 
       if (histfreq == '1') hist_avg = .false. ! potential conflict
       if (days_per_year /= 365) shortwave = 'default' ! definite conflict

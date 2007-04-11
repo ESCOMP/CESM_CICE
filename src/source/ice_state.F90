@@ -94,7 +94,7 @@
          apondn , & ! concentration of ponds
          hpondn     ! pond depth         (m)
 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ncat,max_blocks) :: &
          alvdrn      , & ! visible direct albedo           (fraction)
