@@ -1,4 +1,27 @@
 ===============================================================
+cice4_0_20070412
+Originator: dbailey (David Bailey)
+Date: Thu Apr 12 11:34:16 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: SEQ_MCT changes and pond fixes.
+CCSM Version compatible with: 
+Changes made:
+
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_InitMod.F90
+   M /cice/trunk/src/source/ice_diagnostics.F90
+   M /cice/trunk/src/source/ice_domain.F90
+   M /cice/trunk/src/source/ice_history.F90
+   M /cice/trunk/src/source/ice_grid.F90
+   M /cice/trunk/src/source/ice_therm_vertical.F90
+   D /cice/trunk/src/drivers/cice4/ice_forcing.F90
+   A /cice/trunk/src/source/ice_forcing.F90 (from /cice/trunk/src/drivers/cice4/ice_forcing.F90:3897)
+
+
+===============================================================
+===============================================================
 cice4_0_20070411
 Originator: mvertens (Mariana Vertenstein)
 Date: Wed Apr 11 11:03:40 MDT 2007
