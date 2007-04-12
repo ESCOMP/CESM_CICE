@@ -734,9 +734,9 @@
       if (my_task == master_task) then
          call check_ret( nf_open(kmt_file, 0, ncid), subname )
 
-         call check_ret(nf_inq_dimid (ncid, 'lon', dimid), subname)
+         call check_ret(nf_inq_dimid (ncid, 'ni', dimid), subname)
          call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
-         call check_ret(nf_inq_dimid (ncid, 'lat', dimid), subname)
+         call check_ret(nf_inq_dimid (ncid, 'nj', dimid), subname)
          call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
          if (ni /= nx_global .and. nj /= ny_global) then
             call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
@@ -744,7 +744,7 @@
       end if
 
       if (my_task == master_task) then
-         call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
+         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
          call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
@@ -757,7 +757,7 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
-         call check_ret(nf_inq_varid(ncid, 'LATIXY' , varid), subname)
+         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
          call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
@@ -770,7 +770,7 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
-         call check_ret(nf_inq_varid(ncid, 'AREA' , varid), subname)
+         call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
          call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
@@ -783,18 +783,11 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
-         call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
+         write(25,*)'reading mask' 
+         call check_ret(nf_inq_varid(ncid, 'mask', varid), subname)
+         write(25,*)'read mask' 
+         call flush(25)  
          call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
-         do j = 1, ny_global
-         do i = 1, nx_global
-            ! Determine ice mask
-            if (glob_in(i,j) < 1.) then
-               glob_in(i,j) = c1
-            else
-               glob_in(i,j) = c0
-            end if
-         end do
-         end do
       end if
       call scatter_global(hm, glob_in, master_task, distrb_info, &
                           field_loc_center, field_type_scalar)

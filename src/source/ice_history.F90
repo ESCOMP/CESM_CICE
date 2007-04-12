@@ -154,7 +154,7 @@
            f_dvirdgdt  = .true. , &
            f_hisnap    = .true., f_aisnap     = .true., &
            f_aicen     = .true., f_vicen      = .true., &
-           f_volpn     = .true.,                        &
+           f_volpn     = .false.,                        &
            f_trsig     = .true., f_icepresent = .true.
 
       !---------------------------------------------------------------
@@ -1242,8 +1242,10 @@
                                                 + aicen(i,j,n,iblk)
                 aa(i,j,n_vicen+n-1,iblk) = aa(i,j,n_vicen+n-1,iblk)  &
                                                 + vicen(i,j,n,iblk)
-                aa(i,j,n_volpn+n-1,iblk) = aa(i,j,n_volpn+n-1,iblk)  &
+                if (f_volpn) then
+                   aa(i,j,n_volpn+n-1,iblk) = aa(i,j,n_volpn+n-1,iblk)  &
                                                 + trcrn(i,j,2,n,iblk)
+                end if
              endif              ! tmask
           enddo                 ! i
           enddo                 ! j

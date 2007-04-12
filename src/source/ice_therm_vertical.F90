@@ -55,7 +55,7 @@
       real (kind=dbl_kind), parameter, private :: &
          ferrmax = 1.0e-3_dbl_kind, & ! max allowed energy flux error (W m-2)
                                       ! recommend ferrmax < 0.01 W m-2
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
          hsnomin = 1.0e-3_dbl_kind    ! min thickness for which Tsno computed (m)
 #else
          hsnomin = 1.0e-6_dbl_kind    ! min thickness for which Tsno computed (m)
@@ -1410,13 +1410,16 @@
             i = indxi(ij)
             j = indxj(ij)
 
-            Sswabs_tmp = min(Sswabs(i,j,k), &
-                    -0.95*Tsn_init(ij,k)/etas(ij,k))
-            fswsfc(i,j) = fswsfc(i,j) &
-                        + (Sswabs(i,j,k) - Sswabs_tmp)
-            fswint(i,j) = fswint(i,j) &
-                        - (Sswabs(i,j,k) - Sswabs_tmp)
-            Sswabs(i,j,k) = Sswabs_tmp
+            if (l_snow(ij)) then 
+               Sswabs_tmp = min(Sswabs(i,j,k), &
+                           -0.95*Tsn_init(ij,k)/etas(ij,k))
+               fswsfc(i,j) = fswsfc(i,j) &
+                           + (Sswabs(i,j,k) - Sswabs_tmp)
+               fswint(i,j) = fswint(i,j) &
+                           - (Sswabs(i,j,k) - Sswabs_tmp)
+               Sswabs(i,j,k) = Sswabs_tmp
+            end if
+
          enddo
       enddo
 
