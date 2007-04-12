@@ -610,7 +610,7 @@
         vunit(n_volpn+n-1) = 'm' ! vicen
       enddo
 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       ! redefine for CCSM conventions
       vunit(n_aice      ) = '%'
       vunit(n_uvel      ) = 'cm/s'
@@ -973,7 +973,7 @@
       cona(n_dardg2dt) = secday*c100    ! dardg2dt frac/s to %/day
       cona(n_dvirdgdt) = mps_to_cmpdy   ! dvirdgdt m/s to cm/day
 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       ! CCSM conventions
       cona(n_aice  ) = c100             ! aice  fraction to %
       do n = 1, ncat_hist
@@ -1244,7 +1244,7 @@
                                                 + vicen(i,j,n,iblk)
                 if (f_volpn) then
                    aa(i,j,n_volpn+n-1,iblk) = aa(i,j,n_volpn+n-1,iblk)  &
-                                                + trcrn(i,j,2,n,iblk)
+                                            + trcrn(i,j,ntrcr,n,iblk)
                 end if
              endif              ! tmask
           enddo                 ! i
@@ -1438,7 +1438,7 @@
       character (len=16) :: c_aice
 
 ! Info for lat, lon and time invariant variables
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 10
 #else
       INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 4
@@ -1615,7 +1615,7 @@
       var(ind)%req = coord_attributes('uarea', 'area of U grid cells', &
                                 'm^2')
       var(ind)%coordinates = 'ULON ULAT'
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       ind = ind + 1
       var(ind)%req = coord_attributes('dxt', &
                      'T cell width through middle', 'm')
@@ -1799,7 +1799,7 @@
       !-----------------------------------------------------------------
       ! ... the user should change these to something useful ...
       !-----------------------------------------------------------------
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
         length = lenstr(runid)
         status = nf_put_att_text(ncid,nf_global,'title',length,runid)
         call nf_stat_check (status,'Error in global attribute title')

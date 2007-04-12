@@ -298,7 +298,7 @@
                                   meltt_tmp,          melts_tmp,           &
                                   aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
                                   vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
-                                  trcrn (:,:,2,n,iblk),                    &
+                                  trcrn (:,:,ntrcr,n,iblk),                &
                                   apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
 
             endif
@@ -468,7 +468,7 @@
                                meltt_tmp,          melts_tmp,           &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
                                vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
-                               trcrn (:,:,2,n,iblk),                    &
+                               trcrn (:,:,ntrcr,n,iblk),                &
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
 
          endif

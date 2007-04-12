@@ -305,7 +305,7 @@
                if (this_block%i_glob(i) > 0) then
 	          ig = this_block%i_glob(i)
                   jg = this_block%j_glob(j)
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
                   if (KMTG(ig,jg) > puny)                           &
 #else
                   if (KMTG(ig,jg) > puny .and.                      &
