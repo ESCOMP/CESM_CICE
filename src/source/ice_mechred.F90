@@ -73,7 +73,7 @@
          Cf = 17._dbl_kind   , & ! ratio of ridging work to PE change in ridging 
          Cs = p25            , & ! fraction of shear energy contrbtng to ridging 
          Cp = p5*gravit*(rhow-rhoi)*rhoi/rhow, & ! proport const for PE 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
          fsnowrdg = c0       , & ! snow fraction that survives in ridging 
 #else
          fsnowrdg = p5       , & ! snow fraction that survives in ridging 

@@ -228,7 +228,7 @@
       call to_ugrid(tmass,umass)
       call to_ugrid(aice, aiu)
 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       call update_ghost_cells (stressp_1,               bndy_info, &
                                field_loc_NEcorner, field_type_vector)
       call update_ghost_cells (stressm_1,               bndy_info, &

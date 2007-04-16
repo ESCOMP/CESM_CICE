@@ -2167,7 +2167,7 @@
       use ice_gather_scatter
       use ice_exit
       use ice_work, only: work_g1, work1
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
       use shr_sys_mod, only : shr_sys_flush
 #endif
       include "netcdf.inc"
@@ -2248,7 +2248,7 @@
           write (nu_diag,*) 'Ocean forcing field found = ',vname(n)
         enddo
 
-#ifdef CCSM
+#if (defined CCSM) || (defined SEQ_MCT)
         call shr_sys_flush(nu_diag)
 #endif
 
