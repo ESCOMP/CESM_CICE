@@ -55,11 +55,7 @@
       real (kind=dbl_kind), parameter, private :: &
          ferrmax = 1.0e-3_dbl_kind, & ! max allowed energy flux error (W m-2)
                                       ! recommend ferrmax < 0.01 W m-2
-#if (defined CCSM) || (defined SEQ_MCT)
-         hsnomin = 1.0e-3_dbl_kind    ! min thickness for which Tsno computed (m)
-#else
-         hsnomin = 1.0e-6_dbl_kind    ! min thickness for which Tsno computed (m)
-#endif
+         hsnomin = 1.0e-4_dbl_kind    ! min thickness for which Tsno computed (m)
 
       character (char_len) :: stoplabel
 
@@ -1374,7 +1370,8 @@
 
             if (l_brine) then
                ci = cp_ice - Lfresh*Tmlt(k) /  &
-                             (Tin_init(ij,k)*Tin_init(ij,k))
+                  max( (Tin_init(m,k)*Tin_init(m,k)), &
+                       (1.21_dbl_kind*Tmlt(k)*Tmlt(k)) )
             else
                ci = cp_ice
             endif
@@ -1390,11 +1387,14 @@
 
             if (l_brine) then
                Iswabs_tmp = min(Iswabs(i,j,k), &
-                       0.95*(Tmlt(k)-Tin_init(ij,k))/etai(ij,k))
+                    0.9_dbl_kind*(Tmlt(k)-Tin_init(ij,k))/etai(ij,k))
             else
                Iswabs_tmp = min(Iswabs(i,j,k), &
-                       -0.95*Tin_init(ij,k)/etai(ij,k))
+                   -0.9_dbl_kind*Tin_init(ij,k)/etai(ij,k))
             endif
+
+            if (Tin_init(ij,k) > 1.1_dbl_kind*Tmlt(k)) Iswabs_tmp = c0
+
             fswsfc(i,j) = fswsfc(i,j) &
                         + (Iswabs(i,j,k) - Iswabs_tmp)
             fswint(i,j) = fswint(i,j) &
@@ -1407,19 +1407,18 @@
 
       do k = 1, nslyr
          do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
+            if (l_snow(ij)) then
+               i = indxi(ij)
+               j = indxj(ij)
 
-            if (l_snow(ij)) then 
                Sswabs_tmp = min(Sswabs(i,j,k), &
-                           -0.95*Tsn_init(ij,k)/etas(ij,k))
+                    -0.9_dbl_kind*Tsn_init(ij,k)/etas(ij,k))
                fswsfc(i,j) = fswsfc(i,j) &
                            + (Sswabs(i,j,k) - Sswabs_tmp)
                fswint(i,j) = fswint(i,j) &
                            - (Sswabs(i,j,k) - Sswabs_tmp)
                Sswabs(i,j,k) = Sswabs_tmp
-            end if
-
+            endif
          enddo
       enddo
 
@@ -1820,6 +1819,8 @@
                write(nu_diag,*) 'fsurf:', fsurf(ij)
                write(nu_diag,*) 'fcondtop, fcondbot, fswint', &
                                fcondtop(ij), fcondbot(ij), fswint(i,j)
+               write(nu_diag,*) 'fswsfc, fswthrun', &
+                               fswsfc(i,j), fswthrun(i,j)
                write(nu_diag,*) 'Flux conservation error =', ferr
                write(nu_diag,*) 'Initial snow temperatures:'
                write(nu_diag,*) (Tsn_init(ij,k),k=1,nslyr)
