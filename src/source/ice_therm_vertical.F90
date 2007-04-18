@@ -1393,7 +1393,7 @@
                    -0.9_dbl_kind*Tin_init(ij,k)/etai(ij,k))
             endif
 
-            if (Tin_init(ij,k) > 1.1_dbl_kind*Tmlt(k)) Iswabs_tmp = c0
+            if (Tin_init(ij,k) > (Tmlt(k) - p01)) Iswabs_tmp = c0
 
             fswsfc(i,j) = fswsfc(i,j) &
                         + (Iswabs(i,j,k) - Iswabs_tmp)
@@ -1413,6 +1413,9 @@
 
                Sswabs_tmp = min(Sswabs(i,j,k), &
                     -0.9_dbl_kind*Tsn_init(ij,k)/etas(ij,k))
+
+               if (Tsn_init(ij,k) > -p01) Sswabs_tmp = c0
+
                fswsfc(i,j) = fswsfc(i,j) &
                            + (Sswabs(i,j,k) - Sswabs_tmp)
                fswint(i,j) = fswint(i,j) &
