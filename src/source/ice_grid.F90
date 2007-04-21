@@ -45,7 +45,7 @@
          grid_file    , & !  input file for POP grid info
          kmt_file     , & !  input file for POP grid info
          grid_type        !  current options are rectangular (default),
-                          !  displaced_pole, tripole, panarctic, latlon, column
+                          !  displaced_pole, tripole, panarctic, latlon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
          dxt    , & ! width of T-cell through the middle (m)
@@ -67,10 +67,6 @@
          TLAT   , & ! latitude of temp pts (radians)
          ANGLE  , & ! for conversions between POP grid and lat/lon
          ANGLET     ! ANGLE converted to T-cells
-
-      real (kind=dbl_kind):: &
-        column_lat, & !latitude of single column
-        column_lon    !longitude of single column
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
          cyp    , & ! 1.5*HTE - 0.5*HTE
@@ -184,11 +180,6 @@
          work_g1(:,:) = 75._dbl_kind/rad_to_deg  ! arbitrary polar latitude
          work_g2(:,:) = c1
 
-      elseif (trim(grid_type) == 'column') then
-
-         work_g1(:,:) = 75._dbl_kind/rad_to_deg  ! arbitrary polar latitude
-         work_g2(:,:) = c1
-
       else   ! rectangular grid
 
          work_g1(:,:) = 75._dbl_kind/rad_to_deg  ! arbitrary polar latitude
@@ -273,10 +264,7 @@
       elseif (trim(grid_type) == 'panarctic') then
          call panarctic_grid    ! pan-Arctic grid
       elseif (trim(grid_type) == 'latlon') then
-         call latlongrid        ! lat lon grid for standalone CAM
-         return
-      elseif (trim(grid_type) == 'column') then
-         call columngrid        ! column model grid
+         call latlongrid        ! lat lon grid for sequential CCSM (CAM mode)
          return
       else
          call rectgrid          ! regular rectangular grid
@@ -684,18 +672,19 @@
 !
 ! !DESCRIPTION:
 !
-! Routine to take nx_global and ny_global and calculate a grid that matches
-! that in CAM for coupling to standalone CAM.
+! Read in kmt file that matches CAM lat-lon grid and has single column 
+! functionality
 !
 ! !REVISION HISTORY:
 !
-! author: Jacob Sewall
+! author: Mariana Vertenstein
 !
 ! !USES:
 !
 !     use ice_boundary
       use ice_domain_size
       use ice_gather_scatter
+      use ice_scam, only : scmlat, scmlon, single_column
 !
 ! !ARGUMENTS
       include "netcdf.inc"
@@ -721,15 +710,30 @@
       integer (kind=int_kind) :: &
          ilo,ihi,jlo,jhi      ! beginning and end of physical domain
 
+      real (kind=dbl_kind) :: &
+           closelat, &        ! Single-column latitude value
+           closelon, &        ! Single-column longitude value
+           closelatidx, &     ! Single-column latitude index to retrieve
+           closelonidx        ! Single-column longitude index to retrieve
+
+      integer (kind=int_kind) :: &
+           start(2), &        ! Start index to read in
+           count(2)           ! Number of points to read in
+
+      real (kind=dbl_kind), allocatable :: &
+           lats(:),lons(:),pos_lons(:), glob_grid(:,:)  ! temporaries 
+
+      real (kind=dbl_kind) :: &
+         pos_scmlon           ! temporary
+
       !-----------------------------------------------------------------
       ! - kmt file is actually clm fractional land file
       ! - Determine consistency of dimensions
       ! - Read in lon/lat centers in degrees from kmt file
-      ! - Read in landfrac from "kmt" file which is actually just 0's and
-      !   1's and matches the CAM landmask.  NOTE: CAM's landmask includes
-      !   partial values (0-1).  In the translation to CICE *all* cells with
-      !   *any* ocean are set to 1 (ocean). 
+      ! - Read in ocean from "kmt" file (1 for ocean, 0 for land)
       !-----------------------------------------------------------------
+
+      ! Determine dimension of domain file and check for consistency
 
       if (my_task == master_task) then
          call check_ret( nf_open(kmt_file, 0, ncid), subname )
@@ -738,14 +742,64 @@
          call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
          call check_ret(nf_inq_dimid (ncid, 'nj', dimid), subname)
          call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
-         if (ni /= nx_global .and. nj /= ny_global) then
-            call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+
+         if (single_column) then
+            if ((nx_global /= 1).or. (ny_global /= 1)) then
+               write(nu_diag,*) 'Because you have selected the column model flag'
+               write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
+               write(nu_diag,*) 'ice_domain_size.F and recompile'
+               call abort_ice ('latlongrid: check nx_global, ny_global')
+            endif
+         else
+            if (nx_global /= ni .and. ny_global /= nj) then
+               call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+            end if
          end if
       end if
+         
+      ! Determine start/count to read in for either single column or global lat-lon grid
+
+      if (single_column) then
+         allocate(lats(nj))
+         allocate(lons(ni))
+         allocate(pos_lons(ni))
+         allocate(glob_grid(ni,nj))
+
+         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_grid), subname)
+         do i = 1,ni
+            lons(i) = glob_grid(i,1)
+         end do
+         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
+         call check_ret(nf_get_var_double(ncid, varid, glob_grid), subname)
+         do j = 1,nj
+            lats(j) = glob_grid(1,j) 
+         end do
+         
+         ! convert lons array and scmlon to 0,360 and find index of value closest to 0
+         ! and obtain single-column longitude/latitude indices to retrieve
+         
+         pos_lons(:)= mod(lons(:) + 360._r8,360._r8)
+         pos_scmlon = mod(scmlon  + 360._r8,360._r8)
+         start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
+         start(2) = (MINLOC(abs(lats    -scmlat    ),dim=1))
+
+         deallocate(lats)
+         deallocate(lons)
+         deallocate(pos_lons)
+         deallocate(glob_grid)
+      else
+          start(1)=1
+          start(2)=1
+      endif
+      count(1)=nx_global
+      count(2)=ny_global
+      
+      ! Read in domain file for either single column or for global lat-lon grid
 
       if (my_task == master_task) then
          call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
-         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
             ! Convert from degrees to radians
@@ -758,7 +812,7 @@
 
       if (my_task == master_task) then
          call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
-         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
             ! Convert from degrees to radians
@@ -770,8 +824,10 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
+         ! Note that area read in from domain file is in km^2 - must first convert to m^2 and 
+         ! then convert to radians^2
          call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
-         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
          do j = 1, ny_global
          do i = 1, nx_global
             ! Convert from km^2 to m^2
@@ -783,11 +839,8 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
-         write(25,*)'reading mask' 
          call check_ret(nf_inq_varid(ncid, 'mask', varid), subname)
-         write(25,*)'read mask' 
-         call flush(25)  
-         call check_ret(nf_get_var_double(ncid, varid, glob_in), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
       end if
       call scatter_global(hm, glob_in, master_task, distrb_info, &
                           field_loc_center, field_type_scalar)
@@ -850,104 +903,6 @@
       call makemask
 
       end subroutine latlongrid
-
-!=======================================================================
-!BOP
-!
-! !IROUTINE: columngrid - column grid and mask
-!
-! !INTERFACE:
-!
-      subroutine columngrid
-!
-! !DESCRIPTION:
-!
-! Column grid and mask
-!
-! !REVISION HISTORY:
-!
-! author: C. M. Bitz UW, (based on rectgrid by Hunke)
-!
-! modified Nov. 2003 by William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_domain_size
-      use ice_gather_scatter
-      use ice_work, only: work_g1
-      use ice_exit      
-#ifdef SCAM
-      use scamMod, only: columnLat, columnLon
-#endif
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
-      integer (kind=int_kind) :: &
-         i, j, iblk
-
-      !-----------------------------------------------------------------
-      ! Calculate various geometric 2d arrays
-      !-----------------------------------------------------------------
-
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-
-            HTN  (i,j,iblk) = 1.6e4_dbl_kind
-            HTE  (i,j,iblk) = 1.6e4_dbl_kind
-
-!jsewall New (better?) initialization based on new
-!jsewall namelist parameters column_lat and column_lon.
-#ifdef SCAM
-            column_lat = columnLat
-            column_lon = columnLon
-            write(nu_diag,*) '(columngrid) lat = ', column_lat
-            write(nu_diag,*) '(columngrid) lon = ', column_lon
-#endif
-
-            ! used to find hemisphere and init_state, need not be exact
-            ULAT (i,j,iblk) = column_lat/rad_to_deg  
-            ULON (i,j,iblk) = column_lon/rad_to_deg 
-            ANGLE(i,j,iblk) = c0               ! "square with the world"
-
-         enddo                  ! i
-         enddo                  ! j
-      enddo                     ! iblk
-
-      !-----------------------------------------------------------------
-      ! Verify that nx_global and ny_global are 1
-      !-----------------------------------------------------------------
-
-      if ((nx_global /= 1).or. (ny_global /= 1)) then
-         write(nu_diag,*) 'Because you have selected the column model flag'
-         write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
-         write(nu_diag,*) 'ice_domain_size.F and recompile'
-         call abort_ice ('ice: columngrid: check nx_global, ny_global')
-      endif
-
-      !-----------------------------------------------------------------
-      ! Construct T-cell land mask
-      !-----------------------------------------------------------------
-
-      if (my_task==master_task) then
-         allocate(work_g1(nx_global,ny_global))
-         do j = 1, ny_global
-         do i = 1, nx_global
-            work_g1(i,j) = c1
-         enddo
-         enddo
-      else
-         allocate(work_g1(1,1)) ! to save memory
-      endif
-
-      call scatter_global(hm, work_g1, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
-
-      deallocate(work_g1)
-
-      end subroutine columngrid
 
 !=======================================================================
 !BOP

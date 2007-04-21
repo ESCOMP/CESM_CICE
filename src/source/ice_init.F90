@@ -83,8 +83,7 @@
           atm_data_type,   atm_data_dir,  precip_units, &
           sss_data_type,   sst_data_type, ocn_data_dir, &
           oceanmixed_file, restore_sst,   trestore 
-      use ice_grid, only: grid_file, kmt_file, grid_type, &
-          column_lat, column_lon
+      use ice_grid, only: grid_file, kmt_file, grid_type
       use ice_mechred, only: kstrength, krdg_partic, krdg_redist
       use ice_dyn_evp, only: ndte, kdyn, evp_damping, yield_curve
       use ice_shortwave, only: albicev, albicei, albsnowv, albsnowi, &
@@ -115,7 +114,7 @@
         histfreq_n,     dumpfreq,        dumpfreq_n,    restart_file, &
         restart,        restart_dir,     pointer_file,  ice_ic, &
         grid_type,      grid_file,       kmt_file, &
-        column_lat,     column_lon,      kitd,           kcatbound, &
+        kitd,           kcatbound, &
         kdyn,           ndyn_dt,         ndte,          evp_damping, &
         yield_curve,    advection, &
         kstrength,      krdg_partic,     krdg_redist,   shortwave, &
@@ -166,8 +165,6 @@
       grid_type    = 'rectangular'   ! define rectangular grid internally
       grid_file    = 'unknown_grid_file'
       kmt_file     = 'unknown_kmt_file'
-      column_lat   = 75.0_dbl_kind  !arbitrary polar latitude
-      column_lon   = 170.0_dbl_kind !arbitrary polar longitude
 
       kitd = 1           ! type of itd conversions (0 = delta, 1 = linear)
       kcatbound = 1      ! category boundary formula (0 = old, 1 = new)
@@ -336,11 +333,6 @@
 ! only master_task writes to file
 !      call broadcast_scalar(nu_diag),           master_task)
 
-      if (trim(grid_type) == 'column') then
-         call broadcast_scalar(column_lat,         master_task)
-         call broadcast_scalar(column_lon,         master_task)
-      endif
-
       !-----------------------------------------------------------------
       ! spew
       !-----------------------------------------------------------------
@@ -410,12 +402,6 @@
                                trim(grid_file)
             write(nu_diag,*) ' kmt_file                  = ', &
                                trim(kmt_file)
-         endif
-         if (trim(grid_type) == 'column') then
-            write(nu_diag,1000) ' column_lat                = ', &
-                               column_lat
-            write(nu_diag,1000) ' column_lon                = ', &
-                               column_lon
          endif
 
          write(nu_diag,1020) ' kitd                      = ', kitd

@@ -36,7 +36,7 @@ module ice_comp_mct
   use ice_init
   use ice_boundary
   use ice_prescribed_mod
-
+  use ice_scam
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -122,7 +122,15 @@ contains
     ! use CCSMInit to determine type of run
     !=============================================================
 
-    call shr_inputInfo_initGetData( CCSMInit, case_name=runid )    
+    ! Preset single column values
+
+    single_column = .false.
+    scmlat = -999.
+    scmlon = -999.
+
+    call shr_inputInfo_initGetData( CCSMInit, case_name=runid   ,  &  
+                                    single_column=single_column ,  &
+             	                    scmlat=scmlat,scmlon=scmlon)
 
     if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
        runtype = "initial"
@@ -179,7 +187,6 @@ contains
        time  = (((iyear)*daycal(13)+daycal(month)+mday)*secday) + start_tod
        call shr_sys_flush(nu_diag)
     end if
-    write(6,*)'idate = ',idate,' time= ',time,' istep0= ',istep0
     call calendar(time)     ! update calendar info
 
     !=============================================================
