@@ -1,4 +1,30 @@
 ===============================================================
+cice4_0_20070421
+Originator: mvertens (Mariana Vertenstein)
+Date: Sat Apr 21 16:28:18 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Simplified use of SCAM functionality
+CCSM Version compatible with: 
+Changes made:
+	
+  M  source/ice_init.F90
+    - removed the column_lat and column_lon variables.
+  M  source/ice_domain.F90
+    - removed the usage of nprocs as a nameslit from the 
+      SEQ_MCT or COUP_CCSM if-defs.
+  M  source/ice_grid.F90
+    - removed the column_grid routine and incorporated scam 
+      functionality into the latlongrid routine 
+     (this must still be tested - but it compiles fine and works 
+      with the global functionality).
+  M  drivers/ccsm_sequential/ice_scam.F90
+    - settings for scmlat and scmlon    
+  M  drivers/ccsm_sequential/ice_comp_mct.F90
+    - obtained scmlat and scmlon from shr_inputInfo_initGetDATA	
+	
+===============================================================
+===============================================================
 cice4_0_20070412
 Originator: dbailey (David Bailey)
 Date: Thu Apr 12 11:34:16 MDT 2007
