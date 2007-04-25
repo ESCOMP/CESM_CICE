@@ -8,7 +8,7 @@
 ! Defines unit numbers for files opened for reading or writing
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_fileunits.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_fileunits.F90 58 2007-03-29 15:56:53Z eclare $
 !
 ! author: Elizabeth C. Hunke, LANL
 ! 2006: ECH converted to free source form (F90)
@@ -36,7 +36,9 @@
          nu_forcing     = 49, &  ! forcing data file
          nu_dump        = 50, &  ! dump file for restarting
          nu_restart     = 50, &  ! restart input file
-         nu_rst_pointer = 52     ! pointer to latest restart file
+         nu_rst_pointer = 52, &  ! pointer to latest restart file
+         nu_history     = 53, &  ! binary history output file
+         nu_hdr         = 54     ! header file for binary history output
 
       integer (kind=int_kind) :: &
          nu_diag                 ! diagnostics output file
