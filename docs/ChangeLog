@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20070430
+Originator: dbailey (David Bailey)
+Date: Mon Apr 30 14:38:26 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Bug fixes related to DE radiation and CICE upd.
+CCSM Version compatible with: 
+Changes made:
+	
+   M /cice/trunk/src/source/ice_orbital.F90
+   M /cice/trunk/src/source/ice_therm_vertical.F90
+   M /cice/trunk/src/source/ice_fileunits.F90
+   M /cice/trunk/src/source/ice_forcing.F90
+   M /cice/trunk/src/source/ice_history.F90
+
+===============================================================
+===============================================================
 cice4_0_20070421
 Originator: mvertens (Mariana Vertenstein)
 Date: Sat Apr 21 16:28:18 MDT 2007

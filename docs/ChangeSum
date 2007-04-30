@@ -1,5 +1,9 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		04/30/07 cice4_0_20070430	DE bug fixes and updated
+                                                CICE code
+mvertens	04/21/07 cice4_0_20070421	Simplified SCAM
+						functionality
 dbailey		04/12/07 cice4_0_20070412	SEQ_MCT changes, bug and
                                                 pond fixes
 dbailey		04/11/07 cice4_0_20070411	Sequential CCSM changes.
