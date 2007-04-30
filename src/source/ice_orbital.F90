@@ -133,11 +133,11 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block), intent(out) :: &
          coszen_mean         ! diurnal mean cosine solar zenith angle 
 
-      integer (kind=int_kind), &
+      integer (kind=int_kind) :: &
          nmbday        , &   ! number of time steps in one day
          nd                  ! counter for diurnal mean
 
-      real (kind=dbl_kind), &
+      real (kind=dbl_kind) :: &
          cszn                ! accumulator for diurnal mean cosine solar zenith angle 
 
 !

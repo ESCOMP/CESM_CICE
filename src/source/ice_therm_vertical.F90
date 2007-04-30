@@ -1370,7 +1370,7 @@
 
             if (l_brine) then
                ci = cp_ice - Lfresh*Tmlt(k) /  &
-                  max( (Tin_init(m,k)*Tin_init(m,k)), &
+                  max( (Tin_init(ij,k)*Tin_init(ij,k)), &
                        (1.21_dbl_kind*Tmlt(k)*Tmlt(k)) )
             else
                ci = cp_ice
