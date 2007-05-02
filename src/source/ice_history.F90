@@ -1334,7 +1334,7 @@
       ! write netCDF file
       !---------------------------------------------------------------
 
-#ifdef ncdf
+#if (defined ncdf) || (defined CCSM) || (defined SEQ_MCT)
         call icecdf         ! netcdf output
 #else
         call icebin         ! binary output
@@ -1424,7 +1424,7 @@
 !
 !EOP
 !
-#ifdef ncdf
+#if (defined ncdf) || (defined CCSM) || (defined SEQ_MCT)
       include "netcdf.inc"
 #endif
 
@@ -1462,7 +1462,7 @@
       TYPE(req_attributes), dimension(nvar) :: var
       TYPE(coord_attributes), dimension(ncoord) :: coord_var
 
-#ifdef ncdf
+#if (defined ncdf) || (defined CCSM) || (defined SEQ_MCT)
 
       if (my_task == master_task) then
 
@@ -1978,7 +1978,7 @@
       end subroutine icecdf
 
 !=======================================================================
-#ifdef ncdf
+#if (defined ncdf) || (defined CCSM) || (defined SEQ_MCT)
 !
 !BOP
 !
