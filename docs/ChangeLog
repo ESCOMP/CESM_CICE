@@ -1,4 +1,24 @@
 ===============================================================
+cice4_0_20070502
+Originator: dbailey (David Bailey)
+Date: Wed May  2 09:13:41 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: New calc_strair option.
+CCSM Version compatible with: 
+Changes made:
+	
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_RunMod.F90
+   M /cice/trunk/src/source/ice_atmo.F90
+   M /cice/trunk/src/source/ice_dyn_evp.F90
+   M /cice/trunk/src/source/ice_flux.F90
+   M /cice/trunk/src/source/ice_forcing.F90
+   M /cice/trunk/src/source/ice_history.F90
+   M /cice/trunk/src/source/ice_init.F90
+
+===============================================================
+===============================================================
 cice4_0_20070430
 Originator: dbailey (David Bailey)
 Date: Mon Apr 30 14:38:26 MDT 2007

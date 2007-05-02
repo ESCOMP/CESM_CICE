@@ -1,5 +1,7 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		05/02/07 cice4_0_20070502	New calc_strair option in
+                                                CICE code
 dbailey		04/30/07 cice4_0_20070430	DE bug fixes and updated
                                                 CICE code
 mvertens	04/21/07 cice4_0_20070421	Simplified SCAM
