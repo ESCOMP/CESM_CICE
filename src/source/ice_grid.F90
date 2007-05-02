@@ -8,7 +8,7 @@
 ! Spatial grids, masks, and boundary conditions
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_grid.F90 56 2007-03-15 14:42:35Z dbailey $
+!  SVN:$Id: ice_grid.F90 61 2007-04-25 17:50:16Z dbailey $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
 !          Tony Craig, NCAR
@@ -263,9 +263,11 @@
          call popgrid           ! read POP grid lengths directly
       elseif (trim(grid_type) == 'panarctic') then
          call panarctic_grid    ! pan-Arctic grid
+#ifdef SEQ_MCT
       elseif (trim(grid_type) == 'latlon') then
          call latlongrid        ! lat lon grid for sequential CCSM (CAM mode)
          return
+#endif
       else
          call rectgrid          ! regular rectangular grid
       endif
@@ -660,7 +662,7 @@
       if (my_task == master_task) close (nu_grid)
 
       end subroutine panarctic_grid
-
+#ifdef SEQ_MCT
 !=======================================================================
 !BOP
 !
@@ -903,7 +905,7 @@
       call makemask
 
       end subroutine latlongrid
-
+#endif
 !=======================================================================
 !BOP
 !
