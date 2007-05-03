@@ -17,7 +17,6 @@ module ice_comp_mct
   use seq_flds_mod
   use seq_flds_indices
   use seq_cdata_mod
-  use seq_infobuf_mod
 
   use eshr_timemgr_mod
 
@@ -259,7 +258,6 @@ contains
     integer :: day_sync      ! Sync current day
     integer :: tod_sync      ! Sync current time of day (sec)
     integer :: ymd_sync      ! Current year of sync clock
-    type(seq_infobuf), pointer   :: infobuf_i  
     character(len=char_len_long) :: fname
     character(len=*), parameter  :: SubName = "ice_run_mct"
 !
@@ -268,12 +266,6 @@ contains
 !
 !EOP
 !---------------------------------------------------------------------------
-
-    !--------------------------------------------------------------------
-    ! Get cdata pointers
-    !--------------------------------------------------------------------
-
-    call seq_cdata_setptrs(cdata_i, infobuf=infobuf_i)
 
     !--------------------------------------------------------------------
     ! Check that internal clock is in sync with master clock
