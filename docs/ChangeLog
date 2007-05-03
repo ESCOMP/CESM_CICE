@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20070503
+Originator: mvertens (Mariana Vertenstein)
+Date: Wed May  2 20:26:52 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: removed infobuf from ice_comp_mct.F90
+CCSM Version compatible with: 
+Changes made:
+	
+   M /cice/trunk/src/drivers/ccsm_sequential/ice_comp_mct.F90
+    - removed infobuf reference 	 
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_RunMod.F90
+    - added new calc_strair option to ccsm_sequential code
+	
+===============================================================
+===============================================================
 cice4_0_20070502
 Originator: dbailey (David Bailey)
 Date: Wed May  2 09:13:41 MDT 2007
