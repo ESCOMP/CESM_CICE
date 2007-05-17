@@ -1,4 +1,27 @@
 ===============================================================
+cice4_0_20070517
+Originator: mvertens (Mariana Vertenstein)
+Date: Thu May 17 14:41:24 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: moved check with SyncClock to end of run phase 
+	in drivers/ccsm_sequential/ice_comp_mct.F90
+CCSM Version compatible with: 
+Changes made:
+   M  source/ice_domain.F90
+      - simplified consistency check of nprocs setting to following: 
+           #if (defined SEQ_MCT)
+              nprocs = get_num_procs()
+           #else
+             call abort_ice('ice: Input nprocs not same as system request')
+           #endif
+        and removed all other #if-defs related to this
+   M  drivers/ccsm_sequential/ice_comp_mct.F90
+      - moved check with SyncClock to end of run phase since 
+	SyncClock advance is now at the top of the sequential driver
+	time loop
+	
+===============================================================
 cice4_0_20070503
 Originator: mvertens (Mariana Vertenstein)
 Date: Wed May  2 20:26:52 MDT 2007
