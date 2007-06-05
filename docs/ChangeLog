@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20070605
+Originator: mvertens (Mariana Vertenstein)
+Date: Tue Jun  5 10:50:15 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary:  fix in ice_comp_mct.F90 in order to use
+     new sequential energy/water diagnostics                  
+CCSM Version compatible with: 
+Changes made:
+   M  drivers/ccsm_sequential/ice_comp_mct.F90
+      - added an mct_aVect_permute call at the end of ice_import_mct
+	
+===============================================================
 cice4_0_20070517
 Originator: mvertens (Mariana Vertenstein)
 Date: Thu May 17 14:41:24 MDT 2007

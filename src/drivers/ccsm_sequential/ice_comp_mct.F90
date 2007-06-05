@@ -844,6 +844,8 @@ contains
          enddo
       enddo
 
+    call mct_aVect_permute(x2i_i, perm)
+
    end subroutine ice_import_mct
 
 !=======================================================================
