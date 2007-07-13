@@ -19,6 +19,7 @@
 ! !USES:
 !
       use ice_kinds_mod
+      use ice_calendar
       use ice_constants
       use ice_fileunits
 !
@@ -41,7 +42,7 @@
 ! !INTERFACE:
 !
       subroutine compute_ponds(nx_block,ny_block,nghost,   &
-                               meltt, melts,               &
+                               meltt, melts, frain,        &
                                aicen, vicen, vsnon, Tsfcn, &
                                volpn, apondn, hpondn)
 !
@@ -60,6 +61,7 @@
       real (kind=dbl_kind),intent(in) :: &
          meltt(nx_block,ny_block), &
          melts(nx_block,ny_block), &
+         frain(nx_block,ny_block), &
          aicen(nx_block,ny_block), &
          vicen(nx_block,ny_block), &
          vsnon(nx_block,ny_block), &
@@ -109,7 +111,8 @@
          dTs = Timelt - Tsfcn(i,j)
 
          volpn(i,j) = volpn(i,j) + (c1-rfrac) &
-            * (meltt(i,j)*(rhoi/rhofresh) + melts(i,j)*(rhos/rhofresh))
+            * (meltt(i,j)*(rhoi/rhofresh) + melts(i,j)*(rhos/rhofresh) &
+            + frain(i,j)*dt/rhofresh)
 
 !        Use exponential decrease in pond volume DAB
          if (Tsfcn(i,j) .lt. Timelt-c2) then

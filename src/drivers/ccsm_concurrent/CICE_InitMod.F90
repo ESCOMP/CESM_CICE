@@ -41,6 +41,7 @@
       use ice_itd
       use ice_kinds_mod
       use ice_mechred
+      use ice_meltpond
       use ice_ocean
       use ice_orbital
       use ice_shortwave
@@ -130,7 +131,7 @@
 ! !DESCRIPTION:
 !
 !  Initialize CICE model.
-!
+! 
 ! !REVISION HISTORY: same as module
 !
 ! !INTERFACE:
@@ -164,6 +165,40 @@
          alidrns      , &
          alvdfns      , &
          alidfns
+
+      ! other local variables
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
+         fswthrun    , & ! SW through ice to ocean            (W/m^2)
+         fswintn         ! SW absorbed in ice interior, below surface (W m-2)
+
+      ! Local variables to keep track of melt for ponds
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         melts_old, &
+         meltt_old, &
+         melts_tmp, &
+         meltt_tmp
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr) :: &
+         Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
+
+      ! snow variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fsn             ! snow horizontal fraction
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
+         rhosnwn     , & ! snow density (kg/m3)
+         rsnwn       , & ! snow grain radius (micro-meters)
+         Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
+
+      ! pond variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fpn         , & ! pond fraction
+         hpn             ! pond depth (m)
+
+! BPB 4 Jan 2007  daily mean coszen
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         coszen_mean     ! diurnal mean coszen
+
 
       integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi
 
@@ -207,6 +242,32 @@
       alidf   (:,:,:) = c0
 
       do iblk=1,nblocks
+
+         if (trim(shortwave) == 'dEdd') then ! delta Eddington
+
+            ! identify ice-ocean cells
+            icells = 0
+            do j = 1, ny_block
+            do i = 1, nx_block
+               if (tmask(i,j,iblk)) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+            call compute_coszen (nx_block,         ny_block,       &
+                                 icells,                           &
+                                 indxi,            indxj,          &
+                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
+                                 coszen(:,:,iblk), dt,             &
+                                 coszen_mean)
+
+         else                     ! basic (ccsm3) shortwave
+            coszen(:,:,iblk) = p5 ! sun above the horizon
+         endif
+
       do n=1,ncat
 
          icells = 0
@@ -220,6 +281,77 @@
          enddo               ! i
          enddo               ! j
 
+      !-----------------------------------------------------------------
+      ! Melt pond initialization
+      !-----------------------------------------------------------------
+
+         apondn(:,:,n,iblk) = c0
+         hpondn(:,:,n,iblk) = c0
+
+         if (kpond == 1) then
+
+            melts_tmp = c0
+            meltt_tmp = c0
+
+            call compute_ponds(nx_block, ny_block, nghost,              &
+                               meltt_tmp, melts_tmp, frain(:,:,iblk),   &
+                               aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
+                               vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
+                               trcrn (:,:,ntrcr,n,iblk),                &
+                               apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
+
+         endif
+
+         if (trim(shortwave) == 'dEdd') then
+
+      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
+      ! BPB 19 Dec 2006
+
+               ! set snow properties
+               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                                 icells,                                  &
+                                 indxi,               indxj,              &
+                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                                 trcrn(:,:,1,n,iblk), fsn,                &
+                                 rhosnwn,             rsnwn)
+
+
+               if (kpond == 0) then
+
+               ! set pond properties
+               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
+                                 icells,                                   &
+                                 indxi,               indxj,               &
+                                 aicen(:,:,n,iblk),   trcrn(:,:,1,n,iblk), &
+                                 fsn,                 fpn,                 &
+                                 hpn)
+
+               else
+
+               fpn(:,:) = apondn(:,:,n,iblk)
+               hpn(:,:) = hpondn(:,:,n,iblk)
+
+               endif
+
+               call shortwave_dEdd(nx_block,        ny_block,            &
+                                 icells,                                 &
+                                 indxi,             indxj,               &
+                                 coszen(:,:, iblk),                      &
+                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                 vsnon(:,:,n,iblk), fsn,                 &
+                                 rhosnwn,           rsnwn,               &
+                                 fpn,               hpn,                 &
+                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
+                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 fswsfcn,           fswintn,             &
+                                 fswthrun,          Sswabsn,             &
+                                 Iswabsn)
+
+
+         else
+ 
          call compute_albedos (nx_block,   ny_block, &
                                icells,               &
                                indxi,      indxj,    &
@@ -232,6 +364,8 @@
                                alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
                                alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
                                apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
+
+         endif
 
          ! Aggregate albedos for coupler
 
