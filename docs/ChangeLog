@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20070713b
+Originator: dbailey (David Bailey)
+Date: Fri Jul 13 15:24:31 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Fix some meltpond and Delta-Eddington bugs.
+CCSM Version compatible with: 
+Changes made:
+
+M            5473   source/ice_constants.F90
+M            5473   source/ice_meltpond.F90
+M            5473   source/ice_history.F90
+M            5473   drivers/ccsm_concurrent/CICE_InitMod.F90
+M            5473   drivers/ccsm_concurrent/CICE_RunMod.F90
+
+===============================================================
+===============================================================
 cice4_0_20070713
 Originator: dbailey (David Bailey)
 Date: Fri Jul 13 14:50:23 MDT 2007
