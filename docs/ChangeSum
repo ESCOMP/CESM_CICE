@@ -1,5 +1,13 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		07/13/07 cice4_0_20070713	Cleanup of hard-coded file
+                                                unit and merge with LANL trunk
+mvertens	06/05/07 cice4_0_20070605	fix in ice_comp_mct.F90 for
+                                                new energy/water diag
+mvertens	05/17/07 cice4_0_20070517	moved check with SyncClock
+                                                to end of run phase
+mvertens	05/03/07 cice4_0_20070503	removed infobuf from
+                                                ice_comp_mct.F90
 dbailey		05/02/07 cice4_0_20070502	New calc_strair option in
                                                 CICE code
 dbailey		04/30/07 cice4_0_20070430	DE bug fixes and updated

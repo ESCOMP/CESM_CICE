@@ -1,4 +1,44 @@
 ===============================================================
+cice4_0_20070713
+Originator: dbailey (David Bailey)
+Date: Fri Jul 13 14:50:23 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Cleanup of hard-coded file unit and merge 
+                  with LANL trunk
+CCSM Version compatible with: 
+Changes made:
+
+A number of changes were introduced to merge with the head of the LANL
+trunk. These were primarily some new transport changes. I've also removed
+the hard coded print and write statements that use unit 6. This is the
+first step towards using the shared unit manager utilities.
+
+M            5030   src/source/ice_init.F90
+M            5030   src/source/ice_dyn_evp.F90
+M            5030   src/source/ice_diagnostics.F90
+M            5030   src/source/ice_mechred.F90
+M            5030   src/source/ice_transport_driver.F90
+M            5030   src/source/ice_therm_vertical.F90
+M            5030   src/source/ice_therm_itd.F90
+M            5030   src/source/ice_itd.F90
+M            5030   src/source/ice_transport_remap.F90
+M            5030   src/source/ice_grid.F90
+M            5030   src/source/ice_history.F90
+M            5030   src/drivers/ccsm_sequential/CICE_InitMod.F90
+M            5030   src/drivers/ccsm_sequential/CICE_RunMod.F90
+M            5030   src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            5030   src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+M            5030   src/drivers/ccsm_concurrent/CICE_InitMod.F90
+M            5030   src/drivers/ccsm_concurrent/CICE_RunMod.F90
+M            5030   src/drivers/ccsm_concurrent/ice_prescribed_mod.F90
+M            5030   src/drivers/cice4/CICE_InitMod.F90
+M            5030   src/drivers/cice4/CICE_RunMod.F90
+M            5030   docs/ChangeLog
+M            5030   docs/ChangeSum
+
+===============================================================
+===============================================================
 cice4_0_20070605
 Originator: mvertens (Mariana Vertenstein)
 Date: Tue Jun  5 10:50:15 MDT 2007
