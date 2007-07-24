@@ -1,5 +1,8 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		07/24/07 cice4_0_20070724	General cleanup changes from 
+                                                LANL plus a new fileunit 
+                                                manager.
 dbailey		07/13/07 cice4_0_20070713b	Fix some meltpond and 
 						Delta-Eddington bugs.
 dbailey		07/13/07 cice4_0_20070713	Cleanup of hard-coded file

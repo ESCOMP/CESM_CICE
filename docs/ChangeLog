@@ -1,4 +1,37 @@
 ===============================================================
+cice4_0_20070724
+Originator: dbailey (David Bailey)
+Date: Tue Jul 24 17:05:00 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: General cleanup from LANL plus a new fileunit
+                  manager.
+CCSM Version compatible with: 
+Changes made:
+
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_FinalMod.F90
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_FinalMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_FinalMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_RunMod.F90
+   M /cice/trunk/src/mpi/ice_exit.F90
+   M /cice/trunk/src/mpi/ice_timers.F90
+   M /cice/trunk/src/source/ice_diagnostics.F90
+   M /cice/trunk/src/source/ice_dyn_evp.F90
+   M /cice/trunk/src/source/ice_fileunits.F90
+   M /cice/trunk/src/source/ice_forcing.F90
+   M /cice/trunk/src/source/ice_grid.F90
+   M /cice/trunk/src/source/ice_history.F90
+   M /cice/trunk/src/source/ice_init.F90
+   M /cice/trunk/src/source/ice_read_write.F90
+   M /cice/trunk/src/source/ice_restart.F90
+   M /cice/trunk/src/source/ice_therm_itd.F90
+
+===============================================================
 cice4_0_20070713b
 Originator: dbailey (David Bailey)
 Date: Fri Jul 13 15:24:31 MDT 2007
