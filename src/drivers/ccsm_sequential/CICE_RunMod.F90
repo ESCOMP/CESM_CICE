@@ -271,9 +271,6 @@
             icells = 0
             do j = jlo, jhi
             do i = ilo, ihi
-!               if (aicen(i,j,n,iblk) > puny .and. .not.tmask(i,j,iblk)) then
-!                 print*,my_task,i,j,n,iblk,aicen(i,j,n,iblk),tmask(i,j,iblk)
-!               endif
                if (aicen(i,j,n,iblk) > puny) then
                   icells = icells + 1
                   indxi(icells) = i
