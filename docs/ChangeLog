@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20070730
+Originator: dbailey (David Bailey)
+Date: Mon Jul 30 14:56:02 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Improved DE plus ice_history bug fix.
+CCSM Version compatible with: 
+Changes made:
+
+   M /trunk/cice/source/ice_history.F90
+   M /trunk/cice/source/ice_shortwave.F90
+
+===============================================================
+===============================================================
 cice4_0_20070724
 Originator: dbailey (David Bailey)
 Date: Tue Jul 24 17:05:00 MDT 2007
