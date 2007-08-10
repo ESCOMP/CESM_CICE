@@ -19,7 +19,6 @@
 ! !USES:
 !
       use ice_kinds_mod
-      use ice_calendar
       use ice_constants
       use ice_fileunits
 !
@@ -114,8 +113,7 @@
             call compute_ponds(nx_block, ny_block, nghost,              &
                                meltt_tmp, melts_tmp, frain(:,:,iblk),   &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
-                               vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
-                               trcrn (:,:,ntrcr,n,iblk),                &
+                               vsnon (:,:,n,iblk), trcrn (:,:,:,n,iblk),&
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
 
          endif
@@ -133,9 +131,9 @@
 ! !INTERFACE:
 !
       subroutine compute_ponds(nx_block,ny_block,nghost,   &
-                               meltt, melts, frain,        &
-                               aicen, vicen, vsnon, Tsfcn, &
-                               volpn, apondn, hpondn)
+                               meltt, melts,  frain,       &
+                               aicen, vicen,  vsnon,       &
+                               trcrn, apondn, hpondn)
 !
 ! !DESCRIPTION:
 !
@@ -145,23 +143,34 @@
 !
 ! !USES:
 !
+      use ice_state, only: nt_Tsfc, nt_volpn
+      use ice_calendar, only: dt
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          nghost
 
-      real (kind=dbl_kind),intent(in) :: &
-         meltt(nx_block,ny_block), &
-         melts(nx_block,ny_block), &
-         frain(nx_block,ny_block), &
-         aicen(nx_block,ny_block), &
-         vicen(nx_block,ny_block), &
-         vsnon(nx_block,ny_block), &
-         Tsfcn(nx_block,ny_block)
+      real (kind=dbl_kind), dimension(nx_block,ny_block), &
+         intent(in) :: &
+         meltt, &
+         melts, &
+         frain, &
+         aicen, &
+         vicen, &
+         vsnon
 
-      real (kind=dbl_kind),intent(inout) :: &
-         volpn(nx_block,ny_block),  &
-         apondn(nx_block,ny_block), &
-         hpondn(nx_block,ny_block)
+      real (kind=dbl_kind), dimension(nx_block,ny_block), &
+         intent(inout) :: &
+         apondn, &
+         hpondn
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,ntrcr), &
+         intent(inout) :: &
+         trcrn
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block) :: &
+         volpn, &
+         Tsfcn
 
       integer (kind=int_kind), dimension (nx_block*ny_block) :: &
          indxi, indxj     ! compressed indices for cells with ice melting
@@ -177,6 +186,9 @@
       ihi = nx_block - nghost
       jlo = 1 + nghost
       jhi = ny_block - nghost
+
+      Tsfcn(:,:) = trcrn(:,:,nt_Tsfc)
+      volpn(:,:) = trcrn(:,:,nt_volpn)
 
       !-----------------------------------------------------------------
       ! Identify grid cells where ice can melt.
@@ -235,6 +247,8 @@
             hpondn(i,j) = c0
             volpn(i,j)  = c0
          endif
+
+         trcrn(i,j,nt_volpn) = volpn(i,j)
 
       enddo
 

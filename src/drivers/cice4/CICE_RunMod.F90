@@ -551,27 +551,6 @@
             enddo               ! j
 
       !-----------------------------------------------------------------
-      ! Melt pond initialization
-      !-----------------------------------------------------------------
-
-            apondn(:,:,n,iblk) = c0
-            hpondn(:,:,n,iblk) = c0
-
-            if (kpond == 1 .and. istep == 1) then
-
-               melts_tmp = melts(:,:,iblk)
-               meltt_tmp = meltt(:,:,iblk)
-
-               call compute_ponds(nx_block, ny_block, nghost,              &
-                                  meltt_tmp,          melts_tmp,           &
-                                  aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
-                                  vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
-                                  trcrn (:,:,2,n,iblk),                    &
-                                  apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
-
-            endif
-
-      !-----------------------------------------------------------------
       ! Solar radiation: albedo and absorbed shortwave
       !-----------------------------------------------------------------
 
@@ -585,7 +564,7 @@
                                  icells,                                  &
                                  indxi,               indxj,              &
                                  aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
-                                 trcrn(:,:,1,n,iblk), fsn,                &
+                                 trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
                                  rhosnwn,             rsnwn)
 
                if (kpond == 0) then
@@ -594,7 +573,8 @@
                call shortwave_dEdd_set_pond(nx_block, ny_block,            &
                                  icells,                                   &
                                  indxi,               indxj,               &
-                                 aicen(:,:,n,iblk),   trcrn(:,:,1,n,iblk), &
+                                 aicen(:,:,n,iblk),                        &
+                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
                                  fsn,                 fpn,                 &
                                  hpn)
 
@@ -629,7 +609,8 @@
                                  icells,                                 &
                                  indxi,             indxj,               &
                                  aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk), &
+                                 vsnon(:,:,n,iblk),                      &
+                                 trcrn(:,:,nt_Tsfc,n,iblk),              &
                                  swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                                  alvdrn,            alidrn,              &
@@ -663,7 +644,7 @@
                call atmo_boundary_layer(nx_block,       ny_block,       &
                                         'ice',          icells,         &
                                         indxi,          indxj,          &
-                                        trcrn(:,:,1,n,iblk),            &
+                                        trcrn(:,:,nt_Tsfc,n,iblk),      &
                                         potT(:,:,iblk),                 &
                                         uatm(:,:,iblk), vatm(:,:,iblk), &
                                         wind(:,:,iblk), zlvl(:,:,iblk), &
@@ -695,7 +676,8 @@
                             (nx_block,            ny_block,            &
                              dt,                  icells,              &
                              indxi,               indxj,               &
-                             aicen(:,:,n,iblk),   trcrn(:,:,1,n,iblk), &
+                             aicen(:,:,n,iblk),                        &
+                             trcrn(:,:,nt_Tsfc,n,iblk),                &
                              vicen(:,:,n,iblk),   vsnon(:,:,n,iblk),   &
                              eicen  (:,:,il1:il2,iblk),                &
                              esnon  (:,:,sl1:sl2,iblk),                &
@@ -744,8 +726,7 @@
             call compute_ponds(nx_block, ny_block, nghost,              &
                                meltt_tmp,          melts_tmp,           &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
-                               vsnon (:,:,n,iblk), trcrn (:,:,1,n,iblk),&
-                               trcrn (:,:,2,n,iblk),                    &
+                               vsnon (:,:,n,iblk), trcrn (:,:,:,n,iblk),&
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
 
          endif

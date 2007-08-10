@@ -83,9 +83,6 @@
 !
 ! !USES:
 !
-      use ice_domain_size
-      use ice_blocks
-      use ice_state
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

@@ -123,6 +123,17 @@
          esnon     ! energy of melting for each snow layer (J/m^2)
 
       !-----------------------------------------------------------------
+      ! indices for tracers
+      ! The maximum index should be no greater than ntrcr to prevent
+      ! array out-of-bounds errors.
+      !-----------------------------------------------------------------
+
+      integer (kind=int_kind), parameter :: &
+         nt_Tsfc  =  1, & ! ice/snow surface temperature
+         nt_volpn =  1    ! melt pond volume - not used, for now
+!         nt_iage  =  2    ! volume-weighted ice age
+
+      !-----------------------------------------------------------------
       ! dynamic variables closely related to the state of the ice
       !-----------------------------------------------------------------
 
