@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20070814
+Originator: dbailey (David Bailey)
+Date: Tue Aug 14 14:23:37 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Moved some initialization around with bug fixes.
+CCSM Version compatible with: 
+Changes made:
+
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/ccsm_concurrent/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_RunMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_InitMod.F90
+   M /cice/trunk/src/source/ice_meltpond.F90
+   M /cice/trunk/src/source/ice_shortwave.F90
+   M /cice/trunk/src/source/ice_itd.F90
+
+===============================================================
+===============================================================
 cice4_0_20070730
 Originator: dbailey (David Bailey)
 Date: Mon Jul 30 14:56:02 MDT 2007
