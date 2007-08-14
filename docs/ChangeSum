@@ -1,5 +1,7 @@
 Originator:     Date:   Tag:        Synopsis:
 ===============================================================
+dbailey		08/14/07 cice4_0_20070814	Moved some initialization 
+						around with bug fixes.
 dbailey		07/30/07 cice4_0_20070730	DE improvement and ice_history
                                                 bug fixes.
 dbailey		07/24/07 cice4_0_20070724	General cleanup changes from 
