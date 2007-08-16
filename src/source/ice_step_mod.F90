@@ -54,7 +54,9 @@
       use ice_transport_driver
       use ice_transport_remap
       use ice_work
+#if (defined CCSM) || (defined SEQ_MCT)
       use ice_prescribed_mod
+#endif
 
       implicit none
       private

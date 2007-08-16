@@ -35,8 +35,7 @@
       use ice_calendar
       use ice_diagnostics
       use ice_timers
-      use ice_prescribed_mod
-      use ice_coupling
+      use ice_forcing
       use ice_exit
       use ice_history	
       use ice_restart 	

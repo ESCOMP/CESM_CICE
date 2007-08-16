@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20070816b
+Originator: dbailey (David Bailey)
+Date: 
+Model: CICE
+Version: 4.0
+One-line Summary: Fixed some use statements for standalone CICE.
+CCSM Version compatible with: 
+Changes made:
+
+M   src/drivers/cice4/CICE_RunMod.F90
+M   src/source/ice_step_mod.F90
+
+===============================================================
+===============================================================
 cice4_0_20070816
 Originator: mvertens (Mariana Vertstein)
 Date: Thu Aug 16 12:01:11 MDT 2007
