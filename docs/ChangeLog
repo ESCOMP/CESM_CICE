@@ -1,4 +1,44 @@
 ===============================================================
+cice4_0_20070816
+Originator: mvertens (Mariana Vertstein)
+Date: Thu Aug 16 12:01:11 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: introduced new initialization scheme for non-cice4 
+	mode and introduced more code reuse with ice_step_mod.F90
+CCSM Version compatible with: 
+Changes made:
+	
+M   src/source/ice_init.F90
+       - for non-cice4 mode, removed namelist variables ice_ic and
+       restart and introduced namelist variable inic_file which
+       can have values of 'default', 'none', or the cice restart 
+       filename which can be used to start up the run. 
+       - inic_file is used only when runtype is not set to 'continue'	
+       - cice restart pointer files are only used for continuation
+       runs (i.e. runtype = 'continue")
+	
+A    src/source/ice_step_mod.F90
+       - thermodynamic and dynamics step routines used by
+	 ccsm_sequential, ccsm_concurrent and cice4 are not 
+	 contained in this one module
+	
+M    src/source/ice_restart.F90
+M    src/source/ice_read_write.F90
+M    src/source/ice_grid.F90
+M    src/source/ice_history.F90
+      - changes to inic_file migrated to the above routines	
+	
+M    src/drivers/ccsm_sequential/CICE_InitMod.F90
+D    src/drivers/ccsm_sequential/CICE_RunMod.F90
+M    src/drivers/ccsm_sequential/ice_comp_mct.F90
+M    src/drivers/ccsm_concurrent/CICE_InitMod.F90
+M    src/drivers/ccsm_concurrent/CICE_RunMod.F90
+M    src/drivers/ccsm_concurrent/ice.F90
+M    src/drivers/cice4/CICE_RunMod.F90
+       - changes put in to utilize new ice_step_mod.F90 module
+	
+===============================================================
 cice4_0_20070814
 Originator: dbailey (David Bailey)
 Date: Tue Aug 14 14:23:37 MDT 2007

@@ -323,7 +323,11 @@
       use ice_constants
       use ice_calendar, only: yday
       use ice_flux, only: mlt_onset, frz_onset
+#if (defined CCSM) || (defined SEQ_MCT)
+      use ice_restart, only: inic_file
+#else
       use ice_restart, only: restart
+#endif
       use ice_exit
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -928,7 +932,11 @@
          conb(k) = c0   ! add 0.
       enddo
 
+#if (defined CCSM) || (defined SEQ_MCT)
+      if (trim(inic_file) /= 'default' .and. trim(inic_file) /= 'none' .and. yday >= c2) then
+#else
       if (restart .and. yday >= c2) then
+#endif
 ! restarting midyear gives erroneous onset dates
          mlt_onset = 999._dbl_kind 
          frz_onset = 999._dbl_kind 

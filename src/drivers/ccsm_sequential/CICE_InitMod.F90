@@ -40,7 +40,6 @@
       use ice_kinds_mod
       use ice_mechred
       use ice_meltpond
-      use ice_ocean
       use ice_orbital
       use ice_shortwave
       use ice_therm_itd
@@ -57,7 +56,7 @@
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-      public :: cice_init
+      public :: CICE_Init
 
 !
 !EOP
@@ -69,7 +68,7 @@
 !=======================================================================
 !BOP
 !
-! !ROUTINE: cice_init - initialize CICE model
+! !ROUTINE: CICE_Init - initialize CICE model
 !
 ! !DESCRIPTION:
 !
@@ -79,7 +78,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine cice_init( mpicom_ice )
+      subroutine CICE_Init( mpicom_ice )
 !
 ! !USES:
 !
@@ -117,7 +116,16 @@
       call calendar(time)       ! determine the initial date
       call init_state           ! initialize the ice state
       call ice_prescribed_init
-      if (restart) call restartfile      ! start from restart file
+
+      if (runtype /= 'continue') then
+         ! for non-continuation run, determine if should read restart file
+         if (trim(inic_file) /= 'default' .and. trim(inic_file) /= 'none') then
+            call restartfile(inic_file)      
+         end if
+      else	
+         ! for continuation run, always start for restart pointer file
+         call restartfile()
+      end if
 
       if (kpond == 1) call init_meltponds
       call init_shortwave
@@ -129,7 +137,7 @@
       if(.not.prescribed_ice) call ice_write_hist(dt)
       write_ic = .false.
 
-      end subroutine cice_init
+      end subroutine CICE_Init
 
 !=======================================================================
 

@@ -2,14 +2,14 @@
 !
 !BOP
 !
-! !MODULE: CICE_RunMod - contains main run method for CICE
+! !MODULE: ice_step_mod - thermodynamic and dynamics step routines
 !
 ! !DESCRIPTION:
 !
-!  Contains main driver routine for time stepping of CICE.
+!  Contains CICE thermodynamic and dynamics step routines
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_RunMod.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: 
 !
 !  authors Elizabeth C. Hunke, LANL
 !          Philip W. Jones, LANL
@@ -18,11 +18,11 @@
 ! 2006 ECH: moved exit timeLoop to prevent execution of unnecessary timestep
 ! 2006 ECH: Streamlined for efficiency 
 ! 2006 ECH: Converted to free source form (F90)
+! 2007 MV : Moved thermodynamic and dynamics step routines to ice_step_mod
 !
 ! !INTERFACE:
 !
-
-      module CICE_RunMod
+      module ice_step_mod
 !
 ! !USES:
 !
@@ -451,7 +451,7 @@
             meltt_tmp = meltt(:,:,iblk) - meltt_old
 
             call compute_ponds(nx_block, ny_block, nghost,              &
-                               meltt_tmp,          melts_tmp,           &
+                               meltt_tmp, melts_tmp, frain(:,:,iblk),   &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
                                vsnon (:,:,n,iblk), trcrn (:,:,:,n,iblk),&
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
@@ -1009,6 +1009,6 @@
 
 !=======================================================================
 
-      end module CICE_RunMod
+      end module ice_step_mod
 
 !=======================================================================

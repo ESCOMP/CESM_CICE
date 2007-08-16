@@ -8,7 +8,7 @@
 ! Spatial grids, masks, and boundary conditions
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_grid.F90 61 2007-04-25 17:50:16Z dbailey $
+!  SVN:$Id: ice_grid.F90 71 2007-07-24 22:41:20Z eclare $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
 !          Tony Craig, NCAR
@@ -101,6 +101,10 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
          hm     , & ! land/boundary mask, thickness (T-cell)
          uvm        ! land/boundary mask, velocity (U-cell)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
+         ocn_gridcell_frac   ! only relevant for lat-lon grids
+                             ! gridcell value of [1 - (land fraction)] (T-cell)
 
       logical (kind=log_kind), &
          dimension (nx_block,ny_block,max_blocks) :: &
@@ -830,6 +834,7 @@
 ! !REVISION HISTORY:
 !
 ! author: Mariana Vertenstein
+! 2007: Elizabeth Hunke upgraded to netcdf90 and cice ncdf calls
 !
 ! !USES:
 !
@@ -837,12 +842,10 @@
       use ice_domain_size
       use ice_gather_scatter
       use ice_scam, only : scmlat, scmlon, single_column
+      use netcdf
 !
-! !ARGUMENTS
-      include "netcdf.inc"
-
 ! !INPUT/OUTPUT PARAMETERS:
-!
+      include "netcdf.inc"    ! only neede for single_column input
 !EOP
 !
       integer (kind=int_kind) :: &
@@ -851,14 +854,12 @@
       integer (kind=int_kind) :: &
          ni, nj, ncid, dimid, varid, ier
 
-      real (kind=dbl_kind), dimension (nx_global, ny_global):: &
-         glob_in    ! global array
-
       character (len=char_len) :: &
          subname='latlongrid' ! subroutine name
 
       type (block) :: &
          this_block           ! block information for current block
+
       integer (kind=int_kind) :: &
          ilo,ihi,jlo,jhi      ! beginning and end of physical domain
 
@@ -872,11 +873,15 @@
            start(2), &        ! Start index to read in
            count(2)           ! Number of points to read in
 
+      integer (kind=int_kind) :: &
+        status                ! status flag
+
       real (kind=dbl_kind), allocatable :: &
            lats(:),lons(:),pos_lons(:), glob_grid(:,:)  ! temporaries 
 
       real (kind=dbl_kind) :: &
-         pos_scmlon           ! temporary
+         pos_scmlon,&         ! temporary
+         scamdata             ! temporary
 
       !-----------------------------------------------------------------
       ! - kmt file is actually clm fractional land file
@@ -888,118 +893,113 @@
       ! Determine dimension of domain file and check for consistency
 
       if (my_task == master_task) then
-         call check_ret( nf_open(kmt_file, 0, ncid), subname )
+         call ice_open_nc(kmt_file, ncid)
 
-         call check_ret(nf_inq_dimid (ncid, 'ni', dimid), subname)
-         call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
-         call check_ret(nf_inq_dimid (ncid, 'nj', dimid), subname)
-         call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+         status = nf90_inq_dimid (ncid, 'ni', dimid)
+         status = nf90_inquire_dimension(ncid, dimid, len=ni)
+         status = nf90_inq_dimid (ncid, 'nj', dimid)
+         status = nf90_inquire_dimension(ncid, dimid, len=nj)
+      end if
+         
+      ! Determine start/count to read in for either single column or global lat-lon grid
+      ! If single_column, then assume that only master_task is used since there is only one task
 
-         if (single_column) then
+      if (single_column) then
+         ! Check for consistency 
+         if (my_task == master_task) then
             if ((nx_global /= 1).or. (ny_global /= 1)) then
                write(nu_diag,*) 'Because you have selected the column model flag'
                write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
                write(nu_diag,*) 'ice_domain_size.F and recompile'
                call abort_ice ('latlongrid: check nx_global, ny_global')
             endif
-         else
-            if (nx_global /= ni .and. ny_global /= nj) then
-               call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
-            end if
          end if
-      end if
-         
-      ! Determine start/count to read in for either single column or global lat-lon grid
-
-      if (single_column) then
+            
+         ! Read in domain file for single column
          allocate(lats(nj))
          allocate(lons(ni))
          allocate(pos_lons(ni))
          allocate(glob_grid(ni,nj))
 
-         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
-         call check_ret(nf_get_var_double(ncid, varid, glob_grid), subname)
+         call ice_read_global_nc(ncid, 1, 'xc', glob_grid, diag=.true.)
          do i = 1,ni
             lons(i) = glob_grid(i,1)
          end do
-         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
-         call check_ret(nf_get_var_double(ncid, varid, glob_grid), subname)
+         call ice_read_global_nc(ncid, 1, 'yc', glob_grid, diag=.true.)
          do j = 1,nj
             lats(j) = glob_grid(1,j) 
          end do
          
          ! convert lons array and scmlon to 0,360 and find index of value closest to 0
          ! and obtain single-column longitude/latitude indices to retrieve
-         
          pos_lons(:)= mod(lons(:) + 360._r8,360._r8)
          pos_scmlon = mod(scmlon  + 360._r8,360._r8)
          start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
          start(2) = (MINLOC(abs(lats    -scmlat    ),dim=1))
+         count(1) = 1
+         count(2) = 1
 
          deallocate(lats)
          deallocate(lons)
          deallocate(pos_lons)
          deallocate(glob_grid)
-      else
-          start(1)=1
-          start(2)=1
-      endif
-      count(1)=nx_global
-      count(2)=ny_global
-      
-      ! Read in domain file for either single column or for global lat-lon grid
 
-      if (my_task == master_task) then
          call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
-         do j = 1, ny_global
-         do i = 1, nx_global
-            ! Convert from degrees to radians
-            glob_in(i,j) = pi*glob_in(i,j)/180._dbl_kind 
-         end do
-         end do 
-      end if
-      call scatter_global(TLON, glob_in, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         TLON = scamdata 
          call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
-         do j = 1, ny_global
-         do i = 1, nx_global
-            ! Convert from degrees to radians
-            glob_in(i,j) = pi*glob_in(i,j)/180._dbl_kind 
-         end do
-         end do 
-      end if
-      call scatter_global(TLAT, glob_in, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
-         ! Note that area read in from domain file is in km^2 - must first convert to m^2 and 
-         ! then convert to radians^2
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         TLAT = scamdata
          call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
-         do j = 1, ny_global
-         do i = 1, nx_global
-            ! Convert from km^2 to m^2
-            glob_in(i,j) = glob_in(i,j) * 1.e6_dbl_kind
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         tarea = scamdata
+         call check_ret(nf_inq_varid(ncid, 'hm' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         hm = scamdata
+         call check_ret(nf_inq_varid(ncid, 'frac' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         ocn_gridcell_frac = scamdata
+      else
+         ! Check for consistency 
+         if (my_task == master_task) then
+            if (nx_global /= ni .and. ny_global /= nj) then
+              call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+            end if
+         end if
+
+         ! Read in domain file for global lat-lon grid
+         call ice_read_nc(ncid, 1, 'xc'  , TLON             , diag=.true.)
+         call ice_read_nc(ncid, 1, 'yc'  , TLAT             , diag=.true.)
+         call ice_read_nc(ncid, 1, 'area', tarea            , diag=.true.)
+         call ice_read_nc(ncid, 1, 'mask', hm               , diag=.true.)
+         call ice_read_nc(ncid, 1, 'frac', ocn_gridcell_frac, diag=.true.) 
+      end if
+
+      if (my_task == master_task) then
+         call ice_close_nc(ncid)
+      end if
+
+      do iblk = 1,nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+         do j = jlo, jhi
+         do i = ilo, ihi
+            ! Convert from degrees to radians
+            TLON(i,j,iblk) = pi*TLON(i,j,iblk)/180._dbl_kind 
+
+            ! Convert from degrees to radians
+            TLAT(i,j,iblk) = pi*TLAT(i,j,iblk)/180._dbl_kind 
+
+            ! Convert from radians^2 to m^2 
+            ! (area in domain file is in radians^2 and tarea is in m^2)  
+            tarea(i,j,iblk) = tarea(i,j,iblk) * (radius*radius)
          end do
-         end do 
-      end if
-      call scatter_global(tarea, glob_in, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
-         call check_ret(nf_inq_varid(ncid, 'mask', varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, glob_in), subname)
-      end if
-      call scatter_global(hm, glob_in, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
-         call check_ret(nf_close(ncid), subname)
-      end if
+         end do
+      end do
 
       !-----------------------------------------------------------------
       ! Calculate various geometric 2d arrays
@@ -1055,7 +1055,40 @@
       call makemask
 
       end subroutine latlongrid
-#endif
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: check_ret
+!
+! !INTERFACE:
+      subroutine check_ret(ret, calling)
+!
+! !DESCRIPTION:
+!     Check return status from netcdf call
+!
+! !USES:
+        use netcdf
+! !ARGUMENTS:
+        implicit none
+        integer, intent(in) :: ret
+        character(len=*) :: calling
+!
+! !REVISION HISTORY:
+! author: Mariana Vertenstein
+! 2007: Elizabeth Hunke upgraded to netcdf90
+!
+!EOP
+!
+      if (ret /= NF90_NOERR) then
+         write(nu_diag,*)'netcdf error from ',trim(calling)
+         write(nu_diag,*)'netcdf strerror = ',trim(NF90_STRERROR(ret))
+         call abort_ice('ice ice_grid: netcdf check_ret error')
+      end if
+        
+      end subroutine check_ret
+
+#endif      
 !=======================================================================
 !BOP
 !
@@ -1770,37 +1803,6 @@
 
       end subroutine bsslzr 
 
-!=======================================================================
-!BOP
-!
-! !IROUTINE: check_ret
-!
-! !INTERFACE:
-      subroutine check_ret(ret, calling)
-!
-! !DESCRIPTION:
-!     Check return status from netcdf call
-!
-! !ARGUMENTS:
-        implicit none
-        integer, intent(in) :: ret
-        character(len=*) :: calling
-!
-        include "netcdf.inc"
-!
-! !REVISION HISTORY:
-! author: Mariana Vertenstein
-!
-!EOP
-!
-      if (ret /= NF_NOERR) then
-         write(nu_diag,*)'netcdf error from ',trim(calling)
-         write(nu_diag,*)'netcdf strerror = ',trim(NF_STRERROR(ret))
-         call abort_ice('ice ice_grid: netcdf check_ret error')
-      end if
-        
-      end subroutine check_ret
-      
 !=======================================================================
 
       end module ice_grid

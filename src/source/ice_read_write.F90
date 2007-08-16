@@ -62,6 +62,8 @@
 !
 ! !USES:
 !
+      use ice_exit
+!
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &
@@ -72,15 +74,23 @@
 !
 !EOP
 !
+      integer :: rcode
+	
       if (my_task == master_task) then
 
          if (nbits == 0) then   ! sequential access
 
-            open(nu,file=filename,form='unformatted')
-
+            open(nu,file=filename,form='unformatted', iostat=rcode)
+	    if (rcode /= 0) then
+               call abort_ice('ice_open: sequential access file already open') 
+            end if
+	
          else                   ! direct access
             open(nu,file=filename,recl=nx_global*ny_global*nbits/8, &
-                  form='unformatted',access='direct')
+                  form='unformatted',access='direct', iostat=rcode)
+	    if (rcode /= 0) then
+               call abort_ice('ice_open: direct access file already open') 
+            end if
          endif                   ! nbits = 0
 
       endif                      ! my_task = master_task
@@ -523,7 +533,7 @@
       logical (kind=log_kind), intent(in) :: &
            diag              ! if true, write diagnostic output
 
-      character (char_len), intent(in) :: & 
+      character (len=*), intent(in) :: & 
            varname           ! field name in netcdf file
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
@@ -539,7 +549,6 @@
          status,          & ! status output from netcdf routines
          ndim, nvar,      & ! sizes of netcdf file
          id,              & ! dimension index
-         varndim,         & ! no. of dimensions for field
          dimlen             ! size of dimension
 
       real (kind=dbl_kind) :: &
@@ -589,7 +598,7 @@
             ', varname = ',trim(varname)
           status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
           write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
-          do id=1,varndim
+          do id=1,ndim
             status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
             write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
          enddo
@@ -644,7 +653,7 @@
            fid           , & ! file id
            nrec              ! record number 
 
-     character (char_len), intent(in) :: & 
+     character (len=*), intent(in) :: & 
            varname           ! field name in netcdf file        
 
       real (kind=dbl_kind), dimension(nx_global,ny_global), &
@@ -663,7 +672,6 @@
          status,          & ! status output from netcdf routines
          ndim, nvar,      & ! sizes of netcdf file
          id,              & ! dimension index
-         varndim,         & ! no. of dimensions for field
          dimlen             ! size of dimension      
 
       real (kind=dbl_kind) :: &
@@ -709,7 +717,7 @@
             ', varname = ',trim(varname)
           status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
           write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
-          do id=1,varndim
+          do id=1,ndim   
             status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
             write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
          enddo

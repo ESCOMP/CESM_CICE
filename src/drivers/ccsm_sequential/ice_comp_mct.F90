@@ -194,7 +194,7 @@ contains
        call shr_sys_flush(nu_diag)
     end if
     call calendar(time)     ! update calendar info
-
+ 
     !=============================================================
     ! Initialize MCT attribute vectors and indices
     !=============================================================
@@ -239,7 +239,7 @@ contains
 ! Run thermodynamic CICE
 !
 ! !USES:
-    use CICE_RunMod
+    use ice_step_mod
     use ice_history
     use ice_restart
     use ice_diagnostics
@@ -284,49 +284,56 @@ contains
     call ice_import_mct( x2i_i )
     call t_stopf ('cice_import')
  
-    ! Update time
+    !--------------------------------------------------------------------
+    ! timestep update
+    !--------------------------------------------------------------------
 
     istep  = istep  + 1    ! update time step counters
     istep1 = istep1 + 1
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
     
-    ! If prescribed ice
+    call init_mass_diags   ! diagnostics per timestep
 
     if(prescribed_ice) then  ! read prescribed ice
        call ice_prescribed_run(idate, sec)
     endif
     
-     ! Step through the first part of the thermodynamics
+    !-----------------------------------------------------------------
+    ! thermodynamics1
+    !-----------------------------------------------------------------
 
     call t_startf ('cice_therm1')
     call step_therm1(dt)
     call t_stopf ('cice_therm1')
     
-    ! Send export state to driver (this matches cpl6 logic)
-    
-    call t_startf ('cice_export')
-    call ice_export_mct ( i2x_i )
-    call t_stopf ('cice_export')
-    
-    ! Step through the second part of the thermodynamics and dynamics
-    
-    call t_startf ('cice_therm2_dyn')
+    !-----------------------------------------------------------------
+    ! thermodynamics2
+    !-----------------------------------------------------------------
+
     if (.not.prescribed_ice) then
+       call t_startf ('cice_therm2')
        call step_therm2 (dt)  ! post-coupler thermodynamics
+       call t_stopf ('cice_therm2')
+    end if
+
+   !-----------------------------------------------------------------
+   ! dynamics, transport, ridging
+   !-----------------------------------------------------------------
+
+    if (.not.prescribed_ice) then
+       call t_startf ('cice_dyn')
        do k = 1, ndyn_dt
           call step_dynamics (dyn_dt) ! dynamics, transport, ridging
        enddo
+       call t_stopf ('cice_dyn')
     endif ! not prescribed_ice
-    call t_stopf ('cice_therm2_dyn')
     
     !-----------------------------------------------------------------
     ! write data
     !-----------------------------------------------------------------
     
-    call ice_timer_start(timer_readwrite)  ! reading/writing
-    
-    call t_startf ('cice_diag')
+      call t_startf ('cice_diag')
     if (mod(istep,diagfreq) == 0) call runtime_diags(dt) ! log file
     call t_stopf ('cice_diag')
     
@@ -339,15 +346,21 @@ contains
        call eshr_timemgr_clockGet(SyncClock, year=yr_sync, &
           month=mon_sync, day=day_sync, CurrentTOD=tod_sync)
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
-       write(nu_diag,*) &
-          'ice_comp_mct: callinng dumpfile for restart filename= ',fname
+       write(nu_diag,*)'ice_comp_mct: callinng dumpfile for restart filename= ',&
+            fname
        call dumpfile(fname)
     end if
 
-    call ice_timer_stop(timer_readwrite)  ! reading/writing
+    !-----------------------------------------------------------------
+    ! Send export state to driver (this matches cpl6 logic)
+    !-----------------------------------------------------------------
+    
+    call t_startf ('cice_export')
+    call ice_export_mct ( i2x_i )
+    call t_stopf ('cice_export')
     
     !--------------------------------------------------------------------
-    ! Check that internal clock is in sync with master clock
+    ! check that internal clock is in sync with master clock
     !--------------------------------------------------------------------
 
     tod = sec
@@ -989,7 +1002,11 @@ contains
        do j = jlo, jhi
        do i = ilo, ihi
           n = n+1
-          data(n) = 1._dbl_kind
+	  if (trim(grid_type) == 'latlon') then
+             data(n) = ocn_gridcell_frac(i,j,iblk)
+          else
+             data(n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
+          end if
        enddo   !i
        enddo   !j
     enddo      !iblk
