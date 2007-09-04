@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20070903
+Originator: mvertens (Mariana Vertstein)
+Date: Mon Sep  3 19:50:47 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: put in prescribed-ice changes made in
+	 cice4_0_6_brnchT_20070829 onto trunk
+CCSM Version compatible with: 
+Changes made:
+
+M  source/ice_init.F90
+M  drivers/ccsm_sequential/ice_prescribed_mod.F90
+M  drivers/ccsm_concurrent/ice_prescribed_mod.F90
+   - prescribed ice changes needed to resolve bug #569
+	
+results should be bfb with cice4_0_20070816
+	
+===============================================================
 cice4_0_20070816b
 Originator: dbailey (David Bailey)
 Date: 
@@ -11,7 +29,6 @@ Changes made:
 M   src/drivers/cice4/CICE_RunMod.F90
 M   src/source/ice_step_mod.F90
 
-===============================================================
 ===============================================================
 cice4_0_20070816
 Originator: mvertens (Mariana Vertstein)
