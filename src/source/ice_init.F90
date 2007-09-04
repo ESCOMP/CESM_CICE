@@ -284,7 +284,9 @@
       ! Note in SEQ_MCT mode the runid and runtype flag are obtained from the
       ! sequential driver - not from the cice namelist 
       if (my_task == master_task) then
-         history_file = trim(runid)//"_iceh"
+         history_file  = trim(runid) // ".cice.h"
+         restart_file  = trim(runid) // ".cice.r"
+         incond_file   = trim(runid) // ".cice.i"
       endif
 #endif
 
