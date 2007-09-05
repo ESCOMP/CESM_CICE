@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20070905
+Originator: dbailey (David Bailey)
+Date: Mon Sep  3 19:50:47 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: bug fix for diagnostics in ice_step_mod.F90
+CCSM Version compatible with: 
+Changes made:
+
+M  source/ice_step_mod.F90
+	
+results should be bfb with cice4_0_20070903
+	
+===============================================================
 cice4_0_20070903
 Originator: mvertens (Mariana Vertstein)
 Date: Mon Sep  3 19:50:47 MDT 2007
