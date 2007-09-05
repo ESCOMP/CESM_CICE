@@ -1,7 +1,25 @@
 ===============================================================
+cice4_0_20070905b
+Originator: dbailey (David Bailey)
+Date: Wed Sep  5 14:03:56 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Move to_coupler call in concurrent system and
+                  fix associated diagnostics.
+CCSM Version compatible with: 
+Changes made:
+
+M      source/ice_diagnostics.F90
+M      source/ice_step_mod.F90
+M      source/ice_flux.F90
+M      drivers/ccsm_concurrent/CICE_RunMod.F90
+
+results should NOT be bfb with cice4_0_20070905
+	
+===============================================================
 cice4_0_20070905
 Originator: dbailey (David Bailey)
-Date: Mon Sep  3 19:50:47 MDT 2007
+Date: Wed Sep 5 2007
 Model: CICE
 Version: 4.0
 One-line Summary: bug fix for diagnostics in ice_step_mod.F90

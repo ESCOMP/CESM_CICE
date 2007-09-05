@@ -134,12 +134,6 @@
 
          call step_therm1 (dt)  ! pre-coupler thermodynamics
 
-         call ice_timer_stop(timer_rcvsnd)   ! timing between recv-send
-
-         call to_coupler        ! collect/send data to CCSM coupler
-
-         call ice_timer_start(timer_sndrcv)   ! timing between send-recv
-
          if (.not.prescribed_ice) then
             call step_therm2 (dt)  ! post-coupler thermodynamics
          endif
@@ -153,6 +147,12 @@
                call step_dynamics (dyn_dt)
             enddo
          endif ! not prescribed_ice
+
+         call ice_timer_stop(timer_rcvsnd)   ! timing between recv-send
+
+         call to_coupler        ! collect/send data to CCSM coupler
+
+         call ice_timer_start(timer_sndrcv)   ! timing between send-recv
 
       !-----------------------------------------------------------------
       ! write data
