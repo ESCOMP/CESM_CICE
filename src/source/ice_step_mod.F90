@@ -648,7 +648,8 @@
             enddo
             enddo
 
-            if (icells > 0) &
+            if (icells > 0) then
+
             call linear_itd (nx_block, ny_block,       &
                              icells, indxi, indxj,     &
                              nghost,   trcr_depend,    &
@@ -674,6 +675,8 @@
                                      this_block%i_glob(istop), &
                                      this_block%j_glob(jstop) 
                call abort_ice ('ice: Linear ITD error')
+            endif
+
             endif
 
          endif
