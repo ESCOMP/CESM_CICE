@@ -1,3 +1,23 @@
+cice4_0_20070917
+Originator: mvertens (Mariana Vertenstein)
+Date: Mon Sep 17 16:52:59 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Changes necessary for sequential system 
+	          with separate log files for each component
+	
+CCSM Version compatible with: 
+Changes made:
+	
+M      source/ice_init.F90
+M      source/ice_fileunits.F90
+M      source/ice_restart.F90
+M      drivers/ccsm_sequential/ice_communicate.F90
+M      drivers/ccsm_sequential/CICE_InitMod.F90
+M      drivers/ccsm_sequential/ice_comp_mct.F90
+M      drivers/ccsm_concurrent/CICE_InitMod.F90
+M      drivers/cice4/CICE_InitMod.F90
+
 ===============================================================
 cice4_0_20070905b
 Originator: dbailey (David Bailey)
