@@ -285,6 +285,7 @@
             read(nu_rst_pointer,'(a)') filename0
             filename = trim(filename0)
             close(nu_rst_pointer)
+            write(nu_diag,*) 'read ',pointer_file(1:lenstr(pointer_file))
          endif
       endif
 
@@ -292,7 +293,6 @@
 
       if (my_task == master_task) then
          read (nu_restart) istep0,time,time_forc
-         write(nu_diag,*) 'read ',pointer_file(1:lenstr(pointer_file))
          write(nu_diag,*) 'restart read at istep=',istep0,time,time_forc
       endif
 

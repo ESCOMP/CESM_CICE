@@ -92,8 +92,8 @@
 !     local temporary variables
 
       call init_communicate( mpicom_ice ) ! initial setup for message passing
+      call init_fileunits       ! set unit numbers (including nu_diag)
       call input_data           ! namelist variables
-      call init_fileunits       ! unit numbers
       call init_work            ! work arrays
 
       call init_domain_blocks   ! set up block decomposition

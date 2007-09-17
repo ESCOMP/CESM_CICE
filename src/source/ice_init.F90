@@ -76,10 +76,15 @@
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
           runid, runtype 
-#else
+#elif (defined CCSM)
       use ice_restart, only:  &
            inic_file, restart_dir, restart_file, pointer_file, &
            runid, runtype 
+#elif (defined SEQ_MCT)
+      use ice_restart, only:  &
+           inic_file, restart_dir, restart_file, pointer_file, &
+           runid, runtype 
+      use shr_file_mod, only: shr_file_setio
 #endif
       use ice_history, only: hist_avg, &
                              history_format, history_dir, history_file, &
@@ -274,12 +279,6 @@
          call abort_ice('ice: error reading ice_nml')
       endif
 
-      if (trim(diag_type) == 'file') then
-         call get_fileunit(nu_diag)
-      else
-         nu_diag = 6
-      endif
-
 #ifdef SEQ_MCT
       ! Note in SEQ_MCT mode the runid and runtype flag are obtained from the
       ! sequential driver - not from the cice namelist 
@@ -381,25 +380,35 @@
       call broadcast_scalar(dbug,               master_task)
       call broadcast_array (latpnt(1:2),        master_task)
       call broadcast_array (lonpnt(1:2),        master_task)
-      call broadcast_scalar (runid,             master_task)
-      call broadcast_scalar (runtype,           master_task)
-! only master_task writes to file
-!      call broadcast_scalar(nu_diag),           master_task)
+      call broadcast_scalar(runid,              master_task)
+      call broadcast_scalar(runtype,            master_task)
 
       !-----------------------------------------------------------------
       ! spew
       !-----------------------------------------------------------------
 
+#ifdef SEQ_MCT
+      ! Note that diag_file is not utilized in SEQ_MCT mode
       if (my_task == master_task) then
+         nu_diag = shr_file_getUnit()
+         call shr_file_setIO('ice_modelio.nml',nu_diag)
+      end if
+#else
+      if (trim(diag_type) == 'file') then
+         call get_fileunit(nu_diag)
+      else
+         nu_diag = 6
+      endif
+      if (my_task == master_task) then
+         write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
+         open (nu_diag, file=diag_file, status='unknown')
+      end if
+#endif
 
-         if (trim(diag_type) == 'file') then
-            write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
-            open (nu_diag, file=diag_file, status='unknown')
-         endif
-
-         write (nu_diag,*) '--------------------------------'
-         write (nu_diag,*) '  CICE model diagnostic output  '
-         write (nu_diag,*) '--------------------------------'
+      if (my_task == master_task) then
+         write(nu_diag,*) '--------------------------------'
+         write(nu_diag,*) '  CICE model diagnostic output  '
+         write(nu_diag,*) '--------------------------------'
          write(nu_diag,*) ' '
          write(nu_diag,*) ' Document ice_in namelist parameters:'
          write(nu_diag,*) ' ==================================== '

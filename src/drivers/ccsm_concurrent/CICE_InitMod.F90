@@ -103,8 +103,8 @@
 
       call init_communicate     ! initial setup for message passing
       if (my_task == master_task) call shr_msg_dirio('ice')    ! redirect stdin/stdout
-      call input_data           ! namelist variables
       call init_fileunits       ! unit numbers
+      call input_data           ! namelist variables
       call init_work            ! work arrays
 
       call init_domain_blocks   ! set up block decomposition
