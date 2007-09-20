@@ -392,13 +392,13 @@
 
       allocate (atrcr(icells,ntrcr))
 
+      atrcr(:,:) = c0
+
       !-----------------------------------------------------------------
       ! Aggregate
       !-----------------------------------------------------------------
 
       do n = 1, ncat
-
-      atrcr(:,:) = c0
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC

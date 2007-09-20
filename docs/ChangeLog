@@ -1,3 +1,15 @@
+===============================================================
+cice4_0_20070920
+Originator: dbailey (David Bailey)
+Date: Thu Sep 20 15:25:42 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Bug fix in ice_itd.F90
+CCSM Version compatible with: 
+Changes made:
+
+M      source/ice_itd.F90
+===============================================================
 cice4_0_20070917
 Originator: mvertens (Mariana Vertenstein)
 Date: Mon Sep 17 16:52:59 MDT 2007
