@@ -1015,7 +1015,7 @@
 
          call scale_fluxes (nx_block,            ny_block,           &
                             nghost,              tmask   (:,:,iblk), &
-                            aice_init(:,:,iblk), Tf      (:,:,iblk), &
+                            aice(:,:,iblk),      Tf      (:,:,iblk), &
                             Tair     (:,:,iblk), Qa      (:,:,iblk), &
                             strairxT (:,:,iblk), strairyT(:,:,iblk), &
                             fsens    (:,:,iblk), flat    (:,:,iblk), &
