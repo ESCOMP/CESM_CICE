@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20070924
+Originator: dbailey (David Bailey)
+Date: Mon Sep 24 16:09:57 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Bug fixes in ice_coupling and ice_init.
+CCSM Version compatible with: 
+Changes made:
+
+The bug fix in ice_init was related to some changes for the log
+in the sequential system.
+M      source/ice_init.F90
+
+The bug fix in ice_coupling was related to the allocation of
+sbuf with multiple blocks per processor.
+M      drivers/ccsm_concurrent/ice_coupling.F90
+===============================================================
 cice4_0_20070921
 Originator: dbailey (David Bailey)
 Date: Fri Sep 21 09:26:12 MDT 2007

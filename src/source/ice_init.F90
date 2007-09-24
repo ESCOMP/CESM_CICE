@@ -280,6 +280,20 @@
       endif
 
 #ifdef SEQ_MCT
+      ! Note that diag_file is not utilized in SEQ_MCT mode
+      if (my_task == master_task) then
+         nu_diag = shr_file_getUnit()
+         call shr_file_setIO('ice_modelio.nml',nu_diag)
+      end if
+#else
+      if (trim(diag_type) == 'file') then
+         call get_fileunit(nu_diag)
+      else
+         nu_diag = 6
+      endif
+#endif
+
+#ifdef SEQ_MCT
       ! Note in SEQ_MCT mode the runid and runtype flag are obtained from the
       ! sequential driver - not from the cice namelist 
       if (my_task == master_task) then
@@ -387,25 +401,15 @@
       ! spew
       !-----------------------------------------------------------------
 
-#ifdef SEQ_MCT
-      ! Note that diag_file is not utilized in SEQ_MCT mode
       if (my_task == master_task) then
-         nu_diag = shr_file_getUnit()
-         call shr_file_setIO('ice_modelio.nml',nu_diag)
-      end if
-#else
-      if (trim(diag_type) == 'file') then
-         call get_fileunit(nu_diag)
-      else
-         nu_diag = 6
-      endif
-      if (my_task == master_task) then
-         write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
-         open (nu_diag, file=diag_file, status='unknown')
-      end if
+
+#if !(defined SEQ_MCT)
+         if (trim(diag_type) == 'file') then
+            write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
+            open (nu_diag, file=diag_file, status='unknown')
+         endif
 #endif
 
-      if (my_task == master_task) then
          write(nu_diag,*) '--------------------------------'
          write(nu_diag,*) '  CICE model diagnostic output  '
          write(nu_diag,*) '--------------------------------'
