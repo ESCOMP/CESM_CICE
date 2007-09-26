@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20070926
+Originator: dbailey (David Bailey)
+Date: Wed Sep 26 13:46:19 MDT 2007
+Model: CICE
+Version: 4.0
+One-line Summary: Misc bug fixes and addition of space-filling
+                  curves.
+CCSM Version compatible with: 
+Changes made:
+
+   M source/ice_distribution.F90
+   A source/spacecurve_mod.F90
+   M source/ice_grid.F90
+   M source/ice_step_mod.F90
+
+===============================================================
 cice4_0_20070924
 Originator: dbailey (David Bailey)
 Date: Mon Sep 24 16:09:57 MDT 2007
