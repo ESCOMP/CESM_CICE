@@ -187,6 +187,8 @@
 
       call init_flux_atm         ! initialize atmosphere fluxes sent to coupler
 
+      l_stop = .false.
+
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -601,6 +603,8 @@
 
       call init_flux_ocn        ! initialize ocean fluxes sent to coupler
       
+      l_stop = .false.
+
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -905,6 +909,8 @@
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_ridge)
+
+      l_stop = .false.
 
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk), iblk)

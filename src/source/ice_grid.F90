@@ -381,8 +381,17 @@
                              (tarea(i,j,  iblk) + tarea(i+1,j,  iblk) &
                             + tarea(i,j+1,iblk) + tarea(i+1,j+1,iblk))
 
-            tarear(i,j,iblk) = c1/tarea(i,j,iblk)
-            uarear(i,j,iblk) = c1/uarea(i,j,iblk)
+            if (tarea(i,j,iblk) > c0) then
+               tarear(i,j,iblk) = c1/tarea(i,j,iblk)
+            else
+               tarear(i,j,iblk) = c0 ! possible on boundaries
+            endif
+            if (uarea(i,j,iblk) > c0) then
+               uarear(i,j,iblk) = c1/uarea(i,j,iblk)
+            else
+               uarear(i,j,iblk) = c0 ! possible on boundaries
+            endif
+
             tinyarea(i,j,iblk) = puny*tarea(i,j,iblk)
 
             dxhy(i,j,iblk) = p5*(HTE(i,j,iblk) - HTE(i-1,j,iblk))
