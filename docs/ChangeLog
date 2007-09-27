@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20070926b
+Originator: dbailey (David Bailey)
+Date: Sep 26 21:17:04 MDT 2007
+Version: 4.0
+One-line Summary: Misc bug fixes in ice_communicate for the 
+                  sequential system.
+CCSM Version compatible with: 
+Changes made:
+
+M drivers/ccsm_sequential/ice_communicate.F90
+
+===============================================================
 cice4_0_20070926
 Originator: dbailey (David Bailey)
 Date: Wed Sep 26 13:46:19 MDT 2007

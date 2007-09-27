@@ -219,7 +219,7 @@
    call MPI_COMM_CREATE (MPI_COMM_ICE, MPI_GROUP_NEW,  &
                          new_comm, ierr)
 #else
-   call MPI_COMM_DUP(MPI_COMM_WORLD, new_comm, ierr)
+   call MPI_COMM_DUP(MPI_COMM_ICE, new_comm, ierr)
 #endif
 
 !-----------------------------------------------------------------------
