@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20070928
+Originator: dbailey (David Bailey)
+Date: Fri Sep 28 10:25:21 MDT 2007
+Version: 4.0
+One-line Summary: Bug fixes for small blocks.
+CCSM Version compatible with: 
+Changes made:
+
+M source/ice_grid.F90
+M source/ice_read_write.F90
+M source/ice_restart.F90
+
+===============================================================
 cice4_0_20070926b
 Originator: dbailey (David Bailey)
 Date: Sep 26 21:17:04 MDT 2007
