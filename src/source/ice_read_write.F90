@@ -105,6 +105,7 @@
 ! !INTERFACE:
 !
       subroutine ice_read(nu,  nrec,  work, atype, diag, &
+                          field_type, grid_loc, &
                           ignore_eof, hit_eof)
 !
 ! !DESCRIPTION:
@@ -138,6 +139,11 @@
 
       logical (kind=log_kind) :: &
            diag              ! if true, write diagnostic output
+
+      integer (int_kind), optional, intent(in) :: &
+         field_type,   &! id for type of field (scalar, vector, angle)
+         grid_loc       ! id for location on horizontal grid
+                        !  (center, NEcorner, Nface, Eface)
 
       logical (kind=log_kind), optional, intent(in)  :: ignore_eof
       logical (kind=log_kind), optional, intent(out) :: hit_eof
@@ -223,8 +229,13 @@
     ! NOTE: Ghost cells are not updated.
     !-------------------------------------------------------------------
 
-      call scatter_global(work, work_g1, master_task, distrb_info, &
-                          field_loc_noupdate, field_type_noupdate)
+      if (present(grid_loc) .and. present(field_type)) then
+         call scatter_global(work, work_g1, master_task, distrb_info, &
+                             grid_loc, field_type)
+      else
+         call scatter_global(work, work_g1, master_task, distrb_info, &
+                             field_loc_noupdate, field_type_noupdate)
+      endif
 
       deallocate(work_g1)
 
@@ -506,7 +517,8 @@
 !
 ! !INTERFACE:
 !
-      subroutine ice_read_nc(fid,  nrec,  varname, work,  diag)
+      subroutine ice_read_nc(fid,  nrec,  varname, work,  diag, &
+                             field_type, grid_loc)
 !
 ! !DESCRIPTION:
 !
@@ -535,6 +547,11 @@
 
       character (len=*), intent(in) :: & 
            varname           ! field name in netcdf file
+
+      integer (int_kind), optional, intent(in) :: &
+         field_type,   &! id for type of field (scalar, vector, angle)
+         grid_loc       ! id for location on horizontal grid
+                        !  (center, NEcorner, Nface, Eface)
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
            intent(out) :: &
@@ -614,8 +631,13 @@
     ! NOTE: Ghost cells are not updated.
     !-------------------------------------------------------------------
 
-      call scatter_global(work, work_g1, master_task, distrb_info, &
-                          field_loc_noupdate, field_type_noupdate)
+      if (present(grid_loc) .and. present(field_type)) then
+         call scatter_global(work, work_g1, master_task, distrb_info, &
+                             grid_loc, field_type)
+      else
+         call scatter_global(work, work_g1, master_task, distrb_info, &
+                             field_loc_noupdate, field_type_noupdate)
+      endif
 
       deallocate(work_g1)
 

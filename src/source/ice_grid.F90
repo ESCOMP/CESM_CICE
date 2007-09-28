@@ -313,20 +313,6 @@
          call rectgrid          ! regular rectangular grid
       endif
 
-      call ice_timer_start(timer_bound)
-      bc = 'Neumann'
-      call update_ghost_cells (HTN,                bndy_info, &
-                               field_loc_Nface,    field_type_scalar, bc)
-      call update_ghost_cells (HTE,                bndy_info, &
-                               field_loc_Eface,    field_type_scalar, bc)
-      call update_ghost_cells (ULAT,               bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (ULON,               bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (ANGLE,              bndy_info, &
-                               field_loc_NEcorner, field_type_angle,  bc)
-      call ice_timer_stop(timer_bound)
-
       !-----------------------------------------------------------------
       ! T-grid cell and U-grid cell quantities
       !-----------------------------------------------------------------
@@ -491,7 +477,7 @@
       call ice_timer_start(timer_bound)
       bc = 'Neumann'
       call update_ghost_cells (ANGLET,             bndy_info, &
-                               field_loc_NEcorner, field_type_angle, bc)
+                               field_loc_center, field_type_angle, bc)
       call ice_timer_stop(timer_bound)
 
       call makemask          ! velocity mask, hemisphere masks
@@ -573,11 +559,16 @@
       diag = .true.       ! write diagnostic info
 
       ! lat, lon, cell dimensions, angles
-      call ice_read(nu_grid,1,ULAT, 'rda8',diag)
-      call ice_read(nu_grid,2,ULON, 'rda8',diag)
-      call ice_read(nu_grid,3,HTN,  'rda8',diag)
-      call ice_read(nu_grid,4,HTE,  'rda8',diag)
-      call ice_read(nu_grid,7,ANGLE,'rda8',diag)
+      call ice_read(nu_grid,1,ULAT, 'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+      call ice_read(nu_grid,2,ULON, 'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+      call ice_read(nu_grid,3,HTN,  'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Nface)
+      call ice_read(nu_grid,4,HTE,  'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Eface)
+      call ice_read(nu_grid,7,ANGLE,'rda8',diag, &
+         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:) * cm_to_m
@@ -676,15 +667,20 @@
 
       ! lat, lon, cell dimensions, angles
       fieldname='ulat'
-      call ice_read_nc(fid_grid,1,fieldname,ULAT,diag)
+      call ice_read_nc(fid_grid,1,fieldname,ULAT,diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
       fieldname='ulon'
-      call ice_read_nc(fid_grid,2,fieldname,ULON,diag)
+      call ice_read_nc(fid_grid,2,fieldname,ULON,diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
       fieldname='htn'
-      call ice_read_nc(fid_grid,3,fieldname,HTN,diag)
+      call ice_read_nc(fid_grid,3,fieldname,HTN,diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Nface)
       fieldname='hte'
-      call ice_read_nc(fid_grid,4,fieldname,HTE,diag)
+      call ice_read_nc(fid_grid,4,fieldname,HTE,diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Eface)
       fieldname='angle'
-      call ice_read_nc(fid_grid,7,fieldname,ANGLE,diag)
+      call ice_read_nc(fid_grid,7,fieldname,ANGLE,diag, &
+         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:) * cm_to_m
@@ -812,11 +808,16 @@
 
       ! read other grid quantities
 
-      call ice_read(nu_grid,2,ULAT, 'rda8',diag)
-      call ice_read(nu_grid,3,ULON, 'rda8',diag)
-      call ice_read(nu_grid,4,HTN,  'rda8',diag)
-      call ice_read(nu_grid,5,HTE,  'rda8',diag)
-      call ice_read(nu_grid,8,ANGLE,'rda8',diag)
+      call ice_read(nu_grid,2,ULAT, 'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+      call ice_read(nu_grid,3,ULON, 'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+      call ice_read(nu_grid,4,HTN,  'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Nface)
+      call ice_read(nu_grid,5,HTE,  'rda8',diag, &
+         field_type=field_type_scalar,grid_loc=field_loc_Eface)
+      call ice_read(nu_grid,8,ANGLE,'rda8',diag, &
+         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:)*cm_to_m
@@ -979,7 +980,8 @@
          ! Read in domain file for global lat-lon grid
          call ice_read_nc(ncid, 1, 'xc'  , TLON             , diag=.true.)
          call ice_read_nc(ncid, 1, 'yc'  , TLAT             , diag=.true.)
-         call ice_read_nc(ncid, 1, 'area', tarea            , diag=.true.)
+         call ice_read_nc(ncid, 1, 'area', tarea            , diag=.true., &
+            field_type=field_type_scalar,grid_loc=field_loc_center)
          call ice_read_nc(ncid, 1, 'mask', hm               , diag=.true.)
          call ice_read_nc(ncid, 1, 'frac', ocn_gridcell_frac, diag=.true.) 
       end if
