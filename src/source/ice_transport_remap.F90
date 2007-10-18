@@ -4030,13 +4030,13 @@
 
       do j = 1, ny_block
       do i = nghost+1, nx_block
-         workb(i,j) = atan(dyhx(i,j)/HTE(i-1,j)) 
+         if (HTE(i-1,j) > puny) workb(i,j) = atan(dyhx(i,j)/HTE(i-1,j)) 
       enddo
       enddo
         
       do j = nghost+1, ny_block
       do i = 1, nx_block
-         workc(i,j) = atan(-dxhy(i,j)/HTN(i,j-1))
+         if (HTN(i,j-1) > puny) workc(i,j) = atan(-dxhy(i,j)/HTN(i,j-1))
       enddo
       enddo
 
