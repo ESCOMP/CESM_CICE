@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20071022
+Originator: mvertens (Mariana Vertenstein)
+Date: Mon Oct 22 17:03:24 MDT 2007
+Version: 4.0
+One-line Summary: brought ice_comp_mct.F90 up to dat with drvseq1_0_51
+CCSM Version compatible with: 
+Changes made:
+	
+M ice_comp_mct.F90
+	
+===============================================================
 cice4_0_20070928
 Originator: dbailey (David Bailey)
 Date: Fri Sep 28 10:25:21 MDT 2007
