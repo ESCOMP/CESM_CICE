@@ -241,6 +241,7 @@ contains
     !----------------------------------------------------------------------------
 
     call ice_export_mct (i2x_i)  !Send initial state to driver
+    call shr_inputInfo_initPutData( CCSMInit, ice_prognostic=.true.)
     call t_stopf ('cice_mct_init')
 
     !----------------------------------------------------------------------------
