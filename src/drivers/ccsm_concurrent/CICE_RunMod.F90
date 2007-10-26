@@ -30,6 +30,7 @@
       use ice_step_mod
       use ice_calendar
       use ice_diagnostics
+      use ice_flux
       use ice_timers
       use ice_prescribed_mod
       use ice_coupling
@@ -128,14 +129,24 @@
             call ice_prescribed_run(idate, sec)
          endif
 
+         call init_flux_atm
+
+      !-----------------------------------------------------------------
+      ! Pre-thermo radiation
+      !-----------------------------------------------------------------
+
+         call step_rad1 (dt)
+
       !-----------------------------------------------------------------
       ! thermodynamics
       !-----------------------------------------------------------------
 
-         call step_therm1 (dt)  ! pre-coupler thermodynamics
+      ! Used to be pre-coupler thermo, mostly just fluxes
+         call step_therm1 (dt) 
 
+      ! Used to be post-coupled thermo, mostly the itd.
          if (.not.prescribed_ice) then
-            call step_therm2 (dt)  ! post-coupler thermodynamics
+            call step_therm2 (dt)  
          endif
 
       !-----------------------------------------------------------------
@@ -147,6 +158,14 @@
                call step_dynamics (dyn_dt)
             enddo
          endif ! not prescribed_ice
+
+      !-----------------------------------------------------------------
+      ! Pre-coupler radiation. For CCSM shortwave, this is just the
+      ! albedos, but for Delta-Eddington, this is the full radiative
+      ! calculation.
+      !-----------------------------------------------------------------
+
+         call step_rad2 (dt)
 
          call ice_timer_stop(timer_rcvsnd)   ! timing between recv-send
 

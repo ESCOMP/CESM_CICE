@@ -124,7 +124,6 @@
          freshn      , & ! flux of water, ice to ocean     (kg/m^2/s)
          fsaltn      , & ! flux of salt, ice to ocean      (kg/m^2/s)
          fhocnn      , & ! fbot corrected for leftover energy (W/m^2)
-         fswthrun    , & ! SW through ice to ocean            (W/m^2)
          strairxn    , & ! air/ice zonal  strss,              (N/m^2)
          strairyn    , & ! air/ice merdnl strss,              (N/m^2)
          Trefn       , & ! air tmp reference level                (K)
@@ -135,9 +134,7 @@
          Tbot        , & ! ice bottom surface temperature (deg C)
          fbot        , & ! ice-ocean heat flux at bottom surface (W/m^2)
          shcoef      , & ! transfer coefficient for sensible heat
-         lhcoef      , & ! transfer coefficient for latent heat
-         fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
-         fswintn         ! SW absorbed in ice interior, below surface (W m-2)
+         lhcoef          ! transfer coefficient for latent heat
 
       ! Local variables to keep track of melt for ponds
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -145,26 +142,6 @@
          meltt_old, &
          melts_tmp, &
          meltt_tmp
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr) :: &
-         Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
-
-      ! snow variables for Delta-Eddington shortwave
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         fsn             ! snow horizontal fraction
-      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
-         rhosnwn     , & ! snow density (kg/m3)
-         rsnwn       , & ! snow grain radius (micro-meters)
-         Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
-
-      ! pond variables for Delta-Eddington shortwave
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         fpn         , & ! pond fraction
-         hpn             ! pond depth (m)
-
-! BPB 4 Jan 2007  daily mean coszen
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         coszen_mean     ! diurnal mean coszen
 
       type (block) :: &
          this_block      ! block information for current block
@@ -184,8 +161,6 @@
            call ocean_mixed_layer (dt)   ! ocean surface fluxes and sst
 
 !      call ice_timer_start(timer_tmp)  ! temporary timer
-
-      call init_flux_atm         ! initialize atmosphere fluxes sent to coupler
 
       l_stop = .false.
 
@@ -234,38 +209,6 @@
                                  rside (:,:,  iblk) )
 
 
-      !-----------------------------------------------------------------
-      ! Compute cosine of solar zenith angle.
-      ! This is used by the delta-Eddington shortwave module.
-      ! Albedos are aggregated in merge_fluxes only for cells w/ coszen > 0.
-      ! For basic shortwave, simply set coszen to a constant between 0 and 1.
-      !-----------------------------------------------------------------
-
-         if (trim(shortwave) == 'dEdd') then ! delta Eddington
-
-            ! identify ice-ocean cells
-            icells = 0
-            do j = 1, ny_block
-            do i = 1, nx_block
-               if (tmask(i,j,iblk)) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
-               endif
-            enddo               ! i
-            enddo               ! j
-
-            call compute_coszen (nx_block,         ny_block,       &
-                                 icells,                           &
-                                 indxi,            indxj,          &
-                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt,             &
-                                 coszen_mean)
-
-         else                     ! basic (ccsm3) shortwave
-            coszen(:,:,iblk) = p5 ! sun above the horizon
-         endif
-
          do n = 1, ncat
 
       !-----------------------------------------------------------------
@@ -282,77 +225,6 @@
                endif
             enddo               ! i
             enddo               ! j
-
-      !-----------------------------------------------------------------
-      ! Solar radiation: albedo and absorbed shortwave
-      !-----------------------------------------------------------------
-
-            if (trim(shortwave) == 'dEdd') then   ! delta Eddington
-
-      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
-      ! BPB 19 Dec 2006
-
-               ! set snow properties
-               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
-                                 icells,                                  &
-                                 indxi,               indxj,              &
-                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
-                                 trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
-                                 rhosnwn,             rsnwn)
-
-
-               if (kpond == 0) then
-
-               ! set pond properties
-               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
-                                 icells,                                   &
-                                 indxi,               indxj,               &
-                                 aicen(:,:,n,iblk),                        &
-                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
-                                 fsn,                 fpn,                 &
-                                 hpn)
-
-               else
-
-
-               fpn(:,:) = apondn(:,:,n,iblk)
-               hpn(:,:) = hpondn(:,:,n,iblk)
-
-               endif
-
-               call shortwave_dEdd(nx_block,        ny_block,            &
-                                 icells,                                 &
-                                 indxi,             indxj,               &
-                                 coszen(:,:, iblk),                      &
-                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), fsn,                 &
-                                 rhosnwn,           rsnwn,               &
-                                 fpn,               hpn,                 &
-                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
-                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
-                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn,           fswintn,             &
-                                 fswthrun,          Sswabsn,             &
-                                 Iswabsn)
-
-            else
-               Sswabsn(:,:,:) = c0
-
-               call shortwave_ccsm3(nx_block,       ny_block,            &
-                                 icells,                                 &
-                                 indxi,             indxj,               &
-                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk),                      &
-                                 trcrn(:,:,nt_Tsfc,n,iblk),              &
-                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
-                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
-                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn,           fswintn,             &
-                                 fswthrun,          Iswabsn,             &
-                                 apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
-            endif
 
       !-----------------------------------------------------------------
       ! Atmosphere boundary layer calculation; compute coefficients
@@ -417,9 +289,10 @@
                              fsnow  (:,:,iblk),                        &
                              fbot,                Tbot,                &
                              lhcoef,              shcoef,              &
-                             fswsfcn,             fswintn,             &
-                             fswthrun,                                 &
-                             Sswabsn,             Iswabsn,             &
+                             fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
+                             fswthrun(:,:,n,iblk),                     &
+                             Sswabsn(:,:,sl1:sl2,iblk),                &
+                             Iswabsn(:,:,sl1:sl2,iblk),                &
                              fsensn,              flatn,               &
                              fswabsn,             flwoutn,             &
                              evapn,               freshn,              &
@@ -479,7 +352,7 @@
                             evapn,                                    &
                             Trefn,              Qrefn,                &
                             freshn,             fsaltn,               &
-                            fhocnn,             fswthrun,             &
+                            fhocnn,             fswthrun(:,:,n,iblk), &
                             alvdr   (:,:,iblk), alidr     (:,:,iblk), &
                             alvdf   (:,:,iblk), alidf     (:,:,iblk), &
                             strairxT(:,:,iblk), strairyT  (:,:,iblk), &
@@ -1014,6 +887,422 @@
                          aice0(:,:,  iblk), tmask(:,:,    iblk),  &
                          trcr_depend) 
 
+      enddo
+
+      call ice_timer_stop(timer_column)
+
+      end subroutine step_dynamics
+
+!=======================================================================
+!BOP
+!
+! !ROUTINE: step_rad1 - step pre-thermo radiation
+!
+! !DESCRIPTION:
+!
+! !REVISION HISTORY:
+!
+! authors: David A. Bailey, NCAR
+!
+! !INTERFACE:
+
+      subroutine step_rad1 (dt)
+!
+! !USES:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      real (kind=dbl_kind), intent(in) :: &
+         dt      ! time step
+!
+!EOP
+!
+      integer (kind=int_kind) :: &
+         i, j, ij    , & ! horizontal indices
+         iblk        , & ! block index
+         ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
+         n           , & ! thickness category index
+         il1, il2    , & ! ice layer indices for eice
+         sl1, sl2        ! snow layer indices for esno
+
+      integer (kind=int_kind), save :: &
+         icells          ! number of cells with aicen > puny
+
+      integer (kind=int_kind), dimension(nx_block*ny_block), save :: &
+         indxi, indxj    ! indirect indices for cells with aicen > puny
+
+      ! snow variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fsn             ! snow horizontal fraction
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
+         rhosnwn     , & ! snow density (kg/m3)
+         rsnwn           ! snow grain radius (micro-meters)
+
+      ! pond variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fpn         , & ! pond fraction
+         hpn             ! pond depth (m)
+
+      type (block) :: &
+         this_block      ! block information for current block
+
+      logical (kind=log_kind) :: &
+         l_stop          ! if true, abort the model
+
+      integer (kind=int_kind) :: &
+         istop, jstop    ! indices of grid cell where model aborts 
+
+      l_stop = .false.
+
+      Sswabsn(:,:,:,:) = c0
+
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+      !-----------------------------------------------------------------
+      ! Compute cosine of solar zenith angle.
+      ! This is used by the delta-Eddington shortwave module.
+      ! Albedos are aggregated in merge_fluxes only for cells w/ coszen > 0.
+      ! For basic shortwave, simply set coszen to a constant between 0 and 1.
+      !-----------------------------------------------------------------
+
+         if (trim(shortwave) == 'dEdd') then ! delta Eddington
+
+            ! identify ice-ocean cells
+            icells = 0
+            do j = 1, ny_block
+            do i = 1, nx_block
+               if (tmask(i,j,iblk)) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+            call compute_coszen (nx_block,         ny_block,       &
+                                 icells,                           &
+                                 indxi,            indxj,          &
+                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
+                                 coszen(:,:,iblk), dt)
+
+         else                     ! basic (ccsm3) shortwave
+            coszen(:,:,iblk) = p5 ! sun above the horizon
+         endif
+
+         do n = 1, ncat
+
+      !-----------------------------------------------------------------
+      ! Identify cells with nonzero ice area
+      !-----------------------------------------------------------------
+           
+            icells = 0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aicen(i,j,n,iblk) > puny) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+      !-----------------------------------------------------------------
+      ! Solar radiation: albedo and absorbed shortwave
+      !-----------------------------------------------------------------
+
+            if (trim(shortwave) == 'dEdd') then   ! delta Eddington
+
+      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
+      ! BPB 19 Dec 2006
+
+               ! set snow properties
+               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                                 icells,                                  &
+                                 indxi,               indxj,              &
+                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                                 trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
+                                 rhosnwn,             rsnwn)
+
+
+               if (kpond == 0) then
+
+               ! set pond properties
+               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
+                                 icells,                                   &
+                                 indxi,               indxj,               &
+                                 aicen(:,:,n,iblk),                        &
+                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
+                                 fsn,                 fpn,                 &
+                                 hpn)
+
+               else
+
+
+               fpn(:,:) = apondn(:,:,n,iblk)
+               hpn(:,:) = hpondn(:,:,n,iblk)
+
+               endif
+
+               call shortwave_dEdd(nx_block,        ny_block,            &
+                                 icells,                                 &
+                                 indxi,             indxj,               &
+                                 coszen(:,:, iblk),                      &
+                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                 vsnon(:,:,n,iblk), fsn,                 &
+                                 rhosnwn,           rsnwn,               &
+                                 fpn,               hpn,                 &
+                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
+                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
+                                 fswthrun(:,:,n,iblk),                   &
+                                 Sswabsn(:,:,sl1:sl2,iblk),              &
+                                 Iswabsn(:,:,il1:il2,iblk))
+
+            else
+
+               call absorbed_solar  (nx_block,   ny_block,               &
+                               icells,                                   &
+                               indxi,      indxj,                        &
+                               aicen(:,:,n,iblk),                        &
+                               vicen(:,:,n,iblk),  vsnon(:,:,n,iblk),    &
+                               swvdr(:,:,iblk),    swvdf(:,:,iblk),      &
+                               swidr(:,:,iblk),     swidf(:,:,iblk),     &
+                               alvdrni(:,:,n,iblk), alvdfni(:,:,n,iblk), &
+                               alidrni(:,:,n,iblk), alidfni(:,:,n,iblk), &
+                               alvdrns(:,:,n,iblk), alvdfns(:,:,n,iblk), &
+                               alidrns(:,:,n,iblk), alidfns(:,:,n,iblk), &
+                               fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
+                               fswthrun(:,:,n,iblk),                     &
+                               Iswabsn(:,:,il1:il2,iblk))
+
+            endif
+         enddo                  ! ncat
+
+      enddo                      ! iblk
+
+      end subroutine step_rad1
+
+===========================================================
+!BOP
+!
+! !ROUTINE: step_rad2 - step pre-coupler radiation
+!
+! !DESCRIPTION:
+!
+! !REVISION HISTORY:
+!
+! authors: David A. Bailey, NCAR
+!
+! !INTERFACE:
+
+      subroutine step_rad2 (dt)
+!
+! !USES:
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      real (kind=dbl_kind), intent(in) :: &
+         dt      ! time step
+!
+!EOP
+!
+      integer (kind=int_kind) :: &
+         i, j, ij    , & ! horizontal indices
+         iblk        , & ! block index
+         ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
+         n           , & ! thickness category index
+         il1, il2    , & ! ice layer indices for eice
+         sl1, sl2        ! snow layer indices for esno
+
+      integer (kind=int_kind), save :: &
+         icells          ! number of cells with aicen > puny
+
+      integer (kind=int_kind), dimension(nx_block*ny_block), save :: &
+         indxi, indxj    ! indirect indices for cells with aicen > puny
+
+      ! snow variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fsn             ! snow horizontal fraction
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
+         rhosnwn     , & ! snow density (kg/m3)
+         rsnwn           ! snow grain radius (micro-meters)
+
+      ! pond variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fpn         , & ! pond fraction
+         hpn             ! pond depth (m)
+
+      type (block) :: &
+         this_block      ! block information for current block
+
+      logical (kind=log_kind) :: &
+         l_stop          ! if true, abort the model
+
+      integer (kind=int_kind) :: &
+         istop, jstop    ! indices of grid cell where model aborts 
+
+      l_stop = .false.
+
+      alvdr(:,:,:) = c0
+      alvdf(:,:,:) = c0
+      alidr(:,:,:) = c0
+      alidf(:,:,:) = c0
+      Sswabsn(:,:,:,:) = c0
+
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+      !-----------------------------------------------------------------
+      ! Compute cosine of solar zenith angle.
+      ! This is used by the delta-Eddington shortwave module.
+      ! Albedos are aggregated in merge_fluxes only for cells w/ coszen > 0.
+      ! For basic shortwave, simply set coszen to a constant between 0 and 1.
+      !-----------------------------------------------------------------
+
+         if (trim(shortwave) == 'dEdd') then ! delta Eddington
+
+            ! identify ice-ocean cells
+            icells = 0
+            do j = 1, ny_block
+            do i = 1, nx_block
+               if (tmask(i,j,iblk)) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+            call compute_coszen (nx_block,         ny_block,       &
+                                 icells,                           &
+                                 indxi,            indxj,          &
+                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
+                                 coszen(:,:,iblk), dt)
+
+         else                     ! basic (ccsm3) shortwave
+            coszen(:,:,iblk) = p5 ! sun above the horizon
+         endif
+
+         do n = 1, ncat
+
+      !-----------------------------------------------------------------
+      ! Identify cells with nonzero ice area
+      !-----------------------------------------------------------------
+           
+            icells = 0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aicen(i,j,n,iblk) > puny) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+      !-----------------------------------------------------------------
+      ! Solar radiation: albedo and absorbed shortwave
+      !-----------------------------------------------------------------
+
+            if (trim(shortwave) == 'dEdd') then   ! delta Eddington
+
+      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
+      ! BPB 19 Dec 2006
+
+               ! set snow properties
+               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                                 icells,                                  &
+                                 indxi,               indxj,              &
+                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                                 trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
+                                 rhosnwn,             rsnwn)
+
+
+               if (kpond == 0) then
+
+               ! set pond properties
+               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
+                                 icells,                                   &
+                                 indxi,               indxj,               &
+                                 aicen(:,:,n,iblk),                        &
+                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
+                                 fsn,                 fpn,                 &
+                                 hpn)
+
+               else
+
+
+               fpn(:,:) = apondn(:,:,n,iblk)
+               hpn(:,:) = hpondn(:,:,n,iblk)
+
+               endif
+
+               call shortwave_dEdd(nx_block,        ny_block,            &
+                                 icells,                                 &
+                                 indxi,             indxj,               &
+                                 coszen(:,:, iblk),                      &
+                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                 vsnon(:,:,n,iblk), fsn,                 &
+                                 rhosnwn,           rsnwn,               &
+                                 fpn,               hpn,                 &
+                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
+                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 fswsfcn,           fswintn,             &
+                                 fswthrun,          Sswabsn,             &
+                                 Iswabsn)
+
+            else
+
+               call compute_albedos (nx_block,   ny_block, &
+                               icells,               &
+                               indxi,      indxj,    &
+                               aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
+                               vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
+                               alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
+                               alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
+                               alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
+                               alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
+                               alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
+                               alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
+                               apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
+
+            endif
+
+         ! Aggregate albedos for coupler
+
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+
+               if (coszen(i,j,iblk) > puny) then
+
+                  alvdf(i,j,iblk) = alvdf(i,j,iblk) &
+                     + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alidf(i,j,iblk) = alidf(i,j,iblk) &
+                     + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alvdr(i,j,iblk) = alvdr(i,j,iblk) &
+                     + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alidr(i,j,iblk) = alidr(i,j,iblk) &
+                     + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+
+               endif
+            enddo
+
+         enddo                  ! ncat
+
       !-----------------------------------------------------------------
       ! Divide fluxes by ice area for the coupler, which assumes fluxes
       ! are per unit ice area.
@@ -1021,7 +1310,7 @@
 
          call scale_fluxes (nx_block,            ny_block,           &
                             nghost,              tmask   (:,:,iblk), &
-                            aice(:,:,iblk),      Tf      (:,:,iblk), &
+                            aice     (:,:,iblk), Tf      (:,:,iblk), &
                             Tair     (:,:,iblk), Qa      (:,:,iblk), &
                             strairxT (:,:,iblk), strairyT(:,:,iblk), &
                             fsens    (:,:,iblk), flat    (:,:,iblk), &
@@ -1033,13 +1322,11 @@
                             alvdr    (:,:,iblk), alidr   (:,:,iblk), &
                             alvdf    (:,:,iblk), alidf   (:,:,iblk))
 
-      enddo
+      enddo                      ! iblk
 
-      call ice_timer_stop(timer_column)
-
-      call scale_hist_fluxes    ! to match coupler fluxes
-
-      end subroutine step_dynamics
+      call scale_hist_fluxes     ! to match coupler fluxes
+      
+      end subroutine step_rad2
 
 !=======================================================================
 

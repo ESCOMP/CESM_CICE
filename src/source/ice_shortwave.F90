@@ -98,7 +98,29 @@
          alvdrn      , & ! visible direct albedo           (fraction)
          alidrn      , & ! near-ir direct albedo           (fraction)
          alvdfn      , & ! visible diffuse albedo          (fraction)
-         alidfn          ! near-ir diffuse albedo          (fraction)
+         alidfn      , & ! near-ir diffuse albedo          (fraction)
+         alvdrni     , & ! visible direct albedo (ice)     (fraction)
+         alidrni     , & ! near-ir direct albedo (ice)     (fraction)
+         alvdfni     , & ! visible diffuse albedo (ice)    (fraction)
+         alidfni     , & ! near-ir diffuse albedo (ice)    (fraction)
+         alvdrns     , & ! visible direct albedo (snow)    (fraction)
+         alidrns     , & ! near-ir direct albedo (snow)    (fraction)
+         alvdfns     , & ! visible diffuse albedo (snow)   (fraction)
+         alidfns         ! near-ir diffuse albedo (snow)   (fraction)
+
+      real (kind=dbl_kind), &
+         dimension (nx_block,ny_block,ntilyr,max_blocks) :: &
+         Iswabsn   ! SW radiation absorbed in ice layers (W m-2)
+
+      real (kind=dbl_kind), &
+         dimension (nx_block,ny_block,ntslyr,max_blocks) :: &
+         Sswabsn   ! SW radiation absorbed in snow layers (W m-2)
+
+      real (kind=dbl_kind), &
+         dimension (nx_block,ny_block,ncat,max_blocks) :: &
+         fswthrun    , & ! SW through ice to ocean            (W/m^2)
+         fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
+         fswintn         ! SW absorbed in ice interior, below surface (W m-2)
 
 !=======================================================================
 
@@ -176,12 +198,10 @@
          fpn         , & ! pond fraction
          hpn             ! pond depth (m)
 
-! BPB 4 Jan 2007  daily mean coszen
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         coszen_mean     ! diurnal mean coszen
+      integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi, &
+         il1, il2    , & ! ice layer indices for eice
+         sl1, sl2        ! snow layer indices for esno
 
-
-      integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi
 
       ! Need to compute albedos before init_cpl in CCSM
 
@@ -215,8 +235,7 @@
                                  icells,                           &
                                  indxi,            indxj,          &
                                  tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt,             &
-                                 coszen_mean)
+                                 coszen(:,:,iblk), dt)
 
          else                     ! basic (ccsm3) shortwave
             coszen(:,:,iblk) = p5 ! sun above the horizon
@@ -234,6 +253,11 @@
             endif
          enddo               ! i
          enddo               ! j
+
+         il1 = ilyr1(n)
+         il2 = ilyrn(n)
+         sl1 = slyr1(n)
+         sl2 = slyrn(n)
 
 
          if (trim(shortwave) == 'dEdd') then
@@ -279,9 +303,10 @@
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                                  alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
                                  alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn,           fswintn,             &
-                                 fswthrun,          Sswabsn,             &
-                                 Iswabsn)
+                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
+                                 fswthrun(:,:,n,iblk),                   &
+                                 Sswabsn(:,:,sl1:sl2,iblk),              &
+                                 Iswabsn(:,:,il1:il2,iblk))
 
 
          else
@@ -291,10 +316,10 @@
                                indxi,      indxj,    &
                                aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
                                vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
-                               alvdrni,           alidrni,  &
-                               alvdfni,           alidfni,  &
-                               alvdrns,           alidrns,  &
-                               alvdfns,           alidfns,  &
+                               alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
+                               alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
+                               alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
+                               alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
                                alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
                                alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
                                apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
@@ -317,8 +342,27 @@
                + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
          enddo
 
-      enddo
-      enddo
+      enddo ! ncat
+
+         do j = 1, ny_block
+         do i = 1, nx_block
+
+            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > puny) then
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) / aice(i,j,iblk)
+               alidf(i,j,iblk) = alidf(i,j,iblk) / aice(i,j,iblk)
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) / aice(i,j,iblk)
+               alidr(i,j,iblk) = alidr(i,j,iblk) / aice(i,j,iblk)
+            else
+               alvdf(i,j,iblk) = c0
+               alidf(i,j,iblk) = c0
+               alvdr(i,j,iblk) = c0
+               alidr(i,j,iblk) = c0
+            endif
+
+         enddo
+         enddo
+
+      enddo ! iblk
 
       end subroutine init_shortwave
 

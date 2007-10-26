@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20071026
+Originator: dbailey (David Bailey)
+Date: Fri Oct 26 13:37:53 MDT 2007
+Version: 4.0
+One-line Summary: New step_rad routines and various bug fixes.
+CCSM Version compatible with: 
+Changes made:
+
+M            7193   source/ice_transport_remap.F90
+M            7193   source/ice_shortwave.F90
+M            7193   source/ice_therm_vertical.F90
+M            7193   source/ice_step_mod.F90
+M            7193   source/ice_grid.F90
+M            7193   source/ice_read_write.F90
+M            7193   drivers/ccsm_concurrent/CICE_RunMod.F90
+M            7193   drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20071022
 Originator: mvertens (Mariana Vertenstein)
 Date: Mon Oct 22 17:03:24 MDT 2007

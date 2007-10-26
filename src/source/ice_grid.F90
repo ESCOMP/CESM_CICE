@@ -560,15 +560,15 @@
 
       ! lat, lon, cell dimensions, angles
       call ice_read(nu_grid,1,ULAT, 'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_loc=field_loc_NEcorner,field_type=field_type_scalar)
       call ice_read(nu_grid,2,ULON, 'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_loc=field_loc_NEcorner,field_type=field_type_scalar)
       call ice_read(nu_grid,3,HTN,  'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Nface)
+         field_loc=field_loc_Nface,field_type=field_type_scalar)
       call ice_read(nu_grid,4,HTE,  'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Eface)
+	 field_loc=field_loc_Eface,field_type=field_type_scalar)
       call ice_read(nu_grid,7,ANGLE,'rda8',diag, &
-         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
+	 field_loc=field_loc_NEcorner,field_type=field_type_angle)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:) * cm_to_m
@@ -668,19 +668,19 @@
       ! lat, lon, cell dimensions, angles
       fieldname='ulat'
       call ice_read_nc(fid_grid,1,fieldname,ULAT,diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_NEcorner)
       fieldname='ulon'
       call ice_read_nc(fid_grid,2,fieldname,ULON,diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_NEcorner)
       fieldname='htn'
       call ice_read_nc(fid_grid,3,fieldname,HTN,diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Nface)
+         field_type=field_type_scalar,field_loc=field_loc_Nface)
       fieldname='hte'
       call ice_read_nc(fid_grid,4,fieldname,HTE,diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Eface)
+         field_type=field_type_scalar,field_loc=field_loc_Eface)
       fieldname='angle'
       call ice_read_nc(fid_grid,7,fieldname,ANGLE,diag, &
-         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
+         field_type=field_type_angle,field_loc=field_loc_NEcorner)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:) * cm_to_m
@@ -809,15 +809,15 @@
       ! read other grid quantities
 
       call ice_read(nu_grid,2,ULAT, 'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_NEcorner)
       call ice_read(nu_grid,3,ULON, 'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_NEcorner)
       call ice_read(nu_grid,4,HTN,  'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Nface)
+         field_type=field_type_scalar,field_loc=field_loc_Nface)
       call ice_read(nu_grid,5,HTE,  'rda8',diag, &
-         field_type=field_type_scalar,grid_loc=field_loc_Eface)
+         field_type=field_type_scalar,field_loc=field_loc_Eface)
       call ice_read(nu_grid,8,ANGLE,'rda8',diag, &
-         field_type=field_type_angle,grid_loc=field_loc_NEcorner)
+         field_type=field_type_angle,field_loc=field_loc_NEcorner)
 
       ! fix units
       HTN(:,:,:) = HTN(:,:,:)*cm_to_m
@@ -981,7 +981,7 @@
          call ice_read_nc(ncid, 1, 'xc'  , TLON             , diag=.true.)
          call ice_read_nc(ncid, 1, 'yc'  , TLAT             , diag=.true.)
          call ice_read_nc(ncid, 1, 'area', tarea            , diag=.true., &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_loc=field_loc_center,field_type=field_type_scalar)
          call ice_read_nc(ncid, 1, 'mask', hm               , diag=.true.)
          call ice_read_nc(ncid, 1, 'frac', ocn_gridcell_frac, diag=.true.) 
       end if
