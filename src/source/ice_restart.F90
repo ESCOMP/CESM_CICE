@@ -314,14 +314,14 @@
                                ' min/max area, vol ice, vol snow, Tsfc'
 
          call ice_read(nu_restart,0,aicen(:,:,n,:),'ruf8',diag, &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,vicen(:,:,n,:),'ruf8',diag, &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,vsnon(:,:,n,:),'ruf8',diag, &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          do it = 1, ntrcr
             call ice_read(nu_restart,0,trcrn(:,:,it,n,:),'ruf8',diag, &
-               field_type=field_type_scalar,grid_loc=field_loc_center)
+               field_type=field_type_scalar,field_loc=field_loc_center)
          enddo
       enddo
 
@@ -329,14 +329,14 @@
            write(nu_diag,*) 'min/max eicen for each layer'
       do k=1,ntilyr
          call ice_read(nu_restart,0,eicen(:,:,k,:),'ruf8',diag, &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max esnon for each layer'
       do k=1,ntslyr
          call ice_read(nu_restart,0,esnon(:,:,k,:),'ruf8',diag, &
-            field_type=field_type_scalar,grid_loc=field_loc_center)
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       !-----------------------------------------------------------------
@@ -346,9 +346,9 @@
            write(nu_diag,*) 'min/max velocity components'
 
       call ice_read(nu_restart,0,uvel,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,vvel,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       !-----------------------------------------------------------------
       ! fresh water, salt, and heat flux
@@ -376,32 +376,32 @@
            'internal stress components'
       
       call ice_read(nu_restart,0,stressp_1,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stressm_1,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stress12_1,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       call ice_read(nu_restart,0,stressp_2,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stressm_2,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stress12_2,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       call ice_read(nu_restart,0,stressp_3,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stressm_3,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stress12_3,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       call ice_read(nu_restart,0,stressp_4,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stressm_4,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,stress12_4,'ruf8',diag, &
-         field_type=field_type_vector,grid_loc=field_loc_NEcorner)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       !-----------------------------------------------------------------
       ! ice mask for dynamics

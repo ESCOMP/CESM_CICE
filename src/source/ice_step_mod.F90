@@ -64,7 +64,8 @@
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-      public :: step_therm1, step_therm2, step_dynamics
+      public :: step_therm1, step_therm2, step_dynamics, &
+                step_rad1, step_rad2
 !
 !EOP
 !
@@ -1089,7 +1090,7 @@
 
       end subroutine step_rad1
 
-===========================================================
+!=======================================================================
 !BOP
 !
 ! !ROUTINE: step_rad2 - step pre-coupler radiation

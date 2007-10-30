@@ -166,32 +166,12 @@
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! indirect indices for cells with aicen > puny
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         alvdrni      , & 
-         alidrni      , &
-         alvdfni      , &
-         alidfni      , &
-         alvdrns      , & 
-         alidrns      , &
-         alvdfns      , &
-         alidfns
-
-      ! other local variables
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
-         fswthrun    , & ! SW through ice to ocean            (W/m^2)
-         fswintn         ! SW absorbed in ice interior, below surface (W m-2)
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr) :: &
-         Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
-
       ! snow variables for Delta-Eddington shortwave
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          fsn             ! snow horizontal fraction
       real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
          rhosnwn     , & ! snow density (kg/m3)
-         rsnwn       , & ! snow grain radius (micro-meters)
-         Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
+         rsnwn           ! snow grain radius (micro-meters)
 
       ! pond variables for Delta-Eddington shortwave
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
