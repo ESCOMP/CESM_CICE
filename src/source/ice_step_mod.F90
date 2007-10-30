@@ -293,7 +293,7 @@
                              fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
                              fswthrun(:,:,n,iblk),                     &
                              Sswabsn(:,:,sl1:sl2,iblk),                &
-                             Iswabsn(:,:,sl1:sl2,iblk),                &
+                             Iswabsn(:,:,il1:il2,iblk),                &
                              fsensn,              flatn,               &
                              fswabsn,             flwoutn,             &
                              evapn,               freshn,              &
@@ -1261,9 +1261,10 @@
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                                  alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
                                  alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn,           fswintn,             &
-                                 fswthrun,          Sswabsn,             &
-                                 Iswabsn)
+                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
+                                 fswthrun(:,:,n,iblk),                   &
+                                 Sswabsn(:,:,sl1:sl2,iblk),              &
+                                 Iswabsn(:,:,il1:il2,iblk))
 
             else
 
