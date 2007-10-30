@@ -194,6 +194,7 @@
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
+      Sswabs(:,:,:,:) = c0
 
       do iblk=1,nblocks
 

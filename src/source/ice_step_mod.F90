@@ -1016,6 +1016,11 @@
       ! Solar radiation: albedo and absorbed shortwave
       !-----------------------------------------------------------------
 
+            il1 = ilyr1(n)
+            il2 = ilyrn(n)
+            sl1 = slyr1(n)
+            sl2 = slyrn(n)
+
             if (trim(shortwave) == 'dEdd') then   ! delta Eddington
 
       ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
@@ -1215,6 +1220,11 @@
       !-----------------------------------------------------------------
       ! Solar radiation: albedo and absorbed shortwave
       !-----------------------------------------------------------------
+
+            il1 = ilyr1(n)
+            il2 = ilyrn(n)
+            sl1 = slyr1(n)
+            sl2 = slyrn(n)
 
             if (trim(shortwave) == 'dEdd') then   ! delta Eddington
 
