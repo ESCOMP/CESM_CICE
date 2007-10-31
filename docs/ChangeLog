@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20071031
+Originator: dbailey (David Bailey)
+Date: Wed Oct 31 10:01:07 MDT 2007
+Version: 4.0
+One-line Summary: New step_rad routines and various bug fixes.
+CCSM Version compatible with: 
+Changes made:
+
+   M /cice/trunk/src/source/ice_shortwave.F90
+   M /cice/trunk/src/source/ice_step_mod.F90
+
+===============================================================
 cice4_0_20071026
 Originator: dbailey (David Bailey)
 Date: Fri Oct 26 13:37:53 MDT 2007
