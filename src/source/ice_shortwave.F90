@@ -195,6 +195,10 @@
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
       Sswabsn(:,:,:,:) = c0
+      if (kpond == 0) then
+         apondn(:,:,:,:) = c0
+         hpondn(:,:,:,:) = c0
+      endif
 
       do iblk=1,nblocks
 

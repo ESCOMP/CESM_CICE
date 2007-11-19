@@ -157,6 +157,7 @@
       call ice_timer_start(timer_thermo)  ! thermodynamics
 
       call init_history_therm    ! initialize thermo history variables
+      call init_flux_ocn        ! initialize ocean fluxes sent to coupler
 
       if (oceanmixed_ice) &
            call ocean_mixed_layer (dt)   ! ocean surface fluxes and sst
@@ -475,8 +476,6 @@
       call ice_timer_start(timer_thermo)  ! thermodynamics
 !      call ice_timer_start(timer_tmp)  ! temporary timer
 
-      call init_flux_ocn        ! initialize ocean fluxes sent to coupler
-      
       l_stop = .false.
 
       do iblk = 1, nblocks
