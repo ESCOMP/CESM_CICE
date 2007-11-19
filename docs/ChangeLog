@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20071119
+Originator: dbailey (David Bailey)
+Date: Mon Nov 19 09:12:14 MST 2007
+Version: 4.0
+One-line Summary: Fix albedo-shortwave synchronization.
+CCSM Version compatible with: 
+Changes made:
+
+   M /cice/trunk/src/source/ice_step_mod.F90
+   M /cice/trunk/src/source/ice_diagnostics.F90
+   M /cice/trunk/src/source/ice_shortwave.F90
+
+===============================================================
 cice4_0_20071031
 Originator: dbailey (David Bailey)
 Date: Wed Oct 31 10:01:07 MDT 2007
