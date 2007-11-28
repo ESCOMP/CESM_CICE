@@ -1,0 +1,86 @@
+<streamstemplate>
+   <general_comment>
+      ----------------------------------------------------------------------
+      streams template for xxxx in CCSM3.x
+      ----------------------------------------------------------------------
+      SVN: $Id: cice.template.streams.xml 7177 2007-10-25 00:03:47Z kauff $
+      SVN: $URL: https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts_071115/ccsm_utils/Components/cice.template.streams.xml $
+      ----------------------------------------------------------------------
+   </general_comment>
+<!----------------------------------------------------------------------------->
+<stream datasource="HADLEY">
+   <comment>
+      stream description file for Hadley center sea-ice fraction: 1870-2003
+   </comment>
+   <dataSource>
+      Hadley
+   </dataSource>
+
+   <domainInfo>
+      <variableNames>
+         time time
+         lon  lon
+         lat  lat
+         area area
+         mask mask
+      </variableNames>
+      <filePath>
+         DIN_LOC_ROOT/ice/cice
+      </filePath>
+      <fileNames>
+      hadley.sst_ifrac.1870-2003.1x1.070608.nc  
+      </fileNames>
+   </domainInfo>
+
+   <fieldInfo>
+      <variableNames>
+           ice_cov ice_cov
+      </variableNames>
+      <filePath>
+         DIN_LOC_ROOT/ice/cice
+      </filePath>
+      <fileNames>
+         hadley.sst_ifrac.1870-2003.1x1.070608.nc
+      </fileNames>
+   </fieldInfo>
+</stream>
+<!----------------------------------------------------------------------------->
+<stream datasource="HURRELL">
+   <comment>
+      stream description file for Hurrell sea-ice fraction climatology
+   </comment>
+   <dataSource>
+      Hurrell
+   </dataSource>
+   
+   <domainInfo>
+      <variableNames>
+         time  time
+         lon   lon
+         lat   lat
+         area  area
+         mask  mask
+      </variableNames>
+      <filePath>
+         DIN_LOC_ROOT/ice/cice
+      </filePath>
+      <fileNames> 
+         hurrell_sst_ifrac.1x1.050606.nc 
+      </fileNames>
+   </domainInfo>
+   
+   <fieldInfo>
+      <variableNames>
+        ifrac ice_cov
+      </variableNames>
+      <filePath>
+         DIN_LOC_ROOT/ice/cice
+      </filePath>
+      <fileNames>
+         hurrell_sst_ifrac.1x1.050606.nc
+      </fileNames>
+   </fieldInfo>
+   
+</stream>
+<!----------------------------------------------------------------------------->
+</streamstemplate>

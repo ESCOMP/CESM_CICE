@@ -1,0 +1,504 @@
+#! /bin/csh -f
+
+source $CASEROOT/env_conf    || exit -1 
+source $CASEROOT/env_run     || exit -1 
+source $CASEROOT/env_mach.${MACH} || exit -1 
+source $CASEROOT/env_pes.${MACH} || exit -1 
+
+if !(-d $CASEROOT/Buildnml_Prestage) mkdir $CASEROOT/Buildnml_Prestage
+if !(-d $CASEROOT/Buildexe) mkdir $CASEROOT/Buildexe
+
+# determine ice mode flags
+#-----------------------------------------------------------------------
+
+set kdyn = 0  # dynamics / rheology option
+
+if ($CICE_MODE == 'prognostic') then
+   set ncat                = 5  # number of ice catagories
+   set kdyn                = 1  # dynamics / rheology option
+   set prescribed_ice      = .false.
+   set prescribed_ice_fill = .false.   # unused
+   set stream_year_first   = 0         # unused
+   set stream_year_last    = 0         # unused
+   set model_year_align    = 0         # unused
+   set pice_stream_txt     = "unused"  # unused
+   set pice_stream_nc      = " "
+else if ($CICE_MODE == 'data_clim_1870') then
+   set ncat                = 1 # number of ice categories
+   set prescribed_ice      = .true.
+   set prescribed_ice_fill = .false.
+   set stream_year_first   = 1870
+   set stream_year_last    = 1870
+   set model_year_align    = 1    
+   set pice_stream_txt     = hadley.ifrac.1870-2003.1x1.stream.txt
+   set pice_stream_nc      = hadley.sst_ifrac.1870-2003.1x1.070608.nc
+   $UTILROOT/Tools/build_streams -t cice.template.streams.xml -s HADLEY  >! $CASEROOT/Buildnml_Prestage/$pice_stream_txt || exit 99
+else if ($CICE_MODE == 'data_clim_2000') then
+   set ncat                = 1 # number of ice categories
+   set prescribed_ice      = .true.
+   set prescribed_ice_fill = .false.
+   set stream_year_first   = 1
+   set stream_year_last    = 1
+   set model_year_align    = 1    
+   set pice_stream_txt     = hurrell_ifrac.1x1.stream.txt
+   set pice_stream_nc      = hurrell_sst_ifrac.1x1.050606.nc
+   $UTILROOT/Tools/build_streams -t cice.template.streams.xml -s HURRELL >! $CASEROOT/Buildnml_Prestage/$pice_stream_txt || exit 99
+else if ($CICE_MODE == 'thermo_only') then
+   set prescribed_ice      = .false.
+   set ncat = 1  # number of ice categories
+endif
+
+# set local variables needed to prestage data and create resolved namelist
+#-----------------------------------------------------------------------
+set icedata   = ice/cice
+
+# Calculate year used in new hist/rest filenames
+#-----------------------------------------------------------------------
+if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
+  set datedash = $RUN_REFDATE-00000
+else
+  set datedash = $RUN_STARTDATE-00000
+endif
+
+#-----------------------------------------------------------------------
+# Write out resolved prestage and namelist
+#-----------------------------------------------------------------------
+
+cat >! $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+#! /bin/csh -f 
+
+source \$CASEROOT/env_conf || exit -1
+source \$CASEROOT/env_run  || exit -1
+source \$CASEROOT/env_mach.\$MACH  || exit -1
+source \$CASEROOT/env_pes.\$MACH  || exit -1
+
+ #******************************************************************#
+ # If the user changes any input datasets - be sure to give it a    #
+ # unique filename. Do not duplicate any existing input files       #
+ #******************************************************************#
+
+# started as a $RUN_TYPE run
+
+set runtype = $RUN_TYPE
+if (\$CONTINUE_RUN == 'TRUE') set runtype = 'continue'
+
+set exedir = \$EXEROOT/ice
+cd \$exedir
+
+set hstdir = \$EXEROOT/ice/hist ; if !(-d \$hstdir) mkdir -p \$hstdir
+set rstdir = \$EXEROOT/ice/rest ; if !(-d \$rstdir) mkdir -p \$rstdir
+set inidir = \$EXEROOT/ice/init ; if !(-d \$inidir) mkdir -p \$inidir
+set runhstdir = \$RUNROOT/ice/hist
+set runrstdir = \$RUNROOT/ice/rest
+set runinidir = \$RUNROOT/ice/init
+
+EOF1
+
+if ($prescribed_ice == .true.) then
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+set pice_stream_txt = $pice_stream_txt
+set pice_stream_nc  = $pice_stream_nc 
+\$UTILROOT/Tools/ccsm_getinput \$DIN_LOC_ROOT/ice/cice/\$pice_stream_nc . || exit 3
+sed -e "s#DIN_LOC_ROOT#\$DIN_LOC_ROOT#" < \$CASEROOT/Buildnml_Prestage/\$pice_stream_txt >! \$pice_stream_txt || exit 3
+
+EOF1
+
+endif
+
+# read in ice datasets
+#-----------------------------------------------------------------------
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+  rm -f data.domain.grid data.domain.kmt
+if ($ICE_GRID == 'gx3v5') then
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20030806.grid data.domain.grid || exit 2
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20040323.kmt  data.domain.kmt  || exit 2
+endif
+if ($ICE_GRID == 'gx1v3') then
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20010402.grid data.domain.grid || exit 2
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20010702.kmt  data.domain.kmt  || exit 2
+endif
+if ($ICE_GRID == 'gx1v4') then
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20010402.grid data.domain.grid || exit 2
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20060831.kmt  data.domain.kmt  || exit 2
+endif
+if ($ICE_GRID == 'gx1v5') then
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20010402.grid data.domain.grid || exit 2
+  \$UTILROOT/Tools/ccsm_getinput $icedata/global_${ICE_GRID}_20061229.kmt  data.domain.kmt  || exit 2
+endif
+
+set inic_file = default
+
+if ($RUN_TYPE == startup) then
+  if ($ICE_GRID == 'gx3v5') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
+  if ($ICE_GRID == 'gx1v3') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
+  if ($ICE_GRID == 'gx1v4') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
+  if ($ICE_GRID == 'gx1v5') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
+else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
+  set inic_file = $RUN_REFCASE.cice.r.$datedash
+endif
+
+EOF1
+
+if ($RUN_TYPE == startup) then
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+if (\$runtype != 'continue') then
+if (inic_file != 'default' && inic_file != 'none') then
+   \$UTILROOT/Tools/ccsm_getinput $icedata/\$inic_file   || exit 2
+endif
+endif
+EOF1
+endif
+
+if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+if (\$runtype != 'continue') then
+   \$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/ice/rest/\$inic_file || exit 2
+endif
+EOF1
+endif
+
+#-------------------------------------------------------------------
+# b. create the namelist input file                                      
+#-------------------------------------------------------------------
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+
+# PRESCRIBED_ICE      is $prescribed_ice      
+
+EOF1
+
+# New default albedos based on observations. DAB 05/01/2007
+
+if ($ICE_GRID == 'gx3v5') then
+  set albicev  = 0.68
+  set albicei  = 0.30
+  set albsnowv = 0.91
+  set albsnowi = 0.63
+else
+  set albicev  = 0.75
+  set albicei  = 0.45
+  set albsnowv = 0.98
+  set albsnowi = 0.73
+endif
+
+  set kstrength = 1
+  set kitd = 1
+if ($prescribed_ice == .true. ) then
+  set kstrength = 0
+  set kitd = 0
+endif
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+
+cat << EOF >! ice_in
+  &ice_nml
+    runid         = '\$CASE \$CASESTR'
+  , runtype       = '\$runtype'
+  , year_init     = 1
+  , istep0        = 0
+  , dt            = 3600.0
+  , ndte          = 120
+  , ndyn_dt       = 1
+  , npt           = 99999
+  , diagfreq      = 24
+  , histfreq      = 'm'
+  , histfreq_n    = 1
+  , dumpfreq      = 'y'
+  , dumpfreq_n    = 1
+  , hist_avg      = .true.
+  , print_points  = .false.
+  , kitd          = $kitd
+  , kcatbound     = 0
+  , kdyn          = $kdyn
+  , kstrength     = $kstrength
+  , krdg_partic   = 1
+  , krdg_redist   = 1
+  , evp_damping   = .false.
+  , advection     = 'remap'
+  , shortwave     = 'default'
+  , albedo_type   = 'default'
+  , grid_type     = 'displaced_pole'
+  , grid_file     = 'data.domain.grid'
+  , kmt_file      = 'data.domain.kmt'
+  , inic_file     = '\$inic_file'
+  , incond_dir    = '\$runinidir/'
+  , incond_file   = '\$CASE.cice.i.'
+  , restart_dir   = '\$runrstdir/'
+  , restart_file  = '\$CASE.cice.r'
+  , history_dir   = '\$runhstdir/'
+  , history_file  = '\$CASE.cice.h'
+  , albicev       = $albicev
+  , albicei       = $albicei
+  , albsnowv      = $albsnowv
+  , albsnowi      = $albsnowi
+  , pointer_file  = 'rpointer.ice'
+  , dbug          = .false.
+  , latpnt(1)     =  90.
+  , lonpnt(1)     =   0.
+  , latpnt(2)     = -65.
+  , lonpnt(2)     = -45.
+/
+EOF1
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+
+ &domain_nml
+    nprocs = \$NTASKS_ICE
+  , distribution_type = 'cartesian'
+  , ew_boundary_type  = 'cyclic'
+  , ns_boundary_type  = 'closed'
+/
+EOF1
+
+if ($prescribed_ice == .true.) then
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+
+ &ice_prescribed_nml
+    prescribed_ice      = $prescribed_ice
+  , stream_info_file    = '\$pice_stream_txt'
+  , stream_year_first   = $stream_year_first
+  , stream_year_last    = $stream_year_last 
+  , model_year_align    = $model_year_align
+  , prescribed_ice_fill = $prescribed_ice_fill
+/
+
+  &icefields_nml
+    f_sst       = .false.
+  , f_sss       = .false.
+  , f_uocn      = .false.
+  , f_vocn      = .false.
+  , f_frzmlt    = .false.
+  , f_strtltx   = .false.
+  , f_strtlty   = .false.
+  , f_mlt_onset = .false. 
+  , f_frz_onset = .false. 
+  , f_icepresent= .true.
+  , f_aicen     = .false.
+  , f_vicen     = .false.
+  , f_fsalt     = .false. 
+  , f_fsalt_ai  = .false. 
+  , f_fresh     = .false. 
+  , f_fresh_ai  = .false. 
+  , f_fhocn     = .false. 
+  , f_fhocn_ai  = .false. 
+  , f_dvidtt    = .false. 
+  , f_dvidtd    = .false. 
+  , f_daidtt    = .false. 
+  , f_daidtd    = .false. 
+  , f_sig1      = .false. 
+  , f_sig2      = .false. 
+  , f_strairx   = .false. 
+  , f_strairy   = .false. 
+  , f_strcorx   = .false. 
+  , f_strcory   = .false. 
+  , f_strocnx   = .false. 
+  , f_strocny   = .false. 
+  , f_strintx   = .false. 
+  , f_strinty   = .false. 
+  , f_strength  = .false. 
+  , f_opening   = .false. 
+  , f_divu      = .false. 
+  , f_shear     = .false. 
+  , f_congel    = .false.
+  , f_snoice    = .false.
+  , f_meltt     = .false.
+  , f_meltb     = .false.
+  , f_meltl     = .false.
+  , f_uvel      = .false.
+  , f_vvel      = .false.
+  , f_frazil    = .false.
+ /
+EOF
+EOF1
+
+else 
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+
+ &ice_prescribed_nml
+    prescribed_ice      = .false.
+/
+
+  &icefields_nml
+    f_sst       = .false.
+  , f_sss       = .false.
+  , f_uocn      = .false.
+  , f_vocn      = .false.
+  , f_frzmlt    = .false.
+  , f_strtltx   = .false.
+  , f_strtlty   = .false.
+  , f_mlt_onset = .false. 
+  , f_frz_onset = .false. 
+  , f_icepresent= .true.
+  , f_aicen     = .true.
+  , f_vicen     = .false.
+ /
+EOF
+EOF1
+
+endif
+
+#--------------------------------------------------------------------
+# write out executable generating directives to resolved file
+#--------------------------------------------------------------------
+
+# select resolution
+#-----------------------------------------------------------------------
+if ( $GRID =~ *gx3*) set RES = 100x116
+if ( $GRID =~ *hx1*) set RES = 384x320
+if ( $GRID =~ *gx1*) set RES = 320x384
+if !($?RES)   echo "ERROR: ice can't deal with GRID = $GRID" 
+if !($?RES)   exit -1
+
+set NLON = `echo $RES | sed s/x.\*//`
+set NLAT = `echo $RES | sed s/.\*x//`
+
+cat >! $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
+#! /bin/csh -f 
+
+source \$CASEROOT/env_conf || exit -1
+source \$CASEROOT/env_run  || exit -1
+source \$CASEROOT/env_mach.\$MACH  || exit -1
+source \$CASEROOT/env_pes.\$MACH  || exit -1
+
+set exedir = \$EXEROOT/ice
+set objdir = \$OBJROOT/ice/obj
+
+cd \$objdir
+
+#--------------------------------------------------------------------
+# check basic task and thread settings
+#--------------------------------------------------------------------
+
+if !(\$NTASKS_ICE > 0) then
+  echo "NTASKS_ICE must be > 0, please correct in env_pes and reconfigure"
+  exit -1
+endif
+if !(\$NTHRDS_ICE == 1) then
+  echo "NTHRDS_ICE must be 1, please correct in env_pes and reconfigure"
+  exit -1
+endif
+
+# Filepath: List of source code directories (in order of importance).
+#-----------------------------------------------------------------------
+\cat >! Filepath << EOF
+\$CASEROOT/SourceMods/src.cice
+\$CODEROOT/ice/cice/src/drivers/ccsm_concurrent
+\$CODEROOT/ice/cice/src/mpi
+\$CODEROOT/ice/cice/src/source
+EOF
+
+# Calculate processor tiling based on \$NTASK
+#-----------------------------------------------------------------------
+EOF2
+
+if ( $GRID =~ *gx3* ) then 
+cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
+setenv NY 1
+if (\$NTASKS_ICE > 7) setenv NY 2
+EOF2
+else
+cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
+if ( \$OS == 'ESOS' || \$OS == 'UNICOS' ) then
+  setenv NY 2
+  if (\$NTASKS_ICE == 1) setenv NY 1
+else 
+  setenv NY 1
+  if (\$NTASKS_ICE >= 8) setenv NY 2
+endif
+EOF2
+endif
+
+cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
+@ nlon = $NLON
+@ nx   = \$NTASKS_ICE / \$NY ; setenv NX \$nx
+@ rem  = \$nlon % \$nx
+if (\$rem != 0) echo ERROR: NX must divide evenly into grid, $NLON,\$NX
+if (\$rem != 0) exit -1
+
+setenv BPX    1   # number of blocks per processor in x direction
+setenv BPY    1   # number of blocks per processor in y direction
+
+### x grid decomposition
+@ a = $NLON / \$NX ; @ rem1 = $NLON % \$NX ; @ b = \$a + 1
+if (\$rem1 == 0) setenv BLCKX \$a ; if (\$rem1 != 0) setenv BLCKX \$b
+@ a = \$BLCKX / \$BPX  ; @ rem2 = \$BLCKX % \$BPX  ; @ b = \$a + 1
+if (\$rem2 == 0) setenv BLCKX \$a ; if (\$rem2 != 0) setenv BLCKX \$b
+### y grid decomposition
+@ a = $NLAT / \$NY ; @ rem1 = $NLAT % \$NY ; @ b = \$a + 1
+if (\$rem1 == 0) setenv BLCKY \$a ; if (\$rem1 != 0) setenv BLCKY \$b
+@ a = \$BLCKY / \$BPY  ; @ rem1 = \$BLCKY % \$BPY  ; @ b = \$a + 1
+if (\$rem1 == 0) setenv BLCKY \$a ; if (\$rem1 != 0) setenv BLCKY \$b
+### max blocks
+@ m = \$BPX * \$BPY ; setenv MXBLCKS \$m
+
+# Check for recompile if RES, ncat, NX, or NY changes
+#----------------------------------------------------------------------
+set recompile = FALSE
+echo ${NLON} ${NLAT} ${ncat} \${NX} \${NY} > \$objdir/iceres.new
+cmp -s \$objdir/iceres.new \$objdir/iceres.old || set recompile = TRUE
+if (\$recompile == 'TRUE') then
+  cat \$objdir/iceres.old
+  cat \$objdir/iceres.new
+  echo "NLON,NLAT,ncat,NX,NY has changed, removing objdir and cice, preparing for new compile"
+  rm -f \$objdir/*.o
+  rm -f \$objdir/*.d
+  rm -f \$objdir/*.f
+  rm -f \$objdir/*.f90
+  rm -f \$exedir/cice
+endif
+
+# run make
+#-----------------------------------------------------------------------
+
+if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
+if (\$OS == 'UNICOS') then
+  if (\`uname\` == 'Linux') then
+    # cross compiler needs to run dependency program locally
+    module purge
+    source \$CASEROOT/env_mach.\$MACH  || exit -1
+  endif
+endif
+
+  cp \$BLDROOT/mkDepends . || exit 2
+  cp \$BLDROOT/mkSrcfiles . || exit 2
+
+  set THREAD = FALSE ;  if (\$NTHRDS_ICE > 1) set THREAD = TRUE
+  if (\$SINGLE_EXEC == 'TRUE') then
+    gmake complib -j \$GMAKE_J VPFILE=Filepath MODEL=cice COMPLIB=\$exedir/libcice.a \
+       NXGLOB=$NLON NYGLOB=$NLAT NCAT=$ncat \
+       BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
+       THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
+  else
+    gmake -j \$GMAKE_J VPFILE=Filepath MODEL=cice EXEC=\$exedir/cice \
+        NXGLOB=$NLON NYGLOB=$NLAT NCAT=$ncat \
+        BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
+        THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
+  endif
+endif
+
+mv \$objdir/iceres.new \$objdir/iceres.old
+                                         
+# document the source code used, cleanup \$objdir files
+#-----------------------------------------------------------------------
+
+grep 'CVS' *.[hf]*                       
+#gmake -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH mostlyclean
+
+wait
+
+if (\$SINGLE_EXEC == 'TRUE') then
+  if !(-f \$exedir/libcice.a) then
+    echo "ERROR: cice library not available, check SETBLD"
+    exit -1
+  endif
+else
+  if !(-f \$exedir/cice) then
+    echo "ERROR: cice executable not available, check SETBLD"
+    exit -1
+  endif
+endif
+
+exit 0
+EOF2

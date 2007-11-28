@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20071128
+Originator: dbailey (David Bailey)
+Date: Wed Nov 28 10:15:46 MST 2007
+Version: 4.0
+One-line Summary: Moved cice.template to a local bld directory.
+CCSM Version compatible with: 
+Changes made:
+
+A               0   bld/cice.cpl6.template
+A               0   bld/cice.template.streams.xml
+A               0   bld
+
+===============================================================
 cice4_0_20071119
 Originator: dbailey (David Bailey)
 Date: Mon Nov 19 09:12:14 MST 2007
