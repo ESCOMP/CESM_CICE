@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20071204
+Originator: dbailey (David Bailey)
+Date: Tue Dec  4 08:45:52 MST 2007
+Version: 4.0
+One-line Summary: Small bug in cice.cpl6.template
+CCSM Version compatible with: 
+Changes made:
+
+M  bld/cice.cpl6.template
+
+===============================================================
 cice4_0_20071128
 Originator: dbailey (David Bailey)
 Date: Wed Nov 28 10:15:46 MST 2007

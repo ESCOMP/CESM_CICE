@@ -286,8 +286,8 @@
                                  fpn,               hpn,                 &
                                  swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
-                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
+                                 alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
                                  fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
                                  fswthrun(:,:,n,iblk),                   &
                                  Sswabsn(:,:,sl1:sl2,iblk),              &
