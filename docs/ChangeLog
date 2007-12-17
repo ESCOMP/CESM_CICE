@@ -1,4 +1,34 @@
 ===============================================================
+cice4_0_20071217
+Originator: dbailey (David Bailey)
+Date: Mon Dec 17 15:34:01 MST 2007
+Version: 4.0
+One-line Summary: Changes to get delta-Eddington radiation
+                  synchronized with atmosphere and exact
+                  restart for ponds and dEdd.
+CCSM Version compatible with: 
+Changes made:
+
+M            src/source/ice_init.F90
+M            src/source/ice_dyn_evp.F90
+M            src/source/ice_itd.F90
+M            src/source/ice_shortwave.F90
+M            src/source/ice_meltpond.F90
+M            src/source/ice_fileunits.F90
+M            src/source/ice_diagnostics.F90
+M            src/source/ice_therm_vertical.F90
+M            src/source/ice_step_mod.F90
+M            src/source/ice_flux.F90
+M            src/source/ice_therm_itd.F90
+M            src/source/ice_restart.F90
+M            src/source/ice_forcing.F90
+M            src/source/ice_history.F90
+M            src/drivers/ccsm_sequential/CICE_InitMod.F90
+M            src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            src/drivers/ccsm_concurrent/CICE_InitMod.F90
+M            src/drivers/ccsm_concurrent/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20071204
 Originator: dbailey (David Bailey)
 Date: Tue Dec  4 08:45:52 MST 2007

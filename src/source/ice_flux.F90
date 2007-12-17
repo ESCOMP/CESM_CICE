@@ -358,10 +358,11 @@
       ! initialize albedo and fluxes
       !-----------------------------------------------------------------
 
-      alvdr   (:,:,:) = c0
-      alidr   (:,:,:) = c0
-      alvdf   (:,:,:) = c0
-      alidf   (:,:,:) = c0
+!     Need to do this in step_rad2 now
+!     alvdr   (:,:,:) = c0
+!     alidr   (:,:,:) = c0
+!     alvdf   (:,:,:) = c0
+!     alidf   (:,:,:) = c0
 
       strairxT(:,:,:) = c0      ! wind stress, T grid
       strairyT(:,:,:) = c0
@@ -630,13 +631,14 @@
          i = indxi(ij)
          j = indxj(ij)
 
-        ! albedos
-         if (coszn(i,j) > puny) then      ! sun above the horizon
-            alvdf(i,j) = alvdf(i,j) + alvdfn(i,j)*aicen(i,j)
-            alidf(i,j) = alidf(i,j) + alidfn(i,j)*aicen(i,j)
-            alvdr(i,j) = alvdr(i,j) + alvdrn(i,j)*aicen(i,j)
-            alidr(i,j) = alidr(i,j) + alidrn(i,j)*aicen(i,j)
-         endif
+!     Need to do this in step_rad2 now
+!       ! albedos
+!        if (coszn(i,j) > puny) then      ! sun above the horizon
+!           alvdf(i,j) = alvdf(i,j) + alvdfn(i,j)*aicen(i,j)
+!           alidf(i,j) = alidf(i,j) + alidfn(i,j)*aicen(i,j)
+!           alvdr(i,j) = alvdr(i,j) + alvdrn(i,j)*aicen(i,j)
+!           alidr(i,j) = alidr(i,j) + alidrn(i,j)*aicen(i,j)
+!        endif
 
         ! atmo fluxes
 
@@ -780,7 +782,7 @@
             flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0
-            Tref    (i,j) = Tair(i,j)
+            Tref    (i,j) = c0
             Qref    (i,j) = Qa  (i,j)
             fresh   (i,j) = c0
             fsalt   (i,j) = c0

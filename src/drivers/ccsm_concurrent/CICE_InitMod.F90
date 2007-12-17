@@ -119,9 +119,8 @@
       call init_evp (dt)        ! define evp dynamics parameters, variables
       call init_coupler_flux    ! initialize fluxes exchanged with coupler
       call init_thermo_vertical ! initialize vertical thermodynamics
-      if (shortwave == 'dEdd') then
+      if (trim(shortwave) == 'dEdd') then
          call init_orbit        ! initialize orbital parameters
-         call init_dEdd         ! initialize delta-Eddington scheme
       endif
       call init_itd             ! initialize ice thickness distribution
       call calendar(time)       ! determine the initial date
@@ -136,6 +135,7 @@
       else	
          ! for continuation run, always start for restart pointer file
          call restartfile()
+         call calendar(time)       ! For restart runs, use initial time
       end if
 
       if (kpond == 1) call init_meltponds

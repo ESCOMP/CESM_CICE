@@ -330,7 +330,8 @@
             meltt_tmp = meltt(:,:,iblk) - meltt_old
 
             call compute_ponds(nx_block, ny_block, nghost,              &
-                               meltt_tmp, melts_tmp, frain(:,:,iblk),   &
+                               meltt_tmp, melts_tmp,                    &
+                               frain(:,:,iblk),                         &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
                                vsnon (:,:,n,iblk), trcrn (:,:,:,n,iblk),&
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
@@ -943,6 +944,11 @@
          fpn         , & ! pond fraction
          hpn             ! pond depth (m)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         scale_factor
+ 
+      real (kind=dbl_kind) :: netsw, netsw_old, ar
+
       type (block) :: &
          this_block      ! block information for current block
 
@@ -953,8 +959,6 @@
          istop, jstop    ! indices of grid cell where model aborts 
 
       l_stop = .false.
-
-      Sswabsn(:,:,:,:) = c0
 
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -972,26 +976,36 @@
 
          if (trim(shortwave) == 'dEdd') then ! delta Eddington
 
-            ! identify ice-ocean cells
-            icells = 0
-            do j = 1, ny_block
-            do i = 1, nx_block
-               if (tmask(i,j,iblk)) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
+            scale_factor(:,:) = c1
+
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aice(i,j,iblk) > c0) then
+               netsw = swvdr(i,j,iblk)*(c1 - alvdr(i,j,iblk)) &
+                     + swvdf(i,j,iblk)*(c1 - alvdf(i,j,iblk)) &
+                     + swidr(i,j,iblk)*(c1 - alidr(i,j,iblk)) &
+                     + swidf(i,j,iblk)*(c1 - alidf(i,j,iblk))
+               netsw_old = c0
+               do n=1, ncat
+                  netsw_old = netsw_old + (fswsfcn(i,j,n,iblk) &
+                            + fswintn(i,j,n,iblk) &
+                            + fswthrun(i,j,n,iblk)) * aicen(i,j,n,iblk)
+               enddo
+               ar = c1 / aice(i,j,iblk)
+               netsw_old = netsw_old * ar
+               if (netsw_old > c0) then
+                  scale_factor(i,j) = netsw / netsw_old
+!                 if (my_task == 0 .and. i == 19 .and. j == 29) then
+!                    print *,'coszen,netsw,netsw_old,scale_factor', &
+!                         my_task, i, j, iblk, istep, &
+!                         coszen(i,j,iblk),netsw,netsw_old,scale_factor(i,j)
+!                    print *,'aicen,aice',aicen(i,j,n,iblk),aice(i,j,iblk)
+!                 endif
+               endif
                endif
             enddo               ! i
             enddo               ! j
 
-            call compute_coszen (nx_block,         ny_block,       &
-                                 icells,                           &
-                                 indxi,            indxj,          &
-                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt)
-
-         else                     ! basic (ccsm3) shortwave
-            coszen(:,:,iblk) = p5 ! sun above the horizon
          endif
 
          do n = 1, ncat
@@ -1021,56 +1035,26 @@
             sl2 = slyrn(n)
 
             if (trim(shortwave) == 'dEdd') then   ! delta Eddington
-
-      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
-      ! BPB 19 Dec 2006
-
-               ! set snow properties
-               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
-                                 icells,                                  &
-                                 indxi,               indxj,              &
-                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
-                                 trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
-                                 rhosnwn,             rsnwn)
-
-
-               if (kpond == 0) then
-
-               ! set pond properties
-               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
-                                 icells,                                   &
-                                 indxi,               indxj,               &
-                                 aicen(:,:,n,iblk),                        &
-                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
-                                 fsn,                 fpn,                 &
-                                 hpn)
-
-               else
-
-
-               fpn(:,:) = apondn(:,:,n,iblk)
-               hpn(:,:) = hpondn(:,:,n,iblk)
-
-               endif
-
-               call shortwave_dEdd(nx_block,        ny_block,            &
-                                 icells,                                 &
-                                 indxi,             indxj,               &
-                                 coszen(:,:, iblk),                      &
-                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), fsn,                 &
-                                 rhosnwn,           rsnwn,               &
-                                 fpn,               hpn,                 &
-                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
-                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
-                                 alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
-                                 fswthrun(:,:,n,iblk),                   &
-                                 Sswabsn(:,:,sl1:sl2,iblk),              &
-                                 Iswabsn(:,:,il1:il2,iblk))
+              
+               do ij=1,icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  fswsfcn(i,j,n,iblk) = scale_factor(i,j)*fswsfcn(i,j,n,iblk)
+                  fswintn(i,j,n,iblk) = scale_factor(i,j)*fswintn(i,j,n,iblk)
+                  fswthrun(i,j,n,iblk) = scale_factor(i,j)*fswthrun(i,j,n,iblk)
+                  Sswabsn(i,j,sl1:sl2,iblk) = scale_factor(i,j)*Sswabsn(i,j,sl1:sl2,iblk)
+                  Iswabsn(i,j,il1:il2,iblk) = scale_factor(i,j)*Iswabsn(i,j,il1:il2,iblk)
+                  if (scale_factor(i,j) > 1000._dbl_kind) then
+!                    print *,'fswsfcn,fswintn,fswthrun', &
+!                       fswsfcn(i,j,n,iblk),fswintn(i,j,n,iblk),fswthrun(i,j,n,iblk)
+!                    print *,'Sswabsn', Sswabsn(i,j,sl1:sl2,iblk)
+!                    print *,'Iswabsn', Iswabsn(i,j,il1:il2,iblk)
+                  endif
+               enddo
 
             else
+
+               Sswabsn(i,j,sl1:sl2,iblk) = c0
 
                call absorbed_solar  (nx_block,   ny_block,               &
                                icells,                                   &
@@ -1268,12 +1252,20 @@
                                  fpn,               hpn,                 &
                                  swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                  swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
-                                 alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
+                                 alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
                                  fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
                                  fswthrun(:,:,n,iblk),                   &
                                  Sswabsn(:,:,sl1:sl2,iblk),              &
                                  Iswabsn(:,:,il1:il2,iblk))
+
+! Special case of night to day
+
+               do ij=1,icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  fswsfcn(i,j,n,iblk) = max(p01, fswsfcn(i,j,n,iblk))
+               enddo
 
             else
 
@@ -1281,7 +1273,8 @@
                                icells,               &
                                indxi,      indxj,    &
                                aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
-                               vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
+                               vsnon(:,:,n,iblk),                       &
+                               trcrn(:,:,nt_Tsfc,n,iblk),               &
                                alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
                                alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
                                alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
@@ -1292,24 +1285,22 @@
 
             endif
 
+
          ! Aggregate albedos for coupler
 
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
 
-               if (coszen(i,j,iblk) > puny) then
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) &
+                  + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf(i,j,iblk) = alidf(i,j,iblk) &
+                  + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) &
+                  + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr(i,j,iblk) = alidr(i,j,iblk) &
+                  + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
 
-                  alvdf(i,j,iblk) = alvdf(i,j,iblk) &
-                     + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-                  alidf(i,j,iblk) = alidf(i,j,iblk) &
-                     + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-                  alvdr(i,j,iblk) = alvdr(i,j,iblk) &
-                     + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-                  alidr(i,j,iblk) = alidr(i,j,iblk) &
-                     + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-
-               endif
             enddo
 
          enddo                  ! ncat

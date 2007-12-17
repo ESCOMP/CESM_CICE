@@ -157,9 +157,7 @@
          call ice_write(nu_dump,0,aicen(:,:,n,:),'ruf8',diag)
          call ice_write(nu_dump,0,vicen(:,:,n,:),'ruf8',diag)
          call ice_write(nu_dump,0,vsnon(:,:,n,:),'ruf8',diag)
-         do it = 1, ntrcr
-            call ice_write(nu_dump,0,trcrn(:,:,it,n,:),'ruf8',diag)
-         enddo
+         call ice_write(nu_dump,0,trcrn(:,:,nt_Tsfc,n,:),'ruf8',diag)
       enddo
 
       do k=1,ntilyr
@@ -319,10 +317,8 @@
             field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,vsnon(:,:,n,:),'ruf8',diag, &
             field_type=field_type_scalar,field_loc=field_loc_center)
-         do it = 1, ntrcr
-            call ice_read(nu_restart,0,trcrn(:,:,it,n,:),'ruf8',diag, &
-               field_type=field_type_scalar,field_loc=field_loc_center)
-         enddo
+         call ice_read(nu_restart,0,trcrn(:,:,nt_Tsfc,n,:),'ruf8',diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       if (my_task == master_task) &
@@ -376,32 +372,32 @@
            'internal stress components'
       
       call ice_read(nu_restart,0,stressp_1,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stressm_1,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stress12_1,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
 
       call ice_read(nu_restart,0,stressp_2,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stressm_2,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stress12_2,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
 
       call ice_read(nu_restart,0,stressp_3,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stressm_3,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stress12_3,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
 
       call ice_read(nu_restart,0,stressp_4,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stressm_4,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
       call ice_read(nu_restart,0,stress12_4,'ruf8',diag, &
-         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+         field_type=field_type_scalar,field_loc=field_loc_center)
 
       !-----------------------------------------------------------------
       ! ice mask for dynamics
@@ -436,13 +432,13 @@
       ! update boundary conditions
       !-----------------------------------------------------------------
 
-      call ice_timer_start(timer_bound)
+!     call ice_timer_start(timer_bound)
 
 !     call bound_state (aicen, trcrn, &
 !                       vicen, vsnon, &
 !                       eicen, esnon)
 
-      call ice_timer_stop(timer_bound)
+!     call ice_timer_stop(timer_bound)
 
       !-----------------------------------------------------------------
       ! Ensure ice is binned in correct categories

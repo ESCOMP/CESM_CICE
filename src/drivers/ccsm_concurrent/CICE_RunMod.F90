@@ -37,6 +37,8 @@
       use ice_exit
       use ice_history	
       use ice_restart 	
+      use ice_meltpond
+      use ice_shortwave
 
       implicit none
       private
@@ -123,6 +125,9 @@
 
          call ice_timer_start(timer_rcvsnd)   ! timing between send-recv
 
+         if ((istep == 1) .and. (trim(runtype) == 'startup') .and. &
+            (trim(shortwave) == 'dEdd')) call init_dEdd
+
          call init_mass_diags   ! diagnostics per timestep
 
          if(prescribed_ice) then  ! read prescribed ice
@@ -183,7 +188,11 @@
 
          call ice_write_hist (dt)    ! history file
 
-         if (write_restart == 1) call dumpfile ! dumps for restarting
+         if (write_restart == 1) then
+            call dumpfile ! dumps for restarting
+            if (kpond == 1) call write_restart_volpn
+            if (trim(shortwave) == 'dEdd') call write_restart_dEdd
+         endif
 
          call ice_timer_stop(timer_readwrite)  ! reading/writing
 

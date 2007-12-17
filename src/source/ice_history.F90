@@ -958,7 +958,7 @@
       cona(n_alidr  ) = c100              ! avg of near IR albedo to %
       cona(n_evap   ) = mps_to_cmpdy/rhofresh   ! evap kg/m2/s to cm/day
       cona(n_evap_ai) = mps_to_cmpdy/rhofresh   ! evap kg/m2/s to cm/day
-      conb(n_Tref   ) = -tffresh                ! Tref K to C
+      conb(n_Tair   ) = -tffresh                ! Tair K to C
       cona(n_Qref   ) = kg_to_g                 ! Qref kg/kg to g/kg
 
       cona(n_congel ) = mps_to_cmpdy/dt  ! congel m per step to cm/day
@@ -1120,7 +1120,7 @@
         ai = aice_init(i,j,iblk)
         aa(i,j,n_hi,    iblk)= aa(i,j,n_hi,    iblk) + vice (i,j,iblk) 
         aa(i,j,n_hs,    iblk)= aa(i,j,n_hs,    iblk) + vsno (i,j,iblk) 
-        aa(i,j,n_Tsfc,  iblk)= aa(i,j,n_Tsfc,  iblk) +trcr(i,j,1,iblk)
+        aa(i,j,n_Tsfc,  iblk)= aa(i,j,n_Tsfc,  iblk) + trcr (i,j,nt_Tsfc,iblk)
         aa(i,j,n_aice,  iblk)= aa(i,j,n_aice,  iblk) + aice (i,j,iblk)
         aa(i,j,n_uvel,  iblk)= aa(i,j,n_uvel,  iblk) + uvel (i,j,iblk)
         aa(i,j,n_vvel,  iblk)= aa(i,j,n_vvel,  iblk) + vvel (i,j,iblk)

@@ -269,6 +269,8 @@ contains
     use ice_history
     use ice_restart
     use ice_diagnostics
+    use ice_meltpond
+    use ice_shortwave
 
     use eshr_timemgr_mod, only: eshr_timemgr_clockIsOnLastStep,  &
                                 eshr_timemgr_clockAlarmIsOnRes,  &
@@ -326,6 +328,9 @@ contains
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
     
+    if ((istep == 1) .and. (trim(runtype) == 'startup') .and. &
+       (trim(shortwave) == 'dEdd')) call init_dEdd
+
     call init_mass_diags   ! diagnostics per timestep
 
     if(prescribed_ice) then  ! read prescribed ice
@@ -400,6 +405,8 @@ contains
        write(nu_diag,*)'ice_comp_mct: callinng dumpfile for restart filename= ',&
             fname
        call dumpfile(fname)
+       if (kpond == 1) call write_restart_volpn
+       if (trim(shortwave) == 'dEdd') call write_restart_dEdd
     end if
 
     !-----------------------------------------------------------------

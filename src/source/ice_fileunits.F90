@@ -52,6 +52,10 @@
          nu_forcing    , &  ! forcing data file
          nu_dump       , &  ! dump file for restarting
          nu_restart    , &  ! restart input file
+         nu_dump_volpn , &
+         nu_restart_volpn, &
+         nu_dump_dEdd , &
+         nu_restart_dEdd, &
          nu_rst_pointer, &  ! pointer to latest restart file
          nu_history    , &  ! binary history output file
          nu_hdr        , &  ! header file for binary history output
@@ -107,6 +111,10 @@ contains
          nu_forcing     = shr_file_getUnit()
          nu_dump        = shr_file_getUnit()
          nu_restart     = shr_file_getUnit()
+         nu_dump_volpn  = shr_file_getUnit()
+         nu_restart_volpn = shr_file_getUnit()
+         nu_dump_dEdd   = shr_file_getUnit()
+         nu_restart_dEdd = shr_file_getUnit()
          nu_rst_pointer = shr_file_getUnit()
          nu_history     = shr_file_getUnit()
          nu_hdr         = shr_file_getUnit()
@@ -116,6 +124,10 @@ contains
          call get_fileunit(nu_forcing)
          call get_fileunit(nu_dump)
          call get_fileunit(nu_restart)
+         call get_fileunit(nu_dump_volpn)
+         call get_fileunit(nu_restart_volpn)
+         call get_fileunit(nu_dump_dEdd)
+         call get_fileunit(nu_restart_dEdd)
          call get_fileunit(nu_rst_pointer)
          call get_fileunit(nu_history)
          call get_fileunit(nu_hdr)

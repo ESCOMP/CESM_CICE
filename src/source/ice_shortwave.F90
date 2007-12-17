@@ -54,6 +54,12 @@
       use ice_domain_size
       use ice_constants
       use ice_blocks
+      use ice_fileunits
+      use ice_read_write
+      use ice_restart, only: lenstr, restart_dir, restart_file, &
+                             pointer_file, runtype
+      use ice_communicate, only: my_task, master_task
+      use ice_exit, only: abort_ice
 !
 !EOP
 !
@@ -122,6 +128,10 @@
          fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
          fswintn         ! SW absorbed in ice interior, below surface (W m-2)
 
+      logical (kind=log_kind) :: &
+         restart_dEdd
+
+
 !=======================================================================
 
       contains
@@ -178,6 +188,8 @@
          fpn         , & ! pond fraction
          hpn             ! pond depth (m)
 
+      real (kind=dbl_kind) :: ar
+
       integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi, &
          il1, il2    , & ! ice layer indices for eice
          sl1, sl2        ! snow layer indices for esno
@@ -194,15 +206,24 @@
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
-      Sswabsn(:,:,:,:) = c0
       if (kpond == 0) then
          apondn(:,:,:,:) = c0
          hpondn(:,:,:,:) = c0
       endif
 
-      do iblk=1,nblocks
+      restart_dEdd = .false.
 
-         if (trim(shortwave) == 'dEdd') then ! delta Eddington
+      if (trim(runtype) == 'continue' .and. trim(shortwave) == 'dEdd') &
+         restart_dEdd = .true.
+
+      if (restart_dEdd) then
+
+         call read_restart_dEdd
+
+         dx_exp = argmax / real(nmbexp,kind=dbl_kind)
+         exp_min = exp(-argmax)
+
+         do iblk = 1, nblocks
 
             ! identify ice-ocean cells
             icells = 0
@@ -222,121 +243,97 @@
                                  tlat  (:,:,iblk), tlon(:,:,iblk), &
                                  coszen(:,:,iblk), dt)
 
-         else                     ! basic (ccsm3) shortwave
-            coszen(:,:,iblk) = p5 ! sun above the horizon
-         endif
+         enddo
 
-      do n=1,ncat
+      else
 
-         icells = 0
-         do j = jlo, jhi
-         do i = ilo, ihi
-            if (aicen(i,j,n,iblk) > puny) then
-               icells = icells + 1
-               indxi(icells) = i
-               indxj(icells) = j
-            endif
-         enddo               ! i
-         enddo               ! j
-
-         il1 = ilyr1(n)
-         il2 = ilyrn(n)
-         sl1 = slyr1(n)
-         sl2 = slyrn(n)
-
+      do iblk=1,nblocks
 
          if (trim(shortwave) == 'dEdd') then
 
-      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
-      ! BPB 19 Dec 2006
-
-               ! set snow properties
-               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
-                                 icells,                                  &
-                                 indxi,               indxj,              &
-                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
-                                 trcrn(:,:,1,n,iblk), fsn,                &
-                                 rhosnwn,             rsnwn)
-
-
-               if (kpond == 0) then
-
-               ! set pond properties
-               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
-                                 icells,                                   &
-                                 indxi,               indxj,               &
-                                 aicen(:,:,n,iblk),   trcrn(:,:,1,n,iblk), &
-                                 fsn,                 fpn,                 &
-                                 hpn)
-
-               else
-
-               fpn(:,:) = apondn(:,:,n,iblk)
-               hpn(:,:) = hpondn(:,:,n,iblk)
-
+            ! identify ice-ocean cells
+            icells = 0
+            do j = 1, ny_block
+            do i = 1, nx_block
+               if (tmask(i,j,iblk)) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
                endif
+            enddo               ! i
+            enddo               ! j
 
-               call shortwave_dEdd(nx_block,        ny_block,            &
-                                 icells,                                 &
-                                 indxi,             indxj,               &
-                                 coszen(:,:, iblk),                      &
-                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), fsn,                 &
-                                 rhosnwn,           rsnwn,               &
-                                 fpn,               hpn,                 &
-                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
-                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
-                                 alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
-                                 fswthrun(:,:,n,iblk),                   &
-                                 Sswabsn(:,:,sl1:sl2,iblk),              &
-                                 Iswabsn(:,:,il1:il2,iblk))
-
+            call compute_coszen (nx_block,         ny_block,       &
+                                 icells,                           &
+                                 indxi,            indxj,          &
+                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
+                                 coszen(:,:,iblk), dt)
 
          else
- 
-         call compute_albedos (nx_block,   ny_block, &
-                               icells,               &
-                               indxi,      indxj,    &
-                               aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
-                               vsnon(:,:,n,iblk), trcrn(:,:,1,n,iblk),  &
-                               alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
-                               alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
-                               alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
-                               alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
-                               alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
-                               alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
-                               apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
+
+            coszen(:,:,iblk) = p5 ! sun above the horizon
 
          endif
 
-         ! Aggregate albedos for coupler
+         do n=1,ncat
 
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
+            icells = 0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aicen(i,j,n,iblk) > puny) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
 
-            alvdf(i,j,iblk) = alvdf(i,j,iblk) &
-               + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidf(i,j,iblk) = alidf(i,j,iblk) &
-               + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alvdr(i,j,iblk) = alvdr(i,j,iblk) &
-               + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidr(i,j,iblk) = alidr(i,j,iblk) &
-               + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-         enddo
+            il1 = ilyr1(n)
+            il2 = ilyrn(n)
+            sl1 = slyr1(n)
+            sl2 = slyrn(n)
 
-      enddo ! ncat
+            call compute_albedos (nx_block,   ny_block, &
+                                  icells,               &
+                                  indxi,      indxj,    &
+                                  aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
+                                  vsnon(:,:,n,iblk),                       &
+                                  trcrn(:,:,nt_Tsfc,n,iblk),               &
+                                  alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
+                                  alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
+                                  alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
+                                  alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
+                                  alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
+                                  alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
+                                  apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
+
+            ! Aggregate albedos for coupler
+
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+   
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) &
+                  + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf(i,j,iblk) = alidf(i,j,iblk) &
+                  + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) &
+                  + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr(i,j,iblk) = alidr(i,j,iblk) &
+                  + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+            enddo
+
+         enddo ! ncat
 
          do j = 1, ny_block
          do i = 1, nx_block
 
-            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > puny) then
-               alvdf(i,j,iblk) = alvdf(i,j,iblk) / aice(i,j,iblk)
-               alidf(i,j,iblk) = alidf(i,j,iblk) / aice(i,j,iblk)
-               alvdr(i,j,iblk) = alvdr(i,j,iblk) / aice(i,j,iblk)
-               alidr(i,j,iblk) = alidr(i,j,iblk) / aice(i,j,iblk)
+            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
+               ar = c1 /  aice(i,j,iblk)
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) * ar
+               alidf(i,j,iblk) = alidf(i,j,iblk) * ar
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) * ar
+               alidr(i,j,iblk) = alidr(i,j,iblk) * ar
             else
                alvdf(i,j,iblk) = c0
                alidf(i,j,iblk) = c0
@@ -348,6 +345,8 @@
          enddo
 
       enddo ! iblk
+
+      endif
 
       end subroutine init_shortwave
 
@@ -1047,32 +1046,187 @@
 !
 !BOP
 !
-! !IROUTINE: init_dEdd - initialize Delta-Eddington parameters
+! !ROUTINE: init_dEdd
+!
+! !DESCRIPTION:
+!
+!  Initialize delta-Eddington
+! 
+! !REVISION HISTORY: same as module
 !
 ! !INTERFACE:
 !
       subroutine init_dEdd
 !
-! !DESCRIPTION:
-!
-! Compute initial data for Delta-Eddington method, specifically, 
-! the approximate exponential look-up table.
-!
-! !REVISION HISTORY:
-!
-! author:  Bruce P. Briegleb, NCAR
-!
 ! !USES:
 !
-! !INPUT/OUTPUT PARAMETERS: none
+      use ice_domain_size
+      use ice_blocks
+      use ice_calendar
+      use ice_domain
+      use ice_flux
+      use ice_grid
+      use ice_itd
+      use ice_meltpond
+      use ice_orbital
+      use ice_state
+!
+! !INPUT/OUTPUT PARAMETERS:
 !
 !EOP
-!     
+!
+!     local temporary variables
+
+      integer (kind=int_kind) :: &
+         icells          ! number of cells with aicen > puny
+
+      integer (kind=int_kind), dimension(nx_block*ny_block) :: &
+         indxi, indxj    ! indirect indices for cells with aicen > puny
+
+      ! snow variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fsn             ! snow horizontal fraction
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr) :: &
+         rhosnwn     , & ! snow density (kg/m3)
+         rsnwn           ! snow grain radius (micro-meters)
+
+      ! pond variables for Delta-Eddington shortwave
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         fpn         , & ! pond fraction
+         hpn             ! pond depth (m)
+
+      real (kind=dbl_kind) :: ar
+
+      integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi, &
+         il1, il2    , & ! ice layer indices for eice
+         sl1, sl2        ! snow layer indices for esno
+
+
+      ! Need to compute albedos before init_cpl in CCSM
+
+      ilo = 1 + nghost
+      ihi = nx_block - nghost
+      jlo = 1 + nghost
+      jhi = ny_block - nghost
+
+      print *,'In init_dEdd'
+
+      alvdr   (:,:,:) = c0
+      alidr   (:,:,:) = c0
+      alvdf   (:,:,:) = c0
+      alidf   (:,:,:) = c0
+
       dx_exp = argmax / real(nmbexp,kind=dbl_kind)
       exp_min = exp(-argmax)
- 
+
+      do iblk=1,nblocks
+
+         do n=1,ncat
+
+            icells = 0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aicen(i,j,n,iblk) > puny) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif
+            enddo               ! i
+            enddo               ! j
+
+            il1 = ilyr1(n)
+            il2 = ilyrn(n)
+            sl1 = slyr1(n)
+            sl2 = slyrn(n)
+
+      ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
+      ! BPB 19 Dec 2006
+
+            ! set snow properties
+            call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                              icells,                                  &
+                              indxi,               indxj,              &
+                              aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                              trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
+                              rhosnwn,             rsnwn)
+
+
+            if (kpond == 0) then
+
+            ! set pond properties
+               call shortwave_dEdd_set_pond(nx_block, ny_block,            &
+                                 icells,                                   &
+                                 indxi,               indxj,               &
+                                 aicen(:,:,n,iblk),                        &
+                                 trcrn(:,:,nt_Tsfc,n,iblk),                &
+                                 fsn,                 fpn,                 &
+                                 hpn)
+
+            else
+
+               fpn(:,:) = apondn(:,:,n,iblk)
+               hpn(:,:) = hpondn(:,:,n,iblk)
+
+            endif
+
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                              icells,                                 &
+                              indxi,             indxj,               &
+                              coszen(:,:, iblk),                      &
+                              aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                              vsnon(:,:,n,iblk), fsn,                 &
+                              rhosnwn,           rsnwn,               &
+                              fpn,               hpn,                 &
+                              swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                              swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                              alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
+                              alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                              fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
+                              fswthrun(:,:,n,iblk),                   &
+                              Sswabsn(:,:,sl1:sl2,iblk),              &
+                              Iswabsn(:,:,il1:il2,iblk))
+
+            ! Aggregate albedos for coupler
+
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+   
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) &
+                  + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf(i,j,iblk) = alidf(i,j,iblk) &
+                  + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) &
+                  + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr(i,j,iblk) = alidr(i,j,iblk) &
+                  + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+            enddo
+
+         enddo ! ncat
+
+         do j = 1, ny_block
+         do i = 1, nx_block
+
+            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
+               ar = c1 / aice(i,j,iblk)
+               alvdf(i,j,iblk) = alvdf(i,j,iblk) * ar
+               alidf(i,j,iblk) = alidf(i,j,iblk) * ar
+               alvdr(i,j,iblk) = alvdr(i,j,iblk) * ar
+               alidr(i,j,iblk) = alidr(i,j,iblk) * ar
+            else
+               alvdf(i,j,iblk) = c0
+               alidf(i,j,iblk) = c0
+               alvdr(i,j,iblk) = c0
+               alidr(i,j,iblk) = c0
+            endif
+
+         enddo
+         enddo
+
+      enddo ! iblk
+
       end subroutine init_dEdd
- 
+      
 !=======================================================================
 !BOP
 !
@@ -3291,6 +3445,190 @@
       end subroutine shortwave_dEdd_set_pond
 
 ! End Delta-Eddington shortwave method
+
+!=======================================================================
+!
+!BOP
+!
+! !IROUTINE: write_restart_dEdd - dumps all fields required for restart
+!
+! !INTERFACE:
+!
+      subroutine write_restart_dEdd(filename_spec)
+!
+! !DESCRIPTION:
+!
+! Dumps all values needed for restarting
+!
+! !REVISION HISTORY:
+!
+! author Elizabeth C. Hunke, LANL
+!
+! !USES:
+!
+      use ice_domain_size
+      use ice_calendar, only: sec, month, mday, nyr, istep1, &
+                              time, time_forc, idate, year_init
+      use ice_flux
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      character(len=char_len_long), intent(in), optional :: filename_spec
+
+      integer (kind=int_kind) :: &
+          k, n ! counting indices
+!EOP
+!
+      integer (kind=int_kind) :: &
+          i, j, k, n, it, iblk, & ! counting indices
+          iyear, imonth, iday     ! year, month, day
+
+      character(len=char_len_long) :: filename
+
+      logical (kind=log_kind) :: diag
+
+      ! construct path/file
+      if (present(filename_spec)) then
+         filename = trim(filename_spec)
+      else
+         iyear = nyr + year_init - 1
+         imonth = month
+         iday = mday
+         
+         write(filename,'(a,a,a,i4.4,a,i2.2,a,i2.2,a,i5.5)') &
+              restart_dir(1:lenstr(restart_dir)), &
+              restart_file(1:lenstr(restart_file)),'.dEdd.', &
+              iyear,'-',month,'-',mday,'-',sec
+      end if
+         
+      ! begin writing restart data
+      call ice_open(nu_dump_dEdd,filename,0)
+
+      if (my_task == master_task) then
+        write(nu_dump_dEdd) istep1,time,time_forc
+        write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
+      endif
+
+      diag = .true.
+
+      !-----------------------------------------------------------------
+
+      call ice_write(nu_dump_dEdd,0,alvdr,'ruf8',diag)
+      call ice_write(nu_dump_dEdd,0,alvdf,'ruf8',diag)
+      call ice_write(nu_dump_dEdd,0,alidr,'ruf8',diag)
+      call ice_write(nu_dump_dEdd,0,alidf,'ruf8',diag)
+
+      do n=1,ncat
+         call ice_write(nu_dump_dEdd,0,fswsfcn(:,:,n,:),'ruf8',diag)
+         call ice_write(nu_dump_dEdd,0,fswintn(:,:,n,:),'ruf8',diag)
+         call ice_write(nu_dump_dEdd,0,fswthrun(:,:,n,:),'ruf8',diag)
+      enddo
+
+      do k=1,ntilyr
+         call ice_write(nu_dump_dEdd,0,Iswabsn(:,:,k,:),'ruf8',diag)
+      enddo
+
+      do k=1,ntslyr
+         call ice_write(nu_dump_dEdd,0,Sswabsn(:,:,k,:),'ruf8',diag)
+      enddo
+
+      if (my_task == master_task) close(nu_dump_dEdd)
+
+      end subroutine write_restart_dEdd
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: read_restart_dEdd - reads all fields required for restart
+!
+! !INTERFACE:
+!
+      subroutine read_restart_dEdd(filename_spec)
+!
+! !DESCRIPTION:
+!
+! Reads all values needed for a meltpond volume restart
+!
+! !REVISION HISTORY:
+!
+! author Elizabeth C. Hunke, LANL
+!
+! !USES:
+!
+      use ice_domain_size
+      use ice_calendar, only: sec, month, mday, nyr, istep1, &
+                              time, time_forc, idate, year_init
+      use ice_flux
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      character(len=char_len_long), intent(in), optional :: filename_spec
+
+      integer (kind=int_kind) :: &
+          k, n ! counting indices
+!EOP
+!
+      integer (kind=int_kind) :: &
+          i, j, k, n, it, iblk, & ! counting indices
+          iyear, imonth, iday     ! year, month, day
+
+      character(len=char_len_long) :: &
+         filename, filename0, string1, string2
+
+      logical (kind=log_kind) :: &
+         diag
+
+      if (my_task == master_task) then
+         open(nu_rst_pointer,file=pointer_file)
+         read(nu_rst_pointer,'(a)') filename0
+         filename = trim(filename0)
+         close(nu_rst_pointer)
+
+         ! reconstruct path/file
+         n = index(filename0,trim(restart_file))
+         if (n == 0) call abort_ice('dEdd restart: filename discrepancy')
+         string1 = trim(filename0(1:n-1))
+         string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
+         write(filename,'(a,a,a,a)') &
+            string1(1:lenstr(string1)), &
+            restart_file(1:lenstr(restart_file)),'.dEdd', &
+            string2(1:lenstr(string2))
+      endif ! master_task
+
+      call ice_open(nu_restart_dEdd,filename,0)
+
+      if (my_task == master_task) then
+        read(nu_restart_dEdd) istep1,time,time_forc
+        write(nu_diag,*) 'Reading ',filename(1:lenstr(filename))
+      endif
+
+      diag = .true.
+
+      !-----------------------------------------------------------------
+
+      call ice_read(nu_restart_dEdd,0,alvdr,'ruf8',diag)
+      call ice_read(nu_restart_dEdd,0,alvdf,'ruf8',diag)
+      call ice_read(nu_restart_dEdd,0,alidr,'ruf8',diag)
+      call ice_read(nu_restart_dEdd,0,alidf,'ruf8',diag)
+
+      do n=1,ncat
+         call ice_read(nu_restart_dEdd,0,fswsfcn(:,:,n,:),'ruf8',diag)
+         call ice_read(nu_restart_dEdd,0,fswintn(:,:,n,:),'ruf8',diag)
+         call ice_read(nu_restart_dEdd,0,fswthrun(:,:,n,:),'ruf8',diag)
+      enddo
+
+      do k=1,ntilyr
+         call ice_read(nu_restart_dEdd,0,Iswabsn(:,:,k,:),'ruf8',diag)
+      enddo
+
+      do k=1,ntslyr
+         call ice_read(nu_restart_dEdd,0,Sswabsn(:,:,k,:),'ruf8',diag)
+      enddo
+
+      if (my_task == master_task) close(nu_restart_dEdd)
+
+      end subroutine read_restart_dEdd
+
 !=======================================================================
 
       end module ice_shortwave
