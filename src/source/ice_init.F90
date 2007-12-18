@@ -601,6 +601,7 @@
       use ice_state
       use ice_itd
       use ice_exit
+      use ice_meltpond, only: kpond
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
