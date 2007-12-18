@@ -1,4 +1,14 @@
 ===============================================================
+cice4_0_20071218
+Originator: dbailey (David Bailey)
+Date: Tue Dec 18 08:42:22 MST 2007
+Version: 4.0
+One-line Summary: Bug fix in ice_init for compile.
+CCSM Version compatible with: 
+Changes made:
+
+M            src/source/ice_init.F90
+===============================================================
 cice4_0_20071217
 Originator: dbailey (David Bailey)
 Date: Mon Dec 17 15:34:01 MST 2007
