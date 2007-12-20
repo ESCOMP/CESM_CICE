@@ -242,6 +242,11 @@ EOF1
 
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 
+ &tracer_nml
+    tr_iage = .false.
+  , tr_pond = .false.
+/
+
  &domain_nml
     nprocs = \$NTASKS_ICE
   , distribution_type = 'cartesian'

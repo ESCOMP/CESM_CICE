@@ -32,9 +32,10 @@
 ! !USES:
 !
       use ice_kinds_mod
-      use ice_domain_size, only: ncat, nilyr, nslyr, ntilyr, ntslyr
+      use ice_domain_size, only: ncat, nilyr, nslyr, ntilyr, ntslyr, ntrcr
       use ice_constants
       use ice_fileunits, only: nu_diag
+      use ice_age, only: tr_iage
 !
 !EOP
 !
@@ -55,7 +56,7 @@
       real (kind=dbl_kind), parameter, private :: &
          ferrmax = 1.0e-3_dbl_kind, & ! max allowed energy flux error (W m-2)
                                       ! recommend ferrmax < 0.01 W m-2
-         hsnomin = 1.0e-4_dbl_kind    ! min thickness for which Tsno computed (m)
+         hsnomin = 1.0e-4_dbl_kind    ! min thickness for which Tsno computed
 
       character (char_len) :: stoplabel
 
@@ -88,7 +89,7 @@
       subroutine thermo_vertical (nx_block,    ny_block,  &
                                   dt,          icells,    &
                                   indxi,       indxj,     &
-                                  aicen,       Tsfcn,     &
+                                  aicen,       trcrn,     &
                                   vicen,       vsnon,     &
                                   eicen,       esnon,     &
                                   flw,         potT,      &
@@ -119,6 +120,7 @@
       use ice_exit
       use ice_ocean
       use ice_itd, only: ilyr1, slyr1, ilyrn, slyrn
+      use ice_state, only: nt_Tsfc, nt_iage
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -138,8 +140,11 @@
          intent(inout) :: &
          aicen , & ! concentration of ice
          vicen , & ! volume per unit area of ice          (m)
-         vsnon , & ! volume per unit area of snow         (m)
-         Tsfcn     ! temperature of ice/snow top surface  (C)
+         vsnon     ! volume per unit area of snow         (m)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+         intent(inout) :: &
+         trcrn
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,nilyr), &
          intent(inout) :: &
@@ -257,6 +262,11 @@
          einit       , & ! initial energy of melting (J m-2)
          efinal          ! final energy of melting (J m-2)
 
+! ech: the size of these arrays should be reduced to icells
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         Tsfcn, & ! temperature of ice/snow top surface  (C)
+         iage     ! ice age (s)
+
       !-----------------------------------------------------------------
       ! Initialize
       !-----------------------------------------------------------------
@@ -276,6 +286,9 @@
          freshn (i,j) = c0
          fsaltn (i,j) = c0
          fhocnn (i,j) = c0
+
+         Tsfcn(i,j) = trcrn(i,j,nt_Tsfc)
+         if (tr_iage) iage(i,j) = trcrn(i,j,nt_iage)
       enddo
       enddo
 
@@ -356,7 +369,7 @@
                              fsnow,        hsn_new,  &
                              fhocnn,       evapn,    &
                              meltt,        melts,    &
-                             meltb,                  &
+                             meltb,        iage,     &
                              congel,       snoice,   &
                              mlt_onset,    frz_onset)
 
@@ -414,6 +427,16 @@
                                 Tsfcn(:,:),               &
                                 eicen(:,:,:), esnon(:,:,:))
 
+      !-----------------------------------------------------------------
+      ! Reload tracer array
+      !-----------------------------------------------------------------
+
+      do j = 1, ny_block
+      do i = 1, nx_block
+         trcrn(i,j,nt_Tsfc) = Tsfcn(i,j)
+         if (tr_iage) trcrn(i,j,nt_iage) = iage(i,j)
+      enddo
+      enddo
 
       end subroutine thermo_vertical
 
@@ -2303,48 +2326,8 @@
             endif               ! l_cold
          endif                  ! l_snow
 
-      !-----------------------------------------------------------------
-      ! top ice layer
-      !-----------------------------------------------------------------
-
-         ki = 1
-         k  = ki + nslyr
-         kr = k + 1
-
-         if (.not.l_snow(m) .and. .not.l_cold(m)) then
-            sbdiag(ij,kr) = c0
-            spdiag(ij,kr) = -etai(ij,ki) * kh(m,k+1)
-            diag  (ij,kr) = c1 &
-                           + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
-            rhs   (ij,kr) = Tin_init(m,ki) &
-                           + etai(ij,ki)*Iswabs(i,j,ki) &
-                           + etai(ij,ki)*kh(m,k)*Tsf(m)
-         else
-            sbdiag(ij,kr) = -etai(ij,ki) * kh(m,k)
-            spdiag(ij,kr) = -etai(ij,ki) * kh(m,k+1)
-            diag  (ij,kr) = c1 &
-                           + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
-            rhs   (ij,kr) = Tin_init(m,ki) &
-                           + etai(ij,ki)*Iswabs(i,j,ki)
-         endif
-
-      !-----------------------------------------------------------------
-      ! bottom ice layer
-      !-----------------------------------------------------------------
-
-         ki = nilyr
-         k  = ki + nslyr
-         kr = k + 1
-      
-         sbdiag(ij,kr) = -etai(ij,ki) * kh(m,k)
-         spdiag(ij,kr) = c0
-         diag  (ij,kr) = c1  &
-                        + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
-         rhs   (ij,kr) = Tin_init(m,ki) &
-                        + etai(ij,ki)*Iswabs(i,j,ki) &
-                        + etai(ij,ki)*kh(m,k+1)*Tbot(i,j)
       enddo                     ! ij
-      
+
       !-----------------------------------------------------------------
       ! remaining snow layers
       !-----------------------------------------------------------------
@@ -2372,9 +2355,98 @@
 
       endif                     ! nslyr > 1
 
+
+      if (nilyr > 1) then
+
+         do ij = 1, isolve
+            i = indxii(ij)
+            j = indxjj(ij)
+            m = indxij(ij)
+
+      !-----------------------------------------------------------------
+      ! top ice layer
+      !-----------------------------------------------------------------
+
+            ki = 1
+            k  = ki + nslyr
+            kr = k + 1
+
+            if (l_snow(m) .or. l_cold(m)) then
+               sbdiag(ij,kr) = -etai(ij,ki) * kh(m,k)
+               spdiag(ij,kr) = -etai(ij,ki) * kh(m,k+1)
+               diag  (ij,kr) = c1 &
+                              + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
+               rhs   (ij,kr) = Tin_init(m,ki) &
+                              + etai(ij,ki)*Iswabs(i,j,ki)
+            else    ! no snow, warm surface
+               sbdiag(ij,kr) = c0
+               spdiag(ij,kr) = -etai(ij,ki) * kh(m,k+1)
+               diag  (ij,kr) = c1 &
+                              + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
+               rhs   (ij,kr) = Tin_init(m,ki) &
+                              + etai(ij,ki)*Iswabs(i,j,ki) &
+                              + etai(ij,ki)*kh(m,k)*Tsf(m)
+            endif
+
+      !-----------------------------------------------------------------
+      ! bottom ice layer
+      !-----------------------------------------------------------------
+
+            ki = nilyr
+            k  = ki + nslyr
+            kr = k + 1
+      
+            sbdiag(ij,kr) = -etai(ij,ki) * kh(m,k)
+            spdiag(ij,kr) = c0
+            diag  (ij,kr) = c1  &
+                           + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
+            rhs   (ij,kr) = Tin_init(m,ki) &
+                           + etai(ij,ki)*Iswabs(i,j,ki) &
+                           + etai(ij,ki)*kh(m,k+1)*Tbot(i,j)
+
+         enddo                   ! ij
+      
+      else         ! nilyr = 1
+
+      !-----------------------------------------------------------------
+      ! single ice layer
+      !-----------------------------------------------------------------
+
+         ki = 1
+         k  = ki + nslyr
+         kr = k + 1
+
+         do ij = 1, isolve
+            i = indxii(ij)
+            j = indxjj(ij)
+            m = indxij(ij)
+
+            if (l_snow(m) .or. l_cold(m)) then
+               sbdiag(ij,kr) = -etai(ij,ki) * kh(m,k)
+               spdiag(ij,kr) = c0
+               diag  (ij,kr) = c1                                 &
+                              + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
+               rhs   (ij,kr) = Tin_init(m,ki)                     &
+                              + etai(ij,ki) * Iswabs(i,j,ki)      &
+                              + etai(ij,ki) * kh(m,k+1)*Tbot(i,j)
+            else   ! no snow, warm surface
+               sbdiag(ij,kr) = c0
+               spdiag(ij,kr) = c0
+               diag  (ij,kr) = c1                                 &
+                              + etai(ij,ki) * (kh(m,k) + kh(m,k+1))
+               rhs   (ij,kr) = Tin_init(m,ki)                     &
+                              + etai(ij,ki) * Iswabs(i,j,ki)      &
+                              + etai(ij,ki) * kh(m,k)*Tsf(m)      &
+                              + etai(ij,ki) * kh(m,k+1)*Tbot(i,j)
+            endif
+         enddo                     ! ij
+
+      endif        ! nilyr > 1
+
       !-----------------------------------------------------------------
       ! interior ice layers
       !-----------------------------------------------------------------
+
       do ki = 2, nilyr-1
            
          k  = ki + nslyr
@@ -2522,7 +2594,7 @@
                                     fsnow,     hsn_new,  &
                                     fhocnn,    evapn,    &
                                     meltt,     melts,    &
-                                    meltb,               &
+                                    meltb,     iage,     &
                                     congel,    snoice,   &  
                                     mlt_onset, frz_onset)
 !
@@ -2574,6 +2646,7 @@
          meltb       , & ! basal ice melt           (m/step-->cm/day)
          congel      , & ! basal ice growth         (m/step-->cm/day)
          snoice      , & ! snow-ice formation       (m/step-->cm/day)
+         iage        , & ! ice age (s)
          mlt_onset   , & ! day of year that sfc melting begins
          frz_onset       ! day of year that freezing begins (congel or frazil)
 
@@ -2746,6 +2819,10 @@
 
          if (dzi(ij,nilyr) > puny) &
               qin(ij,nilyr) = hqtot / dzi(ij,nilyr)
+
+         ! update ice age due to freezing (new ice age = dt)
+         if (tr_iage) &
+            iage(i,j) = (iage(i,j)*hin(ij) + dt*dhi) / (hin(ij) + dhi)
 
          ! history diagnostics
          congel(i,j) = congel(i,j) + dhi*aicen(i,j)
@@ -2945,7 +3022,9 @@
       call freeboard (nx_block, ny_block, &
                       icells,             &
                       indxi,    indxj,    &
+                      dt,                 &
                       aicen,    snoice,   &
+                      iage,               &
                       hin,      hsn,      &
                       qin,      qsn,      &
                       dzi,      dzs)
@@ -3110,7 +3189,9 @@
       subroutine freeboard (nx_block, ny_block, &
                             icells,             &
                             indxi,    indxj,    &
+                            dt,                 &
                             aicen,    snoice,   &
+                            iage,               &
                             hin,      hsn,      &
                             qin,      qsn,      &
                             dzi,      dzs)
@@ -3130,9 +3211,13 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(in) :: &
          aicen           ! fractional ice area
 
+      real (kind=dbl_kind), intent(in) :: &
+         dt      ! time step
+
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
-         snoice      ! snow-ice formation       (m/step-->cm/day)
+         snoice  , & ! snow-ice formation       (m/step-->cm/day)
+         iage        ! snow thickness (m)
 
       real (kind=dbl_kind), dimension (icells), &
          intent(inout) :: &
@@ -3222,6 +3307,10 @@
          j = indxj(ij)
 
          if (dhin(ij) > puny) then
+            ! update ice age due to freezing (new ice age = dt)
+            if (tr_iage) &
+               iage(i,j) = (iage(i,j)*hin(ij)+dt*dhin(ij))/(hin(ij)+dhin(ij))
+
             wk1 = dzi(ij,1) + dhin(ij)
             hin(ij) = hin(ij) + dhin(ij)
             qin(ij,1) = (dzi(ij,1)*qin(ij,1) + hqs(ij)) / wk1

@@ -266,6 +266,7 @@ contains
 !
 ! !USES:
     use ice_step_mod
+    use ice_age
     use ice_history
     use ice_restart
     use ice_diagnostics
@@ -405,7 +406,8 @@ contains
        write(nu_diag,*)'ice_comp_mct: callinng dumpfile for restart filename= ',&
             fname
        call dumpfile(fname)
-       if (kpond == 1) call write_restart_volpn
+       if (tr_iage) call write_restart_age
+       if (tr_pond) call write_restart_pond
        if (trim(shortwave) == 'dEdd') call write_restart_dEdd
     end if
 

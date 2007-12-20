@@ -1,4 +1,56 @@
 ===============================================================
+cice4_0_20071220
+Originator: dbailey (David Bailey)
+Date: Thu Dec 20 09:11:49 MST 2007
+Version: 4.0
+One-line Summary: Merge to head of LANL trunk.
+CCSM Version compatible with: 
+Changes made:
+
+This tag adds a new tracer, ice age, and slightly modifies the syntax
+for the meltponds as a tracer. This version also includes a fix for
+exact restart of the stresses in ice_dyn_evp on the dipole grid. The
+tripole is still a work in progress. I've also added the serial (single-
+processor) version of the communication modules. These changes should
+be bfb with cice4_0_20071217.
+
+M            8069   bld/cice.cpl6.template
+A               0   bld/cice.cpl7.template
+A               0   src/serial
+A               0   src/serial/ice_broadcast.F90
+A               0   src/serial/ice_boundary.F90
+A               0   src/serial/ice_timers.F90
+A               0   src/serial/ice_communicate.F90
+A               0   src/serial/ice_exit.F90
+A               0   src/serial/ice_gather_scatter.F90
+A               0   src/serial/ice_global_reductions.F90
+M            8075   src/source/ice_init.F90
+M            8075   src/source/ice_dyn_evp.F90
+M            8075   src/source/ice_calendar.F90
+M            8075   src/source/ice_shortwave.F90
+M            8075   src/source/ice_meltpond.F90
+A               0   src/source/ice_age.F90
+M            8075   src/source/ice_fileunits.F90
+M            8075   src/source/ice_therm_vertical.F90
+M            8075   src/source/ice_step_mod.F90
+M            8075   src/source/ice_therm_itd.F90
+M            8075   src/source/ice_state.F90
+M            8075   src/source/ice_restart.F90
+M            8075   src/source/ice_grid.F90
+M            8075   src/source/ice_read_write.F90
+M            8075   src/source/ice_forcing.F90
+M            8075   src/source/ice_history.F90
+M            8075   src/source/ice_domain_size.F90
+M            8075   src/mpi/ice_exit.F90
+M            8075   src/mpi/ice_gather_scatter.F90
+M            8075   src/drivers/ccsm_sequential/CICE_InitMod.F90
+M            8075   src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            8075   src/drivers/ccsm_concurrent/CICE_InitMod.F90
+M            8075   src/drivers/ccsm_concurrent/CICE_RunMod.F90
+M            8075   src/drivers/cice4/CICE_InitMod.F90
+M            8075   src/drivers/cice4/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20071218
 Originator: dbailey (David Bailey)
 Date: Tue Dec 18 08:42:22 MST 2007

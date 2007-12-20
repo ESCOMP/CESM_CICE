@@ -31,11 +31,9 @@
 !
       implicit none
 
-      integer (kind=int_kind) :: & ! defined in namelist 
-         kpond          ! 1 = explicit meltponds
-
       logical (kind=log_kind) :: &
-         restart_volpn
+         tr_pond,       & ! if .true., use explicit meltponds
+         restart_pond    ! if .true., read meltponds restart file
 
 !=======================================================================
 
@@ -85,11 +83,11 @@
       jlo = 1 + nghost
       jhi = ny_block - nghost
 
-      restart_volpn = .false.
-      if (trim(runtype) == 'continue') restart_volpn = .true.
+      restart_pond = .false.
+      if (trim(runtype) == 'continue') restart_pond = .true.
 
-      if (restart_volpn) then
-         call read_restart_volpn
+      if (restart_pond) then
+         call read_restart_pond
       else
          trcrn(:,:,nt_volpn,:,:) = c0
          apondn(:,:,:,:) = c0
@@ -234,11 +232,11 @@
 !
 !BOP
 !
-! !IROUTINE: write_restart_volpn - dumps all fields required for restart
+! !IROUTINE: write_restart_pond - dumps all fields required for restart
 !
 ! !INTERFACE:
 !
-      subroutine write_restart_volpn(filename_spec)
+      subroutine write_restart_pond(filename_spec)
 !
 ! !DESCRIPTION:
 !
@@ -246,7 +244,8 @@
 !
 ! !REVISION HISTORY:
 !
-! author Elizabeth C. Hunke, LANL
+! authors Elizabeth C. Hunke, LANL
+!         David A. Bailey, NCAR
 !
 ! !USES:
 !
@@ -284,10 +283,10 @@
       end if
          
       ! begin writing restart data
-      call ice_open(nu_dump_volpn,filename,0)
+      call ice_open(nu_dump_pond,filename,0)
 
       if (my_task == master_task) then
-        write(nu_dump_volpn) istep1,time,time_forc
+        write(nu_dump_pond) istep1,time,time_forc
         write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
       endif
 
@@ -296,23 +295,23 @@
       !-----------------------------------------------------------------
 
       do n = 1, ncat
-         call ice_write(nu_dump_volpn,0,trcrn(:,:,nt_volpn,n,:),'ruf8',diag)
-         call ice_write(nu_dump_volpn,0,apondn(:,:,n,:),'ruf8',diag)
-         call ice_write(nu_dump_volpn,0,hpondn(:,:,n,:),'ruf8',diag)
+         call ice_write(nu_dump_pond,0,trcrn(:,:,nt_volpn,n,:),'ruf8',diag)
+         call ice_write(nu_dump_pond,0,apondn(:,:,n,:),'ruf8',diag)
+         call ice_write(nu_dump_pond,0,hpondn(:,:,n,:),'ruf8',diag)
       enddo
 
-      if (my_task == master_task) close(nu_dump_volpn)
+      if (my_task == master_task) close(nu_dump_pond)
 
-      end subroutine write_restart_volpn
+      end subroutine write_restart_pond
 
 !=======================================================================
 !BOP
 !
-! !IROUTINE: read_restart_volpn - reads all fields required for restart
+! !IROUTINE: read_restart_pond - reads all fields required for restart
 !
 ! !INTERFACE:
 !
-      subroutine read_restart_volpn(filename_spec)
+      subroutine read_restart_pond(filename_spec)
 !
 ! !DESCRIPTION:
 !
@@ -320,7 +319,8 @@
 !
 ! !REVISION HISTORY:
 !
-! author Elizabeth C. Hunke, LANL
+! authors Elizabeth C. Hunke, LANL
+!         David A. Bailey, NCAR
 !
 ! !USES:
 !
@@ -362,10 +362,10 @@
             string2(1:lenstr(string2))
       endif ! master_task
 
-      call ice_open(nu_restart_volpn,filename,0)
+      call ice_open(nu_restart_pond,filename,0)
 
       if (my_task == master_task) then
-        read(nu_restart_volpn) istep1,time,time_forc
+        read(nu_restart_pond) istep1,time,time_forc
         write(nu_diag,*) 'Reading ',filename(1:lenstr(filename))
       endif
 
@@ -374,14 +374,14 @@
       !-----------------------------------------------------------------
 
       do n = 1, ncat
-         call ice_read(nu_restart_volpn,0,trcrn(:,:,nt_volpn,n,:),'ruf8',diag)
-         call ice_read(nu_restart_volpn,0,apondn(:,:,n,:),'ruf8',diag)
-         call ice_read(nu_restart_volpn,0,hpondn(:,:,n,:),'ruf8',diag)
+         call ice_read(nu_restart_pond,0,trcrn(:,:,nt_volpn,n,:),'ruf8',diag)
+         call ice_read(nu_restart_pond,0,apondn(:,:,n,:),'ruf8',diag)
+         call ice_read(nu_restart_pond,0,hpondn(:,:,n,:),'ruf8',diag)
       enddo
 
-      if (my_task == master_task) close(nu_restart_volpn)
+      if (my_task == master_task) close(nu_restart_pond)
 
-      end subroutine read_restart_volpn
+      end subroutine read_restart_pond
 
 !=======================================================================
 

@@ -28,6 +28,7 @@
 ! !USES:
 !
       use ice_step_mod
+      use ice_age
       use ice_calendar
       use ice_diagnostics
       use ice_flux
@@ -190,7 +191,8 @@
 
          if (write_restart == 1) then
             call dumpfile ! dumps for restarting
-            if (kpond == 1) call write_restart_volpn
+            if (tr_iage) call write_restart_age
+            if (tr_pond) call write_restart_pond
             if (trim(shortwave) == 'dEdd') call write_restart_dEdd
          endif
 

@@ -6,10 +6,10 @@
 !
 ! !DESCRIPTION:
 !
-! Exit the model. 
+! Exit the model.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_exit.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_exit.F 20 2006-09-01 17:09:49Z  $
 !
 ! authors William H. Lipscomb (LANL)
 !         Elizabeth C. Hunke (LANL)
@@ -52,11 +52,9 @@
 !
       use ice_fileunits
       use ice_communicate
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSM
       use shr_sys_mod
 #endif
-
-      include 'mpif.h'   ! MPI Fortran include file
 !
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -65,17 +63,11 @@
 !
 !EOP
 !
-      integer (int_kind) :: ierr ! MPI error flag
-
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSM
       call shr_sys_abort(error_message)
 #else
+      write (nu_diag,*) error_message
       call flush_fileunit(nu_diag)
-
-      write (ice_stderr,*) error_message
-      call flush_fileunit(ice_stderr)
-
-      call MPI_ABORT(MPI_COMM_WORLD, ierr)
       stop
 #endif
 
@@ -92,7 +84,8 @@
 !
 ! !DESCRIPTION:
 !
-! Ends run by calling MPI_FINALIZE.
+! Ends parallel run by calling MPI_FINALIZE.
+! Does nothing in serial runs.
 !
 ! !REVISION HISTORY:
 !
@@ -102,10 +95,6 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
-
-      integer (int_kind) :: ierr ! MPI error flag
-
-      call MPI_FINALIZE(ierr)
 !
 !EOP
 !

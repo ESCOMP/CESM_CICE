@@ -26,6 +26,7 @@
 !
 ! !USES:
 !
+      use ice_age
       use ice_atmo
       use ice_calendar
       use ice_communicate
@@ -266,6 +267,19 @@
             endif
 
       !-----------------------------------------------------------------
+      ! Update ice age
+      ! This is further adjusted for freezing in the thermodynamics.
+      ! Melting does not alter the ice age.
+      !-----------------------------------------------------------------
+
+            if (tr_iage) then
+               call increment_age (nx_block, ny_block,      &
+                                   dt, icells,              &
+                                   indxi, indxj,            &
+                                   trcrn(:,:,nt_iage,n,iblk))
+            endif
+
+      !-----------------------------------------------------------------
       ! Vertical thermodynamics: Heat conduction, growth and melting.
       !----------------------------------------------------------------- 
 
@@ -324,7 +338,7 @@
       ! Melt ponds
       !-----------------------------------------------------------------
 
-         if (kpond == 1) then
+         if (tr_pond) then
 
             melts_tmp = melts(:,:,iblk) - melts_old
             meltt_tmp = meltt(:,:,iblk) - meltt_old
@@ -1223,7 +1237,7 @@
                                  rhosnwn,             rsnwn)
 
 
-               if (kpond == 0) then
+               if (.not. tr_pond) then
 
                ! set pond properties
                call shortwave_dEdd_set_pond(nx_block, ny_block,            &

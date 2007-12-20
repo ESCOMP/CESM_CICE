@@ -77,10 +77,10 @@
            oldrecnum = 0  , & ! old record number (save between steps)
            oldrecslot = 1     ! old record slot (save between steps)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
-          cldf                ! cloud fraction
+      real (kind=dbl_kind), allocatable, dimension (:,:,:) :: &
+           cldf               ! cloud fraction
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,2,max_blocks) :: &
+      real (kind=dbl_kind), allocatable, dimension (:,:,:,:) :: &
             fsw_data, & ! field values at 2 temporal data points
            cldf_data, &
           fsnow_data, &
@@ -114,8 +114,7 @@
       integer (kind=int_kind), parameter :: & 
          nfld = 8    ! number of fields to search for in forcing file
 
-      real (kind=dbl_kind), &
-       dimension (nx_block,ny_block,max_blocks,nfld,12) :: & 
+      real (kind=dbl_kind), allocatable, dimension (:,:,:,:,:) :: &
          ocn_frc_m   ! ocn data for 12 months
 
       logical (kind=log_kind) :: &
@@ -230,6 +229,10 @@
            nbits
 
       nbits = 64                ! double precision data
+
+      allocate(sst_data (nx_block,ny_block,2,max_blocks))
+      allocate(sss_data (nx_block,ny_block,2,max_blocks))
+      allocate(ocn_frc_m(nx_block,ny_block,max_blocks,nfld,12))
 
     !-------------------------------------------------------------------
     ! Sea surface salinity (SSS)
@@ -370,6 +373,22 @@
       integer (kind=int_kind) :: &
          iblk                 ! block index
 
+      allocate(fsw_data  (nx_block,ny_block,2,max_blocks))
+      allocate(cldf_data (nx_block,ny_block,2,max_blocks))
+      allocate(cldf      (nx_block,ny_block,  max_blocks))
+      allocate(fsnow_data(nx_block,ny_block,2,max_blocks))
+      allocate(Tair_data (nx_block,ny_block,2,max_blocks))
+      allocate(uatm_data (nx_block,ny_block,2,max_blocks))
+      allocate(vatm_data (nx_block,ny_block,2,max_blocks))
+      allocate(wind_data (nx_block,ny_block,2,max_blocks))
+      allocate(strax_data(nx_block,ny_block,2,max_blocks))
+      allocate(stray_data(nx_block,ny_block,2,max_blocks))
+      allocate(Qa_data   (nx_block,ny_block,2,max_blocks))
+      allocate(rhoa_data (nx_block,ny_block,2,max_blocks))
+      allocate(potT_data (nx_block,ny_block,2,max_blocks))
+      allocate(zlvl_data (nx_block,ny_block,2,max_blocks))
+      allocate(flw_data  (nx_block,ny_block,2,max_blocks))
+
       fyear = fyear_init + mod(nyr-1,ycycle)  ! current year
       if (trim(atm_data_type) /= 'default' .and. istep <= 1 &
                    .and. my_task == master_task) then
@@ -391,7 +410,8 @@
          call LY_data
       elseif (trim(atm_data_type) == 'monthly') then
          call monthly_data
-!     else    ! default values set in init_flux
+      else    ! default values set in init_flux
+         return
       endif
 
       do iblk = 1, nblocks
