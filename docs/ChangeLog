@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20080107
+Originator: dbailey (David Bailey)
+Date: Mon Jan  7 14:58:40 MST 2008
+Version: 4.0
+One-line Summary: Merge changes for cpl7.
+CCSM Version compatible with:
+Changes made:
+
+M        bld/cice.cpl7.template
+M        src/drivers/ccsm_sequential/CICE_InitMod.F90
+M        src/drivers/ccsm_sequential/ice_comp_mct.F90
+M        src/source/ice_constants.F90
+M        src/source/ice_shortwave.F90
+M        src/source/ice_step_mod.F90
+
+===============================================================
 cice4_0_20071220
 Originator: dbailey (David Bailey)
 Date: Thu Dec 20 09:11:49 MST 2007
