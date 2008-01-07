@@ -67,7 +67,9 @@
          albocn = 0.06_dbl_kind                   ,&! ocean albedo
          dragio = 0.00536_dbl_kind                ,&! ice-ocn drag coefficient
 !        rho_air   = SHR_CONST_RHODAIR,&! ambient air density (kg/m^3)
-         spval_dbl = SHR_CONST_SPVAL    ! special value
+         spval_dbl = SHR_CONST_SPVAL  ,&! special value
+         rfrac     = 0.85_dbl_kind    ,&! water runoff fraction for melt ponds
+         snowpatch = 0.005_dbl_kind     ! parameter for fractional snow area (m)
 #else
 #ifdef AOMIP
       real (kind=dbl_kind), parameter :: &
@@ -116,7 +118,9 @@
          ice_ref_salinity = 4._dbl_kind ,&! (psu)
 !        ocn_ref_salinity = 34.7_dbl_kind,&! (psu)
 !        rho_air   = 1.2_dbl_kind     ,&! ambient air density (kg/m^3)
-         spval_dbl = 1.0e30_dbl_kind    ! special value (double precision)
+         spval_dbl = 1.0e30_dbl_kind  ,&! special value (double precision)
+         snowpatch = 0.02_dbl_kind    ,&! parameter for fractional snow area (m)
+         rfrac     = 0.9_dbl_kind       ! water runoff fraction for melt ponds
 #endif
 
       real (kind=real_kind), parameter :: &
@@ -134,10 +138,6 @@
          zref   = 10._dbl_kind   ,&! reference height for stability (m)
          Tocnfrz= -34.0_dbl_kind*depressT,&! freezing temp of seawater (C),
                                            ! used as Tsfcn for open water
-         snowpatch = 0.005_dbl_kind ! parameter for fractional snow area (m)
-
-      real (kind=dbl_kind), parameter :: &
-         rfrac  = 0.85_dbl_kind       ! water runoff fraction for melt ponds
 
       ! weights for albedos (match those for isccp shortwave forcing)
 ! 4 Jan 2007 BPB  Following are appropriate for complete cloud

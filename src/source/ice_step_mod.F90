@@ -36,7 +36,6 @@
       use ice_exit
       use ice_fileunits
       use ice_flux
-      use ice_forcing
       use ice_grid
       use ice_history
       use ice_restart

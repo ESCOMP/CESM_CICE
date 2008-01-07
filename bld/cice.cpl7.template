@@ -66,51 +66,66 @@ endif
 # Detemine ice datasets
 #-----------------------------------------------------------------------
 set icedata = ice/cice
+set ice_dt  = 3600.0
+set ndyn_dt = 1
 
 if ($ICE_GRID == 'gx3v5') then
   set data_domain_grid = global_${ICE_GRID}_20030806.grid 
   set data_domain_kmt  = global_${ICE_GRID}_20040323.kmt       
   set grid_type        = displaced_pole
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'gx1v3') then
   set data_domain_grid = global_${ICE_GRID}_20010402.grid 
   set data_domain_kmt  = global_${ICE_GRID}_20010702.kmt  
   set grid_type        = displaced_pole
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'gx1v4') then
   set data_domain_grid = global_${ICE_GRID}_20010402.grid 
   set data_domain_kmt  = global_${ICE_GRID}_20060831.kmt  
   set grid_type        = displaced_pole
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'gx1v5') then
   set data_domain_grid = global_${ICE_GRID}_20010402.grid
   set data_domain_kmt  = global_${ICE_GRID}_20061229.kmt  
   set grid_type        = displaced_pole
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'T31') then
   set data_domain_grid = domain.camocn.48x96_USGS_070807.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'T42') then
   set data_domain_grid = domain.camocn.64x128_USGS_070807.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'T85') then
   set data_domain_grid = domain.camocn.128x256_USGS_070807.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == '4x5') then
   set data_domain_grid = domain.camocn.4x5_USGS_070807.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == '1.9x2.5') then
   set data_domain_grid = domain.camocn.1.9x2.5_gx1v5_070816.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == '0.9x1.25') then
   set data_domain_grid = domain.camocn.0.9x1.25_USGS_070807.nc
   set data_domain_kmt  = $data_domain_grid
   set grid_type        = latlon
+  set ns_boundary      = closed
 else if ($ICE_GRID == 'tx0.1v2') then
   set data_domain_grid = grid.3600x2400.fob.da
   set data_domain_kmt  = kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da
   set grid_type        = tripole
+  set ns_boundary      = tripole
+  set ice_dt           = 1800.0
+  set ndyn_dt          = 2
 endif
 
 if ($RUN_TYPE == startup) then
@@ -119,7 +134,6 @@ if ($RUN_TYPE == startup) then
   if ($ICE_GRID == 'gx1v3') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
   if ($ICE_GRID == 'gx1v4') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
   if ($ICE_GRID == 'gx1v5') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
-  if ($ICE_GRID == 'tx0.1v2') set inic_file = 'none'
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
   set inic_file = $RUN_REFCASE.cice.r.$datedash
 endif
@@ -185,6 +199,20 @@ EOF1
 endif
 
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
+#
+#  Get decomposition info from Configuration Wizard
+#
+set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
+
+if(\$config[1] < 0) then
+   echo \$config[2]
+   exit -1
+else
+   setenv BLCKX \$config[3]
+   setenv BLCKY \$config[4]
+   setenv MXBLCKS \$config[5]
+   setenv DECOMPTYPE \$config[6]
+endif
 
 EOF1
 
@@ -251,9 +279,9 @@ cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 cat << EOF >! ice_in
   &ice_nml
     inic_file     = '\$inic_file'
-  , dt            = 3600.0
+  , dt            = $ice_dt
   , ndte          = 120
-  , ndyn_dt       = 1
+  , ndyn_dt       = $ndyn_dt
   , npt           = 99999
   , diagfreq      = 24
   , histfreq      = 'm'
@@ -299,9 +327,9 @@ cat << EOF >! ice_in
 /
 
  &domain_nml
-    distribution_type = 'cartesian'
+    distribution_type = '\$DECOMPTYPE'
   , ew_boundary_type  = 'cyclic'
-  , ns_boundary_type  = 'closed'
+  , ns_boundary_type  = '$ns_boundary'
 /
 EOF1
 
@@ -430,55 +458,27 @@ set objdir = \$OBJROOT/ice/obj; cd \$objdir
 EOF
 EOF2
 
-# Calculate processor tiling based on \$NTASK
-#-----------------------------------------------------------------------
-
-if ( $GRID =~ *gx3* ) then 
-cat >> $CASEROOT/Buildexe/cice.buildexe.csh <<EOF2 # Calculate processor tiling based on \$NTASK
-setenv NY 1
-if (\$NTASKS_ICE > 7) setenv NY 2
-EOF2
-else
-cat >> $CASEROOT/Buildexe/cice.buildexe.csh <<EOF2
-if ( \$OS == 'ESOS' || \$OS == 'UNICOS' ) then
-  setenv NY 2
-  if (\$NTASKS_ICE == 1) setenv NY 1
-else 
-  setenv NY 1
-  if (\$NTASKS_ICE >= 8) setenv NY 2
-endif
-EOF2
-endif
-
 #-----------------------------------------------------------------------
 cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
+#
+#  Get decomposition info from Configuration Wizard
+#
+set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
 
-@ nlon = $NLON
-@ nx   = \$NTASKS_ICE / \$NY ; setenv NX \$nx
-@ rem  = \$nlon % \$nx
-if (\$rem != 0) echo ERROR: NX must divide evenly into grid, $NLON,\$NX
-if (\$rem != 0) exit -1
-
-setenv BPX    1   # number of blocks per processor in x direction
-setenv BPY    1   # number of blocks per processor in y direction
-
-### x grid decomposition
-@ a = $NLON / \$NX ; @ rem1 = $NLON % \$NX ; @ b = \$a + 1
-if (\$rem1 == 0) setenv BLCKX \$a ; if (\$rem1 != 0) setenv BLCKX \$b
-@ a = \$BLCKX / \$BPX  ; @ rem2 = \$BLCKX % \$BPX  ; @ b = \$a + 1
-if (\$rem2 == 0) setenv BLCKX \$a ; if (\$rem2 != 0) setenv BLCKX \$b
-### y grid decomposition
-@ a = $NLAT / \$NY ; @ rem1 = $NLAT % \$NY ; @ b = \$a + 1
-if (\$rem1 == 0) setenv BLCKY \$a ; if (\$rem1 != 0) setenv BLCKY \$b
-@ a = \$BLCKY / \$BPY  ; @ rem1 = \$BLCKY % \$BPY  ; @ b = \$a + 1
-if (\$rem1 == 0) setenv BLCKY \$a ; if (\$rem1 != 0) setenv BLCKY \$b
-### max blocks
-@ m = \$BPX * \$BPY ; setenv MXBLCKS \$m
+if(\$config[1] < 0) then
+   echo \$config[2]
+   exit -1
+else
+   setenv BLCKX \$config[3]
+   setenv BLCKY \$config[4]
+   setenv MXBLCKS \$config[5]
+   setenv DECOMPTYPE \$config[6]
+endif
 
 # Check for recompile if RES, ncat, BLCKX, BLCKY or MXBLCKS changes
 #----------------------------------------------------------------------
 set recompile = FALSE
-echo ${NLON} ${NLAT} ${ncat} \${NX} \${NY} > \$objdir/iceres.new
+echo ${NLON} ${NLAT} ${ncat} \${BLCKX} \${BLCKY} \${MXBLCKS} > \$objdir/iceres.new
 cmp -s \$objdir/iceres.new \$objdir/iceres.old || set recompile = TRUE
 if (\$recompile == 'TRUE') then
   cat \$objdir/iceres.old
@@ -494,26 +494,9 @@ endif
 # Build the library
 #-----------------------------------------------------------------------
 if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
-   if (\$OS == 'UNICOS') then
-     if (\`uname\` == 'Linux') then
-       # cross compiler needs to run dependency program locally
-       module purge
-       gcc -o makdep \$BLDROOT/makdep.c || exit 2
-       source \$CASEROOT/env_mach.\$MACH  || exit -1
-     else
-       # makes the build run faster on the Cray X1E
-       cc -h command -o makdep \$BLDROOT/makdep.c || exit 2
-     endif
-   else if (\$OS == 'Linux' && \$SITE == 'ORNL') then
-     gcc -o makdep \$BLDROOT/makdep.c || exit 2
-   else
-     cc -o makdep \$BLDROOT/makdep.c || exit 2
-   endif
+   cp \$BLDROOT/mkDepends . || exit 2
+   cp \$BLDROOT/mkSrcfiles . || exit 2
    set THREAD = FALSE ;  if (\$NTHRDS_ICE > 1) set THREAD = TRUE
-   gmake deps VPFILE=Filepath MODEL=cice DEPINC=$INCROOT \
-      NXGLOB=$NLON NYGLOB=$NLAT NCAT=$ncat \
-      BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
-      THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
    gmake complib -j \$GMAKE_J VPFILE=Filepath MODEL=cice COMPLIB=\$objdir/../libcice.a \
       NXGLOB=$NLON NYGLOB=$NLAT NCAT=$ncat DEPINC=$INCROOT \
       BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \

@@ -82,16 +82,6 @@
          albsnowv, & ! cold snow albedo, visible
          albsnowi    ! cold snow albedo, near IR
 
-      ! storage for approximate exponential for Delta-Eddington;
-      ! approximate exp(-x) to better than c10/nmbexp relative
-      ! error for computational efficieny by evaluating table; 
-      ! numerical error is acceptible scientifically
-      integer (kind=int_kind), parameter :: & 
-         nmbexp = 1000000  ! number of exponential values in lookup table
-
-      real (kind=dbl_kind), parameter :: & 
-         argmax = c10      ! maximum argument of exponential
-
       real (kind=dbl_kind) :: &
          dx_exp           , & ! change in argument between table values
          exp_min              ! minimum exponential value
@@ -194,6 +184,15 @@
          il1, il2    , & ! ice layer indices for eice
          sl1, sl2        ! snow layer indices for esno
 
+      ! storage for approximate exponential for Delta-Eddington;
+      ! approximate exp(-x) to better than c10/nmbexp relative
+      ! error for computational efficieny by evaluating table; 
+      ! numerical error is acceptible scientifically
+      integer (kind=int_kind), parameter :: & 
+         nmbexp = 1000000  ! number of exponential values in lookup table
+
+      real (kind=dbl_kind), parameter :: & 
+         argmax = c10      ! maximum argument of exponential
 
       ! Need to compute albedos before init_cpl in CCSM
 
@@ -211,6 +210,11 @@
          hpondn(:,:,:,:) = c0
       endif
 
+      if (trim(shortwave) == 'dEdd') then
+         dx_exp = argmax / real(nmbexp,kind=dbl_kind)
+         exp_min = exp(-argmax)
+      endif
+
       restart_dEdd = .false.
 
       if (trim(runtype) == 'continue' .and. trim(shortwave) == 'dEdd') &
@@ -219,9 +223,6 @@
       if (restart_dEdd) then
 
          call read_restart_dEdd
-
-         dx_exp = argmax / real(nmbexp,kind=dbl_kind)
-         exp_min = exp(-argmax)
 
          do iblk = 1, nblocks
 
@@ -1109,15 +1110,10 @@
       jlo = 1 + nghost
       jhi = ny_block - nghost
 
-      print *,'In init_dEdd'
-
       alvdr   (:,:,:) = c0
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
-
-      dx_exp = argmax / real(nmbexp,kind=dbl_kind)
-      exp_min = exp(-argmax)
 
       do iblk=1,nblocks
 
