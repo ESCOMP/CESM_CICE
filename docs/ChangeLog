@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20080108
+Originator: dbailey (David Bailey)
+Date: Tue Jan  8 11:04:03 MST 2008
+Version: 4.0
+One-line Summary: Bugs introduced with upgrade to LANL trunk.
+CCSM Version compatible with:
+Changes made:
+
+M        src/source/ice_constants.F90
+M        src/source/ice_grid.F90
+===============================================================
 cice4_0_20080107
 Originator: dbailey (David Bailey)
 Date: Mon Jan  7 14:58:40 MST 2008

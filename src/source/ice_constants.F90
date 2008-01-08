@@ -136,7 +136,7 @@
          kice   = 2.03_dbl_kind  ,&! thermal conductivity of fresh ice(W/m/deg)
          ksno   = 0.30_dbl_kind  ,&! thermal conductivity of snow  (W/m/deg)
          zref   = 10._dbl_kind   ,&! reference height for stability (m)
-         Tocnfrz= -34.0_dbl_kind*depressT,&! freezing temp of seawater (C),
+         Tocnfrz= -34.0_dbl_kind*depressT  ! freezing temp of seawater (C),
                                            ! used as Tsfcn for open water
 
       ! weights for albedos (match those for isccp shortwave forcing)

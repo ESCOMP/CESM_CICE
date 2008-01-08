@@ -102,6 +102,10 @@
          hm     , & ! land/boundary mask, thickness (T-cell)
          uvm        ! land/boundary mask, velocity (U-cell)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
+         ocn_gridcell_frac   ! only relevant for lat-lon grids
+                             ! gridcell value of [1 - (land fraction)] (T-cell)
+
       logical (kind=log_kind), &
          dimension (nx_block,ny_block,max_blocks) :: &
          tmask  , & ! land/boundary mask, thickness (T-cell)
@@ -825,7 +829,7 @@
       use netcdf
 !
 ! !INPUT/OUTPUT PARAMETERS:
-!
+      include "netcdf.inc"    ! only neede for single_column input
 !EOP
 !
       integer (kind=int_kind) :: &
@@ -839,6 +843,7 @@
 
       type (block) :: &
          this_block           ! block information for current block
+
       integer (kind=int_kind) :: &
          ilo,ihi,jlo,jhi      ! beginning and end of physical domain
 
@@ -852,11 +857,22 @@
            start(2), &        ! Start index to read in
            count(2)           ! Number of points to read in
 
+      integer (kind=int_kind) :: &
+        status                ! status flag
+
       real (kind=dbl_kind), allocatable :: &
            lats(:),lons(:),pos_lons(:), glob_grid(:,:)  ! temporaries 
 
       real (kind=dbl_kind) :: &
-         pos_scmlon           ! temporary
+         pos_scmlon,&         ! temporary
+         scamdata             ! temporary
+
+      logical (kind=log_kind) :: diag
+
+      character (char_len) :: &
+         fieldname       ! field name in netCDF file
+
+      diag = .true.
 
       !-----------------------------------------------------------------
       ! - kmt file is actually clm fractional land file
@@ -867,95 +883,127 @@
 
       ! Determine dimension of domain file and check for consistency
 
-         call ice_open_nc(kmt_file, ncid))
+      if (my_task == master_task) then
+         call ice_open_nc(kmt_file, ncid)
 
-         call check_ret(nf90_inq_dimid (ncid, 'ni', dimid), subname)
-         call check_ret(nf90_inq_dimension(ncid, dimid, len=ni), subname)
-         call check_ret(nf90_inq_dimid (ncid, 'nj', dimid), subname)
-         call check_ret(nf90_inq_dimension(ncid, dimid, len=nj), subname)
-
-         if (single_column) then
-            if ((nx_global /= 1).or. (ny_global /= 1)) then
-               write(nu_diag,*) 'Because you have selected the column model flag'
-               write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
-               write(nu_diag,*) 'ice_domain_size.F and recompile'
-               call abort_ice ('latlongrid: check nx_global, ny_global')
-            endif
-         else
-            if (nx_global /= ni .and. ny_global /= nj) then
-               call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
-            end if
-         end if
+         status = nf90_inq_dimid (ncid, 'ni', dimid)
+         status = nf90_inquire_dimension(ncid, dimid, len=ni)
+         status = nf90_inq_dimid (ncid, 'nj', dimid)
+         status = nf90_inquire_dimension(ncid, dimid, len=nj)
+      end if
          
       ! Determine start/count to read in for either single column or global lat-lon grid
+      ! If single_column, then assume that only master_task is used since there is only one task
 
       if (single_column) then
+         ! Check for consistency 
+         if (my_task == master_task) then
+         if ((nx_global /= 1).or. (ny_global /= 1)) then
+            write(nu_diag,*) 'Because you have selected the column model flag'
+            write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
+            write(nu_diag,*) 'ice_domain_size.F and recompile'
+            call abort_ice ('latlongrid: check nx_global, ny_global')
+         end if
+         end if
+            
+         ! Read in domain file for single column
          allocate(lats(nj))
          allocate(lons(ni))
          allocate(pos_lons(ni))
          allocate(glob_grid(ni,nj))
 
-         call ice_read_global_nc(ncid, 1, 'xc', glob_grid, dbug)
+         fieldname = 'xc'
+         call ice_read_global_nc(ncid, 1, fieldname, glob_grid, diag)
          do i = 1,ni
             lons(i) = glob_grid(i,1)
          end do
-         call ice_read_global_nc(ncid, 1, 'yc', glob_grid, dbug)
+         fieldname = 'yc'
+         call ice_read_global_nc(ncid, 1, fieldname, glob_grid, diag)
          do j = 1,nj
             lats(j) = glob_grid(1,j) 
          end do
          
          ! convert lons array and scmlon to 0,360 and find index of value closest to 0
          ! and obtain single-column longitude/latitude indices to retrieve
-         
          pos_lons(:)= mod(lons(:) + 360._r8,360._r8)
          pos_scmlon = mod(scmlon  + 360._r8,360._r8)
          start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
          start(2) = (MINLOC(abs(lats    -scmlat    ),dim=1))
+         count(1) = 1
+         count(2) = 1
 
          deallocate(lats)
          deallocate(lons)
          deallocate(pos_lons)
          deallocate(glob_grid)
-      else
-          start(1)=1
-          start(2)=1
-      endif
-      count(1)=nx_global
-      count(2)=ny_global
-      
-      ! Read in domain file for either single column or for global lat-lon grid
 
-         call ice_read_nc(ncid, 1, 'xc', TLON, dbug)
-         do j = 1, ny_global
-         do i = 1, nx_global
+         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         TLON = scamdata 
+         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         TLAT = scamdata
+         call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         tarea = scamdata
+         call check_ret(nf_inq_varid(ncid, 'hm' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         hm = scamdata
+         call check_ret(nf_inq_varid(ncid, 'frac' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         ocn_gridcell_frac = scamdata
+      else
+         ! Check for consistency 
+         if (my_task == master_task) then
+            if (nx_global /= ni .and. ny_global /= nj) then
+              call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+            end if
+         end if
+
+         ! Read in domain file for global lat-lon grid
+         fieldname = 'xc'
+         call ice_read_nc(ncid, 1, fieldname, TLON             , diag)
+         fieldname = 'yc'
+         call ice_read_nc(ncid, 1, fieldname, TLAT             , diag)
+         fieldname = 'area'
+         call ice_read_nc(ncid, 1, fieldname, tarea            , diag)
+         fieldname = 'mask'
+         call ice_read_nc(ncid, 1, fieldname, hm               , diag)
+         fieldname = 'frac'
+         call ice_read_nc(ncid, 1, fieldname, ocn_gridcell_frac, diag)
+      end if
+
+      if (my_task == master_task) then
+         call ice_close_nc(ncid)
+      end if
+
+      do iblk = 1,nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+         do j = jlo, jhi
+         do i = ilo, ihi
             ! Convert from degrees to radians
-            TLON(i,j) = pi*TLON(i,j)/180._dbl_kind 
-         end do
-         end do 
-         call ice_read_nc(ncid, 1, 'yc', TLAT, dbug)
-         do j = 1, ny_global
-         do i = 1, nx_global
+            TLON(i,j,iblk) = pi*TLON(i,j,iblk)/180._dbl_kind 
+
             ! Convert from degrees to radians
-            TLAT(i,j) = pi*TLAT(i,j)/180._dbl_kind 
+            TLAT(i,j,iblk) = pi*TLAT(i,j,iblk)/180._dbl_kind 
+
+            ! Convert from radians^2 to m^2 
+            ! (area in domain file is in radians^2 and tarea is in m^2)  
+            tarea(i,j,iblk) = tarea(i,j,iblk) * (radius*radius)
          end do
-         end do 
-         ! Note that area read in from domain file is in km^2 - must first convert to m^2 and 
-         ! then convert to radians^2
-         call ice_read_nc(ncid, 1, 'area', tarea, dbug)
-         do j = 1, ny_global
-         do i = 1, nx_global
-            ! Convert from km^2 to m^2
-            tarea(i,j) = tarea(i,j) * 1.e6_dbl_kind
          end do
-         end do 
-         call ice_read_nc(ncid, 1, 'mask', hm, dbug)
-         call ice_close(ncid)
+      end do
 
       !-----------------------------------------------------------------
       ! Calculate various geometric 2d arrays
       ! The U grid (velocity) is not used when run with sequential CAM
       ! because we only use thermodynamic sea ice.  However, ULAT is used
-      ! in the default initialization of CICE so we calculate it here as 
+      ! in the defualt initialization of CICE so we calculate it here as 
       ! a "dummy" so that CICE will initialize with ice.  If a no ice
       ! initialization is OK (or desired) this can be commented out and
       ! ULAT will remain 0 as specified above.  ULAT is located at the
@@ -1005,7 +1053,6 @@
       call makemask
 
       end subroutine latlongrid
-
 !=======================================================================
 !BOP
 !
