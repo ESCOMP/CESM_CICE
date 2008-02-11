@@ -118,6 +118,9 @@
         ntr           ! counter for number of tracers turned on
 
       character (len=6) :: chartmp
+#if (defined SEQ_MCT)
+      logical :: exists                    ! true if file exists
+#endif
 
       !-----------------------------------------------------------------
       ! Namelist variables.
@@ -170,7 +173,9 @@
       year_init = 0          ! initial year
       istep0 = 0             ! no. of steps taken in previous integrations,
                              ! real (dumped) or imagined (to set calendar)
+#if (!defined SEQ_MCT)
       dt = 3600.0_dbl_kind   ! time step, s 
+#endif
       npt = 99999            ! total number of time steps (dt) 
       diagfreq = 24          ! how often diag output is written
       print_points = .false. ! if true, print point data
@@ -318,8 +323,11 @@
 #ifdef SEQ_MCT
       ! Note that diag_file is not utilized in SEQ_MCT mode
       if (my_task == master_task) then
-         nu_diag = shr_file_getUnit()
-         call shr_file_setIO('ice_modelio.nml',nu_diag)
+         inquire(file='ice_modelio.nml',exist=exists)
+         if (exists) then
+            nu_diag = shr_file_getUnit()
+            call shr_file_setIO('ice_modelio.nml',nu_diag)
+         end if
       end if
 #else
       if (trim(diag_type) == 'file') then
@@ -335,7 +343,7 @@
       if (my_task == master_task) then
          history_file  = trim(runid) // ".cice.h"
          restart_file  = trim(runid) // ".cice.r"
-         incond_file   = trim(runid) // ".cice.i"
+         incond_file   = trim(runid) // ".cice.i."
       endif
 #endif
 
@@ -504,7 +512,7 @@
          write(nu_diag,1010) ' restart                   = ', restart
          write(nu_diag,1030) ' ice_ic                    = ', ice_ic
 #else 
-         write(nu_diag,1030) ' inic_file                 = ', &
+         write(nu_diag,*)    ' inic_file                 = ', &
                                trim(inic_file)
 #endif
          write(nu_diag,*)    ' grid_type                 = ', &

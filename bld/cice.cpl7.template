@@ -1,441 +1,140 @@
-#! /bin/csh -f
+#! /bin/csh -fv
 
-if !(-d $CASEROOT/Buildnml_Prestage) mkdir $CASEROOT/Buildnml_Prestage
-if !(-d $CASEROOT/Buildexe) mkdir $CASEROOT/Buildexe
+if !(-d $CASEROOT/Buildnml_Prestage         ) mkdir $CASEROOT/Buildnml_Prestage
+if !(-d $CASEROOT/Buildnml_Prestage/ciceconf) mkdir $CASEROOT/Buildnml_Prestage/ciceconf
+if !(-d $CASEROOT/Buildexe                  ) mkdir $CASEROOT/Buildexe
 
-# Determine ice mode flags
-#-----------------------------------------------------------------------
+#--------------------------------------------------------------------
+# Create cice.buildnml_prestage.csh
+#--------------------------------------------------------------------
+
 if     ($CICE_MODE == 'prognostic') then
-   set ncat                = 5  # number of ice catagories
-   set kdyn                = 1  # dynamics / rheology option
-   set kstrength           = 1
-   set kitd                = 1
-   set prescribed_ice      = .false.   # unused
-   set stream_year_first   = 0         # unused
-   set stream_year_last    = 0         # unused
-   set model_year_align    = 0         # unused
-   set pice_stream_txt     = "unused"  # unused
-   set pice_stream_nc      = " "       # unused
+   set mode = prognostic
+   set ncat = 5
 else if ($CICE_MODE == 'thermo_only') then
-   set ncat                = 1  # number of ice categories
-   set kdyn                = 0  # dynamics / rheology option
-   set kstrength           = 1
-   set kitd                = 1
-   set prescribed_ice      = .false.   
-   set stream_year_first   = 0         # unused
-   set stream_year_last    = 0         # unused
-   set model_year_align    = 0         # unused
-   set pice_stream_txt     = "unused"  # unused
-   set pice_stream_nc      = " "       # unused
+   set mode = thermo_only
+   set ncat = 1
 else if ($CICE_MODE == 'data_clim_1870') then
-   set ncat                = 1 # number of ice categories
-   set kdyn                = 0  # dynamics / rheology option
-   set kstrength           = 0
-   set kitd                = 0
-   set prescribed_ice      = .true.
-   set prescribed_ice_fill = .false.
-   set stream_year_first   = 1
-   set stream_year_last    = 1
-   set model_year_align    = 1    
-   set pice_stream_txt     = hurrell_ifrac.1x1.stream.txt
-   set pice_stream_nc      = hurrell_sst_ifrac.1x1.050606.nc
-   $UTILROOT/Tools/build_streams -t cice.template.streams.xml -s HURRELL >! $CASEROOT/Buildnml_Prestage/$pice_stream_txt || exit 99
+   set mode = prescribed
+   set pres_mode = clim_1870
+   set ncat = 1
 else if ($CICE_MODE == 'data_clim_2000') then
-   set ncat                = 1 # number of ice categories
-   set kdyn                = 0  # dynamics / rheology option
-   set kstrength           = 0
-   set kitd                = 0
-   set prescribed_ice      = .true.
-   set prescribed_ice_fill = .false.
-   set stream_year_first   = 1
-   set stream_year_last    = 1
-   set model_year_align    = 1    
-   set pice_stream_txt     = hurrell_ifrac.1x1.stream.txt
-   set pice_stream_nc      = hurrell_sst_ifrac.1x1.050606.nc
-   $UTILROOT/Tools/build_streams -t cice.template.streams.xml -s HURRELL >! $CASEROOT/Buildnml_Prestage/$pice_stream_txt || exit 99
+   set mode = prescribed
+   set pres_mode = clim_2000
+   set ncat = 1
 endif
 
-# Calculate year used in new hist/rest filenames
-#-----------------------------------------------------------------------
-if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-  set datedash = $RUN_REFDATE-00000
-else
-  set datedash = $RUN_STARTDATE-00000
-endif
-
-# Detemine ice datasets
-#-----------------------------------------------------------------------
-set icedata = ice/cice
-set ice_dt  = 3600.0
-set ndyn_dt = 1
-
-if ($ICE_GRID == 'gx3v5') then
-  set data_domain_grid = global_${ICE_GRID}_20030806.grid 
-  set data_domain_kmt  = global_${ICE_GRID}_20040323.kmt       
-  set grid_type        = displaced_pole
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'gx1v3') then
-  set data_domain_grid = global_${ICE_GRID}_20010402.grid 
-  set data_domain_kmt  = global_${ICE_GRID}_20010702.kmt  
-  set grid_type        = displaced_pole
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'gx1v4') then
-  set data_domain_grid = global_${ICE_GRID}_20010402.grid 
-  set data_domain_kmt  = global_${ICE_GRID}_20060831.kmt  
-  set grid_type        = displaced_pole
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'gx1v5') then
-  set data_domain_grid = global_${ICE_GRID}_20010402.grid
-  set data_domain_kmt  = global_${ICE_GRID}_20061229.kmt  
-  set grid_type        = displaced_pole
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'T31') then
-  set data_domain_grid = domain.camocn.48x96_USGS_070807.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'T42') then
-  set data_domain_grid = domain.camocn.64x128_USGS_070807.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'T85') then
-  set data_domain_grid = domain.camocn.128x256_USGS_070807.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == '4x5') then
-  set data_domain_grid = domain.camocn.4x5_USGS_070807.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == '1.9x2.5') then
-  set data_domain_grid = domain.camocn.1.9x2.5_gx1v5_070816.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == '0.9x1.25') then
-  set data_domain_grid = domain.camocn.0.9x1.25_USGS_070807.nc
-  set data_domain_kmt  = $data_domain_grid
-  set grid_type        = latlon
-  set ns_boundary      = closed
-else if ($ICE_GRID == 'tx0.1v2') then
-  set data_domain_grid = grid.3600x2400.fob.da
-  set data_domain_kmt  = kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da
-  set grid_type        = tripole
-  set ns_boundary      = tripole
-  set ice_dt           = 1800.0
-  set ndyn_dt          = 2
-endif
-
-if ($RUN_TYPE == startup) then
-  set inic_file = 'default'
-  if ($ICE_GRID == 'gx3v5') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
-  if ($ICE_GRID == 'gx1v3') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
-  if ($ICE_GRID == 'gx1v4') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
-  if ($ICE_GRID == 'gx1v5') set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
+set inic_file = 'default'
+if ($RUN_TYPE == startup && $ICE_GRID =~ *gx*) then
+  set inic_file = iced.0001-01-01.${ICE_GRID}_20070209
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
+  set datedash  = $RUN_REFDATE-00000
   set inic_file = $RUN_REFCASE.cice.r.$datedash
 endif
-
-# Detemine albedos
-#-----------------------------------------------------------------------
-# New default albedos based on observations. DAB 05/01/2007
-if ($ICE_GRID == 'gx3v5') then
-  set albicev  = 0.68
-  set albicei  = 0.30
-  set albsnowv = 0.91
-  set albsnowi = 0.63
-else
-  set albicev  = 0.75
-  set albicei  = 0.45
-  set albsnowv = 0.98
-  set albsnowi = 0.73
-endif
-
-#-----------------------------------------------------------------------
-# Write out resolved prestage and namelist
-#-----------------------------------------------------------------------
 
 cat >! $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 #! /bin/csh -f 
 
-source \$CASEROOT/env_conf || exit -1
-source \$CASEROOT/env_run  || exit -1
+source \$CASEROOT/env_conf         || exit -1
+source \$CASEROOT/env_run          || exit -1
 source \$CASEROOT/env_mach.\$MACH  || exit -1
 source \$CASEROOT/env_pes.\$MACH   || exit -1
 
- #******************************************************************#
- # If the user changes any input datasets - be sure to give it a    #
- # unique filename. Do not duplicate any existing input files       #
- #******************************************************************#
-
-# started as a $RUN_TYPE run with prescribed_ice set to $prescribed_ice       
-
-set runtype = $RUN_TYPE
-if (\$CONTINUE_RUN == 'TRUE') set runtype = 'continue'
-
 set exedir = \$EXEROOT/ccsm_se; cd \$exedir
 
-set hstdir    = \$EXEROOT/ice/hist ; if !(-d \$hstdir) mkdir -p \$hstdir
-set rstdir    = \$EXEROOT/ice/rest ; if !(-d \$rstdir) mkdir -p \$rstdir
-set inidir    = \$EXEROOT/ice/init ; if !(-d \$inidir) mkdir -p \$inidir
-set runhstdir = \$RUNROOT/ice/hist
-set runrstdir = \$RUNROOT/ice/rest
-set runinidir = \$RUNROOT/ice/init
-
-set data_domain_grid = $data_domain_grid
-set data_domain_kmt  = $data_domain_kmt
 set inic_file        = $inic_file
 EOF1
 
-if ($prescribed_ice == .true.) then
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-set pice_stream_txt = $pice_stream_txt
-set pice_stream_nc  = $pice_stream_nc 
-\$UTILROOT/Tools/ccsm_getinput \$DIN_LOC_ROOT/ice/cice/\$pice_stream_nc . || exit 3
-sed -e "s#DIN_LOC_ROOT#\$DIN_LOC_ROOT#" < \$CASEROOT/Buildnml_Prestage/\$pice_stream_txt >! \$pice_stream_txt || exit 3
-EOF1
-endif
-
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-#
-#  Get decomposition info from Configuration Wizard
-#
-set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
-
-if(\$config[1] < 0) then
-   echo \$config[2]
-   exit -1
-else
-   setenv BLCKX \$config[3]
-   setenv BLCKY \$config[4]
-   setenv MXBLCKS \$config[5]
-   setenv DECOMPTYPE \$config[6]
-endif
-
-EOF1
-
-if ($ICE_GRID =~ *gx* || $ICE_GRID =~ *tx*) then
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-if (\$PRESTAGE_DATA == TRUE) then
-  \$UTILROOT/Tools/ccsm_getinput $icedata/\$data_domain_grid || exit 2
-  \$UTILROOT/Tools/ccsm_getinput $icedata/\$data_domain_kmt  || exit 2
-else 
-  # Assume that data is in \$DIN_LOC_ROOT/ice/cice for gx* grids
-  # Assume that data is in \$DIN_LOC_ROOT/atm/cam/ocnfrac for latlon grids
-  if (\$ICE_GRID =~ *gx* || \$ICE_GRID =~ *tx* ) then 
-    set locpath = \$DIN_LOC_ROOT/ice/cice
-  else    
-    set locpath = \$DIN_LOC_ROOT/atm/cam/ocnfrac
-  endif
-  set data_domain_grid = \$locpath/\$data_domain_grid
-  set data_domain_kmt  = \$locpath/\$data_domain_kmt
-  if !(-f \$data_domain_grid) then
-    echo "local file \$data_domain_grid is missing" ; exit 1
-  endif     
-  if !(-f \$data_domain_kmt) then
-    echo "local file \$data_domain_kmt is missing" ; exit 1
-  endif     
-endif
-EOF1
-endif
-
 if ($RUN_TYPE == startup) then
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-if (\$runtype != 'continue') then
-if (\$inic_file != default && \$inic_file != none) then
-if (\$PRESTAGE_DATA == TRUE) then
-  \$UTILROOT/Tools/ccsm_getinput $icedata/\$inic_file   || exit 2
-else
-  set inic_file = \$DIN_LOC_ROOT/ice/cice/\$inic_file
-  if !(-f \$inic_file) then
-    echo "local file \$inic_file is missing" ; exit 1
-  endif     
-endif
-endif
+if (\$CONTINUE_RUN != 'TRUE' && \$inic_file != default && \$inic_file != none) then
+  if (\$PRESTAGE_DATA == TRUE) then
+    \$UTILROOT/Tools/ccsm_getinput ice/cice/\$inic_file   || exit 2
+  else
+    set inic_file = \$DIN_LOC_ROOT/ice/cice/\$inic_file
+    if !(-f \$inic_file) then
+      echo "local file \$inic_file is missing" ; exit 1
+    endif     
+  endif
 endif
 EOF1
 endif
-
 if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-if (\$runtype != 'continue') then
+if (\$CONTINUE_RUN != 'TRUE') then
    \$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/ice/rest/\$inic_file || exit 2
 endif
 EOF1
 endif
 
+# Determine ice decomposition
+
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 
+# Get decomposition info from Configuration Wizard
+setenv DECOMPTYPE spacecurve
+set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
+if(\$config[1] >= 0) then
+   setenv DECOMPTYPE \$config[6]
+endif
 EOF1
 
-#-------------------------------------------------------------------
-# b. create the namelist input file                                      
-#-------------------------------------------------------------------
-
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-
-cat << EOF >! ice_in
-  &ice_nml
-    inic_file     = '\$inic_file'
-  , dt            = $ice_dt
-  , ndte          = 120
-  , ndyn_dt       = $ndyn_dt
-  , npt           = 99999
-  , diagfreq      = 24
-  , histfreq      = 'm'
-  , histfreq_n    = 1
-  , dumpfreq      = 'y'
-  , dumpfreq_n    = 1
-  , hist_avg      = .true.
-  , print_points  = .false.
-  , kitd          = $kitd
-  , kcatbound     = 0
-  , kdyn          = $kdyn
-  , kstrength     = $kstrength
-  , krdg_partic   = 1
-  , krdg_redist   = 1
-  , evp_damping   = .false.
-  , advection     = 'remap'
-  , shortwave     = 'default'
-  , albedo_type   = 'default'
-  , grid_type     = '$grid_type'
-  , grid_file     = '\$data_domain_grid'
-  , kmt_file      = '\$data_domain_kmt'
-  , incond_dir    = ' '
-  , incond_file   = '\$CASE.cice.i.'
-  , restart_dir   = ' '
-  , restart_file  = '\$CASE.cice.r.'
-  , history_dir   = ' '
-  , history_file  = '\$CASE.cice.h.'
-  , albicev       = $albicev
-  , albicei       = $albicei
-  , albsnowv      = $albsnowv
-  , albsnowi      = $albsnowi
-  , pointer_file  = 'rpointer.ice'
-  , dbug          = .false.
-  , latpnt(1)     =  90.
-  , lonpnt(1)     =   0.
-  , latpnt(2)     = -65.
-  , lonpnt(2)     = -45.
-/
-
- &tracer_nml
-    tr_iage = .false.
-  , tr_pond = .false.
-/
-
+# Write out namelist
+# &ice_nml
+# inic_file = '$inic_file'
+# /
+cat >> $CASEROOT/Buildnml_Prestage/ciceconf/ccsm_namelist << EOF1
  &domain_nml
-    distribution_type = '\$DECOMPTYPE'
-  , ew_boundary_type  = 'cyclic'
-  , ns_boundary_type  = '$ns_boundary'
-/
+ distribution_type = 'DECOMPTYPE'
+ / 
 EOF1
 
-if ($prescribed_ice != .true.) then
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
- &ice_prescribed_nml
-    prescribed_ice      = .false.
-/
-  &icefields_nml
-    f_sst       = .false.
-  , f_sss       = .false.
-  , f_uocn      = .false.
-  , f_vocn      = .false.
-  , f_frzmlt    = .false.
-  , f_strtltx   = .false.
-  , f_strtlty   = .false.
-  , f_mlt_onset = .false. 
-  , f_frz_onset = .false. 
-  , f_icepresent= .true.
-  , f_aicen     = .true.
-  , f_vicen     = .false.
- /
-EOF
+# Determine ice grid spec needed for build-namelist
+
+if ($ICE_GRID =~ *T*) then
+   set NLON = $ICE_NX
+   set NLAT = $ICE_NY
+   set ice_hrgrid = ${NLON}x${NLAT}
+else
+   set ice_hrgrid = $ICE_GRID
+endif
+
+if ($mode == "prescribed") then  # generate config_cache.xml for prescribed mode
+cat >> $CASEROOT/Buildnml_Prestage/ciceconf/config_cache.xml << EOF1
+<?xml version="1.0"?>
+<config_definition>
+<entry id="cice_mode"     value="$mode"      ></entry>
+<entry id="cice_grid"     value="$ice_hrgrid"></entry>
+<entry id="cice_prestype" value="$pres_mode" ></entry>
+</config_definition>
+EOF1
+else     # generate config_cache.xml for non-prescribed mode               
+cat >> $CASEROOT/Buildnml_Prestage/ciceconf/config_cache.xml << EOF1
+<?xml version="1.0"?>
+<config_definition>
+<entry id="cice_mode" value="$mode"    ></entry>
+<entry id="cice_grid"  value="$ICE_GRID"></entry>
+</config_definition>
 EOF1
 endif
 
-if ($prescribed_ice == .true.) then
+cd $CASEROOT/Buildnml_Prestage/ciceconf || exit -1
+$CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist || exit -1
+sed -e 's#DECOMPTYPE#\$DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
+mv ice_in.tmp ice_in
+
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
- &ice_prescribed_nml
-    prescribed_ice      = $prescribed_ice
-  , stream_info_file    ='\$pice_stream_txt'
-  , stream_year_first   = $stream_year_first
-  , stream_year_last    = $stream_year_last 
-  , model_year_align    = $model_year_align
-  , prescribed_ice_fill = $prescribed_ice_fill
-/
-  &icefields_nml
-    f_sst       = .false.
-  , f_sss       = .false.
-  , f_uocn      = .false.
-  , f_vocn      = .false.
-  , f_frzmlt    = .false.
-  , f_strtltx   = .false.
-  , f_strtlty   = .false.
-  , f_mlt_onset = .false. 
-  , f_frz_onset = .false. 
-  , f_icepresent= .true.
-  , f_aicen     = .false.
-  , f_vicen     = .false.
-  , f_fsalt     = .false. 
-  , f_fsalt_ai  = .false. 
-  , f_fresh     = .false. 
-  , f_fresh_ai  = .false. 
-  , f_fhocn     = .false. 
-  , f_fhocn_ai  = .false. 
-  , f_dvidtt    = .false. 
-  , f_dvidtd    = .false. 
-  , f_daidtt    = .false. 
-  , f_daidtd    = .false. 
-  , f_sig1      = .false. 
-  , f_sig2      = .false. 
-  , f_strairx   = .false. 
-  , f_strairy   = .false. 
-  , f_strcorx   = .false. 
-  , f_strcory   = .false. 
-  , f_strocnx   = .false. 
-  , f_strocny   = .false. 
-  , f_strintx   = .false. 
-  , f_strinty   = .false. 
-  , f_strength  = .false. 
-  , f_opening   = .false. 
-  , f_divu      = .false. 
-  , f_shear     = .false. 
-  , f_congel    = .false.
-  , f_snoice    = .false.
-  , f_meltt     = .false.
-  , f_meltb     = .false.
-  , f_meltl     = .false.
-  , f_uvel      = .false.
-  , f_vvel      = .false.
-  , f_frazil    = .false.
- /
+
+cat >! ice_in << EOF
+EOF1
+cat ice_in >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh || exit -1
+cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 EOF
 EOF1
-endif
 
 #--------------------------------------------------------------------
 # write out executable generating directives to resolved file
 #--------------------------------------------------------------------
-
-# Select resolution
-#-----------------------------------------------------------------------
-if ( $ICE_GRID =~ *gx3*     ) set RES = 100x116
-if ( $ICE_GRID =~ *gx1*     ) set RES = 320x384
-if ( $ICE_GRID =~ *T31*     ) set RES =   96x48
-if ( $ICE_GRID =~ *T42*     ) set RES =  128x64
-if ( $ICE_GRID =~ *T85*     ) set RES = 256x128
-if ( $ICE_GRID =~ *4x5*     ) set RES =   72x46
-if ( $ICE_GRID =~ *1.9x2.5* ) set RES =  144x96
-if ( $ICE_GRID =~ *0.9x1.25*) set RES = 288x192
-if ( $ICE_GRID =~ *tx0.1*) set RES = 3600x2400
-if !($?RES)   echo "ERROR: ice can't deal with ICE_GRID = $ICE_GRID" 
-if !($?RES)   exit -1
-
-set NLON = `echo $RES | sed s/x.\*//`
-set NLAT = `echo $RES | sed s/.\*x//`
 
 cat >! $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
 #! /bin/csh -f 
@@ -459,26 +158,82 @@ EOF
 EOF2
 
 #-----------------------------------------------------------------------
+
+# Use simple function for ice/atm on same grid
+#----------------------------------------------------------------------
 cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
-#
+
+set NLON = \$ICE_NX
+set NLAT = \$ICE_NY
+
+set decomp_set  = false
+set decomp_type = spacecurve
+
 #  Get decomposition info from Configuration Wizard
-#
+# tcx temporary for bfb backwards compatability
+if (\$ICE_GRID != \$ATM_GRID) then
 set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
 
-if(\$config[1] < 0) then
-   echo \$config[2]
-   exit -1
-else
-   setenv BLCKX \$config[3]
-   setenv BLCKY \$config[4]
-   setenv MXBLCKS \$config[5]
-   setenv DECOMPTYPE \$config[6]
+if(\$config[1] >= 0) then
+   set bsize_x     = \$config[3]
+   set bsize_y     = \$config[4]
+   set maxblocks   = \$config[5]
+   set decomp_type = \$config[6]
+   set decomp_set = true
 endif
+endif
+
+if (\$decomp_set == false) then
+  # try a 1d decomp
+  @ rem = \$NLON % \$NTASKS_ICE
+  if (\$rem == 0) then
+    @ bsize_x = \$NLON / \$NTASKS_ICE  
+    @ bsize_y = \$NLAT
+    set maxblocks = 1
+    set decomp_set = true 
+  endif
+endif
+
+if (\$decomp_set == false) then
+  # try a 2d decomp
+  @ rem = \$NLON % (\$NTASKS_ICE / 2)
+  if (\$rem == 0) then 
+    @ bsize_x = \$NLON / (\$NTASKS_ICE / 2)  
+    @ bsize_y = \$NLAT / 2
+    set maxblocks = 1
+    set decomp_set = true
+  endif 
+endif
+
+if (\$decomp_set == false) then
+  # try space filling curves
+  set bsize_x   = 4
+  @ rem = \$NLON % \$bsize_x
+  if (\$rem != 0) set bsize_x = 2
+  @ rem = \$NLON % \$bsize_x
+  if (\$rem != 0) set bsize_x = 1
+  set bsize_y = \$NLAT
+  if (\$NTASKS_ICE > \$bsize_x) then
+    @ bsize_y = \$NLAT / 2
+  endif   
+  #set maxblocks = 10
+  # tcx how should this be computed, what should the 5 factor be?
+  @ maxblocks = 5 * (( (\$NLON * \$NLAT) / (\$bsize_x * \$bsize_y * \$NTASKS_ICE)) + 1)
+endif
+
+setenv BLCKX      \$bsize_x
+setenv BLCKY      \$bsize_y
+setenv MXBLCKS    \$maxblocks
+setenv DECOMPTYPE \$decomp_type
+
+EOF2
+
+cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
 
 # Check for recompile if RES, ncat, BLCKX, BLCKY or MXBLCKS changes
 #----------------------------------------------------------------------
 set recompile = FALSE
-echo ${NLON} ${NLAT} ${ncat} \${BLCKX} \${BLCKY} \${MXBLCKS} > \$objdir/iceres.new
+echo \${NLON} \${NLAT} ${ncat} \${BLCKX} \${BLCKY} \${MXBLCKS} > \$objdir/iceres.new
 cmp -s \$objdir/iceres.new \$objdir/iceres.old || set recompile = TRUE
 if (\$recompile == 'TRUE') then
   cat \$objdir/iceres.old
@@ -498,7 +253,7 @@ if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
    cp \$BLDROOT/mkSrcfiles . || exit 2
    set THREAD = FALSE ;  if (\$NTHRDS_ICE > 1) set THREAD = TRUE
    gmake complib -j \$GMAKE_J VPFILE=Filepath MODEL=cice COMPLIB=\$objdir/../libcice.a \
-      NXGLOB=$NLON NYGLOB=$NLAT NCAT=$ncat DEPINC=$INCROOT \
+      NXGLOB=\$NLON NYGLOB=\$NLAT NCAT=$ncat DEPINC=$INCROOT \
       BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
       THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
    cp -p *comp_*.mod $LIBROOT/include/
@@ -512,3 +267,4 @@ if !(-f \$objdir/../libcice.a) then
 endif
 exit 0
 EOF2
+

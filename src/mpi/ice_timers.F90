@@ -10,7 +10,7 @@
 !  and accumulates time for each individual block and node (task).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_timers.F90 53 2007-02-08 00:02:16Z dbailey $
+!  SVN:$Id: ice_timers.F90 100 2008-01-29 00:25:32Z eclare $
 !
 ! 2005: Adapted from POP by William Lipscomb
 !       Replaced 'stdout' by 'nu_diag'
@@ -57,8 +57,9 @@
       timer_step,             &! time stepping
       timer_dynamics,         &! dynamics
       timer_advect,           &! horizontal advection
-      timer_thermo,           &! column
       timer_column,           &! column
+      timer_thermo,           &! thermodynamics
+      timer_sw,               &! radiative transfer
       timer_ridge,            &! ridging
       timer_catconv,          &! category conversions
       timer_couple,           &! coupling
@@ -69,8 +70,8 @@
       timer_cplsend,          &! send to coupled
       timer_sndrcv,           &! time between send to receive
 #endif
-      timer_bound,&              ! boundary updates
-      timer_tmp                ! for temporary timings
+      timer_bound              ! boundary updates
+!      timer_tmp                ! for temporary timings
 
 !-----------------------------------------------------------------------
 !
@@ -99,7 +100,7 @@
          node_cycles1,        &! cycle number at start for node timer
          node_cycles2          ! cycle number at stop  for node timer
 
-      real (r8) ::            &
+      real (dbl_kind) ::            &
          node_accum_time       ! accumulated time for node timer
 
       logical (log_kind), dimension(:), pointer :: &
@@ -109,7 +110,7 @@
          block_cycles1,        &! cycle number at start for block timers
          block_cycles2          ! cycle number at stop  for block timers
 
-      real (r8), dimension(:), pointer :: &
+      real (dbl_kind), dimension(:), pointer :: &
          block_accum_time       ! accumulated time for block timers
 
    end type
@@ -117,7 +118,7 @@
    type (timer_data), dimension(max_timers) :: &
       all_timers               ! timer data for all timers
 
-   real (r8) ::               &
+   real (dbl_kind) ::               &
       clock_rate               ! clock rate in seconds for each cycle
 
 
@@ -192,6 +193,7 @@
    call get_ice_timer(timer_advect,   'Advection',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_column,   'Column',   nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_thermo,   'Thermo',   nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_sw,       'Shortwave',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_ridge,    'Ridging',  nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_catconv,  'Cat Conv', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_couple,   'Coupling', nblocks,distrb_info%nprocs)
@@ -204,7 +206,6 @@
    call get_ice_timer(timer_sndrcv,   'Snd->Rcv', nblocks,distrb_info%nprocs)
 #endif
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_tmp,      'shortwave',nblocks,distrb_info%nprocs)
 
 !-----------------------------------------------------------------------
 !EOC
@@ -671,7 +672,7 @@
       lrestart_timer     ! flag to restart timer if timer is running
                          ! when this routine is called
 
-   real (r8) :: &
+   real (dbl_kind) :: &
       local_time,       &! temp space for holding local timer results
       min_time,         &! minimum accumulated time
       max_time,         &! maximum accumulated time

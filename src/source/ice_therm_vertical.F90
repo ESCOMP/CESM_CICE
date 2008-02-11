@@ -1219,7 +1219,9 @@
          hslyr       , & ! snow layer thickness (m)
          einit           ! initial energy of melting (J m-2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr), &
+!mv following is needed for lahey compiler to work
+      real (kind=dbl_kind), dimension (:,:,:), &
+!     real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr), &
          intent(inout) :: &
          Sswabs          ! SW radiation absorbed in snow layers (W m-2)
 

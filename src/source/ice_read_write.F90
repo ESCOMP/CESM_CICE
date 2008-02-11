@@ -104,9 +104,8 @@
 ! work is a real array, atype indicates the format of the data\\
 ! If the optional variables field_loc and field_type are present \\
 ! the ghost cells are filled using values from the global array.\\
-! This prevents them from being filled with zeroes or Neumann \\
-! conditions in land cells (subroutine update_ghost_cells need \\
-! not be called).
+! This prevents them from being filled with zeroes in land cells \\
+! (subroutine ice_HaloUpdate need not be called).
 !
 ! !REVISION HISTORY:
 !
@@ -264,7 +263,7 @@
            nu            , & ! unit number
            nrec              ! record number (0 for sequential access)
 
-      real (kind=dbl_kind), dimension(nx_global,ny_global), &
+      real (kind=dbl_kind), dimension(:,:), &
            intent(out) :: &
            work_g            ! output array (real, 8-byte)
 
@@ -519,9 +518,8 @@
 ! Read a netCDF file and scatter to processors\\
 ! If the optional variables field_loc and field_type are present \\
 ! the ghost cells are filled using values from the global array.\\
-! This prevents them from being filled with zeroes or Neumann \\
-! conditions in land cells (subroutine update_ghost_cells need \\
-! not be called).
+! This prevents them from being filled with zeroes in land cells \\
+! (subroutine ice_HaloUpdate need not be called).
 !
 ! !REVISION HISTORY:
 !
@@ -675,7 +673,7 @@
      character (char_len), intent(in) :: & 
            varname           ! field name in netcdf file        
 
-      real (kind=dbl_kind), dimension(nx_global,ny_global), &
+      real (kind=dbl_kind), dimension(:,:), &
            intent(out) :: &
            work_g            ! output array (real, 8-byte)
 

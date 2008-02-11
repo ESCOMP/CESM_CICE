@@ -9,7 +9,7 @@
 ! Exit the model. 
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_exit.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_exit.F90 82 2007-10-02 15:44:25Z eclare $
 !
 ! authors William H. Lipscomb (LANL)
 !         Elizabeth C. Hunke (LANL)

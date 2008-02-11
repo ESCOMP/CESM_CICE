@@ -1,0 +1,381 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<!--------------------------->
+<!-- ice_nml settings ------->
+<!--------------------------->
+
+<inic_file                 >'default'                     </inic_file>
+<inic_file cice_grid='gx3v5'>$inic_file</inic_file>  
+<inic_file cice_grid='gx1v4'>$inic_file</inic_file>  
+<inic_file cice_grid='gx1v5'>$inic_file</inic_file>  
+
+<dt> 3600 </dt> 
+
+<ndte> 120 </ndte> 
+
+<ndyn_dt                   > 1 </ndyn_dt>
+<ndyn_dt cice_grid="tx0.1v2"> 2 </ndyn_dt>
+
+<grid_type cice_grid="128x256"   >'latlon'       </grid_type> 
+<grid_type cice_grid="64x128"    >'latlon'       </grid_type> 
+<grid_type cice_grid="48x96"     >'latlon'       </grid_type> 
+<grid_type cice_grid="32x64"     >'latlon'       </grid_type>
+<grid_type cice_grid="8x16"      >'latlon'       </grid_type>
+<grid_type cice_grid="4x5"       >'latlon'       </grid_type> 
+<grid_type cice_grid="10x15"     >'latlon'       </grid_type> 
+<grid_type cice_grid="1.9x2.5"   >'latlon'       </grid_type> 
+<grid_type cice_grid="2x2.5"     >'latlon'       </grid_type> 
+<grid_type cice_grid="0.9x1.25"  >'latlon'       </grid_type> 
+<grid_type cice_grid="0.47x0.63" >'latlon'       </grid_type> 
+<grid_type cice_grid="0.23x0.31" >'latlon'       </grid_type> 
+<grid_type cice_grid="tx0.1v2"   >'tripole'      </grid_type> 
+<grid_type                       >'displaced_pole'</grid_type> 
+
+<grid_format cice_grid="128x256"   >'nc' </grid_format> 
+<grid_format cice_grid="64x128"    >'nc' </grid_format> 
+<grid_format cice_grid="48x96"     >'nc' </grid_format> 
+<grid_format cice_grid="32x64"     >'nc' </grid_format>
+<grid_format cice_grid="8x16"      >'nc' </grid_format>
+<grid_format cice_grid="4x5"       >'nc' </grid_format> 
+<grid_format cice_grid="10x15"     >'nc' </grid_format> 
+<grid_format cice_grid="1.9x2.5"   >'nc' </grid_format> 
+<grid_format cice_grid="2x2.5"     >'nc' </grid_format> 
+<grid_format cice_grid="0.9x1.25"  >'nc' </grid_format> 
+<grid_format cice_grid="0.47x0.63" >'nc' </grid_format> 
+<grid_format cice_grid="0.23x0.31" >'nc' </grid_format> 
+<grid_format cice_grid="tx0.1v2"   >'bin'</grid_format> 
+<grid_format                       >'bin'</grid_format> 
+
+<grid_file cice_grid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </grid_file> 
+<grid_file cice_grid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </grid_file> 
+<grid_file cice_grid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_USGS_070807.nc'     </grid_file> 
+<grid_file cice_grid="32x64"     >'atm/cam/ocnfrac/domain.camocn.32x64_USGS_070807.nc'     </grid_file>
+<grid_file cice_grid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </grid_file>
+<grid_file cice_grid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_USGS_070807.nc'       </grid_file> 
+<grid_file cice_grid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </grid_file> 
+<grid_file cice_grid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v5_070816.nc'  </grid_file> 
+<grid_file cice_grid="2x2.5"     >'atm/cam/ocnfrac/domain.camocn.2x2.5_USGS_070807.nc'     </grid_file> 
+<grid_file cice_grid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v5_071008.nc' </grid_file> 
+<grid_file cice_grid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v5_071220.nc'</grid_file> 
+<grid_file cice_grid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</grid_file> 
+<grid_file cice_grid="gx1v5"     >'ice/cice/global_gx1v5_20010402.grid'                    </grid_file> 
+<grid_file cice_grid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'                    </grid_file> 
+<grid_file cice_grid="gx3v5"     >'ice/cice/global_gx3v5_20030806.grid'                    </grid_file> 
+<grid_file cice_grid="tx0.1v2"   >'ice/cice/grid.3600x2400.fob.da'                         </grid_file> 
+
+<kmt_file cice_grid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
+<kmt_file cice_grid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </kmt_file> 
+<kmt_file cice_grid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_USGS_070807.nc'     </kmt_file> 
+<kmt_file cice_grid="32x64"     >'atm/cam/ocnfrac/domain.camocn.32x64_USGS_070807.nc'     </kmt_file>
+<kmt_file cice_grid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </kmt_file>
+<kmt_file cice_grid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_USGS_070807.nc'       </kmt_file> 
+<kmt_file cice_grid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </kmt_file> 
+<kmt_file cice_grid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v5_070816.nc'  </kmt_file> 
+<kmt_file cice_grid="2x2.5"     >'atm/cam/ocnfrac/domain.camocn.2x2.5_USGS_070807.nc'     </kmt_file> 
+<kmt_file cice_grid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v5_071008.nc' </kmt_file> 
+<kmt_file cice_grid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v5_071220.nc'</kmt_file> 
+<kmt_file cice_grid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</kmt_file> 
+<kmt_file cice_grid="gx1v5"     >'ice/cice/global_gx1v5_20061229.kmt'                     </kmt_file> 
+<kmt_file cice_grid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'                     </kmt_file> 
+<kmt_file cice_grid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'                     </kmt_file> 
+<kmt_file cice_grid="tx0.1v2"   >'ice/cice/kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da'</kmt_file> 
+
+<! --- ice albedods --->
+
+<albicev  cice_grid="gx3v5" >0.68</albicev> 
+<albicev                    >0.75</albicev> 
+<albicei  cice_grid="gx3v5" >0.30</albicei> 
+<albicei                    >0.45</albicei> 
+<albsnowv cice_grid="gx3v5" >0.91</albsnowv> 
+<albsnowv                   >0.98</albsnowv> 
+<albsnowi cice_grid="gx3v5" >0.63</albsnowi> 
+<albsnowi                   >0.73</albsnowi> 
+
+<albedo_type>'default'</albedo_type>
+
+<! --- parameterization information --->
+
+<kitd  cice_mode='prescribed'  > 0 </kitd> 
+<kitd  cice_mode='thermo_only' > 0 </kitd> 
+<kitd                          > 1 </kitd> 
+
+<kdyn  cice_mode='prescribed'  > 0 </kdyn> 
+<kdyn  cice_mode='thermo_only' > 0 </kdyn> 
+<kdyn                          > 1 </kdyn> 
+
+<kstrength  cice_mode='prescribed'  > 0 </kstrength> 
+<kstrength  cice_mode='thermo_only' > 0 </kstrength> 
+<kstrength                          > 1 </kstrength> 
+
+<kcatbound> 0 </kcatbound>
+
+<kpond> 0 </kpond>
+
+<krdg_partic>1</krdg_partic>
+<krdg_redist>1</krdg_redist>
+
+<evp_damping>.false.</evp_damping> 
+
+<shortwave>'default'</shortwave>
+
+<advection>'remap'</advection>
+
+<! --- history information --->
+
+<histfreq    >'m'     </histfreq> 
+<histfreq_n  >1       </histfreq_n>
+<hist_avg    >.true.  </hist_avg> 
+
+<! --- diagnostic information --->
+
+<diagfreq> 24   </diagfreq>
+
+<! --- restart information --->
+<pointer_file>rpointer.ice</pointer_file>
+
+<!--------------------------->
+<!-- Domain namelist- --->
+<!--------------------------->
+
+<distribution_type cice_grid='tx0.1v2' >'spacecurve'</distribution_type>
+<distribution_type                    >'cartesian' </distribution_type>
+
+<ew_boundary_type>'cyclic'</ew_boundary_type>
+
+<ns_boundary_type cice_grid ='tx0.1v2' >'tripole'</ns_boundary_type>
+<ns_boundary_type                     >'open' </ns_boundary_type>
+
+<!--------------------------->
+<!-- Prescribed namelist- --->
+<!--------------------------->
+
+<prescribed_ice cice_mode='prescribed'>.true.  </prescribed_ice>  
+<prescribed_ice                       >.false. </prescribed_ice>  
+
+<prescribed_ice_fill >.false. </prescribed_ice_fill>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" >'atm/cam/sst/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" >'atm/cam/sst/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="8x16" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" >'atm/cam/sst/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" >'atm/cam/sst/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="48x96" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="64x128" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="128x256" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="4x5" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="10x15" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="1.9x2.5" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_2x2.5_clim_c050526.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_2x2.5_clim_c050526.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_prestype="clim_2000"> 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_prestype="clim_2000"> 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_prestype="clim_2000"> 'ifrac' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_prestype="clim_2000" > 1  </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_prestype="clim_2000" > 1  </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_prestype="clim_2000" > 1  </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_prestype="clim_1870" > 'ice/cice/hadley.sst_ifrac.1870-2003.1x1.070608.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_prestype="clim_1870" > 'ice/cice/hadley.sst_ifrac.1870-2003.1x1.070608.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_prestype="clim_1870" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_prestype="clim_1870" > 1870 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_prestype="clim_1870" > 1870 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_prestype="clim_1870" > 1    </model_year_align>
+
+<stream_domFileName  > "unset"</stream_domFileName>
+<stream_fldFileName  > "unset"</stream_fldFileName>
+<stream_fldVarName   > "unset"</stream_fldVarName>
+<stream_year_first   > -999   </stream_year_first>
+<stream_year_last    > -999   </stream_year_last>
+<model_year_align    > -999   </model_year_align>
+
+<stream_domTvarName  > "time" </stream_domTvarName>
+<stream_domXvarName  > "lon"  </stream_domXvarName>
+<stream_domYvarName  > "lat"  </stream_domYvarName>
+<stream_domAreaName  > "area" </stream_domAreaName>
+<stream_domMaskName  > "mask" </stream_domMaskName>
+
+<!--------------------------->
+<!-- Output history fields -->
+<!--------------------------->
+
+<f_sst                       >.false.</f_sst>  
+<f_sst cice_mode='prescribed'>.false.</f_sst> 
+
+<f_sss                       >.false.</f_sss>  
+<f_sss cice_mode='prescribed'>.false.</f_sss> 
+
+<f_uocn                       >.false.</f_uocn>  
+<f_uocn cice_mode='prescribed'>.false.</f_uocn> 
+
+<f_vocn                       >.false.</f_vocn>  
+<f_vocn cice_mode='prescribed'>.false.</f_vocn> 
+
+<f_frzmlt                       >.false.</f_frzmlt
+<f_frzmlt cice_mode='prescribed'>.false.</f_frzmlt
+
+<f_strtltx                       >.false.</f_strtltx>  
+<f_strtltx cice_mode='prescribed'>.false.</f_strtltx>  
+
+<f_strtlty                       >.false.</f_strtlty>  
+<f_strtlty cice_mode='prescribed'>.false.</f_strtlty>  
+
+<f_mlt_onset                       >.false.</f_mlt_onset>  
+<f_mlt_onset cice_mode='prescribed'>.false.</f_mlt_onset> 
+
+<f_frz_onset                       >.false.</f_frz_onset>  
+<f_frz_onset cice_mode='prescribed'>.false.</f_frz_onset> 
+
+<f_icepresent                       >.true.</f_icepresent>  
+<f_icepresent cice_mode='prescribed'>.true.</f_icepresent> 
+
+<f_aicen                       >.true. </f_aicen>  
+<f_aicen cice_mode='prescribed'>.false.</f_aicen> 
+
+<f_vicen                       >.false. </f_vicen>  
+<f_vicen cice_mode='prescribed'>.false.</f_vicen> 
+
+<f_fsalt                       >.true. </f_fsalt>  
+<f_fsalt cice_mode='prescribed'>.false.</f_fsalt> 
+
+<f_fsalt_ai                       >.true. </f_fsalt_ai>  
+<f_fsalt_ai cice_mode='prescribed'>.false.</f_fsalt_ai> 
+
+<f_fresh                       >.true. </f_fresh>  
+<f_fresh cice_mode='prescribed'>.false.</f_fresh> 
+
+<f_fresh_ai                       >.true. </f_fresh_ai>  
+<f_fresh_ai cice_mode='prescribed'>.false.</f_fresh_ai> 
+
+<f_fhocn                       >.true. </f_fhocn>  
+<f_fhocn cice_mode='prescribed'>.false.</f_fhocn> 
+
+<f_fhocn_ai                       >.true. </f_fhocn_ai>  
+<f_fhocn_ai cice_mode='prescribed'>.false.</f_fhocn_ai> 
+
+<f_dvidtt                       >.true. </f_dvidtt>  
+<f_dvidtt cice_mode='prescribed'>.false.</f_dvidtt> 
+
+<f_dvidtd                       >.true. </f_dvidtd>  
+<f_dvidtd cice_mode='prescribed'>.false.</f_dvidtd> 
+
+<f_daidtt                       >.true. </f_daidtt>  
+<f_daidtt cice_mode='prescribed'>.false.</f_daidtt> 
+
+<f_daidtd                       >.true. </f_daidtd>  
+<f_daidtd cice_mode='prescribed'>.false.</f_daidtd> 
+
+<f_sig1                       >.true. </f_sig1>  
+<f_sig1 cice_mode='prescribed'>.false.</f_sig1> 
+
+<f_sig2                       >.true. </f_sig2>  
+<f_sig2 cice_mode='prescribed'>.false.</f_sig2> 
+
+<f_sig2                       >.true. </f_sig2>  
+<f_sig2 cice_mode='prescribed'>.false.</f_sig2> 
+
+<f_strairx                       >.true. </f_strairx>  
+<f_strairx cice_mode='prescribed'>.false.</f_strairx> 
+
+<f_strairy                       >.true. </f_strairy>  
+<f_strairy cice_mode='prescribed'>.false.</f_strairy> 
+
+<f_strcorx                       >.true. </f_strcorx>  
+<f_strcorx cice_mode='prescribed'>.false.</f_strcorx> 
+
+<f_strcory                       >.true. </f_strcory>  
+<f_strcory cice_mode='prescribed'>.false.</f_strcory> 
+
+<f_strocnx                       >.true. </f_strocnx>  
+<f_strocnx cice_mode='prescribed'>.false.</f_strocnx> 
+
+<f_strocny                       >.true. </f_strocny>  
+<f_strocny cice_mode='prescribed'>.false.</f_strocny> 
+
+<f_strintx                       >.true. </f_strintx>  
+<f_strintx cice_mode='prescribed'>.false.</f_strintx> 
+
+<f_strinty                       >.true. </f_strinty>  
+<f_strinty cice_mode='prescribed'>.false.</f_strinty> 
+
+<f_strength                       >.true. </f_strength>  
+<f_strength cice_mode='prescribed'>.false.</f_strength> 
+
+<f_opening                       >.true. </f_opening>  
+<f_opening cice_mode='prescribed'>.false.</f_opening> 
+
+<f_divu                       >.true. </f_divu>  
+<f_divu cice_mode='prescribed'>.false.</f_divu> 
+
+<f_shear                       >.true. </f_shear>  
+<f_shear cice_mode='prescribed'>.false.</f_shear> 
+
+<f_congel                       >.true. </f_congel>  
+<f_congel cice_mode='prescribed'>.false.</f_congel> 
+
+<f_snoice                       >.true. </f_snoice>  
+<f_snoice cice_mode='prescribed'>.false.</f_snoice> 
+
+<f_meltt                       >.true. </f_meltt>  
+<f_meltt cice_mode='prescribed'>.false.</f_meltt> 
+
+<f_meltb                       >.true. </f_meltb>  
+<f_meltb cice_mode='prescribed'>.false.</f_meltb> 
+
+<f_meltl                       >.true. </f_meltl>  
+<f_meltl cice_mode='prescribed'>.false.</f_meltl> 
+
+<f_uvel                       >.true. </f_uvel>  
+<f_uvel cice_mode='prescribed'>.false.</f_uvel> 
+
+<f_vvel                       >.true. </f_vvel>  
+<f_vvel cice_mode='prescribed'>.false.</f_vvel> 
+
+<f_frazil                       >.true. </f_frazil>  
+<f_frazil cice_mode='prescribed'>.false.</f_frazil> 
+
+</namelist_defaults>

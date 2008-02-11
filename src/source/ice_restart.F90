@@ -18,6 +18,7 @@
 !          Restart module separated from history module
 ! 2006 ECH: Accepted some CCSM code into mainstream CICE
 !           Converted to free source form (F90) 
+! 2008 ECH: Rearranged order in which internal stresses are written and read
 ! 
 ! !INTERFACE:
 !
@@ -38,7 +39,7 @@
       save
 
 
-      character(len=char_len) :: & 
+      character(len=char_len_long) :: & 
         inic_file          ! method of ice cover initialization
                            ! 'default'  => latitude and sst dependent
                            ! 'none'     => no ice 
@@ -151,8 +152,6 @@
 
       !-----------------------------------------------------------------
       ! state variables
-      ! Tsfc is the only tracer written to this file.  All other
-      ! tracers are written to their own dump/restart files.
       !-----------------------------------------------------------------
 
       do n=1,ncat
@@ -193,19 +192,18 @@
       ! internal stress
       !-----------------------------------------------------------------
       call ice_write(nu_dump,0,stressp_1,'ruf8',diag)
-      call ice_write(nu_dump,0,stressm_1,'ruf8',diag)
-      call ice_write(nu_dump,0,stress12_1,'ruf8',diag)
-
-      call ice_write(nu_dump,0,stressp_2,'ruf8',diag)
-      call ice_write(nu_dump,0,stressm_2,'ruf8',diag)
-      call ice_write(nu_dump,0,stress12_2,'ruf8',diag)
-
       call ice_write(nu_dump,0,stressp_3,'ruf8',diag)
-      call ice_write(nu_dump,0,stressm_3,'ruf8',diag)
-      call ice_write(nu_dump,0,stress12_3,'ruf8',diag)
-
+      call ice_write(nu_dump,0,stressp_2,'ruf8',diag)
       call ice_write(nu_dump,0,stressp_4,'ruf8',diag)
+
+      call ice_write(nu_dump,0,stressm_1,'ruf8',diag)
+      call ice_write(nu_dump,0,stressm_3,'ruf8',diag)
+      call ice_write(nu_dump,0,stressm_2,'ruf8',diag)
       call ice_write(nu_dump,0,stressm_4,'ruf8',diag)
+
+      call ice_write(nu_dump,0,stress12_1,'ruf8',diag)
+      call ice_write(nu_dump,0,stress12_3,'ruf8',diag)
+      call ice_write(nu_dump,0,stress12_2,'ruf8',diag)
       call ice_write(nu_dump,0,stress12_4,'ruf8',diag)
 
       !-----------------------------------------------------------------
@@ -261,7 +259,8 @@
       use ice_grid, only: tmask
       use ice_itd
       use ice_ocean, only: oceanmixed_ice
-      use ice_work, only: work1
+      use ice_work, only: work1, work_g1, work_g2
+      use ice_gather_scatter, only: scatter_global_stress
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -275,7 +274,7 @@
          filename, filename0
 
       logical (kind=log_kind) :: &
-         diag
+         diag, hit_eof
 
       if (present(inic_file)) then 
          filename = inic_file
@@ -307,8 +306,6 @@
 
       !-----------------------------------------------------------------
       ! state variables
-      ! Tsfc is the only tracer read in this file.  All other
-      ! tracers are in their own dump/restart files.
       !-----------------------------------------------------------------
       do n=1,ncat
          if (my_task == master_task) &
@@ -316,27 +313,27 @@
                                ' min/max area, vol ice, vol snow, Tsfc'
 
          call ice_read(nu_restart,0,aicen(:,:,n,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,vicen(:,:,n,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,vsnon(:,:,n,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
          call ice_read(nu_restart,0,trcrn(:,:,nt_Tsfc,n,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max eicen for each layer'
       do k=1,ntilyr
          call ice_read(nu_restart,0,eicen(:,:,k,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max esnon for each layer'
       do k=1,ntslyr
          call ice_read(nu_restart,0,esnon(:,:,k,:),'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+            field_type=field_type_scalar,field_loc=field_loc_center)
       enddo
 
       !-----------------------------------------------------------------
@@ -346,9 +343,9 @@
            write(nu_diag,*) 'min/max velocity components'
 
       call ice_read(nu_restart,0,uvel,'ruf8',diag, &
-                       field_loc_NEcorner, field_type_vector)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
       call ice_read(nu_restart,0,vvel,'ruf8',diag, &
-                       field_loc_NEcorner, field_type_vector)
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       !-----------------------------------------------------------------
       ! fresh water, salt, and heat flux
@@ -356,12 +353,9 @@
       if (my_task == master_task) &
          write(nu_diag,*) 'min/max fresh water and heat flux components'
 
-      call ice_read(nu_restart,0,fresh,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,fsalt,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,fhocn,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,fresh,'ruf8',diag)
+      call ice_read(nu_restart,0,fsalt,'ruf8',diag)
+      call ice_read(nu_restart,0,fhocn,'ruf8',diag)
 
       !-----------------------------------------------------------------
       ! ocean stress
@@ -369,44 +363,68 @@
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max ocean stress components'
 
-      call ice_read(nu_restart,0,strocnxT,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,strocnyT,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
+      call ice_read(nu_restart,0,strocnxT,'ruf8',diag)
+      call ice_read(nu_restart,0,strocnyT,'ruf8',diag)
 
       !-----------------------------------------------------------------
       ! internal stress
+      ! The stress tensor must be read and scattered in pairs in order
+      ! to properly match corner values across a tripole grid cut.
       !-----------------------------------------------------------------
       if (my_task == master_task) write(nu_diag,*) &
            'internal stress components'
       
-      call ice_read(nu_restart,0,stressp_1,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stressm_1,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stress12_1,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
+      if (my_task==master_task) then
+         allocate(work_g1(nx_global,ny_global))
+         allocate(work_g2(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+         allocate(work_g2(1,1))   ! to save memory
+      endif
 
-      call ice_read(nu_restart,0,stressp_2,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stressm_2,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stress12_2,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stressp_1
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stressp_3
+      call scatter_global_stress(stressp_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressp_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
 
-      call ice_read(nu_restart,0,stressp_3,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stressm_3,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stress12_3,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stressp_2
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stressp_4
+      call scatter_global_stress(stressp_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressp_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
 
-      call ice_read(nu_restart,0,stressp_4,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stressm_4,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
-      call ice_read(nu_restart,0,stress12_4,'ruf8',diag, &
-                    field_loc_center, field_type_vector)
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stressm_1
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stressm_3
+      call scatter_global_stress(stressm_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressm_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stressm_2
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stressm_4
+      call scatter_global_stress(stressm_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressm_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stress12_1
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stress12_3
+      call scatter_global_stress(stress12_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stress12_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global(nu_restart,0,work_g1,'ruf8',diag) ! stress12_2
+      call ice_read_global(nu_restart,0,work_g2,'ruf8',diag) ! stress12_4
+      call scatter_global_stress(stress12_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stress12_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      deallocate (work_g1, work_g2)
 
       !-----------------------------------------------------------------
       ! ice mask for dynamics
@@ -414,8 +432,7 @@
       if (my_task == master_task) &
            write(nu_diag,*) 'ice mask for dynamics'
 
-      call ice_read(nu_restart,0,work1,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,work1,'ruf8',diag)
 
       iceumask(:,:,:) = .false.
       do iblk = 1, nblocks
@@ -432,13 +449,49 @@
          if (my_task == master_task) &
               write(nu_diag,*) 'min/max sst, frzmlt'
 
-         call ice_read(nu_restart,0,sst,'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
-         call ice_read(nu_restart,0,frzmlt,'ruf8',diag, &
-                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,sst,'ruf8',diag)
+         call ice_read(nu_restart,0,frzmlt,'ruf8',diag)
       endif
 
       if (my_task == master_task) close(nu_restart)
+
+      !-----------------------------------------------------------------
+      ! Ensure unused stress values in west and south ghost cells are 0
+      !-----------------------------------------------------------------
+      do iblk = 1, nblocks
+         do j = 1, nghost
+         do i = 1, nx_block
+            stressp_1 (i,j,iblk) = c0
+            stressp_2 (i,j,iblk) = c0
+            stressp_3 (i,j,iblk) = c0
+            stressp_4 (i,j,iblk) = c0
+            stressm_1 (i,j,iblk) = c0
+            stressm_2 (i,j,iblk) = c0
+            stressm_3 (i,j,iblk) = c0
+            stressm_4 (i,j,iblk) = c0
+            stress12_1(i,j,iblk) = c0
+            stress12_2(i,j,iblk) = c0
+            stress12_3(i,j,iblk) = c0
+            stress12_4(i,j,iblk) = c0
+         enddo
+         enddo
+         do j = 1, ny_block
+         do i = 1, nghost
+            stressp_1 (i,j,iblk) = c0
+            stressp_2 (i,j,iblk) = c0
+            stressp_3 (i,j,iblk) = c0
+            stressp_4 (i,j,iblk) = c0
+            stressm_1 (i,j,iblk) = c0
+            stressm_2 (i,j,iblk) = c0
+            stressm_3 (i,j,iblk) = c0
+            stressm_4 (i,j,iblk) = c0
+            stress12_1(i,j,iblk) = c0
+            stress12_2(i,j,iblk) = c0
+            stress12_3(i,j,iblk) = c0
+            stress12_4(i,j,iblk) = c0
+         enddo
+         enddo
+      enddo
 
       !-----------------------------------------------------------------
       ! Ensure ice is binned in correct categories

@@ -27,7 +27,7 @@
 !
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_dyn_evp.F90 49 2007-01-11 22:07:00Z eclare $
+!  SVN:$Id: ice_dyn_evp.F90 100 2008-01-29 00:25:32Z eclare $
 !
 ! author: Elizabeth C. Hunke, LANL
 !
@@ -172,20 +172,23 @@
       jhi = ny_block - nghost
 
        ! This call is needed only if dt changes during runtime.
+!echmod: automate this
 !      call set_evp_parameters (dt)
 
       !-----------------------------------------------------------------
       ! boundary updates
+      ! commented out because the ghost cells are freshly 
+      ! updated after cleanup_itd
       !-----------------------------------------------------------------
 
-      call ice_timer_start(timer_bound)
-      call update_ghost_cells(aice,              bndy_info, & 
-                              field_loc_center,  field_type_scalar)
-      call update_ghost_cells(vice,              bndy_info, & 
-                              field_loc_center,  field_type_scalar)
-      call update_ghost_cells(vsno,              bndy_info, &  
-                              field_loc_center,  field_type_scalar)
-      call ice_timer_stop(timer_bound)
+!      call ice_timer_start(timer_bound)
+!      call ice_HaloUpdate (aice,              halo_info, &
+!                           field_loc_center,  field_type_scalar)
+!      call ice_HaloUpdate (vice,              halo_info, &
+!                           field_loc_center,  field_type_scalar)
+!      call ice_HaloUpdate (vsno,              halo_info, &
+!                           field_loc_center,  field_type_scalar)
+!      call ice_timer_stop(timer_bound)
 
       do iblk = 1, nblocks
 
@@ -214,8 +217,8 @@
       enddo                     ! iblk
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells(icetmask,         bndy_info, & 
-                              field_loc_center, field_type_scalar)
+      call ice_HaloUpdate (icetmask,          halo_info, &
+                           field_loc_center,  field_type_scalar)
       call ice_timer_stop(timer_bound)
 
       !-----------------------------------------------------------------
@@ -277,13 +280,13 @@
       enddo  ! iblk
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells(strength,         bndy_info, & 
-                              field_loc_center, field_type_scalar)
+      call ice_HaloUpdate (strength,           halo_info, &
+                           field_loc_center,   field_type_scalar)
       ! velocities may have changed in evp_prep2
-      call update_ghost_cells(uvel,             bndy_info, & 
-                              field_loc_NEcorner, field_type_vector)
-      call update_ghost_cells(vvel,             bndy_info, & 
-                              field_loc_NEcorner, field_type_vector)
+      call ice_HaloUpdate (uvel,               halo_info, &
+                           field_loc_NEcorner, field_type_vector)
+      call ice_HaloUpdate (vvel,               halo_info, &
+                           field_loc_NEcorner, field_type_vector)
       call ice_timer_stop(timer_bound)
 
 
@@ -338,10 +341,10 @@
          enddo
 
          call ice_timer_start(timer_bound)
-         call update_ghost_cells (uvel,               bndy_info, & 
-                                  field_loc_NEcorner, field_type_vector)
-         call update_ghost_cells (vvel,               bndy_info, & 
-                                  field_loc_NEcorner, field_type_vector)
+         call ice_HaloUpdate (uvel,               halo_info, &
+                              field_loc_NEcorner, field_type_vector)
+         call ice_HaloUpdate (vvel,               halo_info, &
+                              field_loc_NEcorner, field_type_vector)
          call ice_timer_stop(timer_bound)
 
       enddo                     ! subcycling

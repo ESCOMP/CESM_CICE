@@ -8,7 +8,7 @@
 ! Spatial grids, masks, and boundary conditions
 !
 ! !REVISION HISTORY:
-!  SVN:$Id$
+!  SVN:$Id: ice_grid.F90 100 2008-01-29 00:25:32Z eclare $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
 !          Tony Craig, NCAR
@@ -17,8 +17,8 @@
 !       init_grid split into two parts as in POP 2.0
 !       Boundary update routines replaced by POP versions
 ! 2006: Converted to free source form (F90) by Elizabeth Hunke
-! 2007: Neumann boundary condition option added by E. Hunke
-!       Option to read from netcdf files (A. Keen, Met Office)
+! 2007: Option to read from netcdf files (A. Keen, Met Office)
+!       Grid reading routines reworked by E. Hunke for boundary values
 !
 ! !INTERFACE:
 !
@@ -33,6 +33,7 @@
       use ice_domain_size
       use ice_domain
       use ice_fileunits
+      use ice_gather_scatter
       use ice_read_write
       use ice_timers
       use ice_exit
@@ -265,7 +266,6 @@
 !
 ! !USES:
 !
-      use ice_gather_scatter
       use ice_boundary
       use ice_work, only: work_g1
       use ice_exit
@@ -284,9 +284,6 @@
 
       logical (kind=log_kind), dimension(nx_block,ny_block,max_blocks):: &
          out_of_range
-
-      character (char_len) :: &
-         bc                   ! boundary condition type (Dirichlet, Neumann)
 
       type (block) :: &
          this_block           ! block information for current block
@@ -326,16 +323,8 @@
 
          do j = jlo, jhi
          do i = ilo, ihi
-            dxt(i,j,iblk) = p5*(HTN(i,j,iblk) + HTN(i,j-1,iblk))
-            dyt(i,j,iblk) = p5*(HTE(i,j,iblk) + HTE(i-1,j,iblk))
-            
             tarea(i,j,iblk) = dxt(i,j,iblk)*dyt(i,j,iblk)
-
-            dxu(i,j,iblk) = p5*(HTN(i,j,iblk) + HTN(i+1,j,iblk))
-            dyu(i,j,iblk) = p5*(HTE(i,j,iblk) + HTE(i,j+1,iblk))
-
             uarea(i,j,iblk) = dxu(i,j,iblk)*dyu(i,j,iblk)
-
             if (tarea(i,j,iblk) > c0) then
                tarear(i,j,iblk) = c1/tarea(i,j,iblk)
             else
@@ -375,29 +364,27 @@
       !-----------------------------------------------------------------
 
       call ice_timer_start(timer_bound)
-      bc = 'Neumann'
-      call update_ghost_cells (dxt,                bndy_info, &
-                               field_loc_center,   field_type_scalar, bc)
-      call update_ghost_cells (dyt,                bndy_info, &
-                               field_loc_center,   field_type_scalar, bc)
-      call update_ghost_cells (tarea,              bndy_info, &
-                               field_loc_center,   field_type_scalar, bc)
-      call update_ghost_cells (dxu,                bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (dyu,                bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (uarea,              bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (uarear,             bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
-      call update_ghost_cells (tarear,             bndy_info, &
-                               field_loc_center,   field_type_scalar, bc)
-      call update_ghost_cells (tinyarea,           bndy_info, &
-                               field_loc_center,   field_type_scalar, bc)
-      call update_ghost_cells (dxhy,               bndy_info, &
-                               field_loc_center,   field_type_vector, bc)
-      call update_ghost_cells (dyhx,               bndy_info, &
-                               field_loc_center,   field_type_vector, bc)
+      call ice_HaloUpdate (tarea,              halo_info, &
+                           field_loc_center,   field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (uarea,              halo_info, &
+                           field_loc_NEcorner, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (tarear,             halo_info, &
+                           field_loc_center,   field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (uarear,             halo_info, &
+                           field_loc_NEcorner, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (tinyarea,           halo_info, &
+                           field_loc_center,   field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (dxhy,               halo_info, &
+                           field_loc_center,   field_type_vector, &
+                           fillValue=c1)
+      call ice_HaloUpdate (dyhx,               halo_info, &
+                           field_loc_center,   field_type_vector, &
+                           fillValue=c1)
       call ice_timer_stop(timer_bound)
 
       !-----------------------------------------------------------------
@@ -446,9 +433,9 @@
       enddo
       
       call ice_timer_start(timer_bound)
-      bc = 'Neumann'
-      call update_ghost_cells (ANGLET,             bndy_info, &
-                               field_loc_center, field_type_angle, bc)
+      call ice_HaloUpdate (ANGLET,           halo_info, &
+                           field_loc_center, field_type_angle, &
+                           fillValue=c1)
       call ice_timer_stop(timer_bound)
 
       call makemask          ! velocity mask, hemisphere masks
@@ -508,7 +495,7 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1
+      use ice_work, only: work1, work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -529,30 +516,13 @@
 
       diag = .true.       ! write diagnostic info
 
-      ! lat, lon, cell dimensions, angles
-      call ice_read(nu_grid,1,ULAT, 'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
-      call ice_read(nu_grid,2,ULON, 'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
-      call ice_read(nu_grid,3,HTN,  'rda8',diag, &
-                    field_loc_Nface, field_type_scalar)
-      call ice_read(nu_grid,4,HTE,  'rda8',diag, &
-                    field_loc_Eface, field_type_scalar)
-      call ice_read(nu_grid,7,ANGLE,'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
-
-      ! fix units
-      HTN(:,:,:) = HTN(:,:,:) * cm_to_m
-      HTE(:,:,:) = HTE(:,:,:) * cm_to_m
-
+      !-----------------------------------------------------------------
       ! topography
-      call ice_read(nu_kmt,1,work1,'ida4',diag, &
-                    field_loc_center, field_type_scalar)
+      !-----------------------------------------------------------------
 
-      if (my_task == master_task) then
-         close (nu_grid)
-         close (nu_kmt)
-      endif
+      call ice_read(nu_kmt,1,work1,'ida4',diag, &
+                    field_loc=field_loc_center, & 
+                    field_type=field_type_scalar)
 
       hm(:,:,:) = c0
       do iblk = 1, nblocks
@@ -566,15 +536,48 @@
          do i = ilo, ihi
             hm(i,j,iblk) = work1(i,j,iblk)
             if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
-
-         ! uncomment to mask out tropics
-         ! Do this only if running uncoupled
-!!!             if (ULAT(i,j,iblk) > shlat/rad_to_deg .and. &
-!!!                 ULAT(i,j,iblk) < nhlat/rad_to_deg) &
-!!!                 hm(i,j,iblk) = c0
          enddo
          enddo
       enddo
+
+      !-----------------------------------------------------------------
+      ! lat, lon, angle
+      !-----------------------------------------------------------------
+
+      if (my_task == master_task) then
+         allocate(work_g1(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+      endif
+
+      call ice_read_global(nu_grid,1,work_g1,'rda8',.true.)   ! ULAT
+      call scatter_global(ULAT, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      call ice_read_global(nu_grid,2,work_g1,'rda8',.true.)   ! ULON
+      call scatter_global(ULON, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      call ice_read_global(nu_grid,7,work_g1,'rda8',.true.)   ! ANGLE
+      call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+
+      !-----------------------------------------------------------------
+      ! cell dimensions
+      ! calculate derived quantities from global arrays to preserve 
+      ! information on boundaries
+      !-----------------------------------------------------------------
+
+      call ice_read_global(nu_grid,3,work_g1,'rda8',.true.)   ! HTN
+      call primary_grid_lengths_HTN(work_g1)                  ! dxu, dxt
+
+      call ice_read_global(nu_grid,4,work_g1,'rda8',.true.)   ! HTE
+      call primary_grid_lengths_HTE(work_g1)                  ! dyu, dyt
+
+      deallocate(work_g1)
+
+      if (my_task == master_task) then
+         close (nu_grid)
+         close (nu_kmt)
+      endif
 
       end subroutine popgrid
 
@@ -611,7 +614,7 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1
+      use ice_work, only: work1, work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -637,40 +640,14 @@
 
       diag = .true.       ! write diagnostic info
 
-      ! lat, lon, cell dimensions, angles
-      fieldname='ulat'
-      call ice_read_nc(fid_grid,1,fieldname,ULAT,diag, &
-                       field_loc_NEcorner, field_type_scalar)
-      fieldname='ulon'
-      call ice_read_nc(fid_grid,2,fieldname,ULON,diag, &
-                       field_loc_NEcorner, field_type_scalar)
-      fieldname='htn'
-      call ice_read_nc(fid_grid,3,fieldname,HTN,diag, &
-                       field_loc_Nface, field_type_scalar)
-      fieldname='hte'
-      call ice_read_nc(fid_grid,4,fieldname,HTE,diag, &
-                       field_loc_Eface, field_type_scalar)
-      fieldname='angle'
-      call ice_read_nc(fid_grid,7,fieldname,ANGLE,diag, &
-                       field_loc_NEcorner, field_type_scalar)
-
-      ! fix units
-      HTN(:,:,:) = HTN(:,:,:) * cm_to_m
-      HTE(:,:,:) = HTE(:,:,:) * cm_to_m
-
-      ! fix ANGLE: roundoff error due to single precision
-      where (ANGLE >  pi) ANGLE =  pi
-      where (ANGLE < -pi) ANGLE = -pi
-
+      !-----------------------------------------------------------------
       ! topography
+      !-----------------------------------------------------------------
+
       fieldname='kmt'
       call ice_read_nc(fid_kmt,1,fieldname,work1,diag, &
-                       field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
-         call ice_close_nc(fid_grid)
-         call ice_close_nc(fid_kmt)
-      endif
+                       field_loc=field_loc_center, & 
+                       field_type=field_type_scalar)
 
       hm(:,:,:) = c0
       do iblk = 1, nblocks
@@ -684,15 +661,57 @@
          do i = ilo, ihi
             hm(i,j,iblk) = work1(i,j,iblk)
             if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
-
-         ! uncomment to mask out tropics
-         ! Do this only if running uncoupled
-!!!             if (ULAT(i,j,iblk) > shlat/rad_to_deg .and. &
-!!!                 ULAT(i,j,iblk) < nhlat/rad_to_deg) &
-!!!                 hm(i,j,iblk) = c0
          enddo
          enddo
       enddo
+
+      !-----------------------------------------------------------------
+      ! lat, lon, angle
+      !-----------------------------------------------------------------
+
+      if (my_task == master_task) then
+         allocate(work_g1(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+      endif
+
+      fieldname='ulat'
+      call ice_read_global_nc(fid_grid,1,fieldname,work_g1,diag) ! ULAT
+      call scatter_global(ULAT, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      fieldname='ulon'
+      call ice_read_global_nc(fid_grid,2,fieldname,work_g1,diag) ! ULON
+      call scatter_global(ULON, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      fieldname='angle'
+      call ice_read_global_nc(fid_grid,7,fieldname,work_g1,diag) ! ANGLE    
+      call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+
+      ! fix ANGLE: roundoff error due to single precision
+      where (ANGLE >  pi) ANGLE =  pi
+      where (ANGLE < -pi) ANGLE = -pi
+
+      !-----------------------------------------------------------------
+      ! cell dimensions
+      ! calculate derived quantities from global arrays to preserve 
+      ! information on boundaries
+      !-----------------------------------------------------------------
+
+      fieldname='htn'
+      call ice_read_global_nc(fid_grid,3,fieldname,work_g1,diag) ! HTN
+      call primary_grid_lengths_HTN(work_g1)                  ! dxu, dxt
+
+      fieldname='hte'
+      call ice_read_global_nc(fid_grid,4,fieldname,work_g1,diag) ! HTE
+      call primary_grid_lengths_HTE(work_g1)                  ! dyu, dyt
+
+      deallocate(work_g1)
+
+      if (my_task == master_task) then
+         call ice_close_nc(fid_grid)
+         call ice_close_nc(fid_kmt)
+      endif
 
 #endif
       end subroutine popgrid_nc
@@ -718,8 +737,7 @@
 ! !USES:
 !
       use ice_domain_size
-      use ice_gather_scatter
-      use ice_work, only: work1
+      use ice_work, only: work1, work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -760,9 +778,13 @@
       if (my_task == master_task) &
            write (nu_diag,*) '** Reading pan-Arctic grid **'
 
-      ! read topography
+      !-----------------------------------------------------------------
+      ! topography
+      !-----------------------------------------------------------------
+
       call ice_read(nu_grid,1,work1,'ida8',diag, &
-                    field_loc_center, field_type_scalar)
+                    field_loc=field_loc_center, & 
+                    field_type=field_type_scalar)
 
       hm(:,:,:) = c0
       do iblk = 1, nblocks
@@ -780,22 +802,39 @@
          enddo
       enddo                     ! iblk
 
-      ! read other grid quantities
+      !-----------------------------------------------------------------
+      ! lat, lon, angle
+      !-----------------------------------------------------------------
 
-      call ice_read(nu_grid,2,ULAT, 'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
-      call ice_read(nu_grid,3,ULON, 'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
-      call ice_read(nu_grid,4,HTN,  'rda8',diag, &
-                    field_loc_Nface, field_type_scalar)
-      call ice_read(nu_grid,5,HTE,  'rda8',diag, &
-                    field_loc_Eface, field_type_scalar)
-      call ice_read(nu_grid,8,ANGLE,'rda8',diag, &
-                    field_loc_NEcorner, field_type_scalar)
+      if (my_task == master_task) then
+         allocate(work_g1(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+      endif
 
-      ! fix units
-      HTN(:,:,:) = HTN(:,:,:)*cm_to_m
-      HTE(:,:,:) = HTE(:,:,:)*cm_to_m
+      call ice_read_global(nu_grid,2,work_g1,'rda8',.true.)   ! ULAT
+      call scatter_global(ULAT, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      call ice_read_global(nu_grid,3,work_g1,'rda8',.true.)   ! ULON
+      call scatter_global(ULON, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+      call ice_read_global(nu_grid,8,work_g1,'rda8',.true.)   ! ANGLE
+      call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+
+      !-----------------------------------------------------------------
+      ! cell dimensions
+      ! calculate derived quantities from global arrays to preserve 
+      ! information on boundaries
+      !-----------------------------------------------------------------
+
+      call ice_read_global(nu_grid,4,work_g1,'rda8',.true.)   ! HTN
+      call primary_grid_lengths_HTN(work_g1)                  ! dxu, dxt
+
+      call ice_read_global(nu_grid,5,work_g1,'rda8',.true.)   ! HTE
+      call primary_grid_lengths_HTE(work_g1)                  ! dyu, dyt
+
+      deallocate(work_g1)
 
       if (my_task == master_task) close (nu_grid)
 
@@ -824,12 +863,12 @@
 !
 !     use ice_boundary
       use ice_domain_size
-      use ice_gather_scatter
       use ice_scam, only : scmlat, scmlon, single_column
       use netcdf
 !
 ! !INPUT/OUTPUT PARAMETERS:
-      include "netcdf.inc"    ! only neede for single_column input
+      include "netcdf.inc"    ! only needed for single_column input
+!
 !EOP
 !
       integer (kind=int_kind) :: &
@@ -867,13 +906,6 @@
          pos_scmlon,&         ! temporary
          scamdata             ! temporary
 
-      logical (kind=log_kind) :: diag
-
-      character (char_len) :: &
-         fieldname       ! field name in netCDF file
-
-      diag = .true.
-
       !-----------------------------------------------------------------
       ! - kmt file is actually clm fractional land file
       ! - Determine consistency of dimensions
@@ -891,42 +923,41 @@
          status = nf90_inq_dimid (ncid, 'nj', dimid)
          status = nf90_inquire_dimension(ncid, dimid, len=nj)
       end if
-         
+
       ! Determine start/count to read in for either single column or global lat-lon grid
       ! If single_column, then assume that only master_task is used since there is only one task
 
       if (single_column) then
-         ! Check for consistency 
+         ! Check for consistency
          if (my_task == master_task) then
-         if ((nx_global /= 1).or. (ny_global /= 1)) then
-            write(nu_diag,*) 'Because you have selected the column model flag'
-            write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
-            write(nu_diag,*) 'ice_domain_size.F and recompile'
-            call abort_ice ('latlongrid: check nx_global, ny_global')
+            if ((nx_global /= 1).or. (ny_global /= 1)) then
+               write(nu_diag,*) 'Because you have selected the column model flag'
+               write(nu_diag,*) 'Please set nx_global=ny_global=1 in file'
+               write(nu_diag,*) 'ice_domain_size.F and recompile'
+               call abort_ice ('latlongrid: check nx_global, ny_global')
+            endif
          end if
-         end if
-            
+
          ! Read in domain file for single column
          allocate(lats(nj))
          allocate(lons(ni))
          allocate(pos_lons(ni))
          allocate(glob_grid(ni,nj))
 
-         fieldname = 'xc'
-         call ice_read_global_nc(ncid, 1, fieldname, glob_grid, diag)
+         call ice_read_global_nc(ncid, 1, 'xc', glob_grid, diag=.true.)
          do i = 1,ni
             lons(i) = glob_grid(i,1)
          end do
-         fieldname = 'yc'
-         call ice_read_global_nc(ncid, 1, fieldname, glob_grid, diag)
+         call ice_read_global_nc(ncid, 1, 'yc', glob_grid, diag=.true.)
          do j = 1,nj
             lats(j) = glob_grid(1,j) 
          end do
          
          ! convert lons array and scmlon to 0,360 and find index of value closest to 0
          ! and obtain single-column longitude/latitude indices to retrieve
-         pos_lons(:)= mod(lons(:) + 360._r8,360._r8)
-         pos_scmlon = mod(scmlon  + 360._r8,360._r8)
+         
+         pos_lons(:)= mod(lons(:) + 360._dbl_kind,360._dbl_kind)
+         pos_scmlon = mod(scmlon  + 360._dbl_kind,360._dbl_kind)
          start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
          start(2) = (MINLOC(abs(lats    -scmlat    ),dim=1))
          count(1) = 1
@@ -939,7 +970,7 @@
 
          call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
          call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
-         TLON = scamdata 
+         TLON = scamdata
          call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
          call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
          TLAT = scamdata
@@ -948,12 +979,9 @@
          tarea = scamdata
          call check_ret(nf_inq_varid(ncid, 'hm' , varid), subname)
          call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
-         hm = scamdata
-         call check_ret(nf_inq_varid(ncid, 'frac' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
          ocn_gridcell_frac = scamdata
       else
-         ! Check for consistency 
+         ! Check for consistency
          if (my_task == master_task) then
             if (nx_global /= ni .and. ny_global /= nj) then
               call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
@@ -961,16 +989,12 @@
          end if
 
          ! Read in domain file for global lat-lon grid
-         fieldname = 'xc'
-         call ice_read_nc(ncid, 1, fieldname, TLON             , diag)
-         fieldname = 'yc'
-         call ice_read_nc(ncid, 1, fieldname, TLAT             , diag)
-         fieldname = 'area'
-         call ice_read_nc(ncid, 1, fieldname, tarea            , diag)
-         fieldname = 'mask'
-         call ice_read_nc(ncid, 1, fieldname, hm               , diag)
-         fieldname = 'frac'
-         call ice_read_nc(ncid, 1, fieldname, ocn_gridcell_frac, diag)
+         call ice_read_nc(ncid, 1, 'xc'  , TLON             , diag=.true.)
+         call ice_read_nc(ncid, 1, 'yc'  , TLAT             , diag=.true.)
+         call ice_read_nc(ncid, 1, 'area', tarea            , diag=.true., &
+            field_loc=field_loc_center,field_type=field_type_scalar)
+         call ice_read_nc(ncid, 1, 'mask', hm               , diag=.true.)
+         call ice_read_nc(ncid, 1, 'frac', ocn_gridcell_frac, diag=.true.)
       end if
 
       if (my_task == master_task) then
@@ -978,7 +1002,7 @@
       end if
 
       do iblk = 1,nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -987,13 +1011,13 @@
          do j = jlo, jhi
          do i = ilo, ihi
             ! Convert from degrees to radians
-            TLON(i,j,iblk) = pi*TLON(i,j,iblk)/180._dbl_kind 
+            TLON(i,j,iblk) = pi*TLON(i,j,iblk)/180._dbl_kind
 
             ! Convert from degrees to radians
-            TLAT(i,j,iblk) = pi*TLAT(i,j,iblk)/180._dbl_kind 
+            TLAT(i,j,iblk) = pi*TLAT(i,j,iblk)/180._dbl_kind
 
-            ! Convert from radians^2 to m^2 
-            ! (area in domain file is in radians^2 and tarea is in m^2)  
+            ! Convert from radians^2 to m^2
+            ! (area in domain file is in radians^2 and tarea is in m^2)
             tarea(i,j,iblk) = tarea(i,j,iblk) * (radius*radius)
          end do
          end do
@@ -1003,7 +1027,7 @@
       ! Calculate various geometric 2d arrays
       ! The U grid (velocity) is not used when run with sequential CAM
       ! because we only use thermodynamic sea ice.  However, ULAT is used
-      ! in the defualt initialization of CICE so we calculate it here as 
+      ! in the default initialization of CICE so we calculate it here as 
       ! a "dummy" so that CICE will initialize with ice.  If a no ice
       ! initialization is OK (or desired) this can be commented out and
       ! ULAT will remain 0 as specified above.  ULAT is located at the
@@ -1053,6 +1077,7 @@
       call makemask
 
       end subroutine latlongrid
+
 !=======================================================================
 !BOP
 !
@@ -1106,7 +1131,6 @@
 ! !USES:
 !
       use ice_domain_size
-      use ice_gather_scatter
       use ice_work, only: work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -1127,8 +1151,6 @@
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
-            HTN  (i,j,iblk) = dxrect
-            HTE  (i,j,iblk) = dyrect
             ULAT (i,j,iblk) = c0              ! remember to set Coriolis !
             ULON (i,j,iblk) = c0
             ANGLE(i,j,iblk) = c0              ! "square with the world"
@@ -1136,12 +1158,35 @@
          enddo
       enddo
 
+      if (my_task == master_task) then
+         allocate(work_g1(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+      endif
+
+      if (my_task == master_task) then
+      do j = 1, ny_global
+      do i = 1, nx_global
+            work_g1(i,j) = dxrect             ! HTN
+      enddo
+      enddo
+      endif
+      call primary_grid_lengths_HTN(work_g1)  ! dxu, dxt
+
+      if (my_task == master_task) then
+      do j = 1, ny_global
+      do i = 1, nx_global
+            work_g1(i,j) = dyrect             ! HTE
+      enddo
+      enddo
+      endif
+      call primary_grid_lengths_HTE(work_g1)  ! dyu, dyt
+
       !-----------------------------------------------------------------
       ! Construct T-cell land mask
       !-----------------------------------------------------------------
 
       if (my_task == master_task) then
-         allocate(work_g1(nx_global,ny_global))
          work_g1(:,:) = c0      ! initialize hm as land
 
 !!!      do j=1,ny_global        ! open
@@ -1151,8 +1196,6 @@
                work_g1(i,j) = c1
             enddo
          enddo
-      else
-         allocate(work_g1(1,1)) ! to save memory
       endif
 
       call scatter_global(hm, work_g1, master_task, distrb_info, &
@@ -1161,6 +1204,165 @@
       deallocate(work_g1)
 
       end subroutine rectgrid
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: primary_grid_lengths_HTN
+!
+! !INTERFACE:
+!
+      subroutine primary_grid_lengths_HTN(work_g)
+!
+! !DESCRIPTION:
+!
+! Calculate dxu and dxt from HTN on the global grid, to preserve
+! ghost cell and/or land values that might otherwise be lost. Scatter
+! dxu, dxt and HTN to all processors.
+!
+! !REVISION HISTORY:
+!
+! author: Elizabeth C. Hunke, LANL
+!
+! !USES:
+!
+      use ice_work, only: work_g2
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! work_g is the global array holding HTN.
+!
+!EOP
+
+      real (kind=dbl_kind), dimension(:,:) :: work_g
+
+      integer (kind=int_kind) :: &
+         i, j, &
+         ip1     ! i+1
+
+      if (my_task == master_task) then
+         allocate(work_g2(nx_global,ny_global))
+      else
+         allocate(work_g2(1,1))
+      endif
+
+      if (my_task == master_task) then
+      do j = 1, ny_global
+      do i = 1, nx_global
+         work_g(i,j) = work_g(i,j) * cm_to_m                ! HTN
+      enddo
+      enddo
+      do j = 1, ny_global
+      do i = 1, nx_global
+         ! assume cyclic; noncyclic will be handled during scatter
+         ip1 = i+1
+         if (i == nx_global) ip1 = 1
+         work_g2(i,j) = p5*(work_g(i,j) + work_g(ip1,j))    ! dxu
+      enddo
+      enddo
+      endif
+      call scatter_global(HTN, work_g, master_task, distrb_info, &
+                          field_loc_Nface, field_type_scalar)
+      call scatter_global(dxu, work_g2, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+
+      if (my_task == master_task) then
+      do j = 2, ny_global
+         do i = 1, nx_global
+            work_g2(i,j) = p5*(work_g(i,j) + work_g(i,j-1)) ! dxt
+         enddo
+      enddo
+      ! extrapolate to obtain dxt along j=1
+      do i = 1, nx_global
+         work_g2(i,1) = c2*work_g(i,2) - work_g(i,3) ! dxt
+      enddo
+      endif
+      call scatter_global(dxt, work_g2, master_task, distrb_info, &
+                          field_loc_center, field_type_scalar)
+
+      deallocate(work_g2)
+
+      end subroutine primary_grid_lengths_HTN
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: primary_grid_lengths_HTE
+!
+! !INTERFACE:
+!
+      subroutine primary_grid_lengths_HTE(work_g)
+!
+! !DESCRIPTION:
+!
+! Calculate dyu and dyt from HTE on the global grid, to preserve
+! ghost cell and/or land values that might otherwise be lost. Scatter
+! dyu, dyt and HTE to all processors.
+!
+! !REVISION HISTORY:
+!
+! author: Elizabeth C. Hunke, LANL
+!
+! !USES:
+!
+      use ice_work, only: work_g2
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+! work_g is the global array holding HTE.
+!
+!EOP
+
+      real (kind=dbl_kind), dimension(:,:) :: work_g
+
+      integer (kind=int_kind) :: &
+         i, j, &
+         im1     ! i-1
+
+      if (my_task == master_task) then
+         allocate(work_g2(nx_global,ny_global))
+      else
+         allocate(work_g2(1,1))
+      endif
+
+      if (my_task == master_task) then
+      do j = 1, ny_global
+      do i = 1, nx_global
+         work_g(i,j) = work_g(i,j) * cm_to_m                ! HTE
+      enddo
+      enddo
+      do j = 1, ny_global-1
+         do i = 1, nx_global
+            work_g2(i,j) = p5*(work_g(i,j) + work_g(i,j+1)) ! dyu
+         enddo
+      enddo
+      ! extrapolate to obtain dyu along j=ny_global
+      do i = 1, nx_global
+         work_g2(i,ny_global) = c2*work_g(i,ny_global-1) &
+                                 - work_g(i,ny_global-2) ! dyu
+      enddo
+      endif
+      call scatter_global(HTE, work_g, master_task, distrb_info, &
+                          field_loc_Eface, field_type_scalar)
+      call scatter_global(dyu, work_g2, master_task, distrb_info, &
+                          field_loc_NEcorner, field_type_scalar)
+
+      if (my_task == master_task) then
+      do j = 1, ny_global
+      do i = 1, nx_global
+         ! assume cyclic; noncyclic will be handled during scatter
+         im1 = i-1
+         if (i == 1) im1 = nx_global 
+         work_g2(i,j) = p5*(work_g(i,j) + work_g(im1,j))    ! dyt
+      enddo
+      enddo
+      endif
+      call scatter_global(dyt, work_g2, master_task, distrb_info, &
+                          field_loc_center, field_type_scalar)
+
+      deallocate(work_g2)
+
+      end subroutine primary_grid_lengths_HTE
 
 !=======================================================================
 !BOP
@@ -1193,16 +1395,12 @@
          i, j, iblk, &
          ilo,ihi,jlo,jhi      ! beginning and end of physical domain
 
-      character (char_len) :: &
-         bc                   ! boundary condition type (Dirichlet, Neumann)
-
       type (block) :: &
          this_block           ! block information for current block
 
       call ice_timer_start(timer_bound)
-      bc = 'Dirichlet'
-      call update_ghost_cells (hm,               bndy_info, &
-                               field_loc_center, field_type_scalar, bc)
+      call ice_HaloUpdate (hm,               halo_info, &
+                           field_loc_center, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
       !-----------------------------------------------------------------
@@ -1225,8 +1423,8 @@
       enddo
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells (uvm,                bndy_info, &
-                               field_loc_NEcorner, field_type_scalar, bc)
+      call ice_HaloUpdate (uvm,                halo_info, &
+                           field_loc_NEcorner, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
       do iblk = 1, nblocks
@@ -1293,7 +1491,6 @@
 !
       use ice_domain_size
       use ice_boundary
-      use ice_gather_scatter
       use ice_global_reductions, only: global_minval, global_maxval
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -1308,9 +1505,6 @@
 
       real (kind=dbl_kind) :: &
            z1,x1,y1,z2,x2,y2,z3,x3,y3,z4,x4,y4,tx,ty,tz,da
-
-      character (char_len) :: &
-         bc                   ! boundary condition type (Dirichlet, Neumann)
 
       type (block) :: &
            this_block           ! block information for current block
@@ -1367,11 +1561,12 @@
       enddo                     ! iblk
 
       call ice_timer_start(timer_bound)
-      bc = 'Neumann'
-      call update_ghost_cells (TLON,             bndy_info, &
-                               field_loc_center, field_type_scalar, bc)
-      call update_ghost_cells (TLAT,             bndy_info, &
-                               field_loc_center, field_type_scalar, bc)
+      call ice_HaloUpdate (TLON,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (TLAT,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
       call ice_timer_stop(timer_bound)
 
       x1 = global_minval(TLON, distrb_info, field_loc_center, tmask)
@@ -1427,8 +1622,8 @@
       work1(:,:,:) = work(:,:,:)
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells(work1,            bndy_info, &
-                              field_loc_center, field_type_vector)
+      call ice_HaloUpdate (work1,            halo_info, &
+                           field_loc_center, field_type_vector)
       call ice_timer_stop(timer_bound)
 
       call to_ugrid(work1,work)
@@ -1532,8 +1727,8 @@
       work1(:,:,:) = work(:,:,:)
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells(work1,            bndy_info, &
-                              field_loc_center, field_type_scalar)
+      call ice_HaloUpdate (work1,            halo_info, &
+                           field_loc_center, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
       call to_tgrid(work1,work)
@@ -1689,7 +1884,7 @@
 !
         do n=2,k
           fn = n
-          pk = ((c2*fn-1._r8)*xz*pkm1-(fn-c1)*pkm2)/fn
+          pk = ((c2*fn-1._dbl_kind)*xz*pkm1-(fn-c1)*pkm2)/fn
           pkm2 = pkm1
           pkm1 = pk
         enddo
@@ -1770,23 +1965,23 @@
 ! Local Workspace
 !-----------------------------------------
 
-      data bz/ 2.4048255577_r8, 5.5200781103_r8, 8.6537279129_r8 ,&
-         11.7915344391_r8, 14.9309177086_r8, 18.0710639679_r8    ,&
-         21.2116366299_r8, 24.3524715308_r8, 27.4934791320_r8    ,&
-         30.6346064684_r8, 33.7758202136_r8, 36.9170983537_r8    ,&
-         40.0584257646_r8, 43.1997917132_r8, 46.3411883717_r8    ,&
-         49.4826098974_r8, 52.6240518411_r8, 55.7655107550_r8    ,&
-         58.9069839261_r8, 62.0484691902_r8, 65.1899648002_r8    ,&
-         68.3314693299_r8, 71.4729816036_r8, 74.6145006437_r8    ,&
-         77.7560256304_r8, 80.8975558711_r8, 84.0390907769_r8    ,&
-         87.1806298436_r8, 90.3221726372_r8, 93.4637187819_r8    ,&
-         96.6052679510_r8, 99.7468198587_r8, 102.8883742542_r8   ,&
-         106.0299309165_r8, 109.1714896498_r8, 112.3130502805_r8 ,&
-         115.4546126537_r8, 118.5961766309_r8, 121.7377420880_r8 ,&
-         124.8793089132_r8, 128.0208770059_r8, 131.1624462752_r8 ,&
-         134.3040166383_r8, 137.4455880203_r8, 140.5871603528_r8 ,&
-         143.7287335737_r8, 146.8703076258_r8, 150.0118824570_r8 ,&
-         153.1534580192_r8, 156.2950342685_r8/  
+      data bz/ 2.4048255577_dbl_kind, 5.5200781103_dbl_kind, 8.6537279129_dbl_kind ,&
+         11.7915344391_dbl_kind, 14.9309177086_dbl_kind, 18.0710639679_dbl_kind    ,&
+         21.2116366299_dbl_kind, 24.3524715308_dbl_kind, 27.4934791320_dbl_kind    ,&
+         30.6346064684_dbl_kind, 33.7758202136_dbl_kind, 36.9170983537_dbl_kind    ,&
+         40.0584257646_dbl_kind, 43.1997917132_dbl_kind, 46.3411883717_dbl_kind    ,&
+         49.4826098974_dbl_kind, 52.6240518411_dbl_kind, 55.7655107550_dbl_kind    ,&
+         58.9069839261_dbl_kind, 62.0484691902_dbl_kind, 65.1899648002_dbl_kind    ,&
+         68.3314693299_dbl_kind, 71.4729816036_dbl_kind, 74.6145006437_dbl_kind    ,&
+         77.7560256304_dbl_kind, 80.8975558711_dbl_kind, 84.0390907769_dbl_kind    ,&
+         87.1806298436_dbl_kind, 90.3221726372_dbl_kind, 93.4637187819_dbl_kind    ,&
+         96.6052679510_dbl_kind, 99.7468198587_dbl_kind, 102.8883742542_dbl_kind   ,&
+         106.0299309165_dbl_kind, 109.1714896498_dbl_kind, 112.3130502805_dbl_kind ,&
+         115.4546126537_dbl_kind, 118.5961766309_dbl_kind, 121.7377420880_dbl_kind ,&
+         124.8793089132_dbl_kind, 128.0208770059_dbl_kind, 131.1624462752_dbl_kind ,&
+         134.3040166383_dbl_kind, 137.4455880203_dbl_kind, 140.5871603528_dbl_kind ,&
+         143.7287335737_dbl_kind, 146.8703076258_dbl_kind, 150.0118824570_dbl_kind ,&
+         153.1534580192_dbl_kind, 156.2950342685_dbl_kind/  
 !
       nn = n 
       if (n > 50) then 

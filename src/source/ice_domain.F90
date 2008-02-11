@@ -12,7 +12,7 @@
 !  routines in the block, distribution modules.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_domain.F90 54 2007-02-26 21:19:41Z eclare $
+!  SVN:$Id: ice_domain.F90 100 2008-01-29 00:25:32Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL
@@ -52,8 +52,8 @@
    type (distrb), public :: &
       distrb_info        ! block distribution info
 
-   type (bndy), public :: &
-      bndy_info          !  ghost cell update info
+   type (ice_halo), public :: &
+      halo_info          !  ghost cell update info
 
    logical (log_kind), public :: &
       ltripole_grid      ! flag to signal use of tripole grid
@@ -130,7 +130,7 @@
    nprocs = -1
    distribution_type = 'cartesian'
    ew_boundary_type  = 'cyclic'
-   ns_boundary_type  = 'closed'
+   ns_boundary_type  = 'open'
 
    if (my_task == master_task) then
       open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
@@ -249,7 +249,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (r8), dimension(nx_global,ny_global), intent(in) :: &
+   real (dbl_kind), dimension(nx_global,ny_global), intent(in) :: &
       KMTG           ,&! global topography
       ULATG            ! global latitude field (radians)
 
@@ -283,6 +283,67 @@
 
 !----------------------------------------------------------------------
 !
+!  check that there are at least nghost+1 rows or columns of land cells
+!  for closed boundary conditions (otherwise grid lengths are zero in
+!  cells neighboring ocean points).  
+!
+!----------------------------------------------------------------------
+
+   if (trim(ns_boundary_type) == 'closed') then
+      allocate(nocn(nblocks_tot))
+      nocn = 0
+      do n=1,nblocks_tot
+         this_block = get_block(n,n)
+         do j = this_block%jhi-1, this_block%jhi
+         do i = 1, nx_block
+            ig = this_block%i_glob(i)
+            jg = this_block%j_glob(j)
+            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+         enddo
+         enddo
+         do j = this_block%jlo, this_block%jlo+1
+         do i = 1, nx_block
+            ig = this_block%i_glob(i)
+            jg = this_block%j_glob(j)
+            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+         enddo
+         enddo
+         if (nocn(n) > 0) then
+            print*, 'ice: Not enough land cells along ns edge'
+            call abort_ice('ice: Not enough land cells along ns edge')
+         endif
+      enddo
+      deallocate(nocn)
+   endif
+   if (trim(ew_boundary_type) == 'closed') then
+      allocate(nocn(nblocks_tot))
+      nocn = 0
+      do n=1,nblocks_tot
+         this_block = get_block(n,n)
+         do j = 1, ny_block
+         do i = this_block%ihi-1, this_block%ihi
+            ig = this_block%i_glob(i)
+            jg = this_block%j_glob(j)
+            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+         enddo
+         enddo
+         do j = 1, ny_block
+         do i = this_block%ilo, this_block%ilo+1
+            ig = this_block%i_glob(i)
+            jg = this_block%j_glob(j)
+            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+         enddo
+         enddo
+         if (nocn(n) > 0) then
+            print*, 'ice: Not enough land cells along ew edge'
+            call abort_ice('ice: Not enough land cells along ew edge')
+         endif
+      enddo
+      deallocate(nocn)
+   endif
+
+!----------------------------------------------------------------------
+!
 !  estimate the amount of work per processor using the topography
 !  and latitude
 !
@@ -305,7 +366,7 @@
       !do j=1,ny_block
       do j=this_block%jlo,this_block%jhi
          if (this_block%j_glob(j) > 0) then
-            do i=1,nx_block
+            do i=this_block%ilo,this_block%ihi
                if (this_block%i_glob(i) > 0) then
 	          ig = this_block%i_glob(i)
                   jg = this_block%j_glob(j)
@@ -396,10 +457,10 @@
 !----------------------------------------------------------------------
 
    ! update ghost cells on all four boundaries
-   call create_boundary(bndy_info, distrb_info,     &
+   halo_info = ice_HaloCreate(distrb_info,     &
                         trim(ns_boundary_type),     &
                         trim(ew_boundary_type),     &
-                        nx_global, ny_global)
+                        nx_global)
 
 !----------------------------------------------------------------------
 !EOC

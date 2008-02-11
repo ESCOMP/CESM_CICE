@@ -1497,7 +1497,11 @@
         endif
 
         ! create file
+#ifdef _HIRES
+        status = nf90_create(ncfile, NF90_64BIT_OFFSET, ncid)
+#else
         status = nf90_create(ncfile, nf90_clobber, ncid)
+#endif
         if (status /= nf90_noerr) call abort_ice( &
                         'ice: Error creating history ncfile')
 

@@ -9,7 +9,7 @@
 ! Code originally based on kinds_mod.F in POP
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_kinds_mod.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_kinds_mod.F90 100 2008-01-29 00:25:32Z eclare $
 !
 ! author: Elizabeth C. Hunke and William H. Lipscomb, LANL
 ! 2006: ECH converted to free source form (F90)
@@ -33,13 +33,6 @@
                             real_kind = selected_real_kind(6), &
                             dbl_kind  = selected_real_kind(13), &
                             quad_kind = selected_real_kind(20)
-
-      ! additional definitions for modules imported from POP
-      integer, parameter :: i4        = selected_int_kind(6), &
-                            i8        = selected_int_kind(13), &
-                            r4        = selected_real_kind(6), &
-                            r8        = selected_real_kind(13), &
-                            r16       = selected_real_kind(20)
 
 !=======================================================================
 

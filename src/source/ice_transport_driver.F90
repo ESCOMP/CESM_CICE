@@ -40,7 +40,8 @@
 
 !lipscomb - Remove when there is again just one remapping routine
       logical, parameter ::    &
-         newremap = .false.    ! if true, call new remapping scheme
+!         newremap = .false.    ! if true, call new remapping scheme
+         newremap = .true.    ! if true, call new remapping scheme
                                ! if false, call old (CICE 3.14) scheme
 
       logical, parameter :: & ! if true, prescribe area flux across each edge  
@@ -321,18 +322,18 @@
 
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
+    ! Commented out because ghost cells are updated after cleanup_itd.
     !-------------------------------------------------------------------
+!      call ice_timer_start(timer_bound)
 
-      call ice_timer_start(timer_bound)
+!      call ice_HaloUpdate (aice0,            halo_info,     &
+!                           field_loc_center, field_type_scalar)
 
-      call update_ghost_cells (aice0,            bndy_info,     &
-                               field_loc_center, field_type_scalar)
+!      call bound_state (aicen, trcrn,     &
+!                        vicen, vsnon,      &
+!                        eicen, esnon)
 
-      call bound_state (aicen, trcrn,     &
-                        vicen, vsnon,      &
-                        eicen, esnon)
-
-      call ice_timer_stop(timer_bound)
+!      call ice_timer_stop(timer_bound)
 
     !-------------------------------------------------------------------
     ! Ghost cell updates for ice velocity.
@@ -341,10 +342,10 @@
     !-------------------------------------------------------------------
 
 !      call ice_timer_start(timer_bound)
-!      call update_ghost_cells (uvel,               bndy_info,     &
-!                               field_loc_NEcorner, field_type_vector)
-!      call update_ghost_cells (vvel,               bndy_info,     &
-!                               field_loc_NEcorner, field_type_vector)
+!      call ice_HaloUpdate (uvel,               halo_info,     &
+!                           field_loc_NEcorner, field_type_vector)
+!      call ice_HaloUpdate (vvel,               halo_info,     &
+!                           field_loc_NEcorner, field_type_vector)
 !      call ice_timer_stop(timer_bound)
 
 
@@ -449,10 +450,10 @@
          enddo
 
          call ice_timer_start(timer_bound)
-         call update_ghost_cells (tmin,             bndy_info,     &
-                                  field_loc_center, field_type_scalar)
-         call update_ghost_cells (tmax,             bndy_info,     &
-                                  field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (tmin,             halo_info,     &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (tmax,             halo_info,     &
+                              field_loc_center, field_type_scalar)
          call ice_timer_stop(timer_bound)
 
          do iblk = 1, nblocks
@@ -480,8 +481,14 @@
     !  of the velocity field.  Otherwise, initialize edgearea.
     !-------------------------------------------------------------------
 
-         edgearea_e(:,:,:) = c0
-         edgearea_n(:,:,:) = c0
+         do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            edgearea_e(i,j,iblk) = c0
+            edgearea_n(i,j,iblk) = c0
+         enddo
+         enddo
+         enddo
 
          if (l_fixed_area) then
 
@@ -540,6 +547,18 @@
 
       enddo                     ! iblk
 
+    !-------------------------------------------------------------------
+    ! Ghost cell updates for state variables.
+    !-------------------------------------------------------------------
+
+      call ice_timer_start(timer_bound)
+
+      call bound_state (aicen, trcrn,     &
+                        vicen, vsnon,      &
+                        eicen, esnon)
+
+      call ice_timer_stop(timer_bound)
+
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks
 !---!-------------------------------------------------------------------
@@ -591,6 +610,7 @@
             if (l_stop) then
                write (nu_diag,*) 'istep1, my_task, iblk =',     &
                                   istep1, my_task, iblk
+               write (nu_diag,*) 'transport: conservation error, cat 0'
                call abort_ice('ice remap transport: conservation error')
             endif
 
@@ -603,6 +623,7 @@
                if (l_stop) then
                   write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
                                      istep1, my_task, iblk, n
+                  write (nu_diag,*) 'transport: conservation error, cat ',n
                   call abort_ice     &
                        ('ice remap transport: conservation error')
                endif
@@ -702,12 +723,11 @@
 
     !-------------------------------------------------------------------
     ! Get ghost cell values of state variables.
-    ! (Assume velocities are already known for ghost cells.)
+    ! (Assume velocities are already known for ghost cells, also.)
     !-------------------------------------------------------------------
-
-      call bound_state (aicen, trcrn,     &
-                        vicen, vsnon,     &
-                        eicen, esnon)
+!      call bound_state (aicen, trcrn,     &
+!                        vicen, vsnon,     &
+!                        eicen, esnon)
 
     !-------------------------------------------------------------------
     ! Average corner velocities to edges.
@@ -729,10 +749,10 @@
       enddo
 
       call ice_timer_start(timer_bound)
-      call update_ghost_cells (uee,             bndy_info,     &
-                               field_loc_Eface, field_type_scalar)
-      call update_ghost_cells (vnn,             bndy_info,     &
-                               field_loc_Nface, field_type_scalar)
+      call ice_HaloUpdate (uee,             halo_info,     &
+                           field_loc_Eface, field_type_scalar)
+      call ice_HaloUpdate (vnn,             halo_info,     &
+                           field_loc_Nface, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
       do iblk = 1, nblocks
@@ -784,6 +804,18 @@
 
       enddo                     ! iblk
  
+    !-------------------------------------------------------------------
+    ! Ghost cell updates for state variables.
+    !-------------------------------------------------------------------
+
+      call ice_timer_start(timer_bound)
+
+      call bound_state (aicen, trcrn,     &
+                        vicen, vsnon,      &
+                        eicen, esnon)
+
+      call ice_timer_stop(timer_bound)
+
       call ice_timer_stop(timer_advect)  ! advection 
 
       end subroutine transport_upwind
@@ -945,7 +977,8 @@
                i = indxi(ij,n)
                j = indxj(ij,n)
                if (trm(i,j,2,n) > puny)    &    ! hsno > puny
-                 trm(i,j,kt+k,n) = esnon(i,j,slyr1(n)+k-1)*workb(i,j) ! qsno
+                 trm(i,j,kt+k,n) = esnon(i,j,slyr1(n)+k-1)*workb(i,j) & ! qsno
+                                 + rhos*Lfresh
             enddo               ! ij
          enddo                  ! nslyr
 
@@ -1075,7 +1108,8 @@
          do ij = 1, icells
             i = indxi(ij)
             j = indxj(ij)
-               esnon(i,j,slyr1(n)+k-1) = vsnon(i,j,n)*trm(i,j,kt+k,n)
+               esnon(i,j,slyr1(n)+k-1) = (trm(i,j,kt+k,n) - rhos*Lfresh) &
+                                         * vsnon(i,j,n)
             enddo               ! ij
          enddo                  ! nslyr
 

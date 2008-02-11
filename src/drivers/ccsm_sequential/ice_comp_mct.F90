@@ -10,91 +10,50 @@ module ice_comp_mct
 !
 ! !USES:
 
-  use shr_kind_mod,   only : r8 => shr_kind_r8
-
-  use shr_sys_mod, only : shr_sys_abort, shr_sys_flush
-
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod,  only : shr_sys_abort, shr_sys_flush
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
-		shr_file_setloglevel, shr_file_setlogunit
-
-  use mct_mod, only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init,         &
-		mct_gsMap_lsize, mct_gGrid_init, mct_indexsort, mct_permute,   &
-		mct_gsMap_init, mct_avect_permute, mct_gGrid_importiattr,      &
-		mct_gGrid_importrattr, mct_avect_zero, mct_indexset,           &
-		mct_ggrid_permute, mct_gsmap_orderedpoints, mct_avect_unpermute
-
+		           shr_file_setloglevel, shr_file_setlogunit
+  use mct_mod
   use esmf_mod, only : ESMF_Clock
 
-  use seq_flds_mod, only : seq_flds_i2x_fields, seq_flds_x2i_fields,  &
-		seq_flds_dom_other, seq_flds_dom_coord
-
-  use seq_flds_indices, only : index_i2x_si_tref, index_i2x_si_sicthk,               &
-		index_i2x_si_ifrac, index_i2x_si_t, index_i2x_si_avsdr,              &
-		index_i2x_si_avsdf, index_i2x_si_anidf, index_i2x_si_qref,           &
-		index_i2x_faii_taux, index_i2x_faii_tauy, index_i2x_faii_lat,        &
-		index_i2x_faii_sen, index_i2x_faii_lwup, index_i2x_faii_evap,        &
-		index_i2x_faii_swnet, index_i2x_fioi_melth, index_i2x_fioi_swpen,    &
-		index_i2x_fioi_meltw, index_i2x_fioi_salt, index_i2x_fioi_taux,      &
-		index_i2x_fioi_tauy, index_i2x_si_anidr, index_x2i_so_t,             &
-		index_x2i_so_s, index_x2i_so_u, index_x2i_so_v, index_x2i_so_dhdx,   &
-		index_x2i_so_dhdy, index_x2i_sa_z, index_x2i_fioo_q,                 &
-		index_x2i_sa_u, index_x2i_sa_v, index_x2i_sa_ptem, index_x2i_sa_tbot,& 
-		index_x2i_sa_shum, index_x2i_sa_dens, index_x2i_faxa_swvdr,          &
-		index_x2i_faxa_swndr, index_x2i_faxa_swvdf, index_x2i_faxa_swndf,    &
-		index_x2i_faxa_lwdn, index_x2i_faxa_rain, index_x2i_faxa_snow
-		
-  use seq_cdata_mod, only : seq_cdata, seq_cdata_setptrs
-
-  use seq_infodata_mod, only : seq_infodata_type, seq_infodata_getdata,       &
-		seq_infodata_putdata, seq_infodata_start_type_cont,           &
-		seq_infodata_start_type_brnch, seq_infodata_start_type_start
-
+  use seq_flds_mod
+  use seq_flds_indices
+  use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
+  use seq_infodata_mod,only : seq_infodata_type, seq_infodata_getdata,       &
+		              seq_infodata_putdata, seq_infodata_start_type_cont, &
+		              seq_infodata_start_type_brnch, seq_infodata_start_type_start
   use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, seq_timemgr_restartalarmison, &
-		seq_timemgr_eclockdateinsync
+		              seq_timemgr_eclockdateinsync, seq_timemgr_stopalarmison
+  use perf_mod,        only : t_startf, t_stopf
 
-  use perf_mod, only :  t_startf, t_stopf
-
-  use ice_flux, only : strairxt, strairyt, strocnxt, strocnyt,    &
-		alvdr, alidr, alvdf, alidf, tref, qref, flat,     &
-		fsens, flwout, evap, fswabs, fhocn, fswthru,      &
-		fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,   &
-		rhoa, swvdr, swvdf, swidr, swidf, flw, frain,     &
-		fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt, &
-		sss, tf, wind, fsw, init_flux_atm
-
-  use ice_state, only : vice, aice, trcr
-
+  use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
+			      alvdr, alidr, alvdf, alidf, tref, qref, flat,     &
+			      fsens, flwout, evap, fswabs, fhocn, fswthru,      &
+		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,   &
+		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,     &
+		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt, &
+		              sss, tf, wind, fsw, init_flux_atm
+  use ice_state,       only : vice, aice, trcr
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
-
-  use ice_domain, only : nblocks, blocks_ice, bndy_info
-
-  use ice_blocks, only : block, get_block, nx_block, ny_block
-
-  use ice_grid, only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
-		grid_type, t2ugrid_vector
-
-  use ice_constants, only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-		field_loc_center, field_type_scalar, field_type_vector
-
+  use ice_domain,      only : nblocks, blocks_ice, halo_info
+  use ice_blocks,      only : block, get_block, nx_block, ny_block
+  use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
+ 		              grid_type, t2ugrid_vector
+  use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
+		              field_loc_center, field_type_scalar, field_type_vector
   use ice_communicate, only : my_task, master_task
-
-  use ice_calendar, only :  idate, mday, time, month, daycal, secday, &
-		sec, dt, dyn_dt, ndyn_dt, calendar
-
-  use ice_timers, only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
- 
-  use ice_kinds_mod, only : int_kind, dbl_kind, char_len_long 
-
-  use ice_init, only :
-
-  use ice_boundary, only : update_ghost_cells 
-
+  use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
+		              sec, dt, dyn_dt, ndyn_dt, calendar
+  use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
+  use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
+!  use ice_init
+  use ice_boundary,    only : ice_HaloUpdate 
+  use ice_scam,        only : scmlat, scmlon, single_column
+  use ice_fileunits,   only : nu_diag
+  use ice_dyn_evp,     only:  kdyn
   use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
 
-  use ice_scam, only : scmlat, scmlon, single_column
-
-  use ice_fileunits, only : nu_diag
-!
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   public :: ice_init_mct
@@ -163,9 +122,9 @@ contains
     integer            :: ref_ymd            ! Reference date (YYYYMMDD)
     integer            :: ref_tod            ! reference time of day (s)
     integer            :: iyear              ! yyyy
+    integer            :: dtime              ! time step
     integer            :: shrlogunit,shrloglev ! old values
-
-    integer :: iam,ierr
+    integer            :: iam,ierr
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall
 !EOP
@@ -178,7 +137,7 @@ contains
     call seq_cdata_setptrs(cdata_i, ID=ICEID, mpicom=mpicom_ice, &
          gsMap=gsMap_ice, dom=dom_i, infodata=infodata)
 
-#if (defined BGL) && (defined _HIRES)
+#if (defined _MEMTRACE)
     call MPI_comm_rank(mpicom_ice,iam,ierr)
     if(iam == 0 ) then
        write(6,*) 'ice_init_mct:start::'
@@ -196,7 +155,7 @@ contains
     scmlat = -999.
     scmlon = -999.
 
-    call seq_infodata_GetData( infodata, case_name=runid   ,  &
+    call seq_infodata_GetData( infodata, case_name=runid   ,  &  
        single_column=single_column ,scmlat=scmlat,scmlon=scmlon)
     call seq_infodata_GetData( infodata, start_type=starttype)
 
@@ -210,6 +169,13 @@ contains
        write(nu_diag,*) 'ice_comp_mct ERROR: unknown starttype'
        call shr_sys_abort()
     end if
+
+    !=============================================================
+    ! Set ice dtime to ice coupling frequency
+    !=============================================================
+
+    call seq_timemgr_EClockGetData(EClock, dtime=dtime)
+    dt = real(dtime)
 
     !=============================================================
     ! Initialize cice because grid information is needed for
@@ -320,7 +286,7 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-#if (defined BGL) && (defined _HIRES)
+#if (defined _MEMTRACE)
     if(iam == 0) then
        write(6,*) 'ice_init_mct:end::'
        call memmon_print_usage()
@@ -346,11 +312,7 @@ contains
     use ice_history
     use ice_restart
     use ice_diagnostics
-    use ice_age, only: tr_iage, write_restart_age
-    use ice_meltpond, only: tr_pond, write_restart_pond
-    use ice_shortwave, only: shortwave, init_dEdd, write_restart_dEdd
 
-!
 ! !ARGUMENTS:
     type(ESMF_Clock),intent(in)    :: EClock
     type(seq_cdata), intent(inout) :: cdata_i
@@ -360,6 +322,7 @@ contains
 ! !LOCAL VARIABLES:
     integer :: k             ! index
     logical :: rstwr         ! .true. ==> write a restart file
+    logical :: stop_now      ! .true. ==> stop at the end of this run phase
     integer :: ymd           ! Current date (YYYYMMDD)
     integer :: tod           ! Current time of day (sec)
     integer :: yr_sync       ! Sync current year
@@ -377,7 +340,7 @@ contains
 !EOP
 !---------------------------------------------------------------------------
 
-#if (defined BGL) && (defined _HIRES)
+#if (defined _MEMTRACE)
     if(my_task == 0 ) then
        write(6,*) SubName // ':start::'
        call memmon_print_usage()
@@ -408,9 +371,6 @@ contains
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
     
-    if ((istep == 1) .and. (trim(runtype) == 'startup') .and. &
-       (trim(shortwave) == 'dEdd')) call init_dEdd
-
     call init_mass_diags   ! diagnostics per timestep
 
     if(prescribed_ice) then  ! read prescribed ice
@@ -449,12 +409,20 @@ contains
    ! dynamics, transport, ridging
    !-----------------------------------------------------------------
 
-    if (.not.prescribed_ice) then
-       call t_startf ('cice_dyn')
-       do k = 1, ndyn_dt
-          call step_dynamics (dyn_dt) ! dynamics, transport, ridging
-       enddo
-       call t_stopf ('cice_dyn')
+    if (.not.prescribed_ice .and. kdyn>0) then
+       if (ndyn_dt > 1) then
+          call t_startf ('cice_dyn')
+          do k = 1, ndyn_dt
+             call step_dynamics (dyn_dt) ! dynamics, transport, ridging
+          enddo
+          call t_stopf ('cice_dyn')
+       else
+          if (mod(time, dyn_dt) == c0) then
+             call t_startf ('cice_dyn')
+             call step_dynamics (dyn_dt) ! dynamics, transport, ridging
+             call t_stopf ('cice_dyn')
+          endif
+       endif
     endif ! not prescribed_ice
     
     !-----------------------------------------------------------------
@@ -474,7 +442,7 @@ contains
     call t_stopf ('cice_diag')
     
     call t_startf ('cice_hist')
-#if (defined BGL) && (defined _HIRES)
+#if (defined _NOIO)
 !  Not enought memory on BGL to write a history file yet! 
 !    call ice_write_hist (dt)    ! history file
 #else
@@ -490,14 +458,11 @@ contains
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
        write(nu_diag,*)'ice_comp_mct: callinng dumpfile for restart filename= ',&
             fname
-#if (defined BGL) && (defined _HIRES)
+#if (defined _NOIO)
 !  Not enought memory on BGL to call dumpfile  file yet! 
 !       call dumpfile(fname)
 #else
        call dumpfile(fname)
-       if (tr_iage) call write_restart_age
-       if (tr_pond) call write_restart_pond
-       if (trim(shortwave) == 'dEdd') call write_restart_dEdd
 #endif
     end if
 
@@ -515,7 +480,7 @@ contains
 
     tod = sec
     ymd = idate
-    if ( .not. seq_timemgr_EClockDateInSync( EClock, ymd, tod ) )then
+    if (.not. seq_timemgr_EClockDateInSync( EClock, ymd, tod )) then
        call seq_timemgr_EClockGetData( EClock, curr_ymd=ymd_sync, &
           curr_tod=tod_sync )
        write(nu_diag,*)' cice ymd=',ymd     ,'  cice tod= ',tod
@@ -529,13 +494,27 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-#if (defined BGL) && (defined _HIRES)
+#if (defined _MEMTRACE)
     if(my_task == 0 ) then
        write(6,*) SubName // ':start::'
        call memmon_print_usage()
     endif
 #endif
   
+    !-------------------------------------------------------------------
+    ! stop timers and print timer info
+    !-------------------------------------------------------------------
+    ! Need to have this logic here instead of in ice_final_mct since 
+    ! the ice_final_mct.F90 will still be called even in aqua-planet mode
+    ! Could put this logic in the driver - but it seems easier here 
+
+    stop_now = seq_timemgr_StopAlarmIsOn( EClock )
+    if (stop_now) then
+       call ice_timer_stop(timer_total)        ! stop timing entire run
+       call ice_timer_print_all(stats=.false.) ! print timing information
+       call release_all_fileunits
+    end if
+    
   end subroutine ice_run_mct
 
 !---------------------------------------------------------------------------
@@ -549,9 +528,7 @@ contains
 ! !DESCRIPTION:
 ! Finalize CICE
 !
-!
 ! !USES:
-    use ice_exit
 !
 !------------------------------------------------------------------------------
 !BOP
@@ -559,25 +536,10 @@ contains
 ! !ARGUMENTS:
 !
 ! !REVISION HISTORY:
-! Author: Jacob Sewall
 !
 !EOP
 !---------------------------------------------------------------------------
 
-   !-------------------------------------------------------------------
-   ! stop timers and print timer info
-   !-------------------------------------------------------------------
-
-    call ice_timer_stop(timer_total)        ! stop timing entire run
-    call ice_timer_print_all(stats=.false.) ! print timing information
-    
-!    if (nu_diag /= 6) close (nu_diag) ! diagnostic output
-    
-    ! do *NOT* call end_run from this subroutine.  For a serial
-    ! run it is a moot point as end_run does nothing.  But for an
-    ! MPI run end_run will kill MPI before the sequential driver is
-    ! ready for that to happen.
-      
   end subroutine ice_final_mct
 
 !=================================================================================
@@ -914,48 +876,48 @@ contains
      ! Update ghost cells for imported quantities
      !-------------------------------------------------------
 
-     call update_ghost_cells(sst    , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(sss    , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(uocn   , bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(vocn   , bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(zlvl   , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(uatm   , bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(vatm   , bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(potT   , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(Tair   , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(Qa     , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(rhoa   , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(ss_tltx, bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(ss_tlty, bndy_info, field_loc_center, &
-                                                 field_type_vector)
-     call update_ghost_cells(frzmlt , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(swvdr  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(swidr  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(swvdf  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(swidf  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(flw    , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(frain  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
-     call update_ghost_cells(fsnow  , bndy_info, field_loc_center, &
-                                                 field_type_scalar)
+     call ice_HaloUpdate(sst    , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(sss    , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(uocn   , halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(vocn   , halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(zlvl   , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(uatm   , halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(vatm   , halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(potT   , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(Tair   , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(Qa     , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(rhoa   , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(ss_tltx, halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(ss_tlty, halo_info, field_loc_center, &
+                                             field_type_vector)
+     call ice_HaloUpdate(frzmlt , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(swvdr  , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(swidr  , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(swvdf  , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(swidf  , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(flw    , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(frain  , halo_info, field_loc_center, &
+                                             field_type_scalar)
+     call ice_HaloUpdate(fsnow  , halo_info, field_loc_center, &
+                                             field_type_scalar)
 
       !-----------------------------------------------------------------
       ! rotate zonal/meridional vectors to local coordinates

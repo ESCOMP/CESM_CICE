@@ -18,7 +18,7 @@
 ! J. Geophys. Res., 106, 2441--2464.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_itd.F90 41 2006-12-04 23:42:57Z eclare $
+!  SVN:$Id: ice_itd.F90 98 2007-12-20 21:55:19Z eclare $
 !
 ! authors: C. M. Bitz, UW
 !          William H. Lipscomb and Elizabeth C. Hunke, LANL
@@ -392,11 +392,11 @@
 
       allocate (atrcr(icells,ntrcr))
 
-      atrcr(:,:) = c0
-
       !-----------------------------------------------------------------
       ! Aggregate
       !-----------------------------------------------------------------
+
+      atrcr(:,:) = c0
 
       do n = 1, ncat
 
@@ -1738,8 +1738,8 @@
 
       if (l_limit_aice) then  ! check for aice out of bounds
       
-         do j = 1, ny_block
-         do i = 1, nx_block
+         do j = jlo,jhi
+         do i = ilo,ihi
             if (aice(i,j) > c1+puny .or. aice(i,j) < -puny) then
                l_stop = .true.
                istop = i
@@ -1767,8 +1767,6 @@
       !-----------------------------------------------------------------
 
       icells = 0
-!      do j = 1, ny_block
-!      do i = 1, nx_block
       do j = jlo,jhi
       do i = ilo,ihi
          if (aice(i,j) > puny) then
@@ -1815,6 +1813,10 @@
          if (l_stop) return
       endif   ! l_limit_aice
 
+    !-------------------------------------------------------------------
+    ! Update ice-ocean fluxes for strict conservation
+    !-------------------------------------------------------------------
+
       if (present(fresh)) &
            fresh     (:,:) = fresh(:,:)      + dfresh(:,:) 
       if (present(fresh_hist)) &
@@ -1860,7 +1862,7 @@
 ! !USES:
 !
       use ice_state, only: nt_Tsfc
-
+!
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &

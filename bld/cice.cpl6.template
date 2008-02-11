@@ -251,7 +251,7 @@ cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
     nprocs = \$NTASKS_ICE
   , distribution_type = 'cartesian'
   , ew_boundary_type  = 'cyclic'
-  , ns_boundary_type  = 'closed'
+  , ns_boundary_type  = 'open'
 /
 EOF1
 
