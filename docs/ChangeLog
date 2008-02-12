@@ -1,4 +1,61 @@
 ===============================================================
+cice4_0_20080212
+Originator: dbailey (David Bailey)
+Date: Tue Feb 12 10:58:32 MST 2008
+Version: 4.0
+One-line Summary: Merge with ccsm4a branch and LANL trunk.
+CCSM Version compatible with:
+Changes made:
+
+These changes are very extensive as they include changes for CPL7 and
+changes to include the new POP infrastructure.
+
+   A /cice/trunk/bld/build-namelist
+   M /cice/trunk/bld/cice.cpl6.template
+   A /cice/trunk/bld/cice.cpl6.template.streams.xml
+   M /cice/trunk/bld/cice.cpl7.template
+   A /cice/trunk/bld/namelist_files
+   A /cice/trunk/bld/perl5lib
+   M /cice/trunk/src/drivers/ccsm_concurrent/ice_prescribed_mod.F90
+   D /cice/trunk/src/drivers/ccsm_sequential/CICE_FinalMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/ice_communicate.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/ice_comp_mct.F90
+   M /cice/trunk/src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_FinalMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_InitMod.F90
+   M /cice/trunk/src/drivers/cice4/CICE_RunMod.F90
+   M /cice/trunk/src/mpi/ice_boundary.F90
+   M /cice/trunk/src/mpi/ice_broadcast.F90
+   M /cice/trunk/src/mpi/ice_communicate.F90
+   M /cice/trunk/src/mpi/ice_exit.F90
+   M /cice/trunk/src/mpi/ice_gather_scatter.F90
+   M /cice/trunk/src/mpi/ice_global_reductions.F90
+   M /cice/trunk/src/mpi/ice_timers.F90
+   M /cice/trunk/src/serial/ice_boundary.F90
+   M /cice/trunk/src/serial/ice_broadcast.F90
+   M /cice/trunk/src/serial/ice_gather_scatter.F90
+   M /cice/trunk/src/serial/ice_global_reductions.F90
+   M /cice/trunk/src/serial/ice_timers.F90
+   M /cice/trunk/src/source/ice_blocks.F90
+   M /cice/trunk/src/source/ice_distribution.F90
+   M /cice/trunk/src/source/ice_domain.F90
+   M /cice/trunk/src/source/ice_dyn_evp.F90
+   M /cice/trunk/src/source/ice_fileunits.F90
+   M /cice/trunk/src/source/ice_grid.F90
+   M /cice/trunk/src/source/ice_history.F90
+   M /cice/trunk/src/source/ice_init.F90
+   M /cice/trunk/src/source/ice_itd.F90
+   M /cice/trunk/src/source/ice_kinds_mod.F90
+   M /cice/trunk/src/source/ice_read_write.F90
+   M /cice/trunk/src/source/ice_restart.F90
+   M /cice/trunk/src/source/ice_state.F90
+   M /cice/trunk/src/source/ice_step_mod.F90
+   M /cice/trunk/src/source/ice_therm_vertical.F90
+   M /cice/trunk/src/source/ice_transport_driver.F90
+   M /cice/trunk/src/source/ice_transport_remap.F90
+
+===============================================================
 cice4_0_20080108
 Originator: dbailey (David Bailey)
 Date: Tue Jan  8 11:04:03 MST 2008
