@@ -10,7 +10,7 @@
 !  parameters and initializes the grid and CICE state variables.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_InitMod.F90 56 2007-03-15 14:42:35Z dbailey $
+!  SVN:$Id: CICE_InitMod.F90 102 2008-02-08 17:47:30Z eclare $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          William H. Lipscomb, LANL
@@ -203,7 +203,7 @@
 !EOP
 !
       call init_communicate     ! initial setup for message passing
-      call init_fileunits       ! unit numbers (including ice_stdout)
+      call init_fileunits       ! unit numbers
       call input_data           ! namelist variables
       call init_work            ! work arrays
 

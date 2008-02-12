@@ -9,7 +9,7 @@
 !  Contains main driver routine for time stepping of CICE.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_RunMod.F90 52 2007-01-30 18:04:24Z eclare $
+!  SVN:$Id: CICE_RunMod.F90 100 2008-01-29 00:25:32Z eclare $
 !
 !  authors Elizabeth C. Hunke, LANL
 !          Philip W. Jones, LANL
@@ -19,7 +19,6 @@
 ! 2006 ECH: Streamlined for efficiency 
 ! 2006 ECH: Converted to free source form (F90)
 ! 2007 BPB: Modified Delta-Eddington shortwave interface
-! 2007 MV : Moved thermodynamic and dynamics step routines to ice_step_mod
 !
 ! !INTERFACE:
 !
@@ -31,19 +30,35 @@
 #ifdef USE_ESMF
       use esmf_mod
 #endif
-<<<<<<< .working
-      use ice_step_mod
-=======
       use ice_age
       use ice_atmo
->>>>>>> .merge-right.r94
       use ice_calendar
+      use ice_communicate
       use ice_diagnostics
-      use ice_timers
-      use ice_forcing
+      use ice_domain
+      use ice_dyn_evp
       use ice_exit
-      use ice_history	
-      use ice_restart 	
+      use ice_fileunits
+      use ice_flux
+      use ice_forcing
+      use ice_grid
+      use ice_history
+      use ice_restart
+      use ice_init
+      use ice_itd
+      use ice_kinds_mod
+      use ice_mechred
+      use ice_meltpond
+      use ice_ocean
+      use ice_orbital
+      use ice_shortwave
+      use ice_state
+      use ice_therm_itd
+      use ice_therm_vertical
+      use ice_timers
+      use ice_transport_driver
+      use ice_transport_remap
+      use ice_work
 #ifdef popcice
       use ice_to_drv, only: to_drv
 #endif
@@ -54,7 +69,7 @@
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-      public :: CICE_Run
+      public :: CICE_Run, step_therm1, step_therm2, step_dynamics, ice_step
 !
 !EOP
 !
@@ -300,9 +315,21 @@
       end subroutine ice_step
     
 !=======================================================================
+!BOP
+!
+! !ROUTINE: step_therm1 - step pre-coupler thermodynamics
+!
+! !DESCRIPTION:
+!
+! Driver for updating ice and snow internal temperatures and
+! computing thermodynamic growth rates and coupler fluxes.
+!
+! !REVISION HISTORY:
+!
+! authors: William H. Lipscomb, LANL
+!
+! !INTERFACE:
 
-<<<<<<< .working
-=======
       subroutine step_therm1 (dt)
 !
 ! !USES:
@@ -468,7 +495,7 @@
                                  icells,                           &
                                  indxi,            indxj,          &
                                  tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk)), dt)
+                                 coszen(:,:,iblk), dt)
 
          else                     ! basic (ccsm3) shortwave
             coszen(:,:,iblk) = p5 ! sun above the horizon
@@ -875,7 +902,8 @@
             enddo
             enddo
 
-            if (icells > 0) &
+            if (icells > 0) then
+
             call linear_itd (nx_block, ny_block,       &
                              icells, indxi, indxj,     &
                              nghost,   trcr_depend,    &
@@ -901,6 +929,8 @@
                                      this_block%i_glob(istop), &
                                      this_block%j_glob(jstop) 
                call abort_ice ('ice: Linear ITD error')
+            endif
+
             endif
 
          endif
@@ -1015,10 +1045,23 @@
             call abort_ice ('ice: ITD cleanup error')
          endif
 
+      enddo                     ! iblk
+
+      !-------------------------------------------------------------------
+      ! Ghost cell updates for state variables.
+      !-------------------------------------------------------------------
+
+      call ice_timer_start(timer_bound)
+      call bound_state (aicen, trcrn, &
+                        vicen, vsnon, &
+                        eicen, esnon)
+      call ice_timer_stop(timer_bound)
+
       !-----------------------------------------------------------------
-      ! Aggregate the updated state variables. 
+      ! Aggregate the updated state variables (includes ghost cells). 
       !----------------------------------------------------------------- 
  
+      do iblk = 1, nblocks
          call aggregate (nx_block,          ny_block,             &
                          aicen(:,:,:,iblk), trcrn(:,:,:,:,iblk),  &
                          vicen(:,:,:,iblk), vsnon(:,:,  :,iblk),  &
@@ -1148,6 +1191,8 @@
          enddo               ! i
          enddo               ! j
 
+         if (icells > 0) then
+
          call ridge_ice (nx_block,             ny_block,                 &
                          dt,                   icells,                   &
                          indxi,                indxj,                    &
@@ -1173,6 +1218,8 @@
                                   this_block%i_glob(istop), &
                                   this_block%j_glob(jstop) 
             call abort_ice ('ice: Ridging error')
+         endif
+
          endif
 
       enddo                     ! iblk
@@ -1211,10 +1258,23 @@
             call abort_ice ('ice: ITD cleanup error')
          endif
 
+      enddo                     ! iblk
+
+      !-------------------------------------------------------------------
+      ! Ghost cell updates for state variables.
+      !-------------------------------------------------------------------
+
+      call ice_timer_start(timer_bound)
+      call bound_state (aicen, trcrn, &
+                        vicen, vsnon, &
+                        eicen, esnon)
+      call ice_timer_stop(timer_bound)
+
       !-----------------------------------------------------------------
-      ! Aggregate the updated state variables. 
+      ! Aggregate the updated state variables (includes ghost cells). 
       !----------------------------------------------------------------- 
  
+      do iblk = 1, nblocks
          call aggregate (nx_block,          ny_block,             &
                          aicen(:,:,:,iblk), trcrn(:,:,:,:,iblk),  &
                          vicen(:,:,:,iblk), vsnon(:,:,  :,iblk),  &
@@ -1224,7 +1284,6 @@
                          eice (:,:,  iblk), esno (:,:,    iblk),  &
                          aice0(:,:,  iblk), tmask(:,:,    iblk),  &
                          trcr_depend) 
-
       enddo
 
       call ice_timer_stop(timer_column)
@@ -1235,7 +1294,6 @@
 
 !=======================================================================
 
->>>>>>> .merge-right.r94
       end module CICE_RunMod
 
 !=======================================================================

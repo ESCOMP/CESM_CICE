@@ -215,7 +215,7 @@ contains
  	 call shr_file_freeUnit(nu_rst_pointer) 
  	 call shr_file_freeUnit(nu_history) 
  	 call shr_file_freeUnit(nu_hdr) 
-         if (nu_diag /= 6) call shr_file_freeUnit(nu_diag)
+         if (nu_diag /= ice_stdout) call shr_file_freeUnit(nu_diag)
 #else
          call release_fileunit(nu_grid)
          call release_fileunit(nu_kmt)
@@ -227,7 +227,7 @@ contains
          call release_fileunit(nu_rst_pointer)
          call release_fileunit(nu_history)
          call release_fileunit(nu_hdr)
-         if (nu_diag /= 6) call release_fileunit(nu_diag)
+         if (nu_diag /= ice_stdout) call release_fileunit(nu_diag)
 #endif
 
  end subroutine release_all_fileunits

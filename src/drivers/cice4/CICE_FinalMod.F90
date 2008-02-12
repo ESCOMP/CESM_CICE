@@ -11,7 +11,7 @@
 !  environments and frameworks.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: CICE_FinalMod.F90 56 2007-03-15 14:42:35Z dbailey $
+!  SVN:$Id: CICE_FinalMod.F90 71 2007-07-24 22:41:20Z eclare $
 !
 !  authors: Philip W. Jones, LANL
 !  2006: Converted to free source form (F90) by Elizabeth Hunke
