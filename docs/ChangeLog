@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20080213
+Originator: dbailey (David Bailey)
+Date: Wed Feb 13 13:37:28 MST 2008
+Version: 4.0
+One-line Summary: Fix a few problems getting head of trunk to
+                  work with CPL7.
+CCSM Version compatible with:
+Changes made:
+
+This tag fixes a couple issues with getting the head of the CICE trunk to
+work with CPL7. Also, the spacefilling curves should now work with this
+tag.
+
+   M /cice/trunk/bld/build-namelist
+   M /cice/trunk/bld/namelist_files/namelist_defaults_cice.xml
+   M /cice/trunk/bld/namelist_files/namelist_definition.xml
+   M /cice/trunk/src/source/ice_distribution.F90
+   M /cice/trunk/src/source/ice_init.F90
+   M /cice/trunk/src/source/ice_read_write.F90
+
+===============================================================
 cice4_0_20080212
 Originator: dbailey (David Bailey)
 Date: Tue Feb 12 10:58:32 MST 2008
