@@ -436,7 +436,7 @@
       call broadcast_scalar(runid,              master_task)
       call broadcast_scalar(runtype,            master_task)
       if (dbug) & ! else only master_task writes to file
-      call broadcast_scalar(nu_diag),           master_task)
+      call broadcast_scalar(nu_diag,            master_task)
       ! tracers
       call broadcast_scalar(tr_iage,            master_task)
       call broadcast_scalar(restart_age,        master_task)

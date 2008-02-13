@@ -541,7 +541,7 @@
       logical (kind=log_kind), intent(in) :: &
            diag              ! if true, write diagnostic output
 
-      character (char_len), intent(in) :: & 
+      character (len=*), intent(in) :: & 
            varname           ! field name in netcdf file
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
@@ -670,7 +670,7 @@
            fid           , & ! file id
            nrec              ! record number 
 
-     character (char_len), intent(in) :: & 
+     character (len=*), intent(in) :: & 
            varname           ! field name in netcdf file        
 
       real (kind=dbl_kind), dimension(:,:), &
