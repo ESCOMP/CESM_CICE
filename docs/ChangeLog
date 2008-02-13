@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20080213b
+Originator: dbailey (David Bailey)
+Date: Wed Feb 13 13:50:54 MST 2008
+Version: 4.0
+One-line Summary: One more bug in ice_coupling.F90 for CPL6.
+CCSM Version compatible with:
+Changes made:
+
+   M /cice/trunk/src/drivers/ccsm_concurrent/ice_coupling.F90
+
+===============================================================
 cice4_0_20080213
 Originator: dbailey (David Bailey)
 Date: Wed Feb 13 13:37:28 MST 2008
