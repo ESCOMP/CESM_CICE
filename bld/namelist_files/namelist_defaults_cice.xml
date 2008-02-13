@@ -111,8 +111,6 @@
 
 <kcatbound> 0 </kcatbound>
 
-<kpond> 0 </kpond>
-
 <krdg_partic>1</krdg_partic>
 <krdg_redist>1</krdg_redist>
 
@@ -134,6 +132,13 @@
 
 <! --- restart information --->
 <pointer_file>rpointer.ice</pointer_file>
+
+<!--------------------------->
+<!-- Tracer namelist- --->
+<!--------------------------->
+
+<tr_iage> .false. </tr_iage>
+<tr_pond> .false. </tr_pond>
 
 <!--------------------------->
 <!-- Domain namelist- --->

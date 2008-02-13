@@ -326,10 +326,16 @@ add_default($nl, 'kstrength');
 add_default($nl, 'kcatbound');
 add_default($nl, 'krdg_partic');
 add_default($nl, 'krdg_redist');
-add_default($nl, 'kpond');
 add_default($nl, 'evp_damping');
 add_default($nl, 'advection');
 add_default($nl, 'ndte');
+
+##################################
+# namelist group: tracer_nml     #
+##################################
+
+add_default($nl, 'tr_iage');
+add_default($nl, 'tr_pond');
 
 ##################################
 # namelist group: domain_nml     #
@@ -413,7 +419,7 @@ add_default($nl, 'f_frazil');
 # Write output files
 
 # Sea ice component 
-my @groups = qw(ice_nml domain_nml ice_prescribed_nml icefields_nml);
+my @groups = qw(ice_nml tracer_nml domain_nml ice_prescribed_nml icefields_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }

@@ -8,7 +8,7 @@
 <!---General namelist input---->
 <!----------------------------->
 
-<entry id="inic_file" type="char*80" catagory="cice" group="ice_nml" valid_values="" >
+<entry id="inic_file" type="char*80" category="cice" group="ice_nml" valid_values="" >
 Method of ice cover initialization.
 'default'=>latitude and sst dependent, 'none'=>no ice, restart filename (must be a full path)
 Default: 'default'
@@ -16,170 +16,179 @@ Default: 'default'
 
 <!---Time stpes---->
 
-<entry id="dt" type="real"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="dt" type="real"  category="cice" group="ice_nml" valid_values="">
 time step, s
 Default: 3600
 </entry>
 
-<entry id="ndte" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="ndte" type="integer"  category="cice" group="ice_nml" valid_values="">
 subcycles per dynamics timestep
 Default: 120
 </entry>
 
-<entry id="ndyn_dt" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="ndyn_dt" type="integer"  category="cice" group="ice_nml" valid_values="">
 number of dynamic time steps per thermodynamic time step
 Default: 1
 </entry>
 
 <!---Parameterizations  ---->
 
-<entry id="advection" type="char*80"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="advection" type="char*80"  category="cice" group="ice_nml" valid_values="">
 incremental remapping transport scheme
 Default: 'remap'
 </entry>
 
-<entry id="evp_damping" type="logical"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="evp_damping" type="logical"  category="cice" group="ice_nml" valid_values="">
 if true, use damping procedure in evp dynamics
 Default: false
 </entry>
 
-<entry id="kcatbound" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="kcatbound" type="integer"  category="cice" group="ice_nml" valid_values="">
 category boundary formula (0 = old, 1 = new)
 Default: 0
 </entry>
 
-<entry id="kstrength" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="kstrength" type="integer"  category="cice" group="ice_nml" valid_values="">
 1 = Rothrock 75 strength, 0 = Hibler 79
 Default: 1
 </entry>
 
-<entry id="kdyn" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="kdyn" type="integer"  category="cice" group="ice_nml" valid_values="">
 type of dynamics (1 = evp)
 Default: 1
 </entry>
 
-<entry id="kitd" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="kitd" type="integer"  category="cice" group="ice_nml" valid_values="">
 type of itd conversions (0 = delta, 1 = linear)
 Default: 1
 </entry>
 
-<entry id="krdg_partic" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="krdg_partic" type="integer"  category="cice" group="ice_nml" valid_values="">
 1 = new participation, 0 = Thorndike et al 75
 Default: 1
 </entry>
 
-<entry id="krdg_redist" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="krdg_redist" type="integer"  category="cice" group="ice_nml" valid_values="">
 1 = new redistribution, 0 = Hibler 80
 Default: 1
 </entry>
 
-<entry id="kpond" type="integer"  catagory="cice" group="ice_nml" valid_values="">
-1 = explicit melt ponds
-Default: 0
-</entry>
-
 <!---History output     ---->
 
-<entry id="histfreq" type="char*1"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="histfreq" type="char*1"  category="cice" group="ice_nml" valid_values="">
 frequency of history output (once per 1,h,d,m,y)
 Default: m
 </entry>
 
-<entry id="histfreq_n" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="histfreq_n" type="integer"  category="cice" group="ice_nml" valid_values="">
 frequency of history output (10 = once per 10 h,d,m,y)
 Default: 1
 </entry>
 
-<entry id="hist_avg" type="logical"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="hist_avg" type="logical"  category="cice" group="ice_nml" valid_values="">
 if true, write time-averages (not snapshots)
 Default: true
 </entry>
 
-<entry id="history_format" type="char*80"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="history_format" type="char*80"  category="cice" group="ice_nml" valid_values="">
 file format ('bin'=binary or 'nc'=netcdf)
 Default: 'nc' if CPP nc is defined, and 'bin' otherwise
 </entry>
 
 <!---Diagnostic output     ---->
 
-<entry id="diagfreq" type="integer"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="diagfreq" type="integer"  category="cice" group="ice_nml" valid_values="">
 diagnostic output frequency (10 = once per 10 dt)
 Default: 24
 </entry>
 
 <!---Restart output     ---->
 
-<entry id="pointer_file" type="char*80"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="pointer_file" type="char*80"  category="cice" group="ice_nml" valid_values="">
 ice restart pointer file
 Default: rpointer.ice
 </entry>
 
 <!---Grid information    ---->
 
-<entry id="grid_type" type="char*256"  catagory="cice" 
+<entry id="grid_type" type="char*256"  category="cice" 
        group="ice_nml" valid_values="displaced_pole,tripole,panarctic,latlon,rectangular">
 type of grid
 Default: 'rectangular'
 </entry>
 
-<entry id="grid_format" type="char*256"  catagory="cice" group="ice_nml" valid_values="bin,nc">
+<entry id="grid_format" type="char*256"  category="cice" group="ice_nml" valid_values="bin,nc">
 file format ('bin'=binary or 'nc'=netcdf)
 Default: 'bin'
 </entry>
 
-<entry id="grid_file" type="char*256"  catagory="cice" group="ice_nml" valid_values=""
+<entry id="grid_file" type="char*256"  category="cice" group="ice_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
 </entry>
 
-<entry id="kmt_file" type="char*256"  catagory="cice" group="ice_nml" valid_values=""
+<entry id="kmt_file" type="char*256"  category="cice" group="ice_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
 </entry>
 
 <!---Ice albedos    ---->
 
-<entry id="albicev" type="real"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="albicev" type="real"  category="cice" group="ice_nml" valid_values="">
 visible ice albedo for h > ahmax
 </entry>
 
-<entry id="albicei" type="real"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="albicei" type="real"  category="cice" group="ice_nml" valid_values="">
 near-ir ice albedo for h > ahmax
 </entry>
 
-<entry id="albsnowv" type="real"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="albsnowv" type="real"  category="cice" group="ice_nml" valid_values="">
 cold snow albedo, visible
 </entry>
 
-<entry id="albsnowi" type="real"  catagory="cice" group="ice_nml" valid_values="">
+<entry id="albsnowi" type="real"  category="cice" group="ice_nml" valid_values="">
 cold snow albedo, near IR
 </entry>
 
-<entry id="albedo_type" type="char*80"  catagory="cice" group="ice_nml" valid_values="default,constant">
+<entry id="albedo_type" type="char*80"  category="cice" group="ice_nml" valid_values="default,constant">
 albedo parameterization, 'default' ('ccsm3') or 'constant' 
 Default:'default'
 </entry>
 
-<entry id="shortwave" type="char*80"  catagory="cice" group="ice_nml" valid_values="default,dEdd">
+<entry id="shortwave" type="char*80"  category="cice" group="ice_nml" valid_values="default,dEdd">
 shortwave method, 'default' ('ccsm3') or 'dEdd'
 Default:'default'
+</entry>
+
+<!----------------------------->
+<!---Tracer information    ---->
+<!----------------------------->
+
+<entry id="tr_iage" type="logical"  category="cice" group="tracer_nml" valid_values="">
+Ice age tracer.
+Default: FALSE
+</entry>
+
+<entry id="tr_pond" type="logical"  category="cice" group="tracer_nml" valid_values="">
+Pond volume tracer.
+Default: FALSE
 </entry>
 
 <!----------------------------->
 <!---Domain information    ---->
 <!----------------------------->
 
-<entry id="distribution_type" type="char*80"  catagory="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve">
+<entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve">
 method to use for distributing blocks
 Default: cartesian
 </entry>
 
-<entry id="ew_boundary_type" type="char*80"  catagory="cice" group="domain_nml" valid_values="cyclic,closed">
+<entry id="ew_boundary_type" type="char*80"  category="cice" group="domain_nml" valid_values="cyclic,closed">
 type of boundary in logical east-west dir
 Default: cyclic
 </entry>
 
-<entry id="ns_boundary_type" type="char*80"  catagory="cice" group="domain_nml" valid_values="open,closed,cyclic,tripole">
+<entry id="ns_boundary_type" type="char*80"  category="cice" group="domain_nml" valid_values="open,closed,cyclic,tripole">
 Default: open
 </entry>
 
@@ -187,67 +196,67 @@ Default: open
 <!-- Prescribed ice namelist -->
 <!----------------------------->
 
-<entry id="prescribed_ice" type="logical"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="prescribed_ice" type="logical"  category="cice" group="ice_prescribed_nml" valid_values="">
 use prescribed ice mode if true
 Default: FALSE
 </entry>
 
-<entry id="stream_fldVarName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_fldVarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 ifrac variable name on sst/ifrac dataset
 Default: 'ice_cov'
 </entry>
 
-<entry id="stream_fldFileName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values=""
+<entry id="stream_fldFileName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
        input_pathname="abs" >
 file name containing sst/ifrac data 
 </entry>
 
-<entry id="stream_domTvarName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domTvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: time-dim var name
 Default: time
 </entry>
 
-<entry id="stream_domXvarName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domXvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: x-dim var name
 Default: lon
 </entry>
 
-<entry id="stream_domYvarName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domYvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: y-dim varname
 Default: lat
 </entry>
 
-<entry id="stream_domAreaName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domAreaName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: area varname
 Default: area
 </entry>
 
-<entry id="stream_domMaskName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domMaskName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: mask varname
 Default: mask
 </entry>
 
-<entry id="stream_domFileName" type="char*256"  catagory="cice" group="ice_prescribed_nml" valid_values=""
+<entry id="stream_domFileName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
        input_pathname="abs" >
 domain file name
 </entry>
 
-<entry id="stream_year_first" type="integer"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_year_first" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
 first year in stream to use
 Default: 1
 </entry>
 
-<entry id="stream_year_last" type="integer"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_year_last" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
 Last year in stream to use
 Default: 1
 </entry>
 
-<entry id="model_year_align" type="integer"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="model_year_align" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
 Align stream_year_first with this model year
 Default: 1
 </entry>
 
-<entry id="prescribed_ice_fill" type="logical"  catagory="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="prescribed_ice_fill" type="logical"  category="cice" group="ice_prescribed_nml" valid_values="">
 true => pice data fill required
 Default: FALSE
 </entry>
@@ -256,139 +265,139 @@ Default: FALSE
 <!-- History output namelist -->
 <!----------------------------->
 
-<entry id="f_sst" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sst" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_sss" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sss" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_uocn" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_uocn" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_vocn" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_vocn" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_frzmlt" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_frzmlt" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strtltx" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strtltx" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strtlty" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strtlty" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_mlt_onset" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_mlt_onset" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_frz_onset" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_frz_onset" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_icepresent" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_icepresent" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_aicen" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_aicen" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_vicen" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_vicen" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_vicen" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_vicen" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fsalt" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fsalt" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fsalt_ai" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fsalt_ai" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fresh" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fresh" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fresh_ai" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fresh_ai" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fhocn" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fhocn" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_fhocn_ai" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fhocn_ai" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_dvidtt" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dvidtt" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_dvidtd" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dvidtd" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_daidtt" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_daidtt" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_daidtd" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_daidtd" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_sig1" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sig1" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_sig2" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sig2" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strairx" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strairx" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strairy" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strairy" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strcorx" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strcorx" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strcory" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strcory" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strocnx" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strocnx" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strocny" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strocny" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strintx" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strintx" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strinty" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strinty" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_strength" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_strength" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_opening" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_opening" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_divu" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_divu" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_shear" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_shear" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_congel" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_congel" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_snoice" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_snoice" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_meltt" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_meltt" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_meltb" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_meltb" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_meltl" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_meltl" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_uvel" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_uvel" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_vvel" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_vvel" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
-<entry id="f_frazil" type="logical"  catagory="cice"  group="icefields_nml" valid_values="">
+<entry id="f_frazil" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
 
