@@ -59,6 +59,7 @@ if (\$CONTINUE_RUN != 'TRUE' && \$inic_file != default && \$inic_file != none) t
 endif
 EOF1
 endif
+
 if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 if (\$CONTINUE_RUN != 'TRUE') then
@@ -79,10 +80,6 @@ if(\$config[1] >= 0) then
 endif
 EOF1
 
-# Write out namelist
-# &ice_nml
-# inic_file = '$inic_file'
-# /
 cat >> $CASEROOT/Buildnml_Prestage/ciceconf/ccsm_namelist << EOF1
  &domain_nml
  distribution_type = 'DECOMPTYPE'
@@ -119,7 +116,14 @@ EOF1
 endif
 
 cd $CASEROOT/Buildnml_Prestage/ciceconf || exit -1
-$CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist || exit -1
+
+if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
+  $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+                                         -namelist "&ice_nml inic_file='${inic_file}' /" || exit -1
+else
+  $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist || exit -1
+endif
+
 sed -e 's#DECOMPTYPE#\$DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in
 

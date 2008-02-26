@@ -490,6 +490,8 @@
                             vice (:,:),   vsno(:,:),  &
                             trcr(:,:,:))
 
+      deallocate (atrcr)
+
       end subroutine aggregate
 
 !=======================================================================
