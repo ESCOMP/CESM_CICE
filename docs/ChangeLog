@@ -1,3 +1,15 @@
+cice4_0_20080227
+Originator: mvertens
+Wed Feb 27 18:43:56 MST 2008
+Version: 4.0
+One-line Summary: Minor memory trace fixes from John Dennis
+CCSM Version compatible with:
+Changes made:
+
+   M  src/drivers/ccsm_sequential/ice_com_mct.F90
+      - minor memory trace fixes from John Dennis
+===============================================================
+	
 cice4_0_20080226
 Originator: mvertens
 Date: Tue Feb 26 16:33:20 MST 2008
