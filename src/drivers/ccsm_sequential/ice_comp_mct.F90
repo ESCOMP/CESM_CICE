@@ -125,6 +125,7 @@ contains
     integer            :: dtime              ! time step
     integer            :: shrlogunit,shrloglev ! old values
     integer            :: iam,ierr
+    integer            :: lbnum
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall
 !EOP
@@ -140,8 +141,8 @@ contains
 #if (defined _MEMTRACE)
     call MPI_comm_rank(mpicom_ice,iam,ierr)
     if(iam == 0 ) then
-       write(6,*) 'ice_init_mct:start::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','ice_init_mct:start::',lbnum)
     endif
 #endif
 
@@ -288,8 +289,8 @@ contains
 
 #if (defined _MEMTRACE)
     if(iam == 0) then
-       write(6,*) 'ice_init_mct:end::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','ice_init_mct:end::',lbnum)
        call memmon_reset_addr()
     endif
 #endif
@@ -331,6 +332,7 @@ contains
     integer :: tod_sync      ! Sync current time of day (sec)
     integer :: ymd_sync      ! Current year of sync clock
     integer :: shrlogunit,shrloglev ! old values
+    integer :: lbnum
     character(len=char_len_long) :: fname
     character(len=*), parameter  :: SubName = "ice_run_mct"
 !
@@ -342,8 +344,10 @@ contains
 
 #if (defined _MEMTRACE)
     if(my_task == 0 ) then
-       write(6,*) SubName // ':start::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','ice_run_mct:start::',lbnum)
+!       write(6,*) SubName // ':start::'
+!       call memmon_print_usage()
     endif
 #endif
     !----------------------------------------------------------------------------
@@ -494,13 +498,6 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-#if (defined _MEMTRACE)
-    if(my_task == 0 ) then
-       write(6,*) SubName // ':start::'
-       call memmon_print_usage()
-    endif
-#endif
-  
     !-------------------------------------------------------------------
     ! stop timers and print timer info
     !-------------------------------------------------------------------
@@ -515,6 +512,13 @@ contains
        call release_all_fileunits
     end if
     
+#if (defined _MEMTRACE)
+    if(my_task == 0 ) then
+       lbnum=1
+       call memmon_dump_fort('memmon.out','ice_run_mct:end::',lbnum)
+    endif
+#endif
+
   end subroutine ice_run_mct
 
 !---------------------------------------------------------------------------
