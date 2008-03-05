@@ -121,6 +121,7 @@
       use ice_ocean
       use ice_itd, only: ilyr1, slyr1, ilyrn, slyrn
       use ice_state, only: nt_Tsfc, nt_iage
+      use ice_prescribed_mod, only: prescribed_ice
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -247,6 +248,7 @@
 
       real (kind=dbl_kind), dimension (icells,nilyr) :: &
          qin         , & ! ice layer enthalpy, qin < 0 (J m-3)
+         qin_save    , & ! ice layer enthalpy, qin < 0 (J m-3)
          Tin             ! internal ice layer temperatures
 
       real (kind=dbl_kind), dimension (icells,nslyr) :: &
@@ -326,28 +328,42 @@
       !  temperatures.
       !-----------------------------------------------------------------
 
-      call temperature_changes (nx_block,      ny_block, &
-                                my_task,       istep1,   &
-                                dt,            icells,   & 
-                                indxi,         indxj,    &
-                                rhoa,          flw,      &
-                                potT,          Qa,       &
-                                shcoef,        lhcoef,   &
-                                fswsfc,        fswint,   &
-                                fswthrun,      Sswabs,   &
-                                Iswabs,                  &
-                                hilyr,         hslyr,    &
-                                qin,           Tin,      &
-                                qsn,           Tsn,      &
-                                Tsf,           Tbot,     &
-                                fsensn,        flatn,    &
-                                fswabsn,       flwoutn,  &
-                                fsurf,                   &
-                                fcondtop,      fcondbot, &
-                                einit,         l_stop,   &
+      call temperature_changes (nx_block,      ny_block,        &
+                                my_task,       istep1,          &
+                                dt,            icells,          & 
+                                indxi,         indxj,           &
+                                rhoa,          flw,             &
+                                potT,          Qa,              &
+                                shcoef,        lhcoef,          &
+                                fswsfc,        fswint,          &
+                                fswthrun,      Sswabs(:,:,:),   &
+                                Iswabs(:,:,:),                  &
+                                hilyr,         hslyr,           &
+                                qin,           Tin,             &
+                                qsn,           Tsn,             &
+                                Tsf,           Tbot,            &
+                                fsensn,        flatn,           &
+                                fswabsn,       flwoutn,         &
+                                fsurf,                          &
+                                fcondtop,      fcondbot,        &
+                                einit,         l_stop,          &
                                 istop,         jstop)
 
       if (l_stop) return
+
+      !-----------------------------------------------------------------
+      ! If prescribed ice, save qin to use after thickness changes
+      !-----------------------------------------------------------------
+
+      if (prescribed_ice) then
+        do k = 1, nilyr
+           do ij = 1, icells
+              i = indxi(ij)
+              j = indxj(ij)
+              qin_save(ij,k) = qin(ij,k)
+           enddo ! ij
+        enddo                  ! k
+      endif
 
       !-----------------------------------------------------------------
       ! Compute growth and/or melting at the top and bottom surfaces.
@@ -372,6 +388,26 @@
                              meltb,        iage,     &
                              congel,       snoice,   &
                              mlt_onset,    frz_onset)
+
+      !-----------------------------------------------------------------
+      ! If prescribed ice, set hi back to old values
+      !-----------------------------------------------------------------
+
+         if (prescribed_ice) then
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+               hin(ij) = worki(ij)
+               fhocnn(i,j) = c0             ! for diagnostics
+            enddo                  ! ij
+            do k = 1, nilyr
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  qin(ij,k) = qin_save(ij,k)
+              enddo                  ! k
+            enddo                  ! ij
+         endif
 
       !-----------------------------------------------------------------
       ! Check for energy conservation by comparing the change in energy
@@ -1219,9 +1255,7 @@
          hslyr       , & ! snow layer thickness (m)
          einit           ! initial energy of melting (J m-2)
 
-!mv following is needed for lahey compiler to work
-      real (kind=dbl_kind), dimension (:,:,:), &
-!     real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nslyr), &
          intent(inout) :: &
          Sswabs          ! SW radiation absorbed in snow layers (W m-2)
 
@@ -1567,8 +1601,8 @@
                                    Tsf,      Tbot,             &
                                    fsurf,    dfsurf_dT,        &
                                    Tin_init, Tsn_init,         &
-                                   kh,       Sswabs,           &
-                                   Iswabs,                     &
+                                   kh,       Sswabs(:,:,:),    &
+                                   Iswabs(:,:,:),              &
                                    etai,     etas,             &
                                    sbdiag,   diag,             &
                                    spdiag,   rhs)

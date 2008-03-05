@@ -768,8 +768,7 @@ subroutine ice_prescribed_phys
    eicen(:,:,:,:) = c0
 
    do nc=1,ncat
-      trcrn(:,:,1,nc,:) = Tf(:,:,:)
-!     call bound(Tsfcn(:,:,nc,:))
+      trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
    enddo
 
    !-----------------------------------------------------------------
@@ -830,21 +829,24 @@ subroutine ice_prescribed_phys
                      vsnon(i,j,nc,iblk) = hs * aicen(i,j,nc,iblk)
                   end if
 
-                  esnon(i,j,nc,iblk) = -rLfs*vsnon(i,j,nc,iblk)
-
                   !---------------------------------------------------------
                   ! make linear temp profile and compute enthalpy
                   !---------------------------------------------------------
-                  trcrn(i,j,1,nc,iblk) = min(Tair(i,j,iblk)-Tffresh,-p2)   ! deg C       
-                  slope = Tf(i,j,iblk) - trcrn(i,j,1,nc,iblk)
+                  trcrn(i,j,nt_Tsfc,nc,iblk) = min(Tair(i,j,iblk)-Tffresh,-p2)   ! deg C       
+                  slope = Tf(i,j,iblk) - trcrn(i,j,nt_Tsfc,nc,iblk)
                   do k = 1, nilyr
                      zn = (real(k,kind=dbl_kind)-p5) / real(nilyr,kind=dbl_kind)
-                     Ti = trcrn(i,j,1,nc,iblk) + slope*zn
+                     Ti = trcrn(i,j,nt_Tsfc,nc,iblk) + slope*zn
                      salin(k) = (saltmax/c2)*(c1-cos(pi*zn**(nsal/(msal+zn))))
-                     eicen(i,j,ilyr1(nc)+k-1,iblk) =                             &
+                     eicen(i,j,ilyr1(nc)+k-1,iblk) =                        &
                      &    (-rLfi - rcpi*(-depressT*salin(k)-Ti)             &
                      &     -rLfidepressT*salin(k)/Ti) *vicen(i,j,nc,iblk)/nilyr
                   enddo
+
+                  esnon(i,j,nc,iblk) =                                  &
+                     -rhos*(Lfresh - cp_ice*trcrn(i,j,nt_Tsfc,nc,iblk)) &
+                      *vsnon(i,j,nc,iblk)
+
                end if    ! hin_max
             enddo        ! ncat
          else

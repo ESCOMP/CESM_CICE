@@ -401,29 +401,6 @@
 
 !      call ice_timer_stop(timer_tmp)  ! temporary timer
 
-      !-----------------------------------------------------------------
-      ! Divide fluxes by ice area for the coupler, which assumes fluxes
-      ! are per unit ice area.
-      !-----------------------------------------------------------------
-
-         if (prescribed_ice) then
-
-         call scale_fluxes (nx_block,            ny_block,           &
-                            nghost,              tmask   (:,:,iblk), &
-                            aice_init(:,:,iblk), Tf      (:,:,iblk), &
-                            Tair     (:,:,iblk), Qa      (:,:,iblk), &
-                            strairxT (:,:,iblk), strairyT(:,:,iblk), &
-                            fsens    (:,:,iblk), flat    (:,:,iblk), &
-                            fswabs   (:,:,iblk), flwout  (:,:,iblk), &
-                            evap     (:,:,iblk),                     &
-                            Tref     (:,:,iblk), Qref    (:,:,iblk), &
-                            fresh    (:,:,iblk), fsalt   (:,:,iblk), &
-                            fhocn    (:,:,iblk), fswthru (:,:,iblk), &
-                            alvdr    (:,:,iblk), alidr   (:,:,iblk), &
-                            alvdf    (:,:,iblk), alidf   (:,:,iblk))
-
-         endif
-
       enddo                      ! iblk
 
       call ice_timer_stop(timer_column) ! column physics

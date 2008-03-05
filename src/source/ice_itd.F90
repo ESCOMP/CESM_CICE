@@ -1734,7 +1734,7 @@
       !-----------------------------------------------------------------
 
       call aggregate_area (nx_block, ny_block, &
-                           aicen, &
+                           aicen(:,:,:), &
                            aice,     aice0)
 
 
@@ -1789,9 +1789,9 @@
       call rebin (nx_block,   ny_block, &
                   icells,   indxi,    indxj, &
                   trcr_depend, &
-                  aicen,      trcrn, &
-                  vicen,      vsnon, &
-                  eicen,      esnon, &
+                  aicen(:,:,:),      trcrn(:,:,:,:), &
+                  vicen(:,:,:),      vsnon(:,:,:)  , &
+                  eicen(:,:,:),      esnon(:,:,:)  , &
                   l_stop, &
                   istop,      jstop)
 
@@ -1803,11 +1803,11 @@
 
       if (l_limit_aice) then
          call zap_small_areas (nx_block, ny_block, &
-                               nghost,   dt, &
-                               aice,     aice0, &
-                               aicen,    trcrn, &
-                               vicen,    vsnon, &
-                               eicen,    esnon, &
+                               nghost,          dt            , &
+                               aice,            aice0         , &
+                               aicen(:,:,:),    trcrn(:,:,:,:), &
+                               vicen(:,:,:),    vsnon(:,:,:)  , &
+                               eicen(:,:,:),    esnon(:,:,:)  , &
                                dfresh,   dfsalt, &
                                dfhocn,           &
                                l_stop,           &
