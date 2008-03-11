@@ -3556,9 +3556,6 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
       character(len=char_len_long), intent(in), optional :: filename_spec
-
-      integer (kind=int_kind) :: &
-          k, n ! counting indices
 !EOP
 !
       integer (kind=int_kind) :: &

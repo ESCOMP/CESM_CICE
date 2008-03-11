@@ -170,12 +170,10 @@ cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
 set NLON = \$ICE_NX
 set NLAT = \$ICE_NY
 
-set decomp_set  = false
 set decomp_type = spacecurve
 
 #  Get decomposition info from Configuration Wizard
-# tcx temporary for bfb backwards compatability
-if (\$ICE_GRID != \$ATM_GRID) then
+
 set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
 
 if(\$config[1] >= 0) then
@@ -183,46 +181,9 @@ if(\$config[1] >= 0) then
    set bsize_y     = \$config[4]
    set maxblocks   = \$config[5]
    set decomp_type = \$config[6]
-   set decomp_set = true
-endif
-endif
-
-if (\$decomp_set == false) then
-  # try a 1d decomp
-  @ rem = \$NLON % \$NTASKS_ICE
-  if (\$rem == 0) then
-    @ bsize_x = \$NLON / \$NTASKS_ICE  
-    @ bsize_y = \$NLAT
-    set maxblocks = 1
-    set decomp_set = true 
-  endif
-endif
-
-if (\$decomp_set == false) then
-  # try a 2d decomp
-  @ rem = \$NLON % (\$NTASKS_ICE / 2)
-  if (\$rem == 0) then 
-    @ bsize_x = \$NLON / (\$NTASKS_ICE / 2)  
-    @ bsize_y = \$NLAT / 2
-    set maxblocks = 1
-    set decomp_set = true
-  endif 
-endif
-
-if (\$decomp_set == false) then
-  # try space filling curves
-  set bsize_x   = 4
-  @ rem = \$NLON % \$bsize_x
-  if (\$rem != 0) set bsize_x = 2
-  @ rem = \$NLON % \$bsize_x
-  if (\$rem != 0) set bsize_x = 1
-  set bsize_y = \$NLAT
-  if (\$NTASKS_ICE > \$bsize_x) then
-    @ bsize_y = \$NLAT / 2
-  endif   
-  #set maxblocks = 10
-  # tcx how should this be computed, what should the 5 factor be?
-  @ maxblocks = 5 * (( (\$NLON * \$NLAT) / (\$bsize_x * \$bsize_y * \$NTASKS_ICE)) + 1)
+else
+   echo "cice decomp not set for \$ICE_GRID on \$NTASKS_ICE procs"
+   exit -1
 endif
 
 setenv BLCKX      \$bsize_x

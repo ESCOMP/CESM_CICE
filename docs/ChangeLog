@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20080309
+Originator: tcraig
+Date: Sun Mar  9 19:00:03 MDT 2008
+Version: 4.0
+One-line Summary: Remove redundant variable declaration for
+                  Intel compiler.  update ice decomp setting
+                  with cpl7.
+CCSM Version compatible with:
+Changes made:
+
+M      src/source/ice_shortwave.F90
+M      bld/cice.cpl7.template
+
+===============================================================
 cice4_0_20080305
 Originator: dbailey
 Date: Wed Mar  5 14:19:09 MST 2008
