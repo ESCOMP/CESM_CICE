@@ -784,8 +784,8 @@
 
       enddo                      ! iblk
 
-      call ice_timer_stop(timer_column) ! column physics
       call ice_timer_stop(timer_thermo) ! thermodynamics
+      call ice_timer_stop(timer_column) ! column physics
 
       end subroutine step_therm1
 
@@ -1085,8 +1085,8 @@
 
       enddo                     ! iblk
 
-      call ice_timer_stop(timer_column)  ! column physics
       call ice_timer_stop(timer_thermo)  ! thermodynamics
+      call ice_timer_stop(timer_column)  ! column physics
 
       end subroutine step_therm2
 

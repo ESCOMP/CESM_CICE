@@ -1,4 +1,28 @@
 ===============================================================
+cice4_0_20080317
+Originator: dbailey
+Date: Mon Mar 17 16:46:58 MDT 2008
+Version: 4.0
+One-line Summary: Fixed land block elimination seg fault and
+                  some timers in ice_step_mod.
+CCSM Version compatible with:
+Changes made:
+
+The changes in ice_gather_scatter.F90 were to fix a segmentation
+fault when land blocks are eliminated. Also, spval was used for
+land blocks in stead of zero for the _real interface. This makes
+the history output nicer. Some timers were rearranged in ice_step_mod
+so hopefully the timings are more consistent. Also, ntrcr (number
+of tracers) was reset to 1 by default.
+
+M            src/serial/ice_gather_scatter.F90
+M            src/source/ice_step_mod.F90
+M            src/source/ice_state.F90
+M            src/source/ice_domain_size.F90
+M            src/mpi/ice_gather_scatter.F90
+M            src/drivers/cice4/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20080309
 Originator: tcraig
 Date: Sun Mar  9 19:00:03 MDT 2008

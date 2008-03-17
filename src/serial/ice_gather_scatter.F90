@@ -234,7 +234,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
             ARRAY_G(this_block%i_glob(i), &
-                    this_block%j_glob(j)) = c0
+                    this_block%j_glob(j)) = spval
          end do
          end do
 
@@ -320,7 +320,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
             ARRAY_G(this_block%i_glob(i), &
-                    this_block%j_glob(j)) = c0
+                    this_block%j_glob(j)) = 0
          end do
          end do
 
@@ -522,6 +522,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -546,6 +548,8 @@
             ARRAY (i,j,dst_block) = c0
          enddo
          enddo
+
+         endif
       enddo
    endif
 
@@ -615,7 +619,7 @@
 !
 !-----------------------------------------------------------------------
 
-   ARRAY = c0
+   ARRAY = 0._real_kind
 
    select case (field_loc)
    case (field_loc_center)   ! cell center location
@@ -737,6 +741,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -761,6 +767,8 @@
             ARRAY (i,j,dst_block) = 0._real_kind
          enddo
          enddo
+
+         endif
       enddo
    endif
 
@@ -830,7 +838,7 @@
 !
 !-----------------------------------------------------------------------
 
-   ARRAY = c0
+   ARRAY = 0
 
    select case (field_loc)
    case (field_loc_center)   ! cell center location
@@ -952,6 +960,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -976,6 +986,8 @@
             ARRAY (i,j,dst_block) = 0
          enddo
          enddo
+
+         endif
       enddo
    endif
 

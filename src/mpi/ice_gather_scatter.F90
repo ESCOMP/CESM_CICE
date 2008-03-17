@@ -13,7 +13,7 @@
 !        horizontal dimensions (nx_block, ny_block).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_gather_scatter.F90 100 2008-01-29 00:25:32Z eclare $
+!  SVN:$Id: ice_gather_scatter.F90 115 2008-03-17 22:35:48Z dbailey $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP version by William H. Lipscomb, LANL
@@ -340,7 +340,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
            ARRAY_G(this_block%i_glob(i), &
-                   this_block%j_glob(j)) = c0
+                   this_block%j_glob(j)) = spval
          end do
          end do
        endif
@@ -503,7 +503,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
            ARRAY_G(this_block%i_glob(i), &
-                   this_block%j_glob(j)) = c0
+                   this_block%j_glob(j)) = 0
          end do
          end do
        endif
@@ -891,6 +891,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -915,6 +917,8 @@
             ARRAY (i,j,dst_block) = c0
          enddo
          enddo
+
+         endif
       enddo
    endif
 
@@ -1000,7 +1004,7 @@
 !
 !-----------------------------------------------------------------------
 
-   ARRAY = c0
+   ARRAY = 0._real_kind
 
    select case (field_loc)
    case (field_loc_center)   ! cell center location
@@ -1050,7 +1054,7 @@
        if (dst_dist%blockLocation(n) > 0 .and. &
            dst_dist%blockLocation(n)-1 /= my_task) then
 
-         msg_buffer = c0
+         msg_buffer = 0._real_kind
          this_block = get_block(n,n)
 
          !*** if this is an interior block, then there is no
@@ -1241,6 +1245,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -1265,6 +1271,8 @@
             ARRAY (i,j,dst_block) = 0._real_kind
          enddo
          enddo
+
+         endif
       enddo
    endif
 
@@ -1350,7 +1358,7 @@
 !
 !-----------------------------------------------------------------------
 
-   ARRAY = c0
+   ARRAY = 0
 
    select case (field_loc)
    case (field_loc_center)   ! cell center location
@@ -1400,7 +1408,7 @@
        if (dst_dist%blockLocation(n) > 0 .and. &
            dst_dist%blockLocation(n)-1 /= my_task) then
 
-         msg_buffer = c0
+         msg_buffer = 0
          this_block = get_block(n,n)
 
          !*** if this is an interior block, then there is no
@@ -1591,6 +1599,8 @@
          dst_block = dst_dist%blockLocalID(n)
          this_block = get_block(n,n)
 
+         if (dst_block > 0) then
+
          ! north edge
          do j = this_block%jhi+1,ny_block
          do i = 1, nx_block
@@ -1615,6 +1625,8 @@
             ARRAY (i,j,dst_block) = 0
          enddo
          enddo
+
+         endif
       enddo
    endif
 
