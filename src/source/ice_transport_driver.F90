@@ -40,8 +40,7 @@
 
 !lipscomb - Remove when there is again just one remapping routine
       logical, parameter ::    &
-!         newremap = .false.    ! if true, call new remapping scheme
-         newremap = .true.    ! if true, call new remapping scheme
+         newremap = .false.    ! if true, call new remapping scheme
                                ! if false, call old (CICE 3.14) scheme
 
       logical, parameter :: & ! if true, prescribe area flux across each edge  

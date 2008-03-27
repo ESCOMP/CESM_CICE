@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20080327
+Originator: dbailey
+Date: Thu Mar 27 14:49:10 MDT 2008
+Version: 4.0
+One-line Summary: Temporarily back up to old remapping scheme.
+CCSM Version compatible with:
+Changes made:
+
+M    src/source/ice_transport_driver.F90
+
+===============================================================
 cice4_0_20080317
 Originator: dbailey
 Date: Mon Mar 17 16:46:58 MDT 2008
