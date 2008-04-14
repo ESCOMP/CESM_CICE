@@ -304,7 +304,7 @@ if (defined $opts{'infile'}) {
 
 add_default($nl, 'inic_file');
 add_default($nl, 'ndte');
-add_default($nl, 'ndyn_dt');
+add_default($nl, 'xndyn_dt');
 add_default($nl, 'grid_type');
 add_default($nl, 'grid_format');
 add_default($nl, 'grid_file');

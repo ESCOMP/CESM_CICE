@@ -15,8 +15,8 @@
 
 <ndte> 120 </ndte> 
 
-<ndyn_dt                   > 1 </ndyn_dt>
-<ndyn_dt cice_grid="tx0.1v2"> 2 </ndyn_dt>
+<xndyn_dt                    > 1.0 </xndyn_dt>
+<xndyn_dt cice_grid="tx0.1v2"> 2.0 </xndyn_dt>
 
 <grid_type cice_grid="128x256"   >'latlon'       </grid_type> 
 <grid_type cice_grid="64x128"    >'latlon'       </grid_type> 

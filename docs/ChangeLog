@@ -1,4 +1,30 @@
 ===============================================================
+cice4_0_20080414
+Originator: dbailey
+Date: Mon Apr 14 14:04:11 MDT 2008
+Version: 4.0
+One-line Summary: Bug fixes and new xndyn_dt parameter.
+CCSM Version compatible with:
+Changes made:
+
+Fix bug with number of tracers. Should be one by default and the
+tracer indices are all 1 for compiling. Changed ndyn_dt to new
+real xndyn_dt for the ability to super-cycle the dynamics. This is
+still being tested as I'm not happy with the internal conservation 
+diagnostics. Also a change in the way that prescribed ice is done
+to make it more compatible with standalone CAM.
+
+M            bld/build-namelist
+M            bld/namelist_files/namelist_definition.xml
+M            bld/namelist_files/namelist_defaults_cice.xml
+M            src/source/ice_init.F90
+M            src/source/ice_calendar.F90
+M            src/source/ice_state.F90
+M            src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+
+===============================================================
 cice4_0_20080327
 Originator: dbailey
 Date: Thu Mar 27 14:49:10 MDT 2008

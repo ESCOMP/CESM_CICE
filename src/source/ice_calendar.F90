@@ -63,7 +63,6 @@
          idate0   , & ! initial date (yyyymmdd)
          sec      , & ! elapsed seconds into date
          npt      , & ! total number of time steps (dt)
-         ndyn_dt  , & ! reduced timestep for dynamics: ndyn_dt=dt/dyn_dt
          stop_now     , & ! if 1, end program execution
          write_restart, & ! if 1, write restart now
          cpl_write_history, &  ! if 1, write history on command from cpl
@@ -74,6 +73,7 @@
       real (kind=dbl_kind) :: &
          dt             , & ! thermodynamics timestep (s)
          dyn_dt         , & ! dynamics/transport/ridging timestep (s)
+         xndyn_dt       , & ! reduced timestep for dynamics: xndyn_dt=dt/dyn_dt
          time           , & ! total elapsed time (s)
          time_forc      , & ! time of last forcing update (s)
          yday           , & ! day of the year
@@ -134,7 +134,7 @@
       istep1 = istep0   ! number of steps at current timestep
                         ! real (dumped) or imagined (use to set calendar)
       stop_now = 0      ! end program execution if stop_now=1
-      dyn_dt = dt/real(ndyn_dt,kind=dbl_kind) ! dynamics et al timestep
+      dyn_dt = dt/xndyn_dt ! dynamics et al timestep
 
       dayyr = real(days_per_year, kind=dbl_kind)
       if (days_per_year.eq.360) then

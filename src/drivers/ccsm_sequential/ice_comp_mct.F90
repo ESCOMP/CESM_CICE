@@ -44,7 +44,7 @@ module ice_comp_mct
 		              field_loc_center, field_type_scalar, field_type_vector
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
-		              sec, dt, dyn_dt, ndyn_dt, calendar
+		              sec, dt, dyn_dt, xndyn_dt, calendar
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
 !  use ice_init
@@ -414,9 +414,9 @@ contains
    !-----------------------------------------------------------------
 
     if (.not.prescribed_ice .and. kdyn>0) then
-       if (ndyn_dt > 1) then
+       if (xndyn_dt > c1) then
           call t_startf ('cice_dyn')
-          do k = 1, ndyn_dt
+          do k = 1, nint(xndyn_dt)
              call step_dynamics (dyn_dt) ! dynamics, transport, ridging
           enddo
           call t_stopf ('cice_dyn')
@@ -460,7 +460,7 @@ contains
        call seq_timemgr_EClockGetData(EClock, curr_ymd=ymd_sync, curr_tod=tod_sync, &
           curr_yr=yr_sync,curr_mon=mon_sync,curr_day=day_sync)
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
-       write(nu_diag,*)'ice_comp_mct: callinng dumpfile for restart filename= ',&
+       write(nu_diag,*)'ice_comp_mct: calling dumpfile for restart filename= ',&
             fname
 #if (defined _NOIO)
 !  Not enought memory on BGL to call dumpfile  file yet! 

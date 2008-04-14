@@ -767,9 +767,9 @@ subroutine ice_prescribed_phys
    vicen(:,:,:,:) = c0
    eicen(:,:,:,:) = c0
 
-   do nc=1,ncat
-      trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
-   enddo
+!  do nc=1,ncat
+!     trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
+!  enddo
 
    !-----------------------------------------------------------------
    ! Set ice cover over land to zero, not sure if this should be
@@ -832,7 +832,7 @@ subroutine ice_prescribed_phys
                   !---------------------------------------------------------
                   ! make linear temp profile and compute enthalpy
                   !---------------------------------------------------------
-                  trcrn(i,j,nt_Tsfc,nc,iblk) = min(Tair(i,j,iblk)-Tffresh,-p2)   ! deg C       
+!                  trcrn(i,j,nt_Tsfc,nc,iblk) = min(Tair(i,j,iblk)-Tffresh,-p2)   ! deg C       
                   slope = Tf(i,j,iblk) - trcrn(i,j,nt_Tsfc,nc,iblk)
                   do k = 1, nilyr
                      zn = (real(k,kind=dbl_kind)-p5) / real(nilyr,kind=dbl_kind)
@@ -850,6 +850,7 @@ subroutine ice_prescribed_phys
                end if    ! hin_max
             enddo        ! ncat
          else
+            trcrn(i,j,nt_Tsfc,:,iblk) = Tf(i,j,iblk)
             vsnon(i,j,:,iblk) = c0
             esnon(i,j,:,iblk) = c0
          end if          ! ice_cov >= eps04

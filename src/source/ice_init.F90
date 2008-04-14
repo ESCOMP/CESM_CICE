@@ -71,7 +71,7 @@
       use ice_fileunits
       use ice_calendar, only: year_init, istep0, histfreq, histfreq_n, &
                               dumpfreq, dumpfreq_n, diagfreq, &
-                              npt, dt, ndyn_dt, days_per_year
+                              npt, dt, xndyn_dt, days_per_year
 #if (!defined CCSM) && (!defined SEQ_MCT)
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
@@ -148,7 +148,7 @@
         restart_dir,    pointer_file,  &
         grid_format,    grid_type,       grid_file,     kmt_file,      &
         kitd,           kcatbound, &
-        kdyn,           ndyn_dt,         ndte,          evp_damping, &
+        kdyn,           xndyn_dt,        ndte,          evp_damping, &
         yield_curve,    advection, &
         kstrength,      krdg_partic,     krdg_redist,   shortwave, &
         R_ice,          R_pnd,           R_snw, &
@@ -220,7 +220,7 @@
       kitd = 1           ! type of itd conversions (0 = delta, 1 = linear)
       kcatbound = 1      ! category boundary formula (0 = old, 1 = new)
       kdyn = 1           ! type of dynamics (1 = evp)
-      ndyn_dt = 1        ! dynamic time steps per thermodynamic time step
+      xndyn_dt = c1      ! dynamic time steps per thermodynamic time step
       ndte = 120         ! subcycles per dynamics timestep:  ndte=dyn_dt/dte
       evp_damping = .false.  ! if true, use damping procedure in evp dynamics
       yield_curve = 'ellipse'
@@ -397,7 +397,7 @@
       call broadcast_scalar(kitd,               master_task)
       call broadcast_scalar(kcatbound,          master_task)
       call broadcast_scalar(kdyn,               master_task)
-      call broadcast_scalar(ndyn_dt,            master_task)
+      call broadcast_scalar(xndyn_dt,           master_task)
       call broadcast_scalar(ndte,               master_task)
       call broadcast_scalar(evp_damping,        master_task)
       call broadcast_scalar(yield_curve,        master_task)
@@ -525,7 +525,7 @@
          write(nu_diag,1020) ' kcatbound                 = ', &
                                kcatbound
          write(nu_diag,1020) ' kdyn                      = ', kdyn
-         write(nu_diag,1020) ' ndyn_dt                   = ', ndyn_dt
+         write(nu_diag,1000) ' xndyn_dt                  = ', xndyn_dt
          write(nu_diag,1020) ' ndte                      = ', ndte
          write(nu_diag,1010) ' evp_damping               = ', &
                                evp_damping
