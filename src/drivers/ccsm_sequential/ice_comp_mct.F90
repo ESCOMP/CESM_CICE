@@ -76,7 +76,6 @@ module ice_comp_mct
 
 !
 ! !PRIVATE VARIABLES
-  integer, dimension(:), allocatable ::  perm  ! permutation array to reorder points
 
 !=======================================================================
 
@@ -578,7 +577,24 @@ contains
 
     ! number the local grid
 
-    lsize = block_size_x*block_size_y*nblocks
+    n=0
+    do iblk = 1, nblocks
+       this_block = get_block(blocks_ice(iblk),iblk)         
+       ilo = this_block%ilo
+       ihi = this_block%ihi
+       jlo = this_block%jlo
+       jhi = this_block%jhi
+       
+       do j = jlo, jhi
+          do i = ilo, ihi
+             n = n+1
+          enddo !i
+       enddo    !j
+    enddo        !iblk
+    lsize = n
+
+! not valid for padded decomps
+!    lsize = block_size_x*block_size_y*nblocks
     gsize = nx_global*ny_global
 
     allocate(gindex(lsize),stat=ier)
@@ -601,23 +617,6 @@ contains
        enddo    !j
     enddo        !iblk
     
-    allocate(perm(lsize),stat=ier)
-
-    ! reorder gindex to be in ascending order.
-
-    ! initialize a permutation array
-
-    call mct_indexset(perm)
-
-    ! derive a permutation that puts gindex in ascending order
-    ! the default for IndexSort is Ascending.
-
-    call mct_indexsort(lsize,perm,gindex)
-
-    ! Sort gindex in-place
-
-    call mct_permute(gindex,perm,lsize)
-
     call mct_gsMap_init( gsMap_ice, gindex, mpicom_ice, ICEID, lsize, gsize )
 
     deallocate(gindex)
@@ -768,11 +767,6 @@ contains
          enddo    !j
      enddo        !iblk
 
-
-    ! permute before using the Rearrange call.
-
-    call mct_aVect_permute(i2x_i,perm)
-
   end subroutine ice_export_mct
 
 !====================================================================================
@@ -791,10 +785,6 @@ contains
     real (kind=dbl_kind) :: &
          gsum, workx, worky
     !-----------------------------------------------------
-
-    ! unpermute
-
-    call mct_aVect_unpermute(x2i_i, perm)
 
     ! Note that the precipitation fluxes received  from the coupler
     ! are in units of kg/s/m^2 which is what CICE requires.
@@ -994,8 +984,6 @@ contains
          enddo
       enddo
 
-    call mct_aVect_permute(x2i_i, perm)
-
    end subroutine ice_import_mct
 
 !=======================================================================
@@ -1025,6 +1013,7 @@ contains
     !
     call mct_gGrid_init( GGrid=dom_i, CoordChars=trim(seq_flds_dom_coord), &
        OtherChars=trim(seq_flds_dom_other), lsize=lsize )
+    call mct_aVect_zero(dom_i%data)
     !  
     allocate(data(lsize))
     !
@@ -1138,10 +1127,6 @@ contains
        enddo   !j
     enddo      !iblk
     call mct_gGrid_importRattr(dom_i,"frac",data,lsize) 
-
-    ! Permute dom_i to have ascending order
-
-    call mct_gGrid_permute(dom_i, perm)
 
     deallocate(data)
     deallocate(idata)
