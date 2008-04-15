@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20080415
+Originator: tcraig
+Date: Mon Apr 14 20:04:11 MDT 2008
+Version: 4.0
+One-line Summary: updates to ice_comp_mct, new mct required
+CCSM Version compatible with: ccsm4_0_alpha28+
+Changes made:
+
+  - remove mct permutes (requires new mct version)
+  - fix gsmap for padded decomps
+  - zero domain on initialization
+
+M    src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20080414
 Originator: dbailey
 Date: Mon Apr 14 14:04:11 MDT 2008
