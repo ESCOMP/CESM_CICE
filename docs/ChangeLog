@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20080416
+Originator: tcraig
+Date: Tue Apr 15 20:48:15 MDT 2008
+Version: 4.0
+One-line Summary: fix to old remapping
+CCSM Version compatible with: ccsm4_0_alpha28+
+Changes made:
+
+  - fix to remap for underflow/divide by zero in old remapping
+
+M      src/source/ice_transport_remap.F90
+	
+===============================================================
 cice4_0_20080415
 Originator: tcraig
 Date: Mon Apr 14 20:04:11 MDT 2008
