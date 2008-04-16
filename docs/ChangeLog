@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20080416b
+Originator: dbailey
+Date: Tue Apr 15 21:31:50 MDT 2008
+Version: 4.0
+One-line Summary: fix for diagnostics with super/sub cycling
+CCSM Version compatible with: ccsm4_0_alpha28+
+Changes made:
+
+M            src/source/ice_step_mod.F90
+M            src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            src/drivers/ccsm_concurrent/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20080416
 Originator: tcraig
 Date: Tue Apr 15 20:48:15 MDT 2008

@@ -416,13 +416,13 @@ contains
        if (xndyn_dt > c1) then
           call t_startf ('cice_dyn')
           do k = 1, nint(xndyn_dt)
-             call step_dynamics (dyn_dt) ! dynamics, transport, ridging
+             call step_dynamics ! dynamics, transport, ridging
           enddo
           call t_stopf ('cice_dyn')
        else
           if (mod(time, dyn_dt) == c0) then
              call t_startf ('cice_dyn')
-             call step_dynamics (dyn_dt) ! dynamics, transport, ridging
+             call step_dynamics ! dynamics, transport, ridging
              call t_stopf ('cice_dyn')
           endif
        endif

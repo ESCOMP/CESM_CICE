@@ -731,14 +731,12 @@
 !
 ! !INTERFACE:
 
-      subroutine step_dynamics (dt)
+      subroutine step_dynamics
 !
 ! !USES:
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
-      real (kind=dbl_kind), intent(in) :: &
-         dt      ! time step
 !
 !EOP
 !
@@ -768,16 +766,16 @@
       ! Elastic-viscous-plastic ice dynamics
       !-----------------------------------------------------------------
 
-      if (kdyn == 1) call evp (dt)
+      if (kdyn == 1) call evp (dyn_dt)
 
       !-----------------------------------------------------------------
       ! Horizontal ice transport
       !-----------------------------------------------------------------
 
       if (advection == 'upwind') then
-         call transport_upwind (dt)    ! upwind
+         call transport_upwind (dyn_dt)    ! upwind
       else
-         call transport_remap (dt)     ! incremental remapping
+         call transport_remap (dyn_dt)     ! incremental remapping
       endif
 
       !-----------------------------------------------------------------

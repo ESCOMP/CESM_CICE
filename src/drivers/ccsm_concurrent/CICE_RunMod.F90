@@ -160,8 +160,8 @@
       !-----------------------------------------------------------------
 
          if (.not.prescribed_ice) then
-            do k = 1, ndyn_dt
-               call step_dynamics (dyn_dt)
+            do k = 1, nint(xndyn_dt)
+               call step_dynamics
             enddo
          endif ! not prescribed_ice
 
