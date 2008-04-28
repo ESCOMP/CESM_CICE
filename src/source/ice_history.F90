@@ -1087,6 +1087,7 @@
 
       ! ice vol. tendency for history, due to dynamics
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1101,6 +1102,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       !---------------------------------------------------------------
       ! increment step counter
@@ -1118,6 +1120,7 @@
       ! increment field
       !---------------------------------------------------------------
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,ai)
       do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)         
        ilo = this_block%ilo
@@ -1271,6 +1274,7 @@
        enddo                    ! n
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       !---------------------------------------------------------------
       ! Write output files at prescribed intervals
@@ -1283,6 +1287,7 @@
       !---------------------------------------------------------------
 
         ravgct = c1/avgct
+	!$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
         do iblk = 1, nblocks
            this_block = get_block(blocks_ice(iblk),iblk)         
            ilo = this_block%ilo
@@ -1349,6 +1354,7 @@
            enddo                ! j
 
         enddo                   ! iblk
+       !$OMP END PARALLEL DO
 
         time_end = time/int(secday)
 
@@ -1370,6 +1376,7 @@
 
       endif  ! write_history or write_ic
 
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo

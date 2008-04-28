@@ -833,6 +833,7 @@
 
       integer (kind=int_kind) :: i, j, iblk
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j, ar)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -851,6 +852,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       end subroutine scale_hist_fluxes
 

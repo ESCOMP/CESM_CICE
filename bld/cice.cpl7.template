@@ -68,18 +68,6 @@ endif
 EOF1
 endif
 
-# Determine ice decomposition
-
-cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
-
-# Get decomposition info from Configuration Wizard
-setenv DECOMPTYPE spacecurve
-set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
-if(\$config[1] >= 0) then
-   setenv DECOMPTYPE \$config[6]
-endif
-EOF1
-
 cat >> $CASEROOT/Buildnml_Prestage/ciceconf/ccsm_namelist << EOF1
  &domain_nml
  distribution_type = 'DECOMPTYPE'
@@ -124,7 +112,7 @@ else
   $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist || exit -1
 endif
 
-sed -e 's#DECOMPTYPE#\$DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
+sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in
 
 cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
@@ -170,26 +158,10 @@ cat >> $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
 set NLON = \$ICE_NX
 set NLAT = \$ICE_NY
 
-set decomp_type = spacecurve
-
-#  Get decomposition info from Configuration Wizard
-
-set config = \`\$CODEROOT/../scripts/ccsm_utils/Tools/generate_cice_pop_decomp -res \$ICE_GRID -platform \$OS -model cice -nproc \$NTASKS_ICE -output all\`
-
-if(\$config[1] >= 0) then
-   set bsize_x     = \$config[3]
-   set bsize_y     = \$config[4]
-   set maxblocks   = \$config[5]
-   set decomp_type = \$config[6]
-else
-   echo "cice decomp not set for \$ICE_GRID on \$NTASKS_ICE procs"
-   exit -1
-endif
-
-setenv BLCKX      \$bsize_x
-setenv BLCKY      \$bsize_y
-setenv MXBLCKS    \$maxblocks
-setenv DECOMPTYPE \$decomp_type
+setenv BLCKX      \$CICE_BLCKX
+setenv BLCKY      \$CICE_BLCKY
+setenv MXBLCKS    \$CICE_MXBLCKS
+setenv DECOMPTYPE \$CICE_DECOMPTYPE
 
 EOF2
 

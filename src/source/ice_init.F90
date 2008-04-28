@@ -689,8 +689,6 @@
          call abort_ice('ice_init: Not enough snow layers')
       endif
 
-      do iblk = 1, nblocks
-
       !-----------------------------------------------------------------
       ! Set tracer types
       !-----------------------------------------------------------------
@@ -699,6 +697,9 @@
       if (tr_iage) trcr_depend(nt_iage)  = 1   ! volume-weighted ice age
       if (tr_pond) trcr_depend(nt_volpn) = 0   ! melt pond volume
 
+
+      !$OMP PARALLEL DO PRIVATE(iblk,it)
+      do iblk = 1, nblocks
 
       !-----------------------------------------------------------------
       ! Set state variables
@@ -745,6 +746,7 @@
          aice_init(:,:,iblk) = aice(:,:,iblk)
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! ghost cell updates

@@ -1115,6 +1115,8 @@
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
 
+     !$OMP PARALLEL DO PRIVATE(iblk,n,i,j,ilo,ihi,jlo,jhi,icells,indxi,indxj,&
+     !$OMP                     il1,il2,sl1,sl2,fsn,rhosnwn,rsnwn,fpn,hpn,ar)
       do iblk=1,nblocks
 
          do n=1,ncat
@@ -1220,6 +1222,7 @@
          enddo
 
       enddo ! iblk
+      !$OMP END PARALLEL DO
 
       end subroutine init_dEdd
       

@@ -210,6 +210,7 @@
       ! ice mask for dynamics
       !-----------------------------------------------------------------
       
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -218,6 +219,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
       call ice_write(nu_dump,0,work1,'ruf8',diag)
 
       ! for mixed layer model
@@ -435,6 +437,7 @@
       call ice_read(nu_restart,0,work1,'ruf8',diag)
 
       iceumask(:,:,:) = .false.
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -442,6 +445,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       ! for mixed layer model
       if (oceanmixed_ice) then
@@ -458,6 +462,7 @@
       !-----------------------------------------------------------------
       ! Ensure unused stress values in west and south ghost cells are 0
       !-----------------------------------------------------------------
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
          do j = 1, nghost
          do i = 1, nx_block
@@ -492,6 +497,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! Ensure ice is binned in correct categories
@@ -506,6 +512,7 @@
       ! compute aggregate ice state and open water area
       !-----------------------------------------------------------------
 
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
 
          call aggregate (nx_block, ny_block, &
@@ -528,6 +535,7 @@
          aice_init(:,:,iblk) = aice(:,:,iblk)
 
       enddo
+      !$OMP END PARALLEL DO
 
       end subroutine restartfile
 

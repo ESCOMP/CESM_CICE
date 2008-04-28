@@ -310,6 +310,7 @@
       ! Note: On a rectangular grid, the integral of any odd function
       !       of x or y = 0.
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -329,6 +330,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
  
       end subroutine init_remap
 
@@ -380,7 +382,6 @@
                           xav, yav, xxav, xyav, yyav,         &
                           xxxav, xxyav, xyyav, yyyav
       use ice_exit
-      use ice_work, only: worka, workb, workc, workd
       use ice_calendar, only: istep1
       use ice_timers
 !
@@ -518,6 +519,12 @@
          edge             ! 'north' or 'east'
 
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb, &
+         workc, &
+         workd
+
       l_stop = .false.
       istop = 0
       jstop = 0
@@ -636,7 +643,6 @@
 
          enddo                  ! n
 
-       
     !-------------------------------------------------------------------
     ! Given velocity field at cell corners, compute departure points
     ! of trajectories.
@@ -3692,6 +3698,7 @@
       enddo
 
 
+      !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
       ! Compute some geometric quantities needed for non-rectangular grids.
@@ -3718,6 +3725,7 @@
       enddo
 
       ! Compute ghost cell values
+      !$OMP END PARALLEL DO
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (xav,              halo_info, &
@@ -3980,8 +3988,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: worka, workb, workc, workd
-
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) ::    &                
@@ -4007,6 +4013,12 @@
                            
       real (kind=dbl_kind) ::     &
            theta1, theta2, theta3, theta4  ! angles
+
+       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb, &
+         workc, &
+         workd
 
       !-----------------------------------------------------------------
       ! Compute angles between the U-cell coordinate axes and T-cell
@@ -4133,7 +4145,6 @@
                           xav, yav, xxav, xyav, yyav,         &
                           xxxav, xxyav, xyyav, yyyav
       use ice_exit
-      use ice_work, only: worka
       use ice_calendar, only: istep1
       use ice_timers
 
@@ -4265,6 +4276,11 @@
          xp, yp           ! x and y coordinates of special triangle points
                           ! (need 4 points for triangle integrals)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka
+
+      worka(:,:) = c0
+
       l_stop = .false.
       istop = 0
       jstop = 0
@@ -4319,6 +4335,7 @@
          l_dp_midpt = .false.
       endif
  
+      !$OMP PARALLEL DO PRIVATE(iblk,n)
       do iblk = 1, nblocks
  
     !------------------------------------------------------------------- 
@@ -4383,6 +4400,13 @@
                                   trmask(:,:,:,n,iblk) )
 
          enddo                  ! n
+
+      end do
+      !$OMP END PARALLEL DO
+
+      ! NOTE - the following does not thread 
+      !!!$OMP PARALLEL DO PRIVATE(iblk,n,this_block,l_stop,istop,jstop)
+      do iblk = 1, nblocks
 
     !-------------------------------------------------------------------
     ! Given velocity field at cell corners, compute departure points
@@ -4474,6 +4498,11 @@
                            field_loc_center, field_type_vector)
       call ice_timer_stop(timer_bound)
  
+     ! NOTE - depending on resolution/decomposition, the following also has 
+     ! problems threading 
+     !!!$OMP PARALLEL DO PRIVATE(iblk,n,xp,xp0,xp1,xp2,xp3,yp,yp0,yp1,yp2,yp3, &
+     !!!$OMP                     iflux,jflux,triarea,aiflxe,aiflxn,atflxe,atflxn,&
+     !!!$OMP                     l_stop,istop,jstop)
       do iblk = 1, nblocks
  
     !-------------------------------------------------------------------

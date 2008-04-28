@@ -314,6 +314,7 @@
       ! T-grid cell and U-grid cell quantities
       !-----------------------------------------------------------------
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -352,6 +353,7 @@
          enddo
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! Ghost cell updates
@@ -403,6 +405,8 @@
       !-----------------------------------------------------------------
       ANGLET = c0
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,&
+     !$OMP                     angle_0,angle_w,angle_s,angle_sw)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -431,6 +435,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
       
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (ANGLET,           halo_info, &
@@ -525,6 +530,7 @@
                     field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -539,6 +545,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! lat, lon, angle
@@ -650,6 +657,7 @@
                        field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -664,6 +672,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! lat, lon, angle
@@ -787,6 +796,7 @@
                     field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -801,6 +811,7 @@
          enddo
          enddo
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! lat, lon, angle
@@ -1001,6 +1012,7 @@
          call ice_close_nc(ncid)
       end if
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1,nblocks
          this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
@@ -1022,6 +1034,7 @@
          end do
          end do
       end do
+      !$OMP END PARALLEL DO
 
       !-----------------------------------------------------------------
       ! Calculate various geometric 2d arrays
@@ -1036,6 +1049,7 @@
       ! TLAT.
       !-----------------------------------------------------------------
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1073,6 +1087,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       call makemask
 
@@ -1148,6 +1163,7 @@
       ! Calculate various geometric 2d arrays
       !-----------------------------------------------------------------
 
+     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -1157,6 +1173,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       if (my_task == master_task) then
          allocate(work_g1(nx_global,ny_global))
@@ -1407,6 +1424,7 @@
       ! construct T-cell and U-cell masks
       !-----------------------------------------------------------------
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1421,12 +1439,14 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (uvm,                halo_info, &
                            field_loc_NEcorner, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -1466,6 +1486,7 @@
 
 
       enddo  ! iblk
+      !$OMP END PARALLEL DO
 
       end subroutine makemask
 
@@ -1512,6 +1533,9 @@
       TLAT(:,:,:) = c0
       TLON(:,:,:) = c0
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j, &
+     !$OMP	               z1,x1,y1,z2,x2,y2,z3,x3,y3,z4,x4,y4, &
+     !$OMP                     tx,ty,tz,da)   
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1559,6 +1583,7 @@
          enddo                  ! i
          enddo                  ! j         
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (TLON,             halo_info, &
@@ -1671,6 +1696,7 @@
 
       work2(:,:,:) = c0
 
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1689,6 +1715,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       end subroutine to_ugrid
 
@@ -1771,6 +1798,7 @@
       type (block) :: &
          this_block           ! block information for current block
       
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1789,6 +1817,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       end subroutine to_tgrid
 

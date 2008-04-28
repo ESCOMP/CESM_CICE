@@ -658,6 +658,7 @@ contains
     !calculate ice thickness from aice and vice. Also
     !create Tsrf from the first tracer (trcr) in ice_state.F
 
+    !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
     do iblk = 1, nblocks
        do j = 1, ny_block
        do i = 1, nx_block
@@ -690,6 +691,7 @@ contains
        enddo
        enddo
     enddo
+    !$OMP END PARALLEL DO
 
     do iblk = 1, nblocks
        do j = 1, ny_block
@@ -923,8 +925,9 @@ contains
       ! then interpolate to the U-cell centers  (otherwise we
       ! interpolate across the pole)
       ! use ANGLET which is on the T grid !
-
-      do iblk = 1, nblocks
+ 
+     !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
+     do iblk = 1, nblocks
 
        do j = 1,ny_block
        do i = 1,nx_block
@@ -952,6 +955,7 @@ contains
        enddo
        enddo
       enddo
+      !$OMP END PARALLEL DO
 
       ! Interpolate ocean dynamics variables from T-cell centers to 
       ! U-cell centers.
@@ -965,6 +969,7 @@ contains
       ! subroutine stability and are interpolated to the U grid
       ! later as necessary.
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -983,6 +988,7 @@ contains
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
    end subroutine ice_import_mct
 

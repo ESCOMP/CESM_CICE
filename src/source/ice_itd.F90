@@ -924,8 +924,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: worka, workb
-!
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &
@@ -1011,9 +1009,16 @@
         daice_greater_aicen, & ! true if daice > aicen
         dvice_greater_vicen    ! true if dvice > vicen
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb
+
       !-----------------------------------------------------------------
       ! Initialize
       !-----------------------------------------------------------------
+
+      worka(:,:) = c0
+      workb(:,:) = c0
 
       l_stop = .false.
       istop = 0

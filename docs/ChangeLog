@@ -1,3 +1,56 @@
+cice4_0_20080428
+Originator: mvertens
+Date: Mon Apr 28 13:25:36 MDT 2008
+Version: 4.0
+One-line Summary: put in openmp threading capability
+CCSM Version compatible with: ccsm4_0_alpha28+
+Changes made:
+	
+M      bld/cice.cpl7.template
+M      src/source/ice_init.F90
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_itd.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_restart.F90
+M      src/source/ice_grid.F90
+M      src/source/ice_history.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+Note that ice_transport_remap.F90 still has threading problems (that
+seem to be resolution dependent). So for now most of the threading in
+that module has been turned off.
+
+Testing: 
+1) no threading: 
+	
+when threading is not turned in in cice (via setting
+setenv NTHRDS_ICE 1 in env_pes.blueice) then the results are bfb.
+ERB.f19_g15.B.blueice was shown to be bfb with ccsm4_0_alpha28.	
+
+2) threading versus no threading: 
+when threading is turned on, results (via setting 
+setenv NTHRDS_ICE 4 in env_pes.blueice) then threading tests showed
+that the following two settings in the blueice run script
+	setenv OMP_NUM_THREADS 1 setenv OMP_NUM_THREADS 4
+gave bfb results in the cpl log files (as long as the bfbflag was set
+to TRUE in env_run).	
+In addition, examination of daily cice history files were shown to be
+bfb when the above thread count was varied (for T62_g35.D.blueice case)
+	
+3) threading and restart:
+the ERS.f45_g35.B.bluevista test passed when the following
+pes_files was used for the test
+      set ntasks_atm = 8; set nthrds_atm = 4; set rootpe_atm = 0; set pstrid_atm = 1
+      set ntasks_lnd = 8; set nthrds_lnd = 4; set rootpe_lnd = 0; set pstrid_lnd = 1
+      set ntasks_ice = 4; set nthrds_ice = 4; set rootpe_ice = 0; set pstrid_ice = 1
+      set ntasks_ocn = 8; set nthrds_ocn = 1; set rootpe_ocn = 0; set pstrid_ocn = 1
+      set ntasks_cpl = 8; set nthrds_cpl = 1; set rootpe_cpl = 0; set pstrid_cpl = 1
+
 ===============================================================
 cice4_0_20080416b
 Originator: dbailey

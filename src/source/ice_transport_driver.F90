@@ -348,6 +348,7 @@
 !      call ice_timer_stop(timer_bound)
 
 
+     !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
     !-------------------------------------------------------------------
@@ -362,6 +363,7 @@
                                aim  (:,:,:,iblk), trm  (:,:,:,:,iblk))
 
       enddo
+      !$OMP END PARALLEL DO
 
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks.
@@ -419,6 +421,7 @@
          tmin(:,:,:,:,:) = c0
          tmax(:,:,:,:,:) = c0
 
+         !$OMP PARALLEL DO PRIVATE(iblk)
          do iblk = 1, nblocks
 
     !------------------------------------------------------------------- 
@@ -447,6 +450,7 @@
                              aimask(:,:,n,iblk), trmask(:,:,:,n,iblk))
             enddo
          enddo
+         !$OMP END PARALLEL DO
 
          call ice_timer_start(timer_bound)
          call ice_HaloUpdate (tmin,             halo_info,     &
@@ -455,6 +459,7 @@
                               field_loc_center, field_type_scalar)
          call ice_timer_stop(timer_bound)
 
+         !$OMP PARALLEL DO PRIVATE(iblk)
          do iblk = 1, nblocks
             do n = 1, ncat
                call quasilocal_max_min (nx_block, ny_block,     &
@@ -463,6 +468,7 @@
                                         tmax(:,:,:,n,iblk))
             enddo
          enddo
+         !$OMP END PARALLEL DO
 
       endif                     ! l_monotonicity_check
 
@@ -480,6 +486,7 @@
     !  of the velocity field.  Otherwise, initialize edgearea.
     !-------------------------------------------------------------------
 
+         !$OMP PARALLEL DO PRIVATE(iblk)
          do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -488,9 +495,11 @@
          enddo
          enddo
          enddo
+         !$OMP END PARALLEL DO
 
          if (l_fixed_area) then
 
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
                do j = jlo, jhi
                do i = ilo-1, ihi
@@ -507,6 +516,7 @@
                enddo
 
             enddo  ! iblk
+            !$OMP END PARALLEL DO
 
          endif
 
@@ -535,6 +545,7 @@
     ! Given new fields, recompute state variables.
     !-------------------------------------------------------------------
 
+      !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
          call tracers_to_state (nx_block,          ny_block,            &
@@ -545,6 +556,7 @@
                                 eicen(:,:,:,iblk), esnon(:,:,  :,iblk)) 
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
@@ -637,6 +649,7 @@
     !-------------------------------------------------------------------
 
       if (l_monotonicity_check) then
+         !$OMP PARALLEL DO PRIVATE(iblk,l_stop,istop,jstop,n,istep1)
          do iblk = 1, nblocks
             do n = 1, ncat
                call check_monotonicity      &
@@ -654,8 +667,8 @@
                                   istep1, my_task, iblk, n
                call abort_ice('ice remap transport: monotonicity error')
             endif
-
          enddo                  ! iblk
+         !$OMP END PARALLEL DO
 
          deallocate(tmin, tmax, STAT=alloc_error)
          if (alloc_error /= 0) call abort_ice ('deallocation error')
@@ -732,6 +745,7 @@
     ! Average corner velocities to edges.
     !-------------------------------------------------------------------
       
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -746,6 +760,7 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (uee,             halo_info,     &
@@ -754,6 +769,7 @@
                            field_loc_Nface, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
+      !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
       !-----------------------------------------------------------------
@@ -802,6 +818,7 @@
                              aice0(:,:,    iblk), works (:,:,  :,iblk)) 
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
  
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
@@ -853,7 +870,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: worka, workb
       use ice_itd, only: ilyr1, slyr1
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -890,6 +906,10 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat),  &
            intent(out) ::     &
            trm       ! mean tracer values in each grid cell
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb
 !
 !EOP
 !
@@ -907,6 +927,9 @@
 
       integer (kind=int_kind), dimension(0:ncat) ::     &
            icells         ! number of cells with ice
+
+      worka(:,:) = c0
+      workb(:,:) = c0
 
       aim(:,:,0) = aice0(:,:)
 
@@ -1808,7 +1831,6 @@
 !
 ! !USES:
 !
-      use ice_work, only:  worka, workb
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1842,6 +1864,10 @@
       real (kind=dbl_kind) ::        &
          upwind, y1, y2, a, h   ! function
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb
+
     !-------------------------------------------------------------------
     ! Define upwind function
     !-------------------------------------------------------------------
@@ -1851,6 +1877,9 @@
     !-------------------------------------------------------------------
     ! upwind transport
     !-------------------------------------------------------------------
+
+      worka(:,:) = c0
+      workb(:,:) = c0
 
       ilo = 1 + nghost
       ihi = nx_block - nghost
