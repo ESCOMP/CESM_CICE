@@ -23,7 +23,7 @@
    use ice_blocks
    use ice_exit
    use ice_fileunits, only: nu_diag
-   use spacecurve_mod
+   use ice_spacecurve
 
    implicit none
    private

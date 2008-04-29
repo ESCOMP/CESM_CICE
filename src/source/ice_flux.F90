@@ -51,6 +51,8 @@
 
          strairxT, & ! stress on ice by air, x-direction
          strairyT, & ! stress on ice by air, y-direction
+         strairxT_accum, & ! stress on ice by air, x-direction
+         strairyT_accum, & ! stress on ice by air, y-direction
 
        ! out to ocean          T-cell (kg/m s^2)
          strocnxT, & ! ice-ocean stress, x-direction

@@ -245,6 +245,11 @@
          enddo
          enddo
 
+         if (mod(time-dt,dyn_dt) == c0) then
+            strairxT_accum(:,:,iblk) = c0
+            strairyT_accum(:,:,iblk) = c0
+         endif
+
       !-----------------------------------------------------------------
       ! Adjust frzmlt to account for ice-ocean heat fluxes since last
       !  call to coupler.
@@ -433,6 +438,19 @@
                             fswthru (:,:,iblk), fswthru_hist(:,:,iblk))
 
          enddo                  ! ncat
+
+! Accumulate stresses when super-cycling the dynamics. Otherwise just
+! use the stresses as computed.
+
+         if (dt < dyn_dt) then
+            strairxT_accum(:,:,iblk) = strairxT_accum(:,:,iblk) &
+                                     + strairxT(:,:,iblk) * dt / dyn_dt
+            strairyT_accum(:,:,iblk) = strairyT_accum(:,:,iblk) &
+                                     + strairyT(:,:,iblk) * dt / dyn_dt
+         else
+            strairxT_accum(:,:,iblk) = strairxT(:,:,iblk)
+            strairyT_accum(:,:,iblk) = strairyT(:,:,iblk)
+         endif
 
       !-----------------------------------------------------------------
       ! Update mixed layer with heat and radiation from ice.

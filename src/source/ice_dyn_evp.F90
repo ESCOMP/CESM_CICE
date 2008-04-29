@@ -211,7 +211,7 @@
                          nghost,                                 & 
                          aice    (:,:,iblk), vice    (:,:,iblk), & 
                          vsno    (:,:,iblk), tmask   (:,:,iblk), & 
-                         strairxT(:,:,iblk), strairyT(:,:,iblk), & 
+                         strairxT_accum(:,:,iblk), strairyT_accum(:,:,iblk), & 
                          strairx (:,:,iblk), strairy (:,:,iblk), & 
                          tmass   (:,:,iblk), icetmask(:,:,iblk))
 
