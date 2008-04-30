@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20080430
+Originator: tcraig
+Date: Wed Apr 30 01:50:44 MDT 2008
+Version: 4.0
+One-line Summary: Add decomp tool to cice
+CCSM Version compatible with: ccsm4_0_alpha29+
+Changes made:
+	
+AM   bld/check_decomp.csh
+A    bld/cice_decomp.xml
+AM   bld/generate_cice_decomp.pl
+
+===============================================================
 cice4_0_20080429
 Originator: dbailey	
 Date: Tue Apr 29 12:22:59 MDT 2008
