@@ -52,9 +52,6 @@
       private
       public :: init_remap, horizontal_remap, make_masks
 
-!lipscomb - delete later
-      public :: init_remap_old, horizontal_remap_old
-
 ! NOTE: It would be better to pass in ntrace as an argument, but this slows
 !       down the code considerably, at least on mauve.
 ! NOTE: For remapping, hice, hsno, qice, and qsno are considered tracers.
@@ -73,9 +70,7 @@
          p5625m = -9._dbl_kind/16._dbl_kind    ,&
          p52083 = 25._dbl_kind/48._dbl_kind
 
-!lipscomb - debugging parameters
-      logical (kind=log_kind), parameter :: verbose = .false.
-      logical (kind=log_kind), parameter :: bugcheck = .true.
+      logical (kind=log_kind), parameter :: bugcheck = .false.
 
 !=======================================================================
 ! Here is some information about how the incremental remapping scheme
@@ -457,6 +452,7 @@
       integer (kind=int_kind) ::     &
          i, j           ,&! horizontal indices
          iblk           ,&! block indices
+         ilo,ihi,jlo,jhi,&! beginning and end of physical domain
          n                ! ice category index
 
       integer (kind=int_kind), dimension(0:ncat,max_blocks) ::     &
@@ -518,7 +514,6 @@
       character (len=char_len) ::   &
          edge             ! 'north' or 'east'
 
-
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          worka, &
          workb, &
@@ -577,13 +572,20 @@
 
       do iblk = 1, nblocks
 
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
     !------------------------------------------------------------------- 
     ! Compute masks and count ice cells.
     ! Masks are used to prevent tracer values in cells without ice from
     !  being used to compute tracer gradients.
     !------------------------------------------------------------------- 
 
-         call make_masks (nx_block,       ny_block,              &
+         call make_masks (nx_block,       ny_block,                  &
+                          ilo, ihi,       jlo, jhi,                  &
                           nghost,             has_dependents,        &
                           icellsnc(:,iblk),                          &
                           indxinc(:,:,iblk),  indxjnc(:,:,iblk),     &
@@ -599,6 +601,7 @@
          ! open water
 
          call construct_fields(nx_block,            ny_block,           &
+                               ilo, ihi,            jlo, jhi,           &
                                nghost,                                  &
                                tracer_type,         depend,             &
                                has_dependents,      icellsnc (0,iblk),  &
@@ -621,6 +624,7 @@
          do n = 1, ncat
 
             call construct_fields(nx_block,            ny_block,            &
+                                  ilo, ihi,            jlo, jhi,            &
                                   nghost,                                   &
                                   tracer_type,         depend,              &
                                   has_dependents,      icellsnc (n,iblk),   &
@@ -643,12 +647,14 @@
 
          enddo                  ! n
 
+       
     !-------------------------------------------------------------------
     ! Given velocity field at cell corners, compute departure points
     ! of trajectories.
     !-------------------------------------------------------------------
 
          call departure_points(nx_block,         ny_block,          &
+                               ilo, ihi,         jlo, jhi,          &
                                nghost,           dt,                &
                                uvel  (:,:,iblk), vvel(:,:,iblk),    &
                                dxu   (:,:,iblk), dyu (:,:,iblk),    &
@@ -707,6 +713,12 @@
 
       do iblk = 1, nblocks
 
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
     !-------------------------------------------------------------------
     ! Transports for east cell edges.
     !-------------------------------------------------------------------
@@ -717,6 +729,7 @@
 
          edge = 'east'
          call locate_triangles(nx_block,          ny_block,           &
+                               ilo, ihi,          jlo, jhi,           &
                                nghost,            edge,               &
                                icellsng (:,iblk),                     &
                                indxing(:,:,iblk), indxjng(:,:,iblk),  &
@@ -777,6 +790,7 @@
 
          edge = 'north'
          call locate_triangles(nx_block,          ny_block,           &
+                               ilo, ihi,          jlo, jhi,           &
                                nghost,            edge,               &
                                icellsng (:,iblk),                     &
                                indxing(:,:,iblk), indxjng(:,:,iblk),  &
@@ -827,7 +841,7 @@
          ! open water
 
          call update_fields (nx_block,           ny_block,          &
-                             nghost,                                &
+                             ilo, ihi,           jlo, jhi,          &
                              tracer_type,        depend,            &
                              tarear(:,:,iblk),   l_stop,            &
                              istop,              jstop,             &
@@ -851,7 +865,7 @@
          do n = 1, ncat
 
             call update_fields(nx_block,             ny_block,         &
-                               nghost,                                 &
+                               ilo, ihi,             jlo, jhi,         &
                                tracer_type,          depend,           &
                                tarear(:,:,iblk),     l_stop,           &
                                istop,                jstop,            &
@@ -886,6 +900,7 @@
 ! !INTERFACE:
 !
       subroutine make_masks (nx_block, ny_block,           &
+                             ilo, ihi, jlo, jhi,           &
                              nghost,   has_dependents,     &
                              icells,                       &
                              indxi,    indxj,              &
@@ -916,6 +931,7 @@
 !
       integer (kind=int_kind), intent(in) ::     &
            nx_block, ny_block  ,&! block dimensions
+           ilo,ihi,jlo,jhi     ,&! beginning and end of physical domain
            nghost                ! number of ghost cells
 
       logical (kind=log_kind), dimension (ntrace), intent(in) ::     &
@@ -950,13 +966,7 @@
       integer (kind=int_kind) ::     &
            i, j, ij       ,&! horizontal indices
            n              ,&! ice category index
-           nt             ,&! tracer index
-           ilo,ihi,jlo,jhi  ! beginning and end of physical domain
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
+           nt               ! tracer index
 
       do n = 0, ncat
          do ij = 1, nx_block*ny_block
@@ -1065,6 +1075,7 @@
 ! !INTERFACE:
 !
       subroutine construct_fields (nx_block,       ny_block,   &
+                                   ilo, ihi,       jlo, jhi,   &
                                    nghost,                     &
                                    tracer_type,    depend,     &
                                    has_dependents, icells,     &
@@ -1098,6 +1109,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
          nx_block, ny_block  ,&! block dimensions
+         ilo,ihi,jlo,jhi     ,&! beginning and end of physical domain
          nghost              ,&! number of ghost cells
          icells                ! number of cells with mass
 
@@ -1148,7 +1160,6 @@
       integer (kind=int_kind) ::   &
          i, j           ,&! horizontal indices
          nt, nt1        ,&! tracer indices
-         ilo,ihi,jlo,jhi,&! beginning and end of physical domain
          ij               ! combined i/j horizontal index
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) ::    &
@@ -1227,21 +1238,17 @@
          enddo
       endif
          
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
-
       ! limited gradient of mass field in each cell (except masked cells)
       ! Note: The gradient is computed in scaled coordinates with
       !       dxt = dyt = hte = htn = 1.
 
       call limited_gradient (nx_block, ny_block,   &
+                             ilo, ihi, jlo, jhi,   &
                              nghost,               &
                              mm,       hm,         &
                              xav,      yav,        &
-                             HTN,      HTE,       &
-                             dxt,      dyt,      &
+                             HTN,      HTE,        &
+                             dxt,      dyt,        &
                              mx,       my)
 
       do ij = 1,icells   ! ice is present
@@ -1276,11 +1283,12 @@
          if (tracer_type(nt)==1) then ! independent of other tracers
 
             call limited_gradient(nx_block,     ny_block,  &
+                                  ilo, ihi,     jlo, jhi,  &
                                   nghost,                  &
                                   tm(:,:,nt),   mmask,     &
                                   mxav,         myav,      &
                                   HTN,          HTE,       &
-                                  dxt,          dyt,      &
+                                  dxt,          dyt,       &
                                   tx(:,:,nt),   ty(:,:,nt)) 
 
             if (has_dependents(nt)) then   ! need center of area*tracer
@@ -1346,6 +1354,7 @@
             nt1 = depend(nt)
 
             call limited_gradient(nx_block,       ny_block,         &
+                                  ilo, ihi,       jlo, jhi,         &
                                   nghost,                           &
                                   tm(:,:,nt),     tmask(:,:,nt1),   &
                                   mtxav(:,:,nt1), mtyav(:,:,nt1),   &
@@ -1388,6 +1397,7 @@
 ! !INTERFACE:
 !
       subroutine limited_gradient (nx_block, ny_block,   &
+                                   ilo, ihi, jlo, jhi,   &
                                    nghost,               &
                                    phi,      phimask,    &
                                    cnx,      cny,        &
@@ -1414,6 +1424,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
           nx_block, ny_block,&! block dimensions
+          ilo,ihi,jlo,jhi ,&! beginning and end of physical domain
           nghost              ! number of ghost cells
 
       real (kind=dbl_kind), dimension (nx_block,ny_block),   &
@@ -1439,7 +1450,6 @@
 !
       integer (kind=int_kind) ::   &
           i, j, ij        ,&! standard indices
-          ilo,ihi,jlo,jhi ,&! beginning and end of physical domain
           icells            ! number of cells to limit
 
       integer (kind=int_kind), dimension(nx_block*ny_block) ::   &
@@ -1459,12 +1469,6 @@
       gx(:,:) = c0
       gy(:,:) = c0
 
-      ! Physical cells
-      ilo = nghost + 1
-      ihi = nx_block - nghost
-      jlo = nghost + 1
-      jhi = ny_block - nghost
-      
       ! For nghost = 1, loop over physical cells and update ghost cells later
       ! For nghost = 2, loop over a layer of ghost cells and skip the update
 
@@ -1566,6 +1570,7 @@
 ! !INTERFACE:
 !
       subroutine departure_points (nx_block,   ny_block,   &
+                                   ilo, ihi,   jlo, jhi,   &
                                    nghost,     dt,   &
                                    uvel,       vvel,    &
                                    dxu,        dyu,     &
@@ -1589,6 +1594,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
          nx_block, ny_block,&! block dimensions
+         ilo,ihi,jlo,jhi,   &! beginning and end of physical domain
          nghost              ! number of ghost cells
 
       real (kind=dbl_kind), intent(in) ::   &
@@ -1619,24 +1625,13 @@
 !EOP
 !
       integer (kind=int_kind) ::   &
-         i, j, i2, j2   ,&! horizontal indices
-         ilo,ihi,jlo,jhi  ! beginning and end of physical domain
+         i, j, i2, j2     ! horizontal indices
 
       real (kind=dbl_kind) ::                  &
          mpx,  mpy      ,&! coordinates of midpoint of back trajectory,
                           ! relative to cell corner
          mpxt, mpyt     ,&! midpoint coordinates relative to cell center
-         ump,  vmp      ,&! corrected velocity at midpoint
-         use, vse, usw, vsw, une, vne, unw, vnw !lipscomb - remove later
-
-    !-------------------------------------------------------------------
-    ! Initialize
-    !-------------------------------------------------------------------
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
+         ump,  vmp        ! corrected velocity at midpoint
 
     !-------------------------------------------------------------------
     ! Estimate departure points.
@@ -1734,29 +1729,15 @@
     ! trajectory midpoint in the (i2,j2) reference frame.
     !-------------------------------------------------------------------
  
-!lipscomb - get rid of usw, etc.
-
-            usw = uvel(i2-1,j2-1)
-            vsw = vvel(i2-1,j2-1)
+            ump = uvel(i2-1,j2-1)*(mpxt-p5)*(mpyt-p5)     &
+                - uvel(i2,  j2-1)*(mpxt+p5)*(mpyt-p5)     &
+                + uvel(i2,  j2  )*(mpxt+p5)*(mpyt+p5)     &  
+                - uvel(i2-1,j2  )*(mpxt-p5)*(mpyt+p5)
  
-            use = uvel(i2,j2-1)
-            vse = vvel(i2,j2-1)
- 
-            une = uvel(i2,j2)
-            vne = vvel(i2,j2)
- 
-            unw = uvel(i2-1,j2)
-            vnw = vvel(i2-1,j2)
-
-            ump = usw*(mpxt-p5)*(mpyt-p5)     &
-                - use*(mpxt+p5)*(mpyt-p5)     &
-                + une*(mpxt+p5)*(mpyt+p5)     &  
-                - unw*(mpxt-p5)*(mpyt+p5)
- 
-            vmp = vsw*(mpxt-p5)*(mpyt-p5)     &
-                - vse*(mpxt+p5)*(mpyt-p5)     &
-                + vne*(mpxt+p5)*(mpyt+p5)     &
-                - vnw*(mpxt-p5)*(mpyt+p5)
+            vmp = vvel(i2-1,j2-1)*(mpxt-p5)*(mpyt-p5)     &
+                - vvel(i2,  j2-1)*(mpxt+p5)*(mpyt-p5)     &
+                + vvel(i2,  j2  )*(mpxt+p5)*(mpyt+p5)     &
+                - vvel(i2-1,j2  )*(mpxt-p5)*(mpyt+p5)
  
     !-------------------------------------------------------------------
     ! Use the midpoint velocity to estimate the coordinates of the
@@ -1784,6 +1765,7 @@
 ! !INTERFACE:
 !
       subroutine locate_triangles (nx_block,     ny_block,   &
+                                   ilo, ihi,     jlo, jhi,   &
                                    nghost,       edge,       &
                                    icells,                   &
                                    indxi,        indxj,      &
@@ -1812,6 +1794,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
          nx_block, ny_block,&! block dimensions
+         ilo,ihi,jlo,jhi   ,&! beginning and end of physical domain
          nghost              ! number of ghost cells
 
       character (len=char_len), intent(in) ::   &
@@ -1871,8 +1854,9 @@
 
       real (kind=dbl_kind), dimension(nx_block,ny_block) ::   &
          dx, dy         ,&! scaled departure points
-         areafac          ! area scale factor at cell edges
-        
+         areafac_c      ,&! area scale factor at center of edge
+         areafac_l      ,&! area scale factor at left corner
+         areafac_r        ! area scale factor at right corner
 
       real (kind=dbl_kind) ::   &
          xcl, ycl       ,&! coordinates of left corner point
@@ -1898,10 +1882,13 @@
          ishift_br, jshift_br ,&! i,j indices of BR cell relative to edge
          ishift_tc, jshift_tc ,&! i,j indices of TC cell relative to edge
          ishift_bc, jshift_bc ,&! i,j indices of BC cell relative to edge
-         w1, w2           ! work variables
+         area1, area2         ,&! temporary triangle areas
+         area3, area4         ,&! 
+         area_c               ,&! center polygon area
+         w1, w2                 ! work variables
 
-      integer (kind=int_kind), dimension (nx_block,ny_block,ngroups) ::   &
-         fluxsign         ! = 1 for positive flux, -1 for negative
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ngroups) ::   &
+         areafact         ! = 1 for positive flux, -1 for negative
 
       real (kind=dbl_kind), dimension(nx_block,ny_block) ::   &
          areasum          ! sum of triangle areas for a given edge
@@ -1954,17 +1941,19 @@
     ! In this coordinate system, the lefthand corner CL = (-0.5,0)
     !  and the righthand corner CR = (0.5, 0).
     !-------------------------------------------------------------------
-
+  
     !-------------------------------------------------------------------
     ! Initialize
     !-------------------------------------------------------------------
 
-      areafac(:,:) = c0
+      areafac_c(:,:) = c0
+      areafac_l(:,:) = c0
+      areafac_r(:,:) = c0
       do ng = 1, ngroups
          do j = 1, ny_block
          do i = 1, nx_block
             triarea (i,j,ng) = c0
-            fluxsign(i,j,ng) = 0
+            areafact(i,j,ng) = c0
             iflux   (i,j,ng) = i
             jflux   (i,j,ng) = j
          enddo
@@ -1983,10 +1972,10 @@
 
          ! loop size
 
-         ib = 1 + nghost
-         ie = nx_block - nghost
-         jb = nghost            ! lowest j index is a ghost cell
-         je = ny_block - nghost
+         ib = ilo
+         ie = ihi 
+         jb = jlo - nghost            ! lowest j index is a ghost cell
+         je = jhi
 
          ! index shifts for neighbor cells
 
@@ -2007,7 +1996,9 @@
 
          do j = jb, je
          do i = ib, ie
-            areafac(i,j) = p25*(dxu(i-1,j)+dxu(i,j))*(dyu(i-1,j)+dyu(i,j)) 
+            areafac_l(i,j) = dxu(i-1,j)*dyu(i-1,j) 
+            areafac_r(i,j) = dxu(i,j)*dyu(i,j) 
+            areafac_c(i,j) = p5*(areafac_l(i,j) + areafac_r(i,j))
          enddo
          enddo
 
@@ -2015,10 +2006,10 @@
 
          ! loop size
 
-         ib = nghost            ! lowest i index is a ghost cell
-         ie = nx_block - nghost
-         jb = 1 + nghost
-         je = ny_block - nghost
+         ib = ilo - nghost            ! lowest i index is a ghost cell
+         ie = ihi
+         jb = jlo
+         je = jhi
 
          ! index shifts for neighbor cells
 
@@ -2035,11 +2026,13 @@
          ishift_bc =  0
          jshift_bc =  0
 
-         ! area scale factor
+         ! area scale factors
 
          do j = jb, je
          do i = ib, ie
-            areafac(i,j) = p25*(dxu(i,j-1)+dxu(i,j))*(dyu(i,j-1)+dyu(i,j)) 
+            areafac_l(i,j) = dxu(i,j)*dyu(i,j) 
+            areafac_r(i,j) = dxu(i,j-1)*dyu(i,j-1)
+            areafac_c(i,j) = p5 * (areafac_l(i,j) + areafac_r(i,j))
          enddo
          enddo
 
@@ -2120,6 +2113,8 @@
          xcr =  p5
          ycr =  c0
 
+         ! Departure points
+
          if (trim(edge) == 'north') then ! north edge
             xdl = xcl + dx(i-1,j)
             ydl = ycl + dy(i-1,j)
@@ -2132,25 +2127,10 @@
             ydr = ycr + dx(i,j-1)
          endif
 
-         ! Midpoint of departure points
          xdm = p5 * (xdr + xdl)
          ydm = p5 * (ydr + ydl)
 
-         ! For l_fixed_area = T, shift the midpoint so the departure
-         ! region has the prescribed area
-   
-         if (l_fixed_area) then
-            w1 = c2*edgearea(i,j)/areafac(i,j)    &
-                 + (xdr-xcl)*ydl + (xcr-xdl)*ydr
-            w2 = (xdr-xdl)**2 + (ydr-ydl)**2
-            w1 = w1/w2
-            xdm = xdm + (ydr - ydl) * w1
-            ydm = ydm - (xdr - xdl) * w1
- 
-            ! temporary diagnostic
-            w2 = sqrt( ((ydr - ydl)*w1)**2 + ((xdr - xdl)*w1)**2  ) 
-
-         endif
+         ! Intersection points
 
          xil = xcl
          yil = (xcl*(ydm-ydl) + xdm*ydl - xdl*ydm) / (xdm - xdl)
@@ -2158,22 +2138,19 @@
          xir = xcr
          yir = (xcr*(ydr-ydm) - xdm*ydr + xdr*ydm) / (xdr - xdm) 
          
-         mdl = (ydm - ydl) / (xdm - xdl)
-         mdr = (ydr - ydm) / (xdr - xdm)
+         md = (ydr - ydl) / (xdr - xdl)
          
-         if (abs(mdl) > puny) then
-            xicl = xdl - ydl/mdl
+         if (abs(md) > puny) then
+            xic = xdl - ydl/md
          else
-            xicl = c0
+            xic = c0
          endif
-         yicl = c0
+         yic = c0
 
-         if (abs(mdr) > puny) then
-            xicr = xdr - ydr/mdr
-         else
-            xicr = c0
-         endif
-         yicr = c0
+         xicl = xic
+         yicl = yic
+         xicr = xic
+         yicr = yic
 
     !-------------------------------------------------------------------
     ! Locate triangles in TL cell (NW for north edge, NE for east edge)
@@ -2193,7 +2170,7 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tl
             jflux   (i,j,ng) = j + jshift_tl
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_l(i,j)
 
          elseif (yil < c0 .and. xdl < xcl .and. ydl < c0) then
 
@@ -2208,7 +2185,7 @@
             yp    (i,j,3,ng) = yil
             iflux   (i,j,ng) = i + ishift_bl
             jflux   (i,j,ng) = j + jshift_bl
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_l(i,j)
 
          elseif (yil < c0 .and. xdl < xcl .and. ydl >= c0) then
 
@@ -2219,24 +2196,24 @@
             yp    (i,j,1,ng) = ycl
             xp    (i,j,2,ng) = xdl
             yp    (i,j,2,ng) = ydl
-            xp    (i,j,3,ng) = xicl
-            yp    (i,j,3,ng) = yicl
+            xp    (i,j,3,ng) = xic
+            yp    (i,j,3,ng) = yic
             iflux   (i,j,ng) = i + ishift_tl
             jflux   (i,j,ng) = j + jshift_tl
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_l(i,j)
 
          ! BL1 (group 3)
 
             ng = 3
             xp    (i,j,1,ng) = xcl
             yp    (i,j,1,ng) = ycl
-            xp    (i,j,2,ng) = xicl
-            yp    (i,j,2,ng) = yicl
+            xp    (i,j,2,ng) = xic
+            yp    (i,j,2,ng) = yic
             xp    (i,j,3,ng) = xil
             yp    (i,j,3,ng) = yil
             iflux   (i,j,ng) = i + ishift_bl
             jflux   (i,j,ng) = j + jshift_bl
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_l(i,j)
 
          elseif (yil > c0 .and. xdl < xcl .and. ydl < c0) then
 
@@ -2247,24 +2224,24 @@
             yp    (i,j,1,ng) = ycl
             xp    (i,j,2,ng) = xil
             yp    (i,j,2,ng) = yil
-            xp    (i,j,3,ng) = xicl
-            yp    (i,j,3,ng) = yicl
+            xp    (i,j,3,ng) = xic
+            yp    (i,j,3,ng) = yic
             iflux   (i,j,ng) = i + ishift_tl
             jflux   (i,j,ng) = j + jshift_tl
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_l(i,j)
 
          ! BL2 (group 1)
 
             ng = 1
             xp    (i,j,1,ng) = xcl
             yp    (i,j,1,ng) = ycl
-            xp    (i,j,2,ng) = xicl
-            yp    (i,j,2,ng) = yicl
+            xp    (i,j,2,ng) = xic
+            yp    (i,j,2,ng) = yic
             xp    (i,j,3,ng) = xdl
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_bl
             jflux   (i,j,ng) = j + jshift_bl
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_l(i,j)
 
          endif                  ! TL and BL triangles
 
@@ -2286,7 +2263,7 @@
             yp    (i,j,3,ng) = yir
             iflux   (i,j,ng) = i + ishift_tr
             jflux   (i,j,ng) = j + jshift_tr
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_r(i,j)
 
          elseif (yir < c0 .and. xdr >= xcr .and. ydr < c0) then
 
@@ -2301,7 +2278,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_br
             jflux   (i,j,ng) = j + jshift_br
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_r(i,j)
 
          elseif (yir < c0 .and. xdr >= xcr  .and. ydr >= c0) then 
 
@@ -2310,13 +2287,13 @@
             ng = 2
             xp    (i,j,1,ng) = xcr
             yp    (i,j,1,ng) = ycr
-            xp    (i,j,2,ng) = xicr
-            yp    (i,j,2,ng) = yicr
+            xp    (i,j,2,ng) = xic
+            yp    (i,j,2,ng) = yic
             xp    (i,j,3,ng) = xdr
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_tr
             jflux   (i,j,ng) = j + jshift_tr
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_r(i,j)
 
          ! BR1 (group 3)
 
@@ -2325,11 +2302,11 @@
             yp    (i,j,1,ng) = ycr
             xp    (i,j,2,ng) = xir
             yp    (i,j,2,ng) = yir
-            xp    (i,j,3,ng) = xicr
-            yp    (i,j,3,ng) = yicr
+            xp    (i,j,3,ng) = xic
+            yp    (i,j,3,ng) = yic
             iflux   (i,j,ng) = i + ishift_br
             jflux   (i,j,ng) = j + jshift_br
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_r(i,j)
 
          elseif (yir > c0 .and. xdr >= xcr .and. ydr < c0) then 
 
@@ -2338,13 +2315,13 @@
             ng = 3
             xp    (i,j,1,ng) = xcr
             yp    (i,j,1,ng) = ycr
-            xp    (i,j,2,ng) = xicr
-            yp    (i,j,2,ng) = yicr
+            xp    (i,j,2,ng) = xic
+            yp    (i,j,2,ng) = yic
             xp    (i,j,3,ng) = xir
             yp    (i,j,3,ng) = yir
             iflux   (i,j,ng) = i + ishift_tr
             jflux   (i,j,ng) = j + jshift_tr
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_r(i,j)
 
          ! BR2 (group 2)
 
@@ -2353,11 +2330,11 @@
             yp    (i,j,1,ng) = ycr
             xp    (i,j,2,ng) = xdr
             yp    (i,j,2,ng) = ydr
-            xp    (i,j,3,ng) = xicr
-            yp    (i,j,3,ng) = yicr
+            xp    (i,j,3,ng) = xic
+            yp    (i,j,3,ng) = yic
             iflux   (i,j,ng) = i + ishift_br
             jflux   (i,j,ng) = j + jshift_br
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_r(i,j)
 
          endif                  ! TR and BR triangles
 
@@ -2376,9 +2353,149 @@
          endif
 
     !-------------------------------------------------------------------
+    ! For l_fixed_area = T, shift the midpoint so that the departure
+    ! region has the prescribed area
+    !-------------------------------------------------------------------
+
+         if (l_fixed_area) then
+
+            ! Sum the areas of the left and right triangles.
+            ! Note that yp(i,j,1,ng) = 0 for all triangles, so we can
+            !  drop those terms from the area formula.
+
+            ng = 1
+            area1 = p5 * ( (xp(i,j,2,ng)-xp(i,j,1,ng)) *   &
+                            yp(i,j,3,ng)                   &
+                         -  yp(i,j,2,ng) *                 &
+                           (xp(i,j,3,ng)-xp(i,j,1,ng)) )   &
+                         * areafact(i,j,ng) 
+
+            ng = 2
+            area2 = p5 * ( (xp(i,j,2,ng)-xp(i,j,1,ng)) *   &
+                            yp(i,j,3,ng)                   &
+                         -  yp(i,j,2,ng) *                 &
+                           (xp(i,j,3,ng)-xp(i,j,1,ng)) )   &
+                         * areafact(i,j,ng) 
+
+            ng = 3
+            area3 = p5 * ( (xp(i,j,2,ng)-xp(i,j,1,ng)) *   &
+                            yp(i,j,3,ng)                   &
+                         -  yp(i,j,2,ng) *                 &
+                           (xp(i,j,3,ng)-xp(i,j,1,ng)) )   &
+                         * areafact(i,j,ng) 
+
+            !-----------------------------------------------------------
+            ! Check whether the central triangles lie in one grid cell or two.
+            ! If all are in one grid cell, then adjust the area of the central
+            !  region so that the sum of all triangle areas is equal to the
+            !  prescribed value.
+            ! If two triangles are in one grid cell and one is in the other,
+            !  then compute the area of the lone triangle using an area factor
+            !  corresponding to the adjacent corner.  This is necessary to prevent
+            !  negative masses in some rare cases on curved grids.  Then adjust
+            !  the area of the remaining two-triangle region so that the sum of
+            !  all triangle areas has the prescribed value.
+            !-----------------------------------------------------------
+
+            if (ydl*ydr >= c0) then   ! Both DPs lie on same side of x-axis
+
+               ! compute required area of central departure region
+               area_c  = edgearea(i,j) - area1 - area2 - area3
+
+               ! shift midpoint so that the area of remaining triangles = area_c
+               w1 = c2*area_c/areafac_c(i,j)    &
+                    + (xdr-xcl)*ydl + (xcr-xdl)*ydr
+               w2 = (xdr-xdl)**2 + (ydr-ydl)**2
+               w1 = w1/w2
+               xdm = xdm + (ydr - ydl) * w1
+               ydm = ydm - (xdr - xdl) * w1
+
+               ! compute left and right intersection points
+               mdl = (ydm - ydl) / (xdm - xdl)
+               mdr = (ydr - ydm) / (xdr - xdm)
+
+               if (abs(mdl) > puny) then
+                  xicl = xdl - ydl/mdl
+               else
+                  xicl = c0
+               endif
+               yicl = c0
+
+               if (abs(mdr) > puny) then
+                  xicr = xdr - ydr/mdr
+               else
+                  xicr = c0
+               endif
+               yicr = c0
+
+            elseif (xic < c0) then  ! fix ICL = IC
+
+               xicl = xic
+               yicl = yic
+
+               ! compute midpoint between ICL and DR
+               xdm = p5 * (xdr + xicl)
+               ydm = p5 *  ydr
+
+               ! compute area of triangle adjacent to left corner 
+               area4 = p5 * (xcl - xic) * ydl * areafac_l(i,j)
+               area_c  = edgearea(i,j) - area1 - area2 - area3 - area4
+
+               ! shift midpoint so that area of remaining triangles = area_c
+               w1 = c2*area_c/areafac_c(i,j) + (xcr-xic)*ydr
+               w2 = (xdr-xic)**2 + ydr**2
+               w1 = w1/w2
+               xdm = xdm + ydr*w1
+               ydm = ydm - (xdr - xic) * w1
+
+               ! compute ICR
+               mdr = (ydr - ydm) / (xdr - xdm)
+               if (abs(mdr) > puny) then
+                  xicr = xdr - ydr/mdr
+               else
+                  xicr = c0
+               endif
+               yicr = c0
+
+            elseif (xic >= c0) then  ! fix ICR = IR
+
+               xicr = xic
+               yicr = yic
+
+               ! compute midpoint between ICR and DL 
+               xdm = p5 * (xicr + xdl)
+               ydm = p5 *  ydl
+
+               area4 = p5 * (xic - xcr) * ydr * areafac_r(i,j)
+               area_c  = edgearea(i,j) - area1 - area2 - area3 - area4
+
+               ! shift midpoint so that area of remaining triangles = area_c
+               w1 = c2*area_c/areafac_c(i,j) + (xic-xcl)*ydl
+               w2 = (xic-xdl)**2 + ydl**2
+               w1 = w1/w2
+               xdm = xdm - ydl*w1
+               ydm = ydm - (xic - xdl) * w1
+
+               ! compute ICL
+
+               mdl = (ydm - ydl) / (xdm - xdl)
+               if (abs(mdl) > puny) then
+                  xicl = xdl - ydl/mdl
+               else
+                  xicl = c0
+               endif
+               yicl = c0
+
+            endif   ! ydl*ydr >= c0
+
+         endif  ! l_fixed_area
+
+    !-------------------------------------------------------------------
     ! Locate triangles in BC cell (H for both north and east edges) 
     ! and TC cell (N for north edge and E for east edge).
     !-------------------------------------------------------------------
+
+    ! Start with cases where both DPs lie in the same grid cell
 
          if (ydl >= c0 .and. ydr >= c0 .and. ydm >= c0) then
 
@@ -2393,7 +2510,7 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! TC2a (group 5)
 
@@ -2406,7 +2523,7 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! TC3a (group 6)
             ng = 6
@@ -2418,7 +2535,7 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          elseif (ydl >= c0 .and. ydr >= c0 .and. ydm < c0) then  ! rare
 
@@ -2433,7 +2550,7 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! TC2b (group 5)
 
@@ -2446,7 +2563,7 @@
             yp    (i,j,3,ng) = yicr
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! BC3b (group 6)
 
@@ -2459,7 +2576,7 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          elseif (ydl < c0 .and. ydr < c0 .and. ydm < c0) then
 
@@ -2474,7 +2591,7 @@
             yp    (i,j,3,ng) = ycr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          ! BC2a (group 5)
 
@@ -2487,7 +2604,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          ! BC3a (group 6)
 
@@ -2500,7 +2617,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          elseif (ydl < c0 .and. ydr < c0 .and. ydm >= c0) then  ! rare
 
@@ -2515,7 +2632,7 @@
             yp    (i,j,3,ng) = yicl
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          ! BC2b (group 5)
 
@@ -2528,7 +2645,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          ! TC3b (group 6)
 
@@ -2541,9 +2658,14 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
-         elseif (ydl >= c0 .and. ydr < c0 .and. ydm >= c0) then
+    ! Now consider cases where the two DPs lie in different grid cells
+    ! For these cases, one triangle is given the area factor associated
+    !  with the adjacent corner, to avoid rare negative masses on curved grids.
+
+         elseif (ydl >= c0 .and. ydr < c0 .and. xic >= c0  &
+                                          .and. ydm >= c0) then
 
          ! TC1b (group 4)
 
@@ -2556,7 +2678,7 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! BC2b (group 5)
 
@@ -2569,7 +2691,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_r(i,j)
 
          ! TC3b (group 6)
 
@@ -2582,9 +2704,10 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
-         elseif (ydl >= c0 .and. ydr < c0 .and. ydm < c0) then
+         elseif (ydl >= c0 .and. ydr < c0 .and. xic >= c0  &
+                                          .and. ydm < c0 ) then  ! less common
 
          ! TC1b (group 4)
 
@@ -2597,7 +2720,49 @@
             yp    (i,j,3,ng) = ydl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
+
+         ! BC2b (group 5)
+
+            ng = 5
+            xp    (i,j,1,ng) = xcr
+            yp    (i,j,1,ng) = ycr
+            xp    (i,j,2,ng) = xicr
+            yp    (i,j,2,ng) = yicr
+            xp    (i,j,3,ng) = xdr
+            yp    (i,j,3,ng) = ydr
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_r(i,j)
+
+         ! BC3b (group 6)
+
+            ng = 6
+            xp    (i,j,1,ng) = xicr
+            yp    (i,j,1,ng) = yicr
+            xp    (i,j,2,ng) = xicl
+            yp    (i,j,2,ng) = yicl
+            xp    (i,j,3,ng) = xdm
+            yp    (i,j,3,ng) = ydm
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         elseif (ydl >= c0 .and. ydr < c0 .and. xic < c0   &
+                                          .and. ydm < c0) then
+
+         ! TC1b (group 4)
+
+            ng = 4
+            xp    (i,j,1,ng) = xcl
+            yp    (i,j,1,ng) = ycl
+            xp    (i,j,2,ng) = xicl
+            yp    (i,j,2,ng) = yicl
+            xp    (i,j,3,ng) = xdl
+            yp    (i,j,3,ng) = ydl
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_l(i,j)
 
          ! BC2b (group 5)
 
@@ -2610,7 +2775,7 @@
             yp    (i,j,3,ng) = ydr
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
          ! BC3b (group 6)
 
@@ -2623,9 +2788,52 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
 
-         elseif (ydl < c0 .and. ydr >= c0 .and. ydm >= c0) then
+         elseif (ydl >= c0 .and. ydr < c0 .and. xic <  c0  &
+                                          .and. ydm >= c0) then  ! less common
+
+         ! TC1b (group 4)
+
+            ng = 4
+            xp    (i,j,1,ng) = xcl
+            yp    (i,j,1,ng) = ycl
+            xp    (i,j,2,ng) = xicl
+            yp    (i,j,2,ng) = yicl
+            xp    (i,j,3,ng) = xdl
+            yp    (i,j,3,ng) = ydl
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_l(i,j)
+
+         ! BC2b (group 5)
+
+            ng = 5
+            xp    (i,j,1,ng) = xcr
+            yp    (i,j,1,ng) = ycr
+            xp    (i,j,2,ng) = xicr
+            yp    (i,j,2,ng) = yicr
+            xp    (i,j,3,ng) = xdr
+            yp    (i,j,3,ng) = ydr
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         ! TC3b (group 6)
+
+            ng = 6
+            xp    (i,j,1,ng) = xicl
+            yp    (i,j,1,ng) = yicl
+            xp    (i,j,2,ng) = xicr
+            yp    (i,j,2,ng) = yicr
+            xp    (i,j,3,ng) = xdm
+            yp    (i,j,3,ng) = ydm
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_c(i,j)
+
+         elseif (ydl < c0 .and. ydr >= c0 .and. xic <  c0  &
+                                          .and. ydm >= c0) then
 
          ! BC1b (group 4)
 
@@ -2638,7 +2846,7 @@
             yp    (i,j,3,ng) = yicl
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_l(i,j)
 
          ! TC2b (group 5)
 
@@ -2651,7 +2859,7 @@
             yp    (i,j,3,ng) = yicl
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          ! TC3b (group 6)
 
@@ -2664,9 +2872,10 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
 
-         elseif (ydl < c0 .and. ydr >= c0 .and. ydm < c0) then
+         elseif (ydl < c0 .and. ydr >= c0 .and. xic < c0  &
+                                          .and. ydm < c0) then ! less common
 
          ! BC1b (group 4)
 
@@ -2675,11 +2884,11 @@
             yp    (i,j,1,ng) = ycl
             xp    (i,j,2,ng) = xdl
             yp    (i,j,2,ng) = ydl
-            xp    (i,j,3,ng) = xicr
-            yp    (i,j,3,ng) = yicr
+            xp    (i,j,3,ng) = xicl
+            yp    (i,j,3,ng) = yicl
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_l(i,j)
 
          ! TC2b (group 5)
 
@@ -2692,7 +2901,49 @@
             yp    (i,j,3,ng) = yicr
             iflux   (i,j,ng) = i + ishift_tc
             jflux   (i,j,ng) = j + jshift_tc
-            fluxsign(i,j,ng) = -1
+            areafact(i,j,ng) = -areafac_c(i,j)
+
+         ! BC3b (group 6)
+
+            ng = 6
+            xp    (i,j,1,ng) = xicr
+            yp    (i,j,1,ng) = yicr
+            xp    (i,j,2,ng) = xicl
+            yp    (i,j,2,ng) = yicl
+            xp    (i,j,3,ng) = xdm
+            yp    (i,j,3,ng) = ydm
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         elseif (ydl < c0 .and. ydr >= c0 .and. xic >= c0  &
+                                          .and. ydm <  c0) then
+
+         ! BC1b (group 4)
+
+            ng = 4
+            xp    (i,j,1,ng) = xcl
+            yp    (i,j,1,ng) = ycl
+            xp    (i,j,2,ng) = xdl
+            yp    (i,j,2,ng) = ydl
+            xp    (i,j,3,ng) = xicr
+            yp    (i,j,3,ng) = yicr
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         ! TC2b (group 5)
+
+            ng = 5
+            xp    (i,j,1,ng) = xcr
+            yp    (i,j,1,ng) = ycr
+            xp    (i,j,2,ng) = xdr
+            yp    (i,j,2,ng) = ydr
+            xp    (i,j,3,ng) = xicr
+            yp    (i,j,3,ng) = yicr
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_r(i,j)
 
          ! BC3b (group 6)
 
@@ -2705,7 +2956,49 @@
             yp    (i,j,3,ng) = ydm
             iflux   (i,j,ng) = i + ishift_bc
             jflux   (i,j,ng) = j + jshift_bc
-            fluxsign(i,j,ng) = 1
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         elseif (ydl < c0 .and. ydr >= c0 .and. xic >= c0   &
+                                          .and. ydm >= c0) then  ! less common
+
+         ! BC1b (group 4)
+
+            ng = 4
+            xp    (i,j,1,ng) = xcl
+            yp    (i,j,1,ng) = ycl
+            xp    (i,j,2,ng) = xdl
+            yp    (i,j,2,ng) = ydl
+            xp    (i,j,3,ng) = xicl
+            yp    (i,j,3,ng) = yicl
+            iflux   (i,j,ng) = i + ishift_bc
+            jflux   (i,j,ng) = j + jshift_bc
+            areafact(i,j,ng) = areafac_c(i,j)
+
+         ! TC2b (group 5)
+
+            ng = 5
+            xp    (i,j,1,ng) = xcr
+            yp    (i,j,1,ng) = ycr
+            xp    (i,j,2,ng) = xdr
+            yp    (i,j,2,ng) = ydr
+            xp    (i,j,3,ng) = xicr
+            yp    (i,j,3,ng) = yicr
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_r(i,j)
+
+         ! TC3b (group 6)
+
+            ng = 6
+            xp    (i,j,1,ng) = xicl
+            yp    (i,j,1,ng) = yicl
+            xp    (i,j,2,ng) = xicr
+            yp    (i,j,2,ng) = yicr
+            xp    (i,j,3,ng) = xdm
+            yp    (i,j,3,ng) = ydm
+            iflux   (i,j,ng) = i + ishift_tc
+            jflux   (i,j,ng) = j + jshift_tc
+            areafact(i,j,ng) = -areafac_c(i,j)
 
          endif                  ! TC and BC triangles
 
@@ -2714,9 +3007,9 @@
     !-------------------------------------------------------------------
     ! Compute triangle areas with appropriate sign.
     ! These are found by computing the area in scaled coordinates and
-    !  multiplying by a scale factor.
-    ! The resulting area is multiplied by fluxsign, which = 1 for
-    !  fluxes out of the cell and -1 for fluxes into the cell.
+    !  multiplying by a scale factor (areafact).
+    ! Note that the scale factor is positive for fluxes out of the cell 
+    !  and negative for fluxes into the cell.
     !
     ! Note: The triangle area formula below gives A >=0 iff the triangle
     !        points x1, x2, and x3 are taken in counterclockwise order.
@@ -2745,9 +3038,9 @@
                                      (yp(i,j,3,ng)-yp(i,j,1,ng))   &
                                    - (yp(i,j,2,ng)-yp(i,j,1,ng)) *   &
                                      (xp(i,j,3,ng)-xp(i,j,1,ng)) )   &
-                                   * areafac(i,j) * fluxsign(i,j,ng) 
+                                   * areafact(i,j,ng) 
 
-            if (abs(triarea(i,j,ng)) < eps16*areafac(i,j)) then
+            if (abs(triarea(i,j,ng)) < eps16*areafac_c(i,j)) then
                triarea(i,j,ng) = c0
             else
                icells(ng) = icells(ng) + 1 
@@ -2758,33 +3051,25 @@
 
             areasum(i,j) = areasum(i,j) + triarea(i,j,ng)
 
-!lipscomb - bug check - remove later
-
-!!            if (triarea(i,j,ng)/fluxsign(i,j,ng) < c0) then
-!!               print*, 'ATTENTION: Triangle area < 0, m, i, j, ng, A =',   &
-!!                    my_task, i, j, ng, triarea(i,j,ng)/fluxsign(i,j,ng)
-!!            endif
-
          enddo                  ! ij
       enddo                     ! ng
-
 
       if (l_fixed_area) then
        if (bugcheck) then   ! set bugcheck = F to speed up code
          do ij = 1, icellsd
             i = indxid(ij)
             j = indxjd(ij)
-            if (abs(areasum(i,j) - edgearea(i,j)) > eps13*areafac(i,j)) then
+            if (abs(areasum(i,j) - edgearea(i,j)) > eps13*areafac_c(i,j)) then
                print*, ''
                print*, 'Areas do not add up: m, i, j, edge =',   &
                         my_task, i, j, trim(edge)
                print*, 'edgearea =', edgearea(i,j)
                print*, 'areasum =', areasum(i,j)
-               print*, 'areafac =', areafac(i,j)
+               print*, 'areafac_c =', areafac_c(i,j)
                print*, ''
                print*, 'Triangle areas:'
                do ng = 1, ngroups   ! not vector friendly
-                  if (abs(triarea(i,j,ng)) > eps16*areafac(i,j)) then
+                  if (abs(triarea(i,j,ng)) > eps16*abs(areafact(i,j,ng))) then
                      print*, ng, triarea(i,j,ng)
                   endif
                enddo
@@ -2835,9 +3120,7 @@
          enddo                  ! ng
       endif
 
-!lipscomb - bug check - delete later
       if (bugcheck) then
-	
          do ng = 1, ngroups
          do nv = 1, nvert
             do j = jb, je
@@ -3360,7 +3643,7 @@
 ! !INTERFACE:
 !
       subroutine update_fields (nx_block,    ny_block,   &
-                                nghost,                  &
+                                ilo, ihi,    jlo, jhi,   &
                                 tracer_type, depend,     &
                                 tarear,      l_stop,     &
                                 istop,       jstop,      &
@@ -3383,7 +3666,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
          nx_block, ny_block,&! block dimensions
-         nghost              ! number of ghost cells
+         ilo,ihi,jlo,jhi     ! beginning and end of physical domain
 
       integer (kind=int_kind), dimension (ntrace), intent(in) ::     &
          tracer_type       ,&! = 1, 2, or 3 (see comments above)
@@ -3417,8 +3700,7 @@
 !
       integer (kind=int_kind) ::   &
          i, j           ,&! horizontal indices
-         nt, nt1, nt2   ,&! tracer indices
-         ilo,ihi,jlo,jhi  ! beginning and end of physical domain
+         nt, nt1, nt2     ! tracer indices
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,ntrace) ::   &
          mtold            ! old mass*tracer
@@ -3433,15 +3715,6 @@
       integer (kind=int_kind) ::   &
          icells         ,&! number of cells with mm > 0.
          ij               ! combined i/j horizontal index
-
-    !-------------------------------------------------------------------
-    ! Initialize
-    !-------------------------------------------------------------------
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
     !-------------------------------------------------------------------
     ! Save starting values of mass*tracer
@@ -3594,2822 +3867,6 @@
       endif                     ! present(tm)
 
       end subroutine update_fields
-
-!=======================================================================
-
-
-!lipscomb - The following code is included for back compatibility
-!            with the older (CICE 3.14) remapping scheme.
-!           It will be deleted later.
-!=======================================================================
-
-!
-!BOP
-!
-! !IROUTINE: init_remap - initialize grid quantities used by remapping
-!
-! !INTERFACE:
-!
-      subroutine init_remap_old (ntrace,            tracer_type,       &
-                                 depend,            has_dependents)
-!
-! !DESCRIPTION:
-!
-! Grid quantities used by the remapping transport scheme
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_boundary
-      use ice_domain
-      use ice_blocks
-      use ice_grid, only: HTE, HTN, dxt, dyt, dxhy, dyhx, tarear, &
-                          mne, mnw, mse, msw,                     &
-                          xav, yav, xxav, xyav, yyav,             &
-                          xxxav, xxyav, xyyav, yyyav
-      use ice_exit
-      use ice_state, only: trcr_depend
-      use ice_timers
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::                      &
-         ntrace   ! number of remapping tracers
-                          
-      integer (kind=int_kind), dimension(ntrace), intent(out) ::       &
-         tracer_type       ,&! = 1, 2, or 3 (see comments below)
-         depend              ! tracer dependencies (see below)
-
-      logical (kind=log_kind), dimension(ntrace), intent(out) ::       &
-         has_dependents      ! true if a tracer has dependent tracers
-!
-!EOP
-!
-      integer (kind=int_kind) ::     &
-           i, j, k, iblk, nt, nt1  ! standard indices
-
-    !-------------------------------------------------------------------
-    ! Compute tracer type and dependency vectors
-    ! NOTE: May need to change these if transporting
-    !       a different set of tracers.  See comments above.
-    !-------------------------------------------------------------------
-
-      depend(1:2)         = 0   ! hice, hsno
-      tracer_type(1:2)    = 1   ! no dependency
-      
-      k = 2
-
-      do nt = 1, ntrcr
-         depend(k+nt) = trcr_depend(nt)  ! 0 for ice area tracers
-                                         ! 1 for ice volume tracers
-                                         ! 2 for snow volume tracers
-         if (trcr_depend(nt) == 0) then
-            tracer_type(k+nt) = 1
-         else                   ! trcr_depend = 1 or 2
-            tracer_type(k+nt) = 2
-         endif
-      enddo
-
-      k = k + ntrcr
-
-      depend(k+1:k+nilyr) = 1        ! qice depends on hice
-      tracer_type(k+1:k+nilyr) = 2 
-
-      k = k + nilyr
-
-      depend(k+1:k+nslyr) = 2         ! qsno depends on hsno
-      tracer_type(k+1:k+nslyr) = 2 
-
-      has_dependents = .false.
-      do nt = 1, ntrace
-         if (depend(nt) > 0) then
-            nt1 = depend(nt)
-            has_dependents(nt1) = .true.
-            if (nt1 > nt) then
-               write(nu_diag,*)     &
-                    'Tracer nt2 =',nt,' depends on tracer nt1 =',nt1
-               call abort_ice       &
-                       ('ice: remap transport: Must have nt2 > nt1')
-            endif
-         endif
-      enddo
-
-
-      !$OMP PARALLEL DO PRIVATE(iblk)
-      do iblk = 1, nblocks
-
-      ! Compute some geometric quantities needed for non-rectangular grids.
-
-         call remapping_matrix_elements                                   &
-                               (nx_block,          ny_block,              &
-                                nghost,                                   &
-                                HTE    (:,:,iblk), HTN    (:,:,iblk),     &
-                                dxhy   (:,:,iblk), dyhx   (:,:,iblk),     &
-                                mne(:,:,:,:,iblk), mnw(:,:,:,:,iblk),     &
-                                mse(:,:,:,:,iblk), msw(:,:,:,:,iblk))
-
-      ! Construct mean values of geometric quantities over each grid cell.
-
-         call geometric_means(nx_block,        ny_block,             &
-                              nghost,          tarear(:,:,iblk),     &
-                              HTE  (:,:,iblk), HTN   (:,:,iblk),     &
-                              dxt  (:,:,iblk), dyt   (:,:,iblk),     &
-                              xav  (:,:,iblk), yav   (:,:,iblk),     &
-                              xxav (:,:,iblk), xyav  (:,:,iblk),     &
-                              yyav (:,:,iblk),                       &
-                              xxxav(:,:,iblk), xxyav (:,:,iblk),     &
-                              xyyav(:,:,iblk), yyyav (:,:,iblk))
-      enddo
-
-      ! Compute ghost cell values
-      !$OMP END PARALLEL DO
-
-      call ice_timer_start(timer_bound)
-      call ice_HaloUpdate (xav,              halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (yav,              halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (xxav,             halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (xyav,             halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (yyav,             halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (xxxav,            halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (xxyav,            halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (xyyav,            halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_HaloUpdate (yyyav,            halo_info, &
-                           field_loc_center, field_type_scalar, &
-                           fillValue=c1)
-      call ice_timer_stop(timer_bound)
-
-      end subroutine init_remap_old
-
-!=======================================================================
-!BOP
-!
-! !IROUTINE: geometric_means - geometric means used for remapping
-!
-! !INTERFACE:
-!
-      subroutine geometric_means(nx_block,  ny_block,   &
-                                 nghost,    tarear,     &
-                                 HTE,       HTN,        &
-                                 dxt,       dyt,        &
-                                 xav,       yav,        &
-                                 xxav,      xyav,       &
-                                 yyav,                  &
-                                 xxxav,     xxyav,      &
-                                 xyyav,     yyyav)
-!
-! !DESCRIPTION:
-!
-! In each grid cell, compute various geometric means used for remapping.
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::     &
-         nx_block, ny_block ,&! block dimensions
-         nghost               ! number of ghost cells
-
-      real (kind=dbl_kind), dimension(nx_block,ny_block),     &
-         intent(in) ::     &
-         tarear         ,&! 1 / grid cell area
-         HTN            ,&! length of northern edge of T-cell (m)
-         HTE            ,&! length of eastern edge of T-cell (m)
-         dxt            ,&! width of T-cell through the middle (m)
-         dyt              ! height of T-cell through the middle (m)
-
-      real (kind=dbl_kind), dimension(nx_block, ny_block),     &
-         intent(out) ::         &
-         xav,  yav             ,&! mean T-cell values of x, y
-         xxav, xyav, yyav      ,&! mean T-cell values of xx, xy, yy
-         xxxav,xxyav,xyyav,yyyav ! mean T-cell values of xxx, xxy, xyy, yyy
-
-! Local variables
-
-      integer (kind=int_kind) ::     &
-         i, j, m        ,&! counting indices
-         ilo,ihi,jlo,jhi  ! beginning and end of physical domain
-
-      real (kind=dbl_kind) ::             &
-           ar                            ,&! triangle area
-           xv1, xv2, xv3, yv1, yv2, yv3  ,&! vertices
-           x0, x1, x2, x3, y0, y1, y2, y3,&! interior points
-           x0sq, x1sq, x2sq, x3sq        ,&! x0^2, etc.
-           y0sq, y1sq, y2sq, y3sq
-
-      !-----------------------------------------------------------------
-      ! Construct mean values of geometric quantities over each grid cell,
-      ! relative to the origin (0,0) at the geometric center of the cell.
-      ! (The geometric center is located at the intersection of the
-      ! line joining the midpoints of the north and south edges with
-      ! the line joining the midpoints of the east and west edges.
-      ! The intersection is assumed to form a right angle.)
-      ! These mean values are used to compute the cell centroid, center of
-      ! ice area, and centers of ice and snow volume.
-      ! The calculation is done by summing contributions from each of
-      ! four triangles, labeled N, E, S, and W.  These triangles are
-      ! formed by connecting the geometric center to the four cell
-      ! corners.  Integrals are computed using the method described
-      ! in subroutine transport_integrals.
-      !------------------------------------------------------------------
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
-
-      ! Initialize
-      do j = 1, ny_block
-      do i = 1, nx_block
-         xav  (i,j) = c0
-         yav  (i,j) = c0
-         xxav (i,j) = c0
-         xyav (i,j) = c0
-         yyav (i,j) = c0
-         xxxav(i,j) = c0
-         xxyav(i,j) = c0
-         xyyav(i,j) = c0
-         yyyav(i,j) = c0
-      enddo
-      enddo
-
-      ! Compute vertices and area of each triangle.
-
-      do m = 1, 4
-            
-         do j = jlo,jhi
-         do i = ilo,ihi
-
-            ! xv1, yv1 = 0 for each triangle
-
-            if (m==1) then
-               xv2 =  p5*HTN(i,j) ! east triangle
-               yv2 =  p5*HTE(i,j)
-               xv3 =  p5*HTN(i,j-1)
-               yv3 = -yv2
-               ar  = p25*HTE(i,j)*dxt(i,j)
-
-            elseif (m==2) then
-               xv2 = -p5*HTN(i,j) ! west triangle
-               yv2 =  p5*HTE(i-1,j)
-               xv3 = -p5*HTN(i,j-1)
-               yv3 = -p5*HTE(i-1,j)
-               ar  = p25*HTE(i-1,j)*dxt(i,j)
-                     
-            elseif (m==3) then
-               xv2 = -p5*HTN(i,j) ! north triangle
-               yv2 =  p5*HTE(i-1,j)
-               xv3 =  p5*HTN(i,j)
-               yv3 =  p5*HTE(i,j)
-               ar  = p25*HTN(i,j)*dyt(i,j)
-
-            elseif (m==4) then
-               xv2 = -p5*HTN(i,j-1) ! south triangle
-               yv2 = -p5*HTE(i-1,j)
-               xv3 =  p5*HTN(i,j-1)
-               yv3 = -p5*HTE(i,j)
-               ar  = p25*HTN(i,j-1)*dyt(i,j)
-            endif
-
-            ! Contribution to means from each triangle (E, W, N, S)
-
-            x0 = (xv2 + xv3) / c3 ! midpoint
-            y0 = (yv2 + yv3) / c3
-            x1 = p6*x0          ! other 3 points needed for integral
-            x2 = p6*x0 + p4*xv2
-            x3 = p6*x0 + p4*xv3
-            y1 = p6*y0
-            y2 = p6*y0 + p4*yv2
-            y3 = p6*y0 + p4*yv3
-
-            x0sq = x0*x0
-            y0sq = y0*y0
-            x1sq = x1*x1
-            y1sq = y1*y1
-            x2sq = x2*x2
-            y2sq = y2*y2
-            x3sq = x3*x3
-            y3sq = y3*y3
-            
-            xav(i,j) = xav(i,j) + ar*x0
-            yav(i,j) = yav(i,j) + ar*y0
-            xxav(i,j) = xxav(i,j) + ar *               &
-                                  ( p5625m * x0*x0     &
-                                  + p52083 * (x1sq + x2sq + x3sq) )
-            xyav(i,j) = xyav(i,j) + ar *               &
-                                  ( p5625m * x0*y0     &
-                                  + p52083 * (x1*y1 + x2*y2 + x3*y3) )
-            yyav(i,j) = yyav(i,j) + ar *               &
-                                  ( p5625m * y0*y0     &
-                                  + p52083 * (y1sq + y2sq + y3sq) )
-            xxxav(i,j) = xxxav(i,j) + ar *             &
-                            ( p5625m * x0*x0sq         &
-                            + p52083 * (x1*x1sq + x2*x2sq + x3*x3sq) )
-            xxyav(i,j) = xxyav(i,j) + ar *             &
-                            ( p5625m * x0sq*y0         &
-                            + p52083 * (x1sq*y1 + x2sq*y2 + x3sq*y3) )
-            xyyav(i,j) = xyyav(i,j) + ar *             &
-                            ( p5625m * x0*y0sq         &
-                            + p52083 * (x1*y1sq + x2*y2sq + x3*y3sq) )
-            yyyav(i,j) = yyyav(i,j) + ar *             &
-                            ( p5625m * y0*y0sq         &
-                            + p52083 * (y1*y1sq + y2*y2sq + y3*y3sq) )
-
-         enddo                  ! i
-         enddo                  ! j
-      enddo                     ! m (loop over 4 triangles)
-
-      ! Divide by grid cell area
-
-      do j = jlo, jhi
-      do i = ilo, ihi
-         xav  (i,j) = xav  (i,j) * tarear(i,j)
-         yav  (i,j) = yav  (i,j) * tarear(i,j)
-         xxav (i,j) = xxav (i,j) * tarear(i,j)
-         xyav (i,j) = xyav (i,j) * tarear(i,j)
-         yyav (i,j) = yyav (i,j) * tarear(i,j)
-         xxxav(i,j) = xxxav(i,j) * tarear(i,j)
-         xxyav(i,j) = xxyav(i,j) * tarear(i,j)
-         xyyav(i,j) = xyyav(i,j) * tarear(i,j)
-         yyyav(i,j) = yyyav(i,j) * tarear(i,j)
-      enddo                     ! i
-      enddo                     ! j
-
-      end subroutine geometric_means
-
-!=======================================================================
-!BOP
-!
-! !IROUTINE: remapping_matrix_elements - matrix elements used for remapping
-!
-! !INTERFACE:
-!
-      subroutine remapping_matrix_elements(nx_block,  ny_block,    &
-                                           nghost,                 &
-                                           HTE,       HTN,         &
-                                           dxhy,      dyhx,        &
-                                           mne,       mnw,         &
-                                           mse,       msw)
-
-!
-! !DESCRIPTION:
-!
-! Compute matrix elements needed to transform from a reference frame
-! whose origin is at a cell corner (a U-cell) to a reference frame
-! whose origin is at a neighboring cell center (a T-cell).
-! Transformations are needed because the axes of these two reference
-! frames are not parallel on a curved grid.
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::    &                
-         nx_block, ny_block, &! block dimensions
-         nghost               ! number of ghost cells
-
-      real (kind=dbl_kind), dimension(nx_block,ny_block),     &
-         intent(in) ::     &
-         HTN         ,&! length of northern edge of T-cell (m)
-         HTE         ,&! length of eastern edge of T-cell (m)
-         dxhy        ,&! 0.5*(HTE(i,j) - HTE(i-1,j))
-         dyhx          ! 0.5*(HTN(i,j) - HTN(i,j-1))
-
-      real (kind=dbl_kind), dimension(2,2,nx_block,ny_block),   &
-         intent(out) ::     &
-         mne, mnw    ,&! matrices used for coordinate transformations
-         mse, msw      ! ne = northeast corner, nw = northwest, etc.
-
-! Local variables
-
-      integer (kind=int_kind) ::     &
-         i, j
-                           
-      real (kind=dbl_kind) ::     &
-           theta1, theta2, theta3, theta4  ! angles
-
-       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         worka, &
-         workb, &
-         workc, &
-         workd
-
-      !-----------------------------------------------------------------
-      ! Compute angles between the U-cell coordinate axes and T-cell
-      ! coordinate axes.  The U-cell axes lie along the cell edges,
-      ! which do not meet at right angles in the T-cell reference frame.
-      ! The angles are defined as positive if the U-cell axes are obtained
-      ! by a counterclockwise rotation from the T-cell axes.
-      ! Four independent angles are needed.
-      ! NOTE: Where theta2 and theta3 are set to zero, they are not
-      !         needed because they lie outside the transport domain.
-      !       OK to have HTN = 0 or HTE = 0 for ghost cells at the edge
-      !         of the global domain if the boundary is closed.
-      !         Ice velocities should not be needed at the edges of a
-      !         closed (i.e., land-locked) domain.
-      !
-      ! You might ask: Why not compute matrix elements on physical cells
-      ! and then do a ghost-cell update?  The problem is that for tripole
-      ! updates, these matrix elements transform across the tripole cut
-      ! in a complicated way for which there is no update routine.
-      !-----------------------------------------------------------------
-
-      do j = 1, ny_block
-      do i = 1, nx_block
-         worka(i,j) = c0           ! theta1, NE corner
-         workb(i,j) = c0           ! theta2, NW corner
-         workc(i,j) = c0           ! theta3, SW corner
-         workd(i,j) = c0           ! theta4, SW corner
-
-         if (HTN(i,j) > puny) worka(i,j) = atan( dxhy(i,j)/HTN(i,j))
-         if (HTE(i,j) > puny) workd(i,j) = atan(-dyhx(i,j)/HTE(i,j)) 
-      enddo
-      enddo
-
-      do j = 1, ny_block
-      do i = nghost+1, nx_block
-         if (HTE(i-1,j) > puny) workb(i,j) = atan(dyhx(i,j)/HTE(i-1,j)) 
-      enddo
-      enddo
-        
-      do j = nghost+1, ny_block
-      do i = 1, nx_block
-         if (HTN(i,j-1) > puny) workc(i,j) = atan(-dxhy(i,j)/HTN(i,j-1))
-      enddo
-      enddo
-
-      !-----------------------------------------------------------------
-      ! Compute matrix elements.
-      !-----------------------------------------------------------------
-
-      do j = 1, ny_block
-      do i = 1, nx_block
-
-         theta1 = worka(i,j)
-         theta2 = workb(i,j)
-         theta3 = workc(i,j)
-         theta4 = workd(i,j)
-
-         mne(1,1,i,j) =  cos(theta1)
-         mne(2,1,i,j) =  sin(theta1)
-         mne(1,2,i,j) = -sin(theta4)
-         mne(2,2,i,j) =  cos(theta4)
-         
-         mnw(1,1,i,j) =  cos(theta1)
-         mnw(2,1,i,j) =  sin(theta1)
-         mnw(1,2,i,j) = -sin(theta2)
-         mnw(2,2,i,j) =  cos(theta2)
-         
-         msw(1,1,i,j) =  cos(theta3)
-         msw(2,1,i,j) =  sin(theta3)
-         msw(1,2,i,j) = -sin(theta2)
-         msw(2,2,i,j) =  cos(theta2)
-         
-         mse(1,1,i,j) =  cos(theta3)
-         mse(2,1,i,j) =  sin(theta3)
-         mse(1,2,i,j) = -sin(theta4)
-         mse(2,2,i,j) =  cos(theta4)
-         
-      enddo                     ! i
-      enddo                     ! j
-
-      end subroutine remapping_matrix_elements
-
-!=======================================================================
-!BOP
-!
-! !IROUTINE: horizontal_remap - incremental remapping transport scheme
-!
-! !INTERFACE:
-!
-      subroutine horizontal_remap_old (dt,                              &
-                                   uvel,              vvel,         &
-                                   aim,               trm,          &
-                                   edgearea_e,        edgearea_n,   &
-                                   tracer_type_in,    depend_in,    &
-                                   has_dependents_in, integral_order_in, &
-                                   l_dp_midpt_in)
-!
-! !DESCRIPTION:
- 
-! Solve the transport equations for one timestep using the incremental
-! remapping scheme developed by John Dukowicz and John Baumgardner (DB)
-! and modified for sea ice by William Lipscomb and Elizabeth Hunke.
-!
-! This scheme preserves monotonicity of ice area and tracers.  That is,
-! it does not produce new extrema.  It is second-order accurate in space,
-! except where gradients are limited to preserve monotonicity. 
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb, LANL
-! 2006: Moved driver (subroutine transport_remap) into separate module. 
-!       Developed new remapping scheme that will supersede this one.
-!       For now, keep this module for testing and back compatibility.
-!
-! !USES:
-!
-      use ice_boundary
-      use ice_global_reductions
-      use ice_domain
-      use ice_blocks
-      use ice_grid, only: HTE, HTN, dxt, dyt, dxhy, dyhx,     &
-                          tarea, tarear, hm,                  &
-                          mne, mnw, mse, msw,                 &
-                          xav, yav, xxav, xyav, yyav,         &
-                          xxxav, xxyav, xyyav, yyyav
-      use ice_exit
-      use ice_calendar, only: istep1
-      use ice_timers
-
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      real (kind=dbl_kind), intent(in) ::     &
-         dt      ! time step
- 
-      real (kind=dbl_kind), intent(in),       &
-                dimension(nx_block,ny_block,max_blocks) ::           &
-         uvel       ,&! x-component of velocity (m/s)
-         vvel         ! y-component of velocity (m/s)
- 
-      real (kind=dbl_kind), intent(inout),     &
-         dimension (nx_block,ny_block,0:ncat,max_blocks) ::          &
-         aim          ! mean ice category areas in each grid cell
- 
-      real (kind=dbl_kind), intent(inout),     &
-         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
-         trm              ! mean tracer values in each grid cell
- 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks),  &
-         intent(out) ::                                               &
-         edgearea_e     ,&! area of departure regions for east edges
-         edgearea_n       ! area of departure regions for north edges
- 
-      integer (kind=int_kind), dimension(ntrace), intent(in),        &
-         optional ::   &
-         tracer_type_in    ,&! = 1, 2, or 3 (see comments above)
-         depend_in           ! tracer dependencies (see above)
- 
-      logical (kind=log_kind), dimension(ntrace), intent(in),        &
-         optional ::   &
-         has_dependents_in   ! true if a tracer has dependent tracers
- 
-      integer (kind=int_kind), intent(in), optional ::     &
-         integral_order_in    ! polynomial order of quadrature integrals
-                              ! linear=1, quadratic=2, cubic=3
-
-      logical (kind=log_kind), intent(in), optional ::     &
-         l_dp_midpt_in       ! if true, find departure points using
-                             ! corrected midpoint velocity
-!
-!EOP
-!
- 
-      ! local variables
- 
-      integer (kind=int_kind) ::     &
-         i, j           ,&! horizontal indices
-         iblk           ,&! block indices
-         n                ! ice category index
- 
-      integer (kind=int_kind), dimension(0:ncat,max_blocks) ::     &
-         icellsnc         ! number of cells with ice
- 
-      integer (kind=int_kind),     &
-         dimension(nx_block*ny_block,0:ncat,max_blocks) ::     &
-         indxinc, indxjnc   ! compressed i/j indices
- 
-      type (block) ::     &
-         this_block       ! block information for current block
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) ::     &
-         dpx            ,&! x coordinates of departure points at cell corners
-         dpy            ,&! y coordinates of departure points at cell corners
-         extmask          ! extended ice mask
- 
-      real (kind=dbl_kind),      &
-         dimension (nx_block,ny_block,0:ncat,max_blocks) ::     &
-         aic            ,&! ice area at geometric center of cell
-         aix, aiy      ,&! limited derivative of ice area wrt x and y
-         aimask           ! = 1. if ice is present, = 0. otherwise
- 
-      real (kind=dbl_kind),      &
-         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
-         trc            ,&! tracer values at geometric center of cell
-         trx, try       ,&! limited derivative of tracer wrt x and y
-         trmask           ! = 1. if tracer is present, = 0. otherwise
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,0:ncat) ::     &
-         aiflxe, aiflxn   ! ice area transports across E and N cell edges
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat) ::     &
-         atflxe, atflxn   ! area*tracer transports across E and N cell edges
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ngroups) ::     &
-         triarea        ,&! area of east-edge departure triangle
-         xp0, yp0       ,&! x and y coordinates of special triangle points
-         xp1, yp1       ,&! (need 4 points for triangle integrals)
-         xp2, yp2       ,&
-         xp3, yp3
- 
-      integer (kind=int_kind),     &
-         dimension (nx_block,ny_block,ngroups) ::     &
-         iflux          ,&! i index of cell contributing transport
-         jflux            ! j index of cell contributing transport
- 
-      integer (kind=int_kind), dimension(ngroups,max_blocks) ::     &
-         icellsng         ! number of cells with ice
- 
-      integer (kind=int_kind),     &
-         dimension(nx_block*ny_block,ngroups,max_blocks) ::     &
-         indxing, indxjng ! compressed i/j indices
- 
-      logical (kind=log_kind) ::     &
-         l_stop           ! if true, abort the model
- 
-      integer (kind=int_kind) ::     &
-         istop, jstop     ! indices of grid cell where model aborts
- 
-      integer (kind=log_kind), dimension(ntrace) ::   &
-         tracer_type    ,&! = 1, 2, or 3 (see comments above)
-         depend           ! tracer dependencies (see above)
- 
-      logical (kind=log_kind), dimension(ntrace) ::   &
-         has_dependents   ! true if a tracer has dependent tracers
- 
-      integer (kind=int_kind) ::    &
-         integral_order    ! polynomial order of quadrature integrals
-                           ! linear=1, quadratic=2, cubic=3
-
-      logical (kind=log_kind) ::     &
-         l_dp_midpt          ! if true, find departure points using
-                             ! corrected midpoint velocity
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,0:nvert,ngroups) ::  &
-         xp, yp           ! x and y coordinates of special triangle points
-                          ! (need 4 points for triangle integrals)
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         worka
-
-      worka(:,:) = c0
-
-      l_stop = .false.
-      istop = 0
-      jstop = 0
- 
-      aic(:,:,:,:) = c0
-      aix(:,:,:,:) = c0
-      aiy(:,:,:,:) = c0
-      trc(:,:,:,:,:) = c0
-      trx(:,:,:,:,:) = c0
-      try(:,:,:,:,:) = c0
-      extmask(:,:,:) = c0
- 
-!---!-------------------------------------------------------------------
-!---! Remap the ice area and associated tracers.
-!---! Remap the open water area (without tracers).
-!---!-------------------------------------------------------------------
- 
- 
-    !------------------------------------------------------------------- 
-    ! Initialize various remapping options.
-    ! These are either passed in as optional arguments or set to the
-    !  default values.
-    !-------------------------------------------------------------------
- 
-      if (present(has_dependents_in)) then
-         has_dependents(:) = has_dependents_in(:)
-      else      
-         has_dependents(:) = .false.
-      endif
- 
-      if (present(tracer_type_in)) then
-         tracer_type(:) = tracer_type_in(:)
-      else
-         tracer_type(:) = 1
-      endif
- 
-      if (present(depend_in)) then
-         depend(:) = depend_in(:)
-      else
-         depend(:) = 0
-      endif
- 
-      if (present(integral_order_in)) then
-         integral_order = integral_order_in
-      else
-         integral_order = 2   ! quadratic integrals
-      endif
-         
-      if (present(l_dp_midpt_in)) then
-         l_dp_midpt = l_dp_midpt_in
-      else
-         l_dp_midpt = .false.
-      endif
- 
-      !$OMP PARALLEL DO PRIVATE(iblk,n)
-      do iblk = 1, nblocks
- 
-    !------------------------------------------------------------------- 
-    ! Compute masks and count ice cells.
-    ! Masks are used to prevent tracer values in cells without ice from
-    !  being used to compute tracer gradients.
-    !------------------------------------------------------------------- 
- 
-         call make_masks (nx_block,       ny_block,              &
-                          nghost,             has_dependents,        &
-                          icellsnc(:,iblk),                          &
-                          indxinc(:,:,iblk),  indxjnc(:,:,iblk),     &
-                          aim(:,:,:,iblk),     aimask(:,:,:,iblk),     &
-                          trm(:,:,:,:,iblk),   trmask(:,:,:,:,iblk))
-
-    !-------------------------------------------------------------------
-    ! Construct linear fields, limiting gradients to preserve monotonicity.
-    !-------------------------------------------------------------------
- 
-         ! open water
-
-         call construct_fields(nx_block,            ny_block,           &
-                               nghost,                                  &
-                               tracer_type,         depend,             &
-                               has_dependents,      icellsnc (0,iblk),  &
-                               indxinc  (:,0,iblk), indxjnc(:,0,iblk),  &
-                               HTN      (:,:,iblk), HTE  (:,:,iblk),    &
-                               hm       (:,:,iblk), xav  (:,:,iblk),    &
-                               yav      (:,:,iblk), xxav (:,:,iblk),    &
-                               xyav     (:,:,iblk), yyav (:,:,iblk),    &
-                               xxxav    (:,:,iblk), xxyav(:,:,iblk),    &
-                               xyyav    (:,:,iblk), yyyav(:,:,iblk),    &
-                               dxt      (:,:,iblk), dyt  (:,:,iblk),    &
-                               aim    (:,:,0,iblk),  aic(:,:,0,iblk),     &
-                               aix    (:,:,0,iblk),  aiy(:,:,0,iblk),     &
-                               aimask (:,:,0,iblk) )
-!!                               mm    (:,:,0,iblk),  mc(:,:,0,iblk),     &
-!!                               mx    (:,:,0,iblk),  my(:,:,0,iblk),     &
-!!                               mmask (:,:,0,iblk) )
-
-         ! ice categories
-
-         do n = 1, ncat
-
-            call construct_fields(nx_block,            ny_block,            &
-                                  nghost,                                   &
-                                  tracer_type,         depend,              &
-                                  has_dependents,      icellsnc (n,iblk),   &
-                                  indxinc  (:,n,iblk), indxjnc(:,n,iblk),   &
-                                  HTN      (:,:,iblk), HTE    (:,:,iblk),   &
-                                  hm       (:,:,iblk), xav    (:,:,iblk),   &
-                                  yav      (:,:,iblk), xxav   (:,:,iblk),   &
-                                  xyav     (:,:,iblk), yyav   (:,:,iblk),   &
-                                  xxxav    (:,:,iblk), xxyav  (:,:,iblk),   &
-                                  xyyav    (:,:,iblk), yyyav  (:,:,iblk),   &
-                                  dxt      (:,:,iblk), dyt    (:,:,iblk),   &
-                                  aim    (:,:,n,iblk),  aic  (:,:,n,iblk),    &
-                                  aix    (:,:,n,iblk),  aiy  (:,:,n,iblk),    &
-                                  aimask (:,:,n,iblk),                       &
-                                  trm  (:,:,:,n,iblk),  trc(:,:,:,n,iblk),    &
-                                  trx  (:,:,:,n,iblk),  try(:,:,:,n,iblk),    &
-                                  trmask(:,:,:,n,iblk) )
-
-         enddo                  ! n
-
-      end do
-      !$OMP END PARALLEL DO
-
-      ! NOTE - the following does not thread 
-      !!!$OMP PARALLEL DO PRIVATE(iblk,n,this_block,l_stop,istop,jstop)
-      do iblk = 1, nblocks
-
-    !-------------------------------------------------------------------
-    ! Given velocity field at cell corners, compute departure points
-    ! of trajectories.
-    !-------------------------------------------------------------------
- 
-         call departure_points_old(nx_block,          ny_block,               &
-                               nghost,            dt,                     &
-                               uvel   (:,:,iblk), vvel   (:,:,iblk),      &
-                               dpx    (:,:,iblk), dpy    (:,:,iblk),      &
-                               HTN    (:,:,iblk), HTE    (:,:,iblk),      &
-                               dxt    (:,:,iblk), dyt    (:,:,iblk),      &
-                               dxhy   (:,:,iblk), dyhx   (:,:,iblk),      &
-                               mne(:,:,:,:,iblk), mnw(:,:,:,:,iblk),      &
-                               mse(:,:,:,:,iblk), msw(:,:,:,:,iblk),      &
-                               l_dp_midpt,        l_stop,                 &
-                               istop,             jstop)
- 
-         if (l_stop) then
-            this_block = get_block(blocks_ice(iblk),iblk)         
-            write(nu_diag,*) 'istep1, my_task, iblk =',     &
-                              istep1, my_task, iblk
-            write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0)     &
-                 write(nu_diag,*) 'Global i and j:',     &
-                                  this_block%i_glob(istop),     &
-                                  this_block%j_glob(jstop) 
-            call abort_ice('remap transport: bad departure points')
-         endif
- 
-      enddo                     ! iblk
- 
-      call ice_timer_start(timer_bound)
-      call ice_HaloUpdate (dpx,                halo_info, &
-                           field_loc_NEcorner, field_type_vector)
-      call ice_HaloUpdate (dpy,                halo_info, &
-                           field_loc_NEcorner, field_type_vector)
-      call ice_timer_stop(timer_bound)
- 
-    !-------------------------------------------------------------------
-    ! define extended ice mask
-    !-------------------------------------------------------------------
- 
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-            if (dpx(i,j,iblk)/=c0 .or. dpy(i,j,iblk)/=c0) then
-               worka(i,j) = c1
-            else
-               worka(i,j) = c0
-            endif
-         enddo
-         enddo
- 
-         do j = 1+nghost, ny_block-nghost
-         do i = 1+nghost, nx_block-nghost
-         if (worka(i-1,j+1)==c1 .or. worka(i,j+1)==c1 .or.      &
-             worka(i+1,j+1)==c1 .or.     &
-             worka(i-1,j)  ==c1 .or. worka(i,j)  ==c1 .or.      &
-             worka(i+1,j)  ==c1 .or.     &
-             worka(i-1,j-1)==c1 .or. worka(i,j-1)==c1 .or.      &
-             worka(i+1,j-1)==c1 ) then
-             extmask(i,j,iblk) = c1
-         endif
-         enddo
-         enddo
-      enddo
- 
-      call ice_timer_start(timer_bound)
-      call ice_HaloUpdate (extmask,            halo_info, &
-                           field_loc_NEcorner, field_type_vector)
- 
-    !-------------------------------------------------------------------
-    ! Ghost cell updates for centroids and gradients
-    !-------------------------------------------------------------------
- 
-      call ice_HaloUpdate (aic,              halo_info,     &
-                           field_loc_center, field_type_scalar)
-      call ice_HaloUpdate (aix,              halo_info,     &
-                           field_loc_center, field_type_vector)
-      call ice_HaloUpdate (aiy,              halo_info,     &
-                           field_loc_center, field_type_vector)
- 
-      call ice_HaloUpdate (trc,              halo_info,     &
-                           field_loc_center, field_type_scalar)
-      call ice_HaloUpdate (trx,              halo_info,     &
-                           field_loc_center, field_type_vector)
-      call ice_HaloUpdate (try,              halo_info,     &
-                           field_loc_center, field_type_vector)
-      call ice_timer_stop(timer_bound)
- 
-     ! NOTE - depending on resolution/decomposition, the following also has 
-     ! problems threading 
-     !!!$OMP PARALLEL DO PRIVATE(iblk,n,xp,xp0,xp1,xp2,xp3,yp,yp0,yp1,yp2,yp3, &
-     !!!$OMP                     iflux,jflux,triarea,aiflxe,aiflxn,atflxe,atflxn,&
-     !!!$OMP                     l_stop,istop,jstop)
-      do iblk = 1, nblocks
- 
-    !-------------------------------------------------------------------
-    ! Transports for east cell edges.
-    !-------------------------------------------------------------------
- 
-    !-------------------------------------------------------------------
-    ! Compute areas and vertices of departure triangles.
-    !-------------------------------------------------------------------
- 
-         call locate_triangles_east     &
-                                 (nx_block,           ny_block,              &
-                                  nghost,                                    &
-                                  extmask(:,:,iblk),  icellsng (:,iblk),     &
-                                  indxing(:,:,iblk),  indxjng(:,:,iblk),     &
-                                  dpx    (:,:,iblk),  dpy    (:,:,iblk),     &
-                                  HTN    (:,:,iblk),  HTE    (:,:,iblk),     &
-                                  mne(:,:,:,:,iblk),  mnw(:,:,:,:,iblk),     &
-                                  mse(:,:,:,:,iblk),  msw(:,:,:,:,iblk),     &
-                                  xp0,                xp1,     &
-                                  xp2,                xp3,     &
-                                  yp0,                yp1,     &
-                                  yp2,                yp3,     &
-                                  iflux,              jflux,   &
-                                  triarea,            edgearea_e)
- 
-!lipscomb - This copy is needed for consistency with the new subroutines
-!           that use the xp and yp arrays.
-         xp(:,:,0,:) = xp0(:,:,:)
-         xp(:,:,1,:) = xp1(:,:,:)
-         xp(:,:,2,:) = xp2(:,:,:)
-         xp(:,:,3,:) = xp3(:,:,:)
-
-         yp(:,:,0,:) = yp0(:,:,:)
-         yp(:,:,1,:) = yp1(:,:,:)
-         yp(:,:,2,:) = yp2(:,:,:)
-         yp(:,:,3,:) = yp3(:,:,:)
-
-    !-------------------------------------------------------------------
-    ! Given triangle vertices, compute coordinates of triangle points
-    !  needed for transport integrals.
-    !-------------------------------------------------------------------
- 
-         call triangle_coordinates (nx_block,          ny_block,          &
-                                    integral_order,    icellsng (:,iblk), &
-                                    indxing(:,:,iblk), indxjng(:,:,iblk), &
-                                    xp,                yp)
-
-    !-------------------------------------------------------------------
-    ! Compute the transport across east cell edges by summing contributions
-    ! from each triangle.
-    !-------------------------------------------------------------------
- 
-
-         ! open water
-         call transport_integrals(nx_block,           ny_block,          &
-                                  icellsng (:,iblk),                     &
-                                  indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                  tracer_type,        depend,            &
-                                  integral_order,     triarea,           &
-                                  iflux,              jflux,             &
-                                  xp,                 yp,                &
-                                  aic(:,:,0,iblk),     aix(:,:,0,iblk),    &
-                                  aiy(:,:,0,iblk),     aiflxe(:,:,0))
-
-         ! ice categories
-         do n = 1, ncat
-            call transport_integrals                                   &
-                               (nx_block,           ny_block,          &
-                                icellsng (:,iblk),                     &
-                                indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                tracer_type,        depend,            &
-                                integral_order,     triarea,           &
-                                iflux,              jflux,             &
-                                xp,                 yp,                &
-                                aic  (:,:,n,iblk),   aix  (:,:,n,iblk),  &
-                                aiy  (:,:,n,iblk),   aiflxe(:,:,n),      &
-                                trc(:,:,:,n,iblk),   trx(:,:,:,n,iblk),  &
-                                try(:,:,:,n,iblk),   atflxe(:,:,:,n))
-
-         enddo
- 
-    !-------------------------------------------------------------------
-    ! Repeat for north edges
-    !-------------------------------------------------------------------
- 
-         call locate_triangles_north     &
-                                 (nx_block,           ny_block,     &
-                                  nghost,     &
-                                  extmask(:,:,iblk),  icellsng (:,iblk),     &
-                                  indxing(:,:,iblk),  indxjng(:,:,iblk),     &
-                                  dpx    (:,:,iblk),  dpy    (:,:,iblk),     &
-                                  HTN    (:,:,iblk),  HTE    (:,:,iblk),     &
-                                  mne(:,:,:,:,iblk),  mnw(:,:,:,:,iblk),     &
-                                  mse(:,:,:,:,iblk),  msw(:,:,:,:,iblk),     &
-                                  xp0,                xp1,     &
-                                  xp2,                xp3,     &
-                                  yp0,                yp1,     &
-                                  yp2,                yp3,     &
-                                  iflux,              jflux,   &
-                                  triarea,            edgearea_n)
- 
-!lipscomb - This copy is needed for consistency with the new subroutines
-!           that use the xp and yp arrays.
-         xp(:,:,0,:) = xp0(:,:,:)
-         xp(:,:,1,:) = xp1(:,:,:)
-         xp(:,:,2,:) = xp2(:,:,:)
-         xp(:,:,3,:) = xp3(:,:,:)
-
-         yp(:,:,0,:) = yp0(:,:,:)
-         yp(:,:,1,:) = yp1(:,:,:)
-         yp(:,:,2,:) = yp2(:,:,:)
-         yp(:,:,3,:) = yp3(:,:,:)
-
-         call triangle_coordinates (nx_block,          ny_block,          &
-                                    integral_order,    icellsng (:,iblk), &
-                                    indxing(:,:,iblk), indxjng(:,:,iblk), &
-                                    xp,                yp)
-
-         ! open water
-         call transport_integrals(nx_block,           ny_block,          &
-                                  icellsng (:,iblk),                     &
-                                  indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                  tracer_type,        depend,            &
-                                  integral_order,     triarea,           &
-                                  iflux,              jflux,             &
-                                  xp,                 yp,                &
-                                  aic(:,:,0,iblk),     aix(:,:,0,iblk),    &
-                                  aiy(:,:,0,iblk),     aiflxn(:,:,0))
-!!!                                  mc(:,:,0,iblk),     mx(:,:,0,iblk),    &
-!!!                                  my(:,:,0,iblk),     mflxn(:,:,0))
-
-            call update_fields(nx_block,             ny_block,         &
-                               nghost,                                 &
-                               tracer_type,          depend,           &
-                               tarear(:,:,iblk),     l_stop,           &
-                               istop,                jstop,            &
-                               aiflxe(:,:,  0),      aiflxn(:,:,  0),   &
-                               aim   (:,:,  0,iblk))
-
-         if (l_stop) then
-            this_block = get_block(blocks_ice(iblk),iblk)         
-            write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
-                               istep1, my_task, iblk, '0'
-            write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0)     &
-                 write(nu_diag,*) 'Global i and j:',     &
-                                  this_block%i_glob(istop),     &
-                                  this_block%j_glob(jstop) 
-            call abort_ice ('ice remap_transport: negative area, open water')
-         endif
- 
-         ! ice categories
-         do n = 1, ncat
-            call transport_integrals                                   &
-                               (nx_block,           ny_block,          &
-                                icellsng (:,iblk),                     &
-                                indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                tracer_type,        depend,            &
-                                integral_order,     triarea,           &
-                                iflux,              jflux,             &
-                                xp,                 yp,                &
-                                aic  (:,:,n,iblk),   aix  (:,:,n,iblk),  &
-                                aiy  (:,:,n,iblk),   aiflxn(:,:,n),      &
-                                trc(:,:,:,n,iblk),   trx(:,:,:,n,iblk),  &
-                                try(:,:,:,n,iblk),   atflxn(:,:,:,n))
-!!                                mc  (:,:,n,iblk),   mx  (:,:,n,iblk),  &
-!!                                my  (:,:,n,iblk),   mflxn(:,:,n),      &
-!!                                tc(:,:,:,n,iblk),   tx(:,:,:,n,iblk),  &
-!!                                ty(:,:,:,n,iblk),   mtflxn(:,:,:,n))
-
-            call update_fields(nx_block,             ny_block,         &
-                               nghost,                                 &
-                               tracer_type,          depend,           &
-                               tarear(:,:,iblk),     l_stop,           &
-                               istop,                jstop,            &
-                               aiflxe(:,:,  n),      aiflxn(:,:,  n),   &
-                               aim   (:,:,  n,iblk),                    &
-                               atflxe(:,:,:,n),      atflxn(:,:,:,n),  &
-                               trm   (:,:,:,n,iblk))
-
- 
-            if (l_stop) then
-               this_block = get_block(blocks_ice(iblk),iblk)         
-               write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
-                                  istep1, my_task, iblk, n
-               write (nu_diag,*) 'Global block:', this_block%block_id
-               if (istop > 0 .and. jstop > 0)     &
-                    write(nu_diag,*) 'Global i and j:',     &
-                                     this_block%i_glob(istop),     &
-                                     this_block%j_glob(jstop) 
-               call abort_ice ('ice remap_transport: negative area, ice')
-            endif
-         enddo                  ! n
- 
-      enddo                     ! iblk
- 
-      end subroutine horizontal_remap_old
- 
-!=======================================================================
-!BOP
-!
-! !IROUTINE: departure_points - compute departure points of trajectories
-!
-! !INTERFACE:
-!
-      subroutine departure_points_old (nx_block,   ny_block,    &
-                                   nghost,     dt,          &
-                                   uvel,       vvel,        &
-                                   dpx,        dpy,         &
-                                   HTN,        HTE,         &
-                                   dxt,        dyt,         &
-                                   dxhy,       dyhx,        &
-                                   mne,        mnw,         &
-                                   mse,        msw,         &
-                                   l_dp_midpt, l_stop,      &
-                                   istop,      jstop)
-!
-! !DESCRIPTION:
-!
-! Given velocity fields on cell corners, compute departure points
-! of trajectories using a midpoint approximation.
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::     &
-         nx_block, ny_block ,&! block dimensions
-         nghost               ! number of ghost cells
- 
-      real (kind=dbl_kind), intent(in) ::     &
-         dt               ! time step (s)
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block), intent(in) ::     &
-         uvel           ,&! x-component of velocity (m/s)
-         vvel           ,&! y-component of velocity (m/s)
-         HTN            ,&! length of northern edge of T-cell (m)
-         HTE            ,&! length of eastern edge of T-cell (m)
-         dxt            ,&! width of T-cell through the middle (m)
-         dyt            ,&! height of T-cell through the middle (m)
-         dxhy           ,&! 0.5*(HTE(i,j) - HTE(i-1,j))
-         dyhx             ! 0.5*(HTN(i,j) - HTN(i,j-1))
- 
-      real (kind=dbl_kind), dimension(2,2,nx_block,ny_block),     &
-         intent(in) ::     &
-         mne, mnw       ,&! matrices used for coordinate transformations
-         mse, msw         ! ne = northeast corner, nw = northwest, etc.
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block),     &
-         intent(out) ::     &
-         dpx            ,&! x coordinates of departure points at cell corners
-         dpy              ! y coordinates of departure points at cell corners
- 
-      logical (kind=log_kind), intent(in) ::     &
-         l_dp_midpt          ! if true, find departure points using
-                             ! corrected midpoint velocity
- 
-      logical (kind=log_kind), intent(inout) ::     &
-         l_stop       ! if true, abort on return
- 
-      integer (kind=int_kind), intent(inout) ::     &
-         istop, jstop     ! indices of grid cell where model aborts 
- 
-!
-!EOP
-!
-      integer (kind=int_kind) ::     &
-         i, j           ,&! horizontal indices
-         i2, j2         ,&! horizontal indices
-         niter          ,&! iteration counter
-         ilo,ihi,jlo,jhi  ! beginning and end of physical domain
- 
-      real (kind=dbl_kind) ::     &
-         mpx, mpy       ,&! coordinates of midpoint of back trajectory
-         u1t, v1t       ,&! transformed velocity, SW corner
-         u2t, v2t       ,&! transformed velocity, SE corner
-         u3t, v3t       ,&! transformed velocity, NE corner
-         u4t, v4t       ,&! transformed velocity, NW corner
-         umpt, vmpt     ,&! midpoint velocity in transformed coordinates
-         ump, vmp       ,&! midpoint velocity in original corner coordinates
-         w1,w2,w3,w4      ! work variables
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block) ::     &
-         cxt, cyt       ,&! transformed cell corner coordinates
-         mpxt, mpyt     ,&! midpoint transformed to cell-ctr coordinates
-         mpxs, mpys     ,&! midpoint in stretched coordinates
-         mat11, mat12   ,&! transformation matrix, cell corner to center
-         mat21, mat22     ! transformation matrix, cell corner to center
- 
-      integer (kind=int_kind), dimension (nx_block,ny_block) ::     &
-         hindi, hindj     ! horizontal indices array
- 
-    !-------------------------------------------------------------------
-    ! Initialize
-    !-------------------------------------------------------------------
- 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
- 
-    !-------------------------------------------------------------------
-    ! Estimate departure points.
-    ! This estimate is 1st-order accurate; improve accuracy by
-    !  using midpoint approximation below.
-    !-------------------------------------------------------------------
- 
-      do j = 1, ny_block
-      do i = 1, nx_block
-         dpx(i,j) = -dt*uvel(i,j)
-         dpy(i,j) = -dt*vvel(i,j)
-      enddo
-      enddo
- 
-    !-------------------------------------------------------------------
-    ! Check for values out of bounds (more than one grid cell away).
-    !-------------------------------------------------------------------
- 
- 
-      do j = jlo, jhi
-      do i = ilo, ihi
-         if ((dpx(i,j) < -HTN(i,j)) .or.      &
-             (dpx(i,j) >  HTN(i+1,j)) .or.     &
-             (dpy(i,j) < -HTE(i,j)) .or.     &
-             (dpy(i,j) >  HTE(i,j+1))) then
-            l_stop = .true.
-            istop = i
-            jstop = j
-         endif
-      enddo
-      enddo
- 
-      if (l_stop) then
-         i = istop
-         j = jstop
-         write (nu_diag,*) ' '
-         write (nu_diag,*)     &
-                    'Warning: Departure points out of bounds in remap'
-         write (nu_diag,*) 'i, j =', i, j
-         write (nu_diag,*) 'dpx, dpy =', dpx(i,j), dpy(i,j)
-         return
-      endif
- 
-      if (l_dp_midpt) then ! find dep pts using corrected midpt velocity 
- 
-         do j = jlo, jhi
-         do i = ilo, ihi
-            if (uvel(i,j)/=c0 .or. vvel(i,j)/=c0) then
- 
-    !-------------------------------------------------------------------
-    ! Estimate midpoint of backward trajectory relative to corner (i,j).
-    !-------------------------------------------------------------------
-            mpx = p5 * dpx(i,j)
-            mpy = p5 * dpy(i,j)
- 
-    !-------------------------------------------------------------------
-    ! Determine the indices (i2,j2) of the cell where the trajectory lies
-    ! and compute for that cell:
-    ! (1) the matrix 'mat' needed to transform vectors from the reference
-    !     frame of cell corner (i,j) to that of cell center (i2,j2)
-    ! (2) the coordinates (cxt,cyt) of corner (i,j) relative to center
-    !     (i2,j2) in the (i2,j2) reference frame
-    ! (3) a rough guess for the midpoint location in stretched coordinates
-    !     (mpxs, mpys), used in the first pass of the iteration below
-    ! Note: Coordinates in the (i2,j2) reference frame have a 't' at
-    !       the end.
-    !-------------------------------------------------------------------
- 
-            if (mpx >= c0 .and. mpy >= c0) then ! cell (i+1,j+1)
-               i2 = i+1
-               j2 = j+1
-               hindi(i,j) = i2
-               hindj(i,j) = j2
-               mat11(i,j) = msw(1,1,i2,j2)
-               mat21(i,j) = msw(2,1,i2,j2)
-               mat12(i,j) = msw(1,2,i2,j2)
-               mat22(i,j) = msw(2,2,i2,j2)
-               cxt(i,j)   = -p5*HTN(i2,j2-1)
-               cyt(i,j)   = -p5*HTE(i2-1,j2)
-               mpxs(i,j)  = -c1
-               mpys(i,j)  = -c1
-            elseif (mpx < c0 .and. mpy < c0) then ! cell (i,j)
-               i2 = i
-               j2 = j
-               hindi(i,j) = i2
-               hindj(i,j) = j2
-               mat11(i,j) = mne(1,1,i2,j2)
-               mat21(i,j) = mne(2,1,i2,j2)
-               mat12(i,j) = mne(1,2,i2,j2)
-               mat22(i,j) = mne(2,2,i2,j2)
-               cxt(i,j)   = p5*HTN(i2,j2)
-               cyt(i,j)   = p5*HTE(i2,j2)
-               mpxs(i,j)  = c1
-               mpys(i,j)  = c1
-            elseif (mpx >= c0 .and. mpy < c0) then ! cell (i+1,j)
-               i2 = i+1
-               j2 = j
-               hindi(i,j) = i2
-               hindj(i,j) = j2
-               mat11(i,j) = mnw(1,1,i2,j2)
-               mat21(i,j) = mnw(2,1,i2,j2)
-               mat12(i,j) = mnw(1,2,i2,j2)
-               mat22(i,j) = mnw(2,2,i2,j2)
-               cxt(i,j)   = -p5*HTN(i2,j2)
-               cyt(i,j)   =  p5*HTE(i2-1,j2)
-               mpxs(i,j)  = -c1
-               mpys(i,j)  =  c1
-            elseif (mpx < c0 .and. mpy >= c0) then ! cell (i,j+1)
-               i2 = i
-               j2 = j+1
-               hindi(i,j) = i2
-               hindj(i,j) = j2
-               mat11(i,j) = mse(1,1,i2,j2)
-               mat21(i,j) = mse(2,1,i2,j2)
-               mat12(i,j) = mse(1,2,i2,j2)
-               mat22(i,j) = mse(2,2,i2,j2)
-               cxt(i,j)   =  p5*HTN(i2,j2-1)
-               cyt(i,j)   = -p5*HTE(i2,j2)
-               mpxs(i,j)  =  c1
-               mpys(i,j)  = -c1
-            endif
-            
-    !-------------------------------------------------------------------
-    ! Transform coordinates of the trajectory midpoint to the (i2,j2)
-    ! reference frame.
-    !-------------------------------------------------------------------
- 
-            mpxt(i,j) = cxt(i,j) + mat11(i,j)*mpx + mat12(i,j)*mpy
-            mpyt(i,j) = cyt(i,j) + mat21(i,j)*mpx + mat22(i,j)*mpy
- 
-    !-------------------------------------------------------------------
-    ! Transform (mpxt,mpyt) to a stretched coordinate system in which
-    ! the coordinates of the four corners relative to the center are
-    ! (-1,-1), (1,-1), (1,1), and (-1,1).
-    !
-    ! Iterate a couple of times for accuracy.
-    ! (Occasionally abs(mpxs) or abs(mpys) > 1 after first iteration.)
-    !-------------------------------------------------------------------
- 
-               i2 = hindi(i,j)
-               j2 = hindj(i,j)
-               w1 = c2*mpxt(i,j) * dyt(i2,j2)
-               w3 = c2*mpyt(i,j) * dxt(i2,j2)
-               ! 1st iteration
-               w2 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dyhx(i2,j2) * (c2*mpyt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dxhy(i2,j2))
-               w4 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dxhy(i2,j2) * (c2*mpxt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dyhx(i2,j2))
-               mpxs(i,j) = w1/w2
-               mpys(i,j) = w3/w4
-               ! 2nd iteration
-               w2 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dyhx(i2,j2) * (c2*mpyt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dxhy(i2,j2))
-               w4 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dxhy(i2,j2) * (c2*mpxt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dyhx(i2,j2))
-               mpxs(i,j) = w1/w2
-               mpys(i,j) = w3/w4
-               ! 3rd iteration
-               w2 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dyhx(i2,j2) * (c2*mpyt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dxhy(i2,j2))
-               w4 =   dxt(i2,j2) * dyt(i2,j2)     &
-                   + dxhy(i2,j2) * (c2*mpxt(i,j)     &
-                               - mpxs(i,j)*mpys(i,j)*dyhx(i2,j2))
-               mpxs(i,j) = w1/w2
-               mpys(i,j) = w3/w4
- 
-    !-------------------------------------------------------------------
-    ! Transform the four corner velocities to the (i2,j2) reference frame.
-    !-------------------------------------------------------------------
- 
-            i2   = hindi(i,j)
-            j2   = hindj(i,j)
- 
-            u1t = msw(1,1,i2,j2)*uvel(i2-1,j2-1)     &
-                + msw(1,2,i2,j2)*vvel(i2-1,j2-1)
-            v1t = msw(2,1,i2,j2)*uvel(i2-1,j2-1)     &
-                + msw(2,2,i2,j2)*vvel(i2-1,j2-1)
- 
-            u2t = mse(1,1,i2,j2)*uvel(i2,j2-1)     &
-                + mse(1,2,i2,j2)*vvel(i2,j2-1)
-            v2t = mse(2,1,i2,j2)*uvel(i2,j2-1)     &
-                + mse(2,2,i2,j2)*vvel(i2,j2-1)
- 
-            u3t = mne(1,1,i2,j2)*uvel(i2,j2)     &
-                + mne(1,2,i2,j2)*vvel(i2,j2)
-            v3t = mne(2,1,i2,j2)*uvel(i2,j2)     &
-                + mne(2,2,i2,j2)*vvel(i2,j2)
- 
-            u4t = mnw(1,1,i2,j2)*uvel(i2-1,j2)     &
-                + mnw(1,2,i2,j2)*vvel(i2-1,j2)
-            v4t = mnw(2,1,i2,j2)*uvel(i2-1,j2)     &
-                + mnw(2,2,i2,j2)*vvel(i2-1,j2)
- 
-    !-------------------------------------------------------------------
-    ! Using a bilinear approximation, estimate the velocity at the
-    ! trajectory midpoint in the (i2,j2) reference frame.
-    !-------------------------------------------------------------------
- 
-            umpt = p25 * ( u1t*(mpxs(i,j)-c1)*(mpys(i,j)-c1)     &
-                         - u2t*(mpxs(i,j)+c1)*(mpys(i,j)-c1)     &
-                         + u3t*(mpxs(i,j)+c1)*(mpys(i,j)+c1)     &
-                         - u4t*(mpxs(i,j)-c1)*(mpys(i,j)+c1) )
- 
-            vmpt = p25 * ( v1t*(mpxs(i,j)-c1)*(mpys(i,j)-c1)     &
-                         - v2t*(mpxs(i,j)+c1)*(mpys(i,j)-c1)     &
-                         + v3t*(mpxs(i,j)+c1)*(mpys(i,j)+c1)     &
-                         - v4t*(mpxs(i,j)-c1)*(mpys(i,j)+c1) )
- 
-    !-------------------------------------------------------------------
-    ! Transform the velocity back to the cell corner reference frame,
-    ! using the inverse of matrix 'mat'.
-    !-------------------------------------------------------------------
- 
-            w1 = c1 / (mat11(i,j)*mat22(i,j) - mat12(i,j)*mat21(i,j))
-            ump = w1 * ( mat22(i,j)*umpt - mat12(i,j)*vmpt)
-            vmp = w1 * (-mat21(i,j)*umpt + mat11(i,j)*vmpt)
- 
-    !-------------------------------------------------------------------
-    ! Use the midpoint velocity to estimate the coordinates of the
-    ! departure point relative to corner (i,j).
-    !-------------------------------------------------------------------
- 
-            dpx(i,j) = -dt * ump
-            dpy(i,j) = -dt * vmp
- 
-            endif               ! nonzero velocity
-         enddo                  ! i
-         enddo                  ! j
- 
-      endif                     ! l_dp_mipdt
- 
-      end subroutine departure_points_old
- 
-!=======================================================================
-!
-!BOP
-!
-! !IROUTINE: locate_triangles_east - triangle info for east edges
-!
-! !INTERFACE:
-!
-      subroutine locate_triangles_east (nx_block,  ny_block,   &
-                                        nghost,                &
-                                        extmask,  icells,      &
-                                        indxi,  indxj,         &
-                                        dpx,       dpy,        &
-                                        HTN,       HTE,        &
-                                        mne,       mnw,        &
-                                        mse,       msw,        &
-                                        xp0,       xp1,        &
-                                        xp2,       xp3,        &
-                                        yp0,       yp1,        &
-                                        yp2,       yp3,        &
-                                        iflux,     jflux,      &
-                                        triarea,   edgearea)
-!
-! !DESCRIPTION:
-!
-! Compute areas and vertices of transport triangles for east cell edges.
-!
-! !REVISION HISTORY:
-!
-! authors William H. Lipscomb, LANL
-!         John R. Baumgardner, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::     &
-         nx_block, ny_block ,&! block dimensions
-         nghost               ! number of ghost cells
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block),     &
-         intent(in) ::     &
-         extmask          ! extended ice extent mask
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block),     &
-           intent(in) ::     &
-         dpx            ,&! x coordinates of departure points at cell corners
-         dpy            ,&! y coordinates of departure points at cell corners
-         HTN            ,&! length of northern edge of T-cell (m)
-         HTE              ! length of southern edge of T-cell
- 
-      real (kind=dbl_kind), dimension(2,2,nx_block,ny_block),      &
-            intent(in) ::     &
-         mne, mnw       ,&! matrices used for coordinate transformations
-         mse, msw         ! ne = northeast corner, nw = northwest, etc.
- 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ngroups),     &
-           intent(out) ::     &
-         triarea        ,&! area of east-edge departure triangle
-         xp0, yp0       ,&! coordinates of special triangle points
-         xp1, yp1       ,&
-         xp2, yp2       ,&
-         xp3, yp3
- 
-      real (kind=dbl_kind), dimension(nx_block,ny_block), intent(out) ::   &
-         edgearea         ! area of departure region for each edge
-                          ! edgearea > 0 for eastward flow
- 
-      integer (kind=int_kind), intent(out),     &
-           dimension (nx_block, ny_block, ngroups) ::     &
-         iflux          ,&! i index of cell contributing east transport
-         jflux            ! j index of cell contributing east transport
- 
-      integer (kind=int_kind), dimension (ngroups), intent(out) ::     &
-         icells              ! number of cells where triarea > puny
- 
-      integer (kind=int_kind), dimension (nx_block*ny_block,ngroups),     &
-         intent(out) ::     &
-         indxi ,&! compressed index in i-direction
-         indxj   ! compressed index in j-direction
-!
-!EOP
-!
-      integer (kind=int_kind) ::     &
-         i, j           ,&! horizontal indices of cell edge
-         i2, j2         ,&! horizontal indices of cell contributing transport
-         ng             ,&! triangle group index
-         ilo,ihi,jlo,jhi,&! beginning and end of physical domain
-         ij               ! compressed horizontal index
- 
-      real (kind=dbl_kind) ::     &
-         x1, y1, x2, y2 ,&! x,y coordinates of departure points, as in DB
-         xa, ya, xb, yb ,&! x,y coordinates of points where the lines joining
-                          ! (x1,y1) and (x2,y2) cross cell edges, as in DB
-         xca, yca       ,&! transformed coordinates of corner point a
-         xda, yda       ,&! transformed coordinates of departure point a
-         xxa, yxa       ,&! transformed coordinates of intersection point xa
-         xya, yya       ,&! transformed coordinates of intersection point ya
-         xcb, ycb       ,&! transformed coordinates of corner point b
-         xdb, ydb       ,&! transformed coordinates of departure point b
-         xxb, yxb       ,&! transformed coordinates of intersection point xb
-         xyb, yyb       ,&! transformed coordinates of intersection point yb
-         xic, yic       ,&! transformed coordinates of point where the
-                          ! line joining dep pts intersects the face
-         w1               ! work variable
- 
-      integer (kind=int_kind), dimension (nx_block,ny_block,ngroups) ::  &
-         fluxsign         ! = 1 for positive flux, -1 for negative
- 
-      logical :: cnd1, cnd2, cnd3   ! conditionals
- 
-    !-------------------------------------------------------------------
-    ! Triangle notation:
-    ! For each edge, there are 20 triangles that can contribute,
-    ! but many of these are mutually exclusive.  It turns out that
-    ! at most 5 triangles can contribute to transport integrals at once.
-    !
-    ! For the east edge, these triangles are referred to as:
-    ! (1) NE, NE1, N, N2
-    ! (2) SE, SE1, S, S2
-    ! (3) NE2, N1, SE2, S1
-    ! (4) H1a, H1b, E1a, E2b
-    ! (5) H2a, H2b, N2a, N2b
-    !
-    ! See Figure 3 in DB for pictures of these triangles.
-    ! See Table 1 in DB for logical conditions.
-    !
-    ! Many triangle vertices lie at points whose coordinates are
-    ! (x1,y1), (x2,y2), (xa,0), (xb,0), (0,ya), and (0,yb) in a
-    ! reference frame whose origin is the cell corner.  These
-    ! coordinates must be transformed to the reference frame whose
-    ! origin is the geometric center of the T-cell in which the triangle
-    ! is located.  The transformation is carried out using pre-computed
-    ! 2x2 matrices.  There are 4 matrices (one for each corner)
-    ! associated with each grid cell.  They do not describe pure
-    ! rotations, because they do not preserve length.
-    !-------------------------------------------------------------------
- 
-    !-------------------------------------------------------------------
-    ! Initialize
-    !-------------------------------------------------------------------
- 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
- 
-      do ng = 1, ngroups
-      do j = 1, ny_block
-      do i = 1, nx_block
-         fluxsign(i,j,ng) = 0
-         iflux   (i,j,ng) = 0
-         jflux   (i,j,ng) = 0
-         xp0     (i,j,ng) = c0
-         xp1     (i,j,ng) = c0
-         xp2     (i,j,ng) = c0
-         xp3     (i,j,ng) = c0
-         yp0     (i,j,ng) = c0
-         yp1     (i,j,ng) = c0
-         yp2     (i,j,ng) = c0
-         yp3     (i,j,ng) = c0
-      enddo
-      enddo
-      enddo
- 
-    !-------------------------------------------------------------------
-    ! Main loop
-    !-------------------------------------------------------------------
- 
-      do j = jlo, jhi
-      do i = ilo-1, ihi      ! includes W edge of cells with index ilo
- 
-         if (extmask(i,j) > puny) then
- 
-    !-------------------------------------------------------------------
-    ! coordinates of departure points
-    !-------------------------------------------------------------------
-         x1 = dpx(i,j)
-         y1 = dpy(i,j)
-         x2 = dpx(i,j-1)
-         y2 = dpy(i,j-1)
-         w1 =  c1 / (y2 - HTE(i,j)  - y1)
-         xa = (x1*(y2 - HTE(i,j)) - x2*y1) * w1
-         xb = (x1*y2 - x2*(y1 + HTE(i,j))) * w1
-         if (abs(xb-xa) > puny) then
-            ya = xa * HTE(i,j) / (xb - xa)
-            yb = ya + HTE(i,j)
-         else
-            ya = c0
-            yb = c0
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in NE cell
-    ! (All corner cells follow the same pattern.)
-    !-------------------------------------------------------------------
-         ! load horizontal indices of NE cell
-         i2 = i+1
-         j2 = j+1
- 
-         ! find vertex coordinates relative to center of NE cell
- 
-         xca = -p5*HTN(i2,j2-1)                         ! corner pt
-         yca = -p5*HTE(i2-1,j2)
- 
-         xda = xca + msw(1,1,i2,j2)*x1 + msw(1,2,i2,j2)*y1  ! departure pt
-         yda = yca + msw(2,1,i2,j2)*x1 + msw(2,2,i2,j2)*y1
- 
-         xxa = xca + msw(1,1,i2,j2)*xa                ! xa
-         yxa = yca + msw(2,1,i2,j2)*xa
- 
-         xya = xca + msw(1,2,i2,j2)*ya                ! ya
-         yya = yca + msw(2,2,i2,j2)*ya
- 
-         ! vertices of 2 potential group 1 triangles
-         ng = 1
- 
-         cnd1 = xa > c0 .and. y1 > c0 .and. x1 >= c0   ! NE (group 1)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         cnd2 = xa < c0 .and. y1 > c0 .and. x1 >= c0   ! NE1 (group 1)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! vertices of potential group 3 triangle
-         ng = 3
- 
-         cnd3 = xa > c0 .and. y1 > c0 .and. x1 < c0    ! NE2 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xya
-            yp3     (i,j,ng) = yya
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in N cell
-    !-------------------------------------------------------------------
-         i2 = i
-         j2 = j+1
- 
-         xca =  p5*HTN(i2,j2-1)
-         yca = -p5*HTE(i2,j2)
- 
-         xda = xca + mse(1,1,i2,j2)*x1 + mse(1,2,i2,j2)*y1
-         yda = yca + mse(2,1,i2,j2)*x1 + mse(2,2,i2,j2)*y1
- 
-         xxa = xca + mse(1,1,i2,j2)*xa
-         yxa = yca + mse(2,1,i2,j2)*xa
- 
-         xya = xca + mse(1,2,i2,j2)*ya
-         yya = yca + mse(2,2,i2,j2)*ya
- 
-         ng = 1
- 
-         cnd1 =  xa < c0 .and. y1 > c0 .and. x1 < c0    ! N (group 1)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         cnd2 = xa > c0 .and. y1 > c0 .and. x1 < c0     ! N2 (group 1)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ng = 3
- 
-         cnd3 =  xa < c0 .and. y1 > c0 .and. x1 >= c0   ! N1 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xya
-            yp3     (i,j,ng) = yya
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in SE cell
-    !-------------------------------------------------------------------
-         i2 = i+1
-         j2 = j-1
- 
-         xcb = -p5*HTN(i2,j2)
-         ycb =  p5*HTE(i2-1,j2)
- 
-         xdb = xcb + mnw(1,1,i2,j2)*x2 + mnw(1,2,i2,j2)*y2
-         ydb = ycb + mnw(2,1,i2,j2)*x2 + mnw(2,2,i2,j2)*y2
- 
-         xxb = xcb + mnw(1,1,i2,j2)*xb
-         yxb = ycb + mnw(2,1,i2,j2)*xb
- 
-         xyb = xcb + mnw(1,2,i2,j2)*yb
-         yyb = ycb + mnw(2,2,i2,j2)*yb
- 
-         ng = 2
- 
-         cnd1 = xb > c0 .and. y2 < c0 .and. x2 >= c0    ! SE (group 2)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         cnd2 = xb < c0 .and. y2 < c0 .and. x2 >= c0    ! SE1 (group 2)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ng = 3
- 
-         cnd3 = xb > c0 .and. y2 < c0 .and. x2 < c0     ! SE2 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xyb
-            yp3     (i,j,ng) = yyb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in S cell
-    !-------------------------------------------------------------------
-         i2 = i
-         j2 = j-1
- 
-         xcb = p5*HTN(i2,j2)
-         ycb = p5*HTE(i2,j2)
- 
-         xdb = xcb + mne(1,1,i2,j2)*x2 + mne(1,2,i2,j2)*y2
-         ydb = ycb + mne(2,1,i2,j2)*x2 + mne(2,2,i2,j2)*y2
- 
-         xxb = xcb + mne(1,1,i2,j2)*xb
-         yxb = ycb + mne(2,1,i2,j2)*xb
- 
-         xyb = xcb + mne(1,2,i2,j2)*yb
-         yyb = ycb + mne(2,2,i2,j2)*yb
- 
-         ng = 2
- 
-         cnd1 = xb < c0 .and. y2 < c0 .and. x2 < c0     ! S (group 2)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         cnd2 = xb > c0 .and. y2 < c0 .and. x2 < c0     ! S2 (group 2)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ng = 3
- 
-         cnd3 = xb < c0 .and. y2 < c0 .and. x2 >= c0    ! S1 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xyb
-            yp3     (i,j,ng) = yyb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! redefine departure points if not in home or east cell
-    !-------------------------------------------------------------------
- 
-         if (y1 > c0) then
-            x1 = xa
-            y1 = c0
-         endif
- 
-         if (y2 < c0) then
-            x2 = xb
-            y2 = c0
-         endif
- 
-         ! quantity used to compute intersection point
- 
-         if (abs(xb-xa) > puny) then
-            w1 = min (c1, max(c0, xb/(xb-xa)))
-         else
-            w1 = c0
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles inside home cell
-    ! Note that home and facing cells follow the same pattern.
-    !-------------------------------------------------------------------
- 
-         ! load horizontal indices
-         i2 = i
-         j2 = j
- 
-         ! triangle vertices relative to center of home cell
- 
-         xca =  p5*HTN(i2,j2)
-         yca =  p5*HTE(i2,j2)
- 
-         xcb =  p5*HTN(i2,j2-1)
-         ycb = -p5*HTE(i2,j2)
- 
-         xda = xca + mne(1,1,i2,j2)*x1 + mne(1,2,i2,j2)*y1
-         yda = yca + mne(2,1,i2,j2)*x1 + mne(2,2,i2,j2)*y1
- 
-         xdb = xcb + mse(1,1,i2,j2)*x2 + mse(1,2,i2,j2)*y2
-         ydb = ycb + mse(2,1,i2,j2)*x2 + mse(2,2,i2,j2)*y2
- 
-         xic = p5 * (w1*(HTN(i2,j2)-HTN(i2,j2-1)) + HTN(i2,j2-1))
-         yic = (w1 - p5) * HTE(i2,j2)
- 
-         ! contribution from triangle that includes the
-         ! E cell edge (part of convex quadrilateral inside home cell)
- 
-         ng = 4
- 
-         cnd1 = xa*xb >= c0 .and. xa+xb < c0            ! H1a (group 4)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xcb
-            yp2     (i,j,ng) = ycb
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-        ! contribution from triangle lying along the upper part
-        ! of E edge for case of line xa-xb intersecting the edge
- 
-         cnd2 = xa*xb < c0 .and. x1 < c0                ! H1b (group 4)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! contribution from triangle touching but not
-         ! lying along the E edge (other part of convex quadrilateral)
- 
-         ng = 5
- 
-         cnd1 = xa*xb >= c0 .and. xa+xb < c0            ! H2a (group 5)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xda
-            yp2     (i,j,ng) = yda
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! contribution from triangle lying along the lower part
-         ! of E edge for case of line xa-xb intersecting the edge
- 
-         cnd2 = xa*xb < c0 .and. x2 < c0                ! H2b (group 5)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux  (i,j,ng)  = i2
-            jflux  (i,j,ng)  = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in E cell
-    !-------------------------------------------------------------------
- 
-         i2 = i+1
-         j2 = j
- 
-         xca = -p5*HTN(i2,j2)
-         yca =  p5*HTE(i2-1,j2)
- 
-         xcb = -p5*HTN(i2,j2-1)
-         ycb = -p5*HTE(i2-1,j2)
- 
-         xda = xca + mnw(1,1,i2,j2)*x1 + mnw(1,2,i2,j2)*y1
-         yda = yca + mnw(2,1,i2,j2)*x1 + mnw(2,2,i2,j2)*y1
- 
-         xdb = xcb + msw(1,1,i2,j2)*x2 + msw(1,2,i2,j2)*y2
-         ydb = ycb + msw(2,1,i2,j2)*x2 + msw(2,2,i2,j2)*y2
- 
-         xic = -p5 * (w1*(HTN(i2,j2)-HTN(i2,j2-1)) + HTN(i2,j2-1))
-         yic = (w1 - p5) * HTE(i2-1,j2)
- 
-         ! contribution from triangle that includes the
-         ! W cell edge (part of convex quadrilateral inside E cell)
- 
-         ng = 4
- 
-         cnd1 = xa*xb >= c0 .and. xa+xb > c0            ! E1a (group 4)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xcb
-            yp2     (i,j,ng) = ycb
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle lying along the upper part
-         ! of W edge for case of line xa-xb intersecting the edge
- 
-         cnd2 = xa*xb < c0 .and. x1 > c0                ! E1b (group 4)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle touching but not
-         ! lying along the W edge (other part of convex quadrilateral)
- 
-         ng = 5
- 
-         cnd1 = xa*xb >= c0 .and. xa+xb > c0            ! E2a (group 5)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xda
-            yp2     (i,j,ng) = yda
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle lying along the lower part
-         ! of W edge for case of line xa-xb intersecting the edge
- 
-         cnd2 = xa*xb < c0 .and. x2 > c0                ! E2b (group 5)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         endif                  ! extmask
- 
-      enddo                     ! i
-      enddo                     ! j
- 
-    !-------------------------------------------------------------------
-    ! compute triangle areas with appropriate sign
-    !-------------------------------------------------------------------
- 
-      edgearea(:,:) = c0
-      do ng = 1, ngroups
-         icells(ng) = 0
- 
-         do j = 1, ny_block
-         do i = 1, nx_block
- 
-            w1 = p5 * abs( (xp2(i,j,ng)-xp1(i,j,ng)) *     &
-                           (yp3(i,j,ng)-yp1(i,j,ng))     &
-                         - (yp2(i,j,ng)-yp1(i,j,ng)) *     &
-                           (xp3(i,j,ng)-xp1(i,j,ng)) )
- 
-            triarea(i,j,ng) = fluxsign(i,j,ng) * w1
- 
-            if (abs(triarea(i,j,ng)) <= puny) then
-               triarea(i,j,ng) = c0 
-            else
-               icells(ng) = icells(ng) + 1 
-               ij = icells(ng)
-               indxi(ij,ng) = i
-               indxj(ij,ng) = j
-               edgearea(i,j) = edgearea(i,j) + triarea(i,j,ng)*fluxsign(i,j,ng)
-            endif
- 
-            
-         enddo                  ! i
-         enddo                  ! j
-      enddo                     ! ng
- 
-      end subroutine locate_triangles_east
- 
-!=======================================================================
-!
-!BOP
-!
-! !IROUTINE: locate_triangles_north - triangle info for north edges
-!
-! !INTERFACE:
-!
-      subroutine locate_triangles_north(nx_block,  ny_block,   &
-                                        nghost,                &
-                                        extmask,   icells,     &
-                                        indxi,     indxj,      &
-                                        dpx,       dpy,        &
-                                        HTN,       HTE,        &
-                                        mne,       mnw,        &
-                                        mse,       msw,        &
-                                        xp0,       xp1,        &
-                                        xp2,       xp3,        &
-                                        yp0,       yp1,        &
-                                        yp2,       yp3,        &
-                                        iflux,     jflux,      &
-                                        triarea,   edgearea)
-!
-! !DESCRIPTION:
-!
-! Compute areas and vertices of transport triangles for north cell edges.
-! Note: The north edges follow the same pattern as the east edges.
-! With some work, it would be possible to have a single generic
-!  subroutine for both east and north edges.
-!
-! !REVISION HISTORY:
-!
-! authors William H. Lipscomb, LANL
-!         John R. Baumgardner, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) ::     &
-         nx_block, ny_block ,&! block dimensions
-         nghost               ! number of ghost cells
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block),     &
-         intent(in) ::     &
-         extmask          ! extended ice extent mask
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block),     &
-           intent(in) ::     &
-         dpx            ,&! x coordinates of departure points at cell corners
-         dpy            ,&! y coordinates of departure points at cell corners
-         HTN            ,&! length of northern edge of T-cell (m)
-         HTE              ! length of southern edge of T-cell
- 
-      real (kind=dbl_kind), dimension(2,2,nx_block,ny_block),      &
-            intent(in) ::     &
-         mne, mnw       ,&! matrices used for coordinate transformations
-         mse, msw         ! ne = northeast corner, nw = northwest, etc.
- 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ngroups),     &
-           intent(out) ::     &
-         triarea        ,&! area of north-edge departure triangle
-         xp0,   yp0     ,&! coordinates of special triangle points
-         xp1,   yp1     ,&
-         xp2,   yp2     ,&
-         xp3,   yp3
- 
-      real (kind=dbl_kind), dimension(nx_block,ny_block), intent(out) ::   &
-         edgearea         ! area of departure region for each edge
-                          ! edgearea > 0 for northward flow
- 
-      integer (kind=int_kind), intent(out),     &
-           dimension (nx_block, ny_block, ngroups) ::     &
-         iflux          ,&! i index of cell contributing north transport
-         jflux            ! j index of cell contributing north transport
- 
-      integer (kind=int_kind), dimension (ngroups), intent(out) ::     &
-         icells              ! number of cells where triarea > puny
- 
-      integer (kind=int_kind), dimension (nx_block*ny_block,ngroups),     &
-         intent(out) ::     &
-         indxi ,&! compressed index in i-direction
-         indxj   ! compressed index in j-direction
-!
-!EOP
-!
-      integer (kind=int_kind) ::     &
-         i, j           ,&! horizontal indices of cell edge
-         i2, j2         ,&! horizontal indices of cell contributing transport
-         ng             ,&! triangle group index
-         ilo,ihi,jlo,jhi,&! beginning and end of physical domain
-         ij               ! compressed horizontal index
- 
-      real (kind=dbl_kind) ::     &
-         x1, y1, x2, y2 ,&! x,y coordinates of departure points, as in DB
-         xa, ya, xb, yb ,&! x,y coordinates of points where the lines joining
-                          ! (x1,y1) and (x2,y2) cross cell edges, as in DB
-         xca, yca       ,&! transformed coordinates of corner point a
-         xda, yda       ,&! transformed coordinates of departure point a
-         xxa, yxa       ,&! transformed coordinates of intersection point xa
-         xya, yya       ,&! transformed coordinates of intersection point ya
-         xcb, ycb       ,&! transformed coordinates of corner point b
-         xdb, ydb       ,&! transformed coordinates of departure point b
-         xxb, yxb       ,&! transformed coordinates of intersection point xb
-         xyb, yyb       ,&! transformed coordinates of intersection point yb
-         xic, yic       ,&! transformed coordinates of point where the
-                          ! line joining dep pts intersects the face
-         w1               ! work variable
- 
-      integer (kind=int_kind), dimension (nx_block,ny_block,ngroups) ::     &
-         fluxsign         ! = 1 for positive flux, -1 for negative
- 
-      logical :: cnd1, cnd2, cnd3   ! conditionals
- 
-    !-------------------------------------------------------------------
-    ! Triangle notation:
-    ! For each edge, there are 20 triangles that can contribute,
-    ! but many of these are mutually exclusive.  It turns out that
-    ! at most 5 triangles can contribute to transport integrals at once.
-    !
-    ! For the north edge, these triangles are referred to as:
-    ! (1) NW, NW1, W, W2
-    ! (2) NE, NE1, E, E2
-    ! (3) NW2, W1, NE2, E1
-    ! (4) H1a, H1b, N1a, N1b
-    ! (5) H2a, H2b, N2a, N2b
-    !
-    ! See Figure 3 in DB for pictures of these triangles.
-    ! See Table 1 in DB for logical conditions.
-    !
-    ! Many triangle vertices lie at points whose coordinates are
-    ! (x1,y1), (x2,y2), (xa,0), (xb,0), (0,ya), and (0,yb) in a
-    ! reference frame whose origin is the cell corner.  These
-    ! coordinates must be transformed to the reference frame whose
-    ! origin is the geometric center of the T-cell in which the triangle
-    ! is located.  The transformation is carried out using pre-computed
-    ! 2x2 matrices.  There are 4 matrices (one for each corner)
-    ! associated with each grid cell.  They do not describe pure
-    ! rotations, because they do not preserve length.
-    !-------------------------------------------------------------------
- 
-    !-------------------------------------------------------------------
-    ! Initialize
-    !-------------------------------------------------------------------
- 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
- 
-      do ng = 1, ngroups
-      do j = 1, ny_block
-      do i = 1, nx_block
-         fluxsign(i,j,ng) = 0
-         iflux   (i,j,ng) = 0
-         jflux   (i,j,ng) = 0
-         xp0     (i,j,ng) = c0
-         xp1     (i,j,ng) = c0
-         xp2     (i,j,ng) = c0
-         xp3     (i,j,ng) = c0
-         yp0     (i,j,ng) = c0
-         yp1     (i,j,ng) = c0
-         yp2     (i,j,ng) = c0
-         yp3     (i,j,ng) = c0
-      enddo
-      enddo
-      enddo
- 
-    !-------------------------------------------------------------------
-    ! Main loop
-    !-------------------------------------------------------------------
- 
-      do j = jlo-1, jhi  ! includes S edge of cells with index jlo
-      do i = ilo, ihi
- 
-         if (extmask(i,j) > puny) then
- 
-    !-------------------------------------------------------------------
-    ! coordinates of departure points
-    !-------------------------------------------------------------------
-         x2 = dpx(i,j)
-         y2 = dpy(i,j)
-         x1 = dpx(i-1,j)
-         y1 = dpy(i-1,j)
-         w1 =  c1 / (x1 - HTN(i,j)  - x2)
-         ya = (x1*y2 - y1*(HTN(i,j) + x2)) * w1
-         yb = (y2*(x1 - HTN(i,j)) - x2*y1) * w1
-         if (abs(ya-yb) > puny) then
-            xa = ya*HTN(i,j) / (ya - yb)
-            xb = xa - HTN(i,j)
-         else
-            xa = c0
-            xb = c0
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in NW cell
-    !-------------------------------------------------------------------
-         i2 = i-1
-         j2 = j+1
- 
-         xca =  p5*HTN(i2,j2-1)                         ! corner pt
-         yca = -p5*HTE(i2,j2)
- 
-         xda = xca + mse(1,1,i2,j2)*x1 + mse(1,2,i2,j2)*y1  ! departure pt
-         yda = yca + mse(2,1,i2,j2)*x1 + mse(2,2,i2,j2)*y1
- 
-         xya = xca + mse(1,2,i2,j2)*ya                  ! ya
-         yya = yca + mse(2,2,i2,j2)*ya
- 
-         xxa = xca + mse(1,1,i2,j2)*xa                  ! xa
-         yxa = yca + mse(2,1,i2,j2)*xa
- 
-         ng = 1
- 
-         cnd1 = ya > c0 .and. x1 < c0 .and. y1 >= c0    ! NW (group 1)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         cnd2 = ya < c0 .and. x1 < c0 .and. y1 >= c0    ! NW1 (group 1)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ng = 3
- 
-         cnd3 = ya > c0 .and. x1 < c0 .and. y1 < c0     ! NW2 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xxa
-            yp3     (i,j,ng) = yxa
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in W cell
-    !-------------------------------------------------------------------
-         i2 = i-1
-         j2 = j
- 
-         xca = p5*HTN(i2,j2)
-         yca = p5*HTE(i2,j2)
- 
-         xda = xca + mne(1,1,i2,j2)*x1 + mne(1,2,i2,j2)*y1
-         yda = yca + mne(2,1,i2,j2)*x1 + mne(2,2,i2,j2)*y1
- 
-         xya = xca + mne(1,2,i2,j2)*ya
-         yya = yca + mne(2,2,i2,j2)*ya
- 
-         xxa = xca + mne(1,1,i2,j2)*xa
-         yxa = yca + mne(2,1,i2,j2)*xa
- 
-         ng = 1
- 
-         cnd1 = ya < c0 .and. x1 < c0 .and. y1 < c0     ! W (group 1)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         cnd2 = ya > c0 .and. x1 < c0 .and. y1 < c0     ! W2 (group 1)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xxa
-            yp2     (i,j,ng) = yxa
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ng = 3
- 
-         cnd3 = ya < c0 .and. x1 < c0 .and. y1 >= c0    ! W1 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xya
-            yp2     (i,j,ng) = yya
-            xp3     (i,j,ng) = xxa
-            yp3     (i,j,ng) = yxa
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in NE cell
-    !-------------------------------------------------------------------
-         i2 = i+1
-         j2 = j+1
- 
-         xcb = -p5*HTN(i2,j2-1)
-         ycb = -p5*HTE(i2-1,j2)
- 
-         xdb = xcb + msw(1,1,i2,j2)*x2 + msw(1,2,i2,j2)*y2
-         ydb = ycb + msw(2,1,i2,j2)*x2 + msw(2,2,i2,j2)*y2
- 
-         xyb = xcb + msw(1,2,i2,j2)*yb
-         yyb = ycb + msw(2,2,i2,j2)*yb
- 
-         xxb = xcb + msw(1,1,i2,j2)*xb
-         yxb = ycb + msw(2,1,i2,j2)*xb
- 
-         ng = 2
- 
-         cnd1 = yb > c0 .and. x2 > c0 .and. y2 >= c0    ! NE (group 2)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         cnd2 = yb < c0 .and. x2 > c0  .and. y2 >= c0   ! NE1 (group 2)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ng = 3
- 
-         cnd3 = yb > c0 .and. x2 > c0 .and. y2 < c0     ! NE2 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xxb
-            yp3     (i,j,ng) = yxb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in E cell
-    !-------------------------------------------------------------------
-         i2 = i+1
-         j2 = j
- 
-         xcb = -p5*HTN(i2,j2)
-         ycb =  p5*HTE(i2-1,j2)
- 
-         xdb = xcb + mnw(1,1,i2,j2)*x2 + mnw(1,2,i2,j2)*y2
-         ydb = ycb + mnw(2,1,i2,j2)*x2 + mnw(2,2,i2,j2)*y2
- 
-         xyb = xcb + mnw(1,2,i2,j2)*yb
-         yyb = ycb + mnw(2,2,i2,j2)*yb
- 
-         xxb = xcb + mnw(1,1,i2,j2)*xb
-         yxb = ycb + mnw(2,1,i2,j2)*xb
- 
-         ng = 2
- 
-         cnd1 = yb < c0 .and. x2 > c0 .and. y2 < c0     ! E (group 2)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         cnd2 = yb > c0 .and. x2 > c0 .and. y2 < c0     ! E2 (group 2)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xxb
-            yp2     (i,j,ng) = yxb
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ng = 3
- 
-         cnd3 = yb < c0 .and. x2 > c0 .and. y2 >= c0    ! E1 (group 3)
-         if (cnd3) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xyb
-            yp2     (i,j,ng) = yyb
-            xp3     (i,j,ng) = xxb
-            yp3     (i,j,ng) = yxb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! redefine departure points if not in home or north cell
-    !-------------------------------------------------------------------
-         if (x1 < c0) then
-            x1 = c0
-            y1 = ya
-         endif
- 
-         if (x2 > c0) then
-            x2 = c0
-            y2 = yb
-         endif
- 
-         ! quantity used to compute intersection point
- 
-         if (abs(yb-ya) > puny) then
-            w1 = min (c1, max(c0, yb/(yb-ya)))
-         else
-            w1 = c0
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles inside home cell
-    !-------------------------------------------------------------------
-         i2 = i
-         j2 = j
- 
-         xca = -p5*HTN(i2,j2)
-         yca =  p5*HTE(i2-1,j2)
- 
-         xcb =  p5*HTN(i2,j2)
-         ycb =  p5*HTE(i2,j2)
- 
-         xda = xca + mnw(1,1,i2,j2)*x1 + mnw(1,2,i2,j2)*y1
-         yda = yca + mnw(2,1,i2,j2)*x1 + mnw(2,2,i2,j2)*y1
- 
-         xdb = xcb + mne(1,1,i2,j2)*x2 + mne(1,2,i2,j2)*y2
-         ydb = ycb + mne(2,1,i2,j2)*x2 + mne(2,2,i2,j2)*y2
- 
-         xic = (p5 - w1) * HTN(i2,j2)          ! intersection w/ N edge
-         yic = p5 * (w1*(HTE(i2-1,j2)-HTE(i2,j2)) + HTE(i2,j2))
- 
-         ! contribution from triangle that includes the
-         ! N cell edge (part of convex quadrilateral inside home cell)
- 
-         ng = 4
- 
-         cnd1 = ya*yb >= c0 .and. ya+yb < c0            ! H1a (group 4)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xcb
-            yp2     (i,j,ng) = ycb
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! contribution from triangle lying along the left part of
-         ! the N edge for case of line ya-yb intersecting the edge
- 
-         cnd2 = ya*yb < c0 .and. y1 < c0                ! H1b (group 4)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! contribution from triangle touching but not lying
-         ! along the N edge (other part of convex quadrilateral)
- 
-         ng = 5
- 
-         cnd1 = ya*yb >= c0 .and. ya+yb < c0            ! H2a (group 5)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xda
-            yp2     (i,j,ng) = yda
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-         ! contribution from triangle lying along the right part
-         ! of the N edge for case of line ya-yb intersecting the edge
- 
-         cnd2 = ya*yb < c0 .and. y2 < c0                ! H2b (group 5)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = 1
-         endif
- 
-    !-------------------------------------------------------------------
-    ! contribution from triangles in N cell
-    !-------------------------------------------------------------------
-         i2 = i
-         j2 = j+1
- 
-         xca = -p5*HTN(i2,j2-1)
-         yca = -p5*HTE(i2-1,j2)
- 
-         xcb =  p5*HTN(i2,j2-1)
-         ycb = -p5*HTE(i2,j2)
- 
-         xda = xca + msw(1,1,i2,j2)*x1 + msw(1,2,i2,j2)*y1
-         yda = yca + msw(2,1,i2,j2)*x1 + msw(2,2,i2,j2)*y1
- 
-         xdb = xcb + mse(1,1,i2,j2)*x2 + mse(1,2,i2,j2)*y2
-         ydb = ycb + mse(2,1,i2,j2)*x2 + mse(2,2,i2,j2)*y2
- 
-         xic = (p5 - w1)*HTN(i2,j2-1)
-         yic = -p5 * (w1*(HTE(i2-1,j2)-HTE(i2,j2)) + HTE(i2,j2))
- 
-         ! contribution from triangle that includes the
-         ! S cell edge (part of convex quadrilateral inside home cell)
- 
-         ng = 4
- 
-         cnd1 = ya*yb >= c0 .and. ya+yb > c0            ! N1a (group 4)
-         if (cnd1) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xcb
-            yp2     (i,j,ng) = ycb
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle lying along the left part
-         ! of the S edge for case of line ya-yb intersecting the edge
- 
-         cnd2 = ya*yb < c0 .and. y1 > c0                ! N1b (group 4)
-         if (cnd2) then
-            xp1     (i,j,ng) = xca
-            yp1     (i,j,ng) = yca
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xda
-            yp3     (i,j,ng) = yda
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle touching but not
-         ! lying along the S edge (other part of convex quadrilateral)
- 
-         ng = 5
- 
-         cnd1 = ya*yb >= c0 .and. ya+yb > c0            ! N2a (group 5)
-         if (cnd1) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xda
-            yp2     (i,j,ng) = yda
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         ! contribution from triangle lying along the right part
-         ! of the S edge for case of line ya-yb intersecting the edge
- 
-         cnd2 = ya*yb < c0 .and. y2 > c0                ! N2b (group 5)
-         if (cnd2) then
-            xp1     (i,j,ng) = xcb
-            yp1     (i,j,ng) = ycb
-            xp2     (i,j,ng) = xic
-            yp2     (i,j,ng) = yic
-            xp3     (i,j,ng) = xdb
-            yp3     (i,j,ng) = ydb
-            iflux   (i,j,ng) = i2
-            jflux   (i,j,ng) = j2
-            fluxsign(i,j,ng) = -1
-         endif
- 
-         endif                  ! extmask
- 
-      enddo                     ! i loop
-      enddo                     ! j loop
- 
-    !-------------------------------------------------------------------
-    ! compute triangle areas with appropriate sign
-    !-------------------------------------------------------------------
- 
-      edgearea(:,:) = c0
-      do ng = 1, ngroups
-         icells(ng) = 0
- 
-         do j = 1, ny_block
-         do i = 1, nx_block
- 
-            w1 = p5 * abs( (xp2(i,j,ng)-xp1(i,j,ng)) *     &
-                           (yp3(i,j,ng)-yp1(i,j,ng))     &
-                         - (yp2(i,j,ng)-yp1(i,j,ng)) *     &
-                           (xp3(i,j,ng)-xp1(i,j,ng)) )
- 
-            triarea(i,j,ng) = fluxsign(i,j,ng) * w1
- 
-            if (abs(triarea(i,j,ng)) <= puny) then
-               triarea(i,j,ng) = c0 
-            else
-               icells(ng) = icells(ng) + 1 
-               ij = icells(ng)
-               indxi(ij,ng) = i
-               indxj(ij,ng) = j
-               edgearea(i,j) = edgearea(i,j) + triarea(i,j,ng)*fluxsign(i,j,ng)
-            endif
- 
-         enddo                  ! i
-         enddo                  ! j
-      enddo                     ! ng
- 
-      end subroutine locate_triangles_north
 
 !=======================================================================
 

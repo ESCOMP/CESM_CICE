@@ -194,12 +194,10 @@
       real (kind=dbl_kind), parameter :: & 
          argmax = c10      ! maximum argument of exponential
 
-      ! Need to compute albedos before init_cpl in CCSM
+      type (block) :: &
+         this_block      ! block information for current block
 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
+      ! Need to compute albedos before init_cpl in CCSM
 
       alvdr   (:,:,:) = c0
       alidr   (:,:,:) = c0
@@ -248,104 +246,110 @@
 
       else
 
-      do iblk=1,nblocks
+         do iblk=1,nblocks
 
-         if (trim(shortwave) == 'dEdd') then
+            this_block = get_block(blocks_ice(iblk),iblk)         
+            ilo = this_block%ilo
+            ihi = this_block%ihi
+            jlo = this_block%jlo
+            jhi = this_block%jhi
 
-            ! identify ice-ocean cells
-            icells = 0
-            do j = 1, ny_block
-            do i = 1, nx_block
-               if (tmask(i,j,iblk)) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
-               endif
-            enddo               ! i
-            enddo               ! j
+            if (trim(shortwave) == 'dEdd') then
 
-            call compute_coszen (nx_block,         ny_block,       &
-                                 icells,                           &
-                                 indxi,            indxj,          &
-                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt)
+               ! identify ice-ocean cells
+               icells = 0
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  if (tmask(i,j,iblk)) then
+                     icells = icells + 1
+                     indxi(icells) = i
+                     indxj(icells) = j
+                  endif
+               enddo               ! i
+               enddo               ! j
 
-         else
-
-            coszen(:,:,iblk) = p5 ! sun above the horizon
-
-         endif
-
-         do n=1,ncat
-
-            icells = 0
-            do j = jlo, jhi
-            do i = ilo, ihi
-               if (aicen(i,j,n,iblk) > puny) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
-               endif
-            enddo               ! i
-            enddo               ! j
-
-            il1 = ilyr1(n)
-            il2 = ilyrn(n)
-            sl1 = slyr1(n)
-            sl2 = slyrn(n)
-
-            call compute_albedos (nx_block,   ny_block, &
-                                  icells,               &
-                                  indxi,      indxj,    &
-                                  aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
-                                  vsnon(:,:,n,iblk),                       &
-                                  trcrn(:,:,nt_Tsfc,n,iblk),               &
-                                  alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
-                                  alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
-                                  alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
-                                  alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
-                                  alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
-                                  alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
-                                  apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
-
-            ! Aggregate albedos for coupler
-
-            do ij = 1, icells
-               i = indxi(ij)
-               j = indxj(ij)
+               call compute_coszen (nx_block,         ny_block,       &
+                                    icells,                           &
+                                    indxi,            indxj,          &
+                                    tlat  (:,:,iblk), tlon(:,:,iblk), &
+                                    coszen(:,:,iblk), dt)
    
-               alvdf(i,j,iblk) = alvdf(i,j,iblk) &
-                  + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-               alidf(i,j,iblk) = alidf(i,j,iblk) &
-                  + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
-               alvdr(i,j,iblk) = alvdr(i,j,iblk) &
-                  + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-               alidr(i,j,iblk) = alidr(i,j,iblk) &
-                  + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
-            enddo
-
-         enddo ! ncat
-
-         do j = 1, ny_block
-         do i = 1, nx_block
-
-            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
-               ar = c1 /  aice(i,j,iblk)
-               alvdf(i,j,iblk) = alvdf(i,j,iblk) * ar
-               alidf(i,j,iblk) = alidf(i,j,iblk) * ar
-               alvdr(i,j,iblk) = alvdr(i,j,iblk) * ar
-               alidr(i,j,iblk) = alidr(i,j,iblk) * ar
             else
-               alvdf(i,j,iblk) = c0
-               alidf(i,j,iblk) = c0
-               alvdr(i,j,iblk) = c0
-               alidr(i,j,iblk) = c0
+
+               coszen(:,:,iblk) = p5 ! sun above the horizon
+   
             endif
 
-         enddo
-         enddo
+            do n=1,ncat
+   
+               icells = 0
+               do j = jlo, jhi
+               do i = ilo, ihi
+                  if (aicen(i,j,n,iblk) > puny) then
+                     icells = icells + 1
+                     indxi(icells) = i
+                     indxj(icells) = j
+                  endif
+               enddo               ! i
+               enddo               ! j
 
-      enddo ! iblk
+               il1 = ilyr1(n)
+               il2 = ilyrn(n)
+               sl1 = slyr1(n)
+               sl2 = slyrn(n)
+
+               call compute_albedos (nx_block,   ny_block,                    &
+                                     icells,                                  &
+                                     indxi,      indxj,                       &
+                                     aicen(:,:,n,iblk), vicen(:,:,n,iblk),    &
+                                     vsnon(:,:,n,iblk),                       &
+                                     trcrn(:,:,nt_Tsfc,n,iblk),               &
+                                     alvdrni(:,:,n,iblk),alidrni(:,:,n,iblk), &
+                                     alvdfni(:,:,n,iblk),alidfni(:,:,n,iblk), &
+                                     alvdrns(:,:,n,iblk),alidrns(:,:,n,iblk), &
+                                     alvdfns(:,:,n,iblk),alidfns(:,:,n,iblk), &
+                                     alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),   &
+                                     alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),   &
+                                     apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
+
+               ! Aggregate albedos for coupler
+   
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+      
+                  alvdf(i,j,iblk) = alvdf(i,j,iblk) &
+                     + alvdfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alidf(i,j,iblk) = alidf(i,j,iblk) &
+                     + alidfn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alvdr(i,j,iblk) = alvdr(i,j,iblk) &
+                     + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  alidr(i,j,iblk) = alidr(i,j,iblk) &
+                     + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               enddo
+   
+            enddo ! ncat
+
+            do j = 1, ny_block
+            do i = 1, nx_block
+   
+               if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
+                  ar = c1 /  aice(i,j,iblk)
+                  alvdf(i,j,iblk) = alvdf(i,j,iblk) * ar
+                  alidf(i,j,iblk) = alidf(i,j,iblk) * ar
+                  alvdr(i,j,iblk) = alvdr(i,j,iblk) * ar
+                  alidr(i,j,iblk) = alidr(i,j,iblk) * ar
+               else
+                  alvdf(i,j,iblk) = c0
+                  alidf(i,j,iblk) = c0
+                  alvdr(i,j,iblk) = c0
+                  alidr(i,j,iblk) = c0
+               endif
+
+            enddo
+            enddo
+
+         enddo ! iblk
 
       endif
 
@@ -1084,6 +1088,9 @@
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! indirect indices for cells with aicen > puny
 
+      type (block) :: &
+         this_block      ! block information for current block
+
       ! snow variables for Delta-Eddington shortwave
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          fsn             ! snow horizontal fraction
@@ -1105,11 +1112,6 @@
 
       ! Need to compute albedos before init_cpl in CCSM
 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
-
       alvdr   (:,:,:) = c0
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
@@ -1118,6 +1120,12 @@
      !$OMP PARALLEL DO PRIVATE(iblk,n,i,j,ilo,ihi,jlo,jhi,icells,indxi,indxj,&
      !$OMP                     il1,il2,sl1,sl2,fsn,rhosnwn,rsnwn,fpn,hpn,ar)
       do iblk=1,nblocks
+
+         this_block = get_block(blocks_ice(iblk),iblk)
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
 
          do n=1,ncat
 

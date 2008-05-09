@@ -180,7 +180,7 @@ contains
 
          if (.not. alreadyInUse) then
             iunit = n        ! return the free unit number
-            ice_IOUnitsInUse(iunit) = .true.  ! mark iunit as being in use
+            ice_IOUnitsInUse(n) = .true.  ! mark iunit as being in use
             exit srch_units
          else
             !*** if inquire shows this unit in use, mark it as

@@ -204,6 +204,7 @@
       integer(kind=int_kind) :: i,j,n,iblk      ! local loop indices
       integer(kind=int_kind) :: ilo,ihi,jlo,jhi ! local loop indices
       integer(kind=int_kind) :: iyear     ! yyyy
+      integer(kind=int_kind) :: lsize     ! compute this
 
       write(nu_diag,*) &
            '(ice_coupling,init_cpl) send initial msg. set contract'
@@ -211,14 +212,29 @@
 
       nadv_i = nint(secday/dt)
 
+      n=0
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+         do j = jlo, jhi
+            do i = ilo, ihi
+               n = n+1
+            enddo !i
+         enddo    !j
+      enddo        !iblk
+      lsize = n
+
       isbuf                          = 0         ! default info-buffer value
       isbuf(cpl_fields_ibuf_cdate  ) = idate     ! initial date (coded: yyyymmdd)
       isbuf(cpl_fields_ibuf_sec    ) = sec       ! elapsed seconds into date
       isbuf(cpl_fields_ibuf_stopnow) = stop_now  ! stop now flag
       isbuf(cpl_fields_ibuf_userest) = 0         ! use model restart data initally
       isbuf(cpl_fields_ibuf_ncpl   ) = nadv_i    ! number of comms per day
-      isbuf(cpl_fields_ibuf_lsize  ) &
-         = (nx_block-2*nghost)*(ny_block-2*nghost)*nblocks
+      isbuf(cpl_fields_ibuf_lsize  ) = lsize 
       isbuf(cpl_fields_ibuf_lisize ) = nx_block-2*nghost ! local size wrt i-index
       isbuf(cpl_fields_ibuf_ljsize ) = ny_block-2*nghost ! local size wrt j-index
       isbuf(cpl_fields_ibuf_gsize  ) = nx_global*ny_global ! size of global grid
@@ -227,8 +243,7 @@
       isbuf(cpl_fields_ibuf_nfields) = cpl_fields_grid_total
       isbuf(cpl_fields_ibuf_dead   ) = 0           ! not a dead model
 
-      allocate(sbuf((nx_block-2*nghost)*(ny_block-2*nghost)*nblocks, &
-         cpl_fields_grid_total))
+      allocate(sbuf(lsize, cpl_fields_grid_total))
       sbuf = -888.0_dbl_kind
       n=0
       do iblk = 1, nblocks
@@ -267,12 +282,10 @@
       !-----------------------------------------------------------------
 
       nsend = cpl_interface_contractNumatt(contractS)
-      allocate(buffs((nx_block-2*nghost)*(ny_block-2*nghost)*nblocks, &
-         nsend))
+      allocate(buffs(lsize, nsend))
 
       nrecv = cpl_interface_contractNumatt(contractR)
-      allocate(buffr((nx_block-2*nghost)*(ny_block-2*nghost)*nblocks, &
-         nrecv))
+      allocate(buffr(lsize, nrecv))
 
       !-----------------------------------------------------------------
       ! Determine send indices

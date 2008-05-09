@@ -806,9 +806,10 @@
 !
 ! !INTERFACE:
 !
-      subroutine reduce_area (nx_block,  ny_block, &
-                              nghost,    tmask,    &
-                              aicen,     vicen,    &
+      subroutine reduce_area (nx_block, ny_block, &
+                              ilo, ihi, jlo, jhi, &
+                              tmask,              &
+                              aicen,     vicen,   &
                               hicen_old, hicen)
 !
 ! !DESCRIPTION:
@@ -831,7 +832,7 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-           nghost              ! number of ghost cells
+         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
 
       logical (kind=log_kind), dimension (nx_block,ny_block), &
          intent(in) :: &
@@ -851,8 +852,7 @@
 !EOP
 !
       integer (kind=int_kind) :: &
-         i, j    , & ! horizontal indices
-         ilo,ihi,jlo,jhi   ! beginning and end of physical domain
+         i, j        ! horizontal indices
 
       real (kind=dbl_kind) :: &
          hi0     , & ! current hi for ice fraction adjustment
@@ -860,11 +860,6 @@
          dhi         ! hice1 - hice1_old
 
       hicen(:,:) = c0
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
       do j = jlo, jhi
       do i = ilo, ihi
@@ -1613,7 +1608,8 @@
 ! !INTERFACE:
 !
       subroutine cleanup_itd (nx_block,    ny_block,   &
-                              nghost,      dt,         &
+                              ilo, ihi,    jlo, jhi,   &
+                              dt,                      &
                               aicen,       trcrn,      &
                               vicen,       vsnon,      &
                               eicen,       esnon,      &
@@ -1645,7 +1641,7 @@
 !
       integer (kind=int_kind), intent(in) :: & 
          nx_block, ny_block, & ! block dimensions 
-         nghost                ! number of ghost cells 
+         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
  
       real (kind=dbl_kind), intent(in) :: & 
          dt        ! time step 
@@ -1701,8 +1697,7 @@
       integer (kind=int_kind) :: &
          i, j             , & ! horizontal indices
          n                , & ! category index
-         icells           , & ! number of grid cells with ice
-         ilo,ihi,jlo,jhi      ! beginning and end of physical domain
+         icells               ! number of grid cells with ice
 
        integer (kind=int_kind), dimension (nx_block*ny_block) :: &
          indxi, indxj      ! compressed i/j indices
@@ -1729,17 +1724,12 @@
       istop = 0
       jstop = 0
 
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
-
       !-----------------------------------------------------------------
       ! Compute total ice area.
       !-----------------------------------------------------------------
 
       call aggregate_area (nx_block, ny_block, &
-                           aicen(:,:,:), &
+                           aicen, &
                            aice,     aice0)
 
 
@@ -1794,9 +1784,9 @@
       call rebin (nx_block,   ny_block, &
                   icells,   indxi,    indxj, &
                   trcr_depend, &
-                  aicen(:,:,:),      trcrn(:,:,:,:), &
-                  vicen(:,:,:),      vsnon(:,:,:)  , &
-                  eicen(:,:,:),      esnon(:,:,:)  , &
+                  aicen,      trcrn, &
+                  vicen,      vsnon, &
+                  eicen,      esnon, &
                   l_stop, &
                   istop,      jstop)
 
@@ -1808,11 +1798,12 @@
 
       if (l_limit_aice) then
          call zap_small_areas (nx_block, ny_block, &
-                               nghost,          dt            , &
-                               aice,            aice0         , &
-                               aicen(:,:,:),    trcrn(:,:,:,:), &
-                               vicen(:,:,:),    vsnon(:,:,:)  , &
-                               eicen(:,:,:),    esnon(:,:,:)  , &
+                               ilo, ihi, jlo, jhi, &
+                               dt,              &
+                               aice,     aice0, &
+                               aicen,    trcrn, &
+                               vicen,    vsnon, &
+                               eicen,    esnon, &
                                dfresh,   dfsalt, &
                                dfhocn,           &
                                l_stop,           &
@@ -1847,7 +1838,8 @@
 ! !INTERFACE:
 !
       subroutine zap_small_areas (nx_block, ny_block, &
-                                  nghost,   dt,       &
+                                  ilo, ihi, jlo, jhi, &
+                                  dt,              &
                                   aice,     aice0,    &
                                   aicen,    trcrn,    &
                                   vicen,    vsnon,    &
@@ -1874,7 +1866,7 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         nghost                ! number of ghost cells
+         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
 
       real (kind=dbl_kind), intent(in) :: &
          dt                    ! time step
@@ -1918,7 +1910,6 @@
 !
       integer (kind=int_kind) :: &
          i,j, n, k, it  , & ! counting indices
-         ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
          icells         , & ! number of cells with ice to zap
          ij                 ! combined i/j horizontal index
 
@@ -1935,11 +1926,6 @@
       l_stop = .false.
       istop = 0
       jstop = 0
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
       dfresh(:,:) = c0
       dfsalt(:,:) = c0

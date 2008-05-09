@@ -178,9 +178,19 @@ Default: FALSE
 <!---Domain information    ---->
 <!----------------------------->
 
+<entry id="processor_shape" type="char*80"  category="cice" group="domain_nml" valid_values="slenderX1,slenderX2,square-ice,square-pop">
+method to use for distributing blocks
+Default: square-pop
+</entry>
+
 <entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve">
 method to use for distributing blocks
 Default: cartesian
+</entry>
+
+<entry id="distribution_wght" type="char*80"  category="cice" group="domain_nml" valid_values="block,latitude">
+method to use for distributing blocks
+Default: block
 </entry>
 
 <entry id="ew_boundary_type" type="char*80"  category="cice" group="domain_nml" valid_values="cyclic,closed">

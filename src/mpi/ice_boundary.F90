@@ -9,7 +9,7 @@
 !  regions (ghost cells) using MPI calls
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_boundary.F90 100 2008-01-29 00:25:32Z eclare $
+!  SVN:$Id: ice_boundary.F90 112 2008-03-13 21:06:56Z eclare $
 !  2007-07-19: Phil Jones, Yoshi Yoshida, John Dennis
 !              new naming conventions, optimizations during
 !              initialization, true multi-dimensional updates 
@@ -41,9 +41,10 @@
           ice_distributionGetBlockLoc, ice_distributionGet
 
    implicit none
-   include 'mpif.h'
    private
    save
+
+   include 'mpif.h'
 
 ! !PUBLIC TYPES:
 
@@ -585,9 +586,9 @@ contains
 !-----------------------------------------------------------------------
    
    maxTmp = maxval(sendCount)
-   maxSizeSend = global_maxval(maxTmp)
+   maxSizeSend = global_maxval(maxTmp, dist)
    maxTmp = maxval(recvCount)
-   maxSizeRecv = global_maxval(maxTmp)
+   maxSizeRecv = global_maxval(maxTmp, dist)
 
    if (.not. allocated(bufSendR8)) then
 

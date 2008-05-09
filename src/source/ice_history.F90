@@ -1087,7 +1087,7 @@
 
       ! ice vol. tendency for history, due to dynamics
 
-     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1120,7 +1120,7 @@
       ! increment field
       !---------------------------------------------------------------
 
-     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,ai)
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,ai)
       do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)         
        ilo = this_block%ilo
@@ -1287,7 +1287,7 @@
       !---------------------------------------------------------------
 
         ravgct = c1/avgct
-	!$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
+        !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
         do iblk = 1, nblocks
            this_block = get_block(blocks_ice(iblk),iblk)         
            ilo = this_block%ilo
@@ -1354,7 +1354,7 @@
            enddo                ! j
 
         enddo                   ! iblk
-       !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
         time_end = time/int(secday)
 
@@ -1412,6 +1412,8 @@
 
          endif                  ! yday
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
+      
 
       end subroutine ice_write_hist
 

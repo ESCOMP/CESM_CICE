@@ -12,7 +12,7 @@
 !  routines in the block, distribution modules.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_domain.F90 100 2008-01-29 00:25:32Z eclare $
+!  SVN:$Id: ice_domain.F90 118 2008-04-08 20:57:17Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL
@@ -70,6 +70,11 @@
 
     character (char_len) :: &
        distribution_type,   &! method to use for distributing blocks
+                             ! 'cartesian'
+                             ! 'rake' 
+       distribution_wght,   &! method for weighting work per block 
+                             ! 'block' = POP default configuration
+                             ! 'latitude' = no. ocean points * |lat|
        ew_boundary_type,    &! type of domain bndy in each logical
        ns_boundary_type      !    direction (ew is i, ns is j)
 
@@ -117,8 +122,10 @@
 !----------------------------------------------------------------------
 
    namelist /domain_nml/ nprocs, &
-                         distribution_type,  &
-                         ew_boundary_type,   &
+                         processor_shape,   &
+                         distribution_type, &
+                         distribution_wght, &
+                         ew_boundary_type,  &
                          ns_boundary_type
 
 !----------------------------------------------------------------------
@@ -128,7 +135,9 @@
 !----------------------------------------------------------------------
 
    nprocs = -1
+   processor_shape   = 'slenderX2'
    distribution_type = 'cartesian'
+   distribution_wght = 'latitude'
    ew_boundary_type  = 'cyclic'
    ns_boundary_type  = 'open'
 
@@ -154,7 +163,9 @@
    endif
 
    call broadcast_scalar(nprocs,            master_task)
+   call broadcast_scalar(processor_shape,   master_task)
    call broadcast_scalar(distribution_type, master_task)
+   call broadcast_scalar(distribution_wght, master_task)
    call broadcast_scalar(ew_boundary_type,  master_task)
    call broadcast_scalar(ns_boundary_type,  master_task)
 
@@ -220,12 +231,15 @@
      write(nu_diag,'(a26,i6)') '  No. of categories: nc = ',ncat
      write(nu_diag,'(a26,i6)') '  No. of ice layers: ni = ',nilyr
      write(nu_diag,'(a26,i6)') '  No. of snow layers:ns = ',nslyr
-     write(nu_diag,'(a26,i6)') '  Block size:  nx_block = ',nx_block
-     write(nu_diag,'(a26,i6)') '               ny_block = ',ny_block
-     write(nu_diag,'(a29,i6)') '  Processors: ', nprocs
-     write(nu_diag,'(a31,a9)') '  Distribution: ', &
+     write(nu_diag,'(a26,i6)') '  Processors:  total    = ',nprocs
+     write(nu_diag,'(a25,a10)') '  Processor shape:        ', &
+                                  trim(processor_shape)
+     write(nu_diag,'(a25,a10)') '  Distribution type:      ', &
                                   trim(distribution_type)
-     write(nu_diag,'(a25,i2,/)')'  Number of ghost cells: ', nghost
+     write(nu_diag,'(a25,a10)') '  Distribution weight:    ', &
+                                  trim(distribution_wght)
+     write(nu_diag,'(a26,i6)') '  max_blocks =            ', max_blocks
+     write(nu_diag,'(a26,i6,/)')'  Number of ghost cells:  ', nghost
    endif
 
 !----------------------------------------------------------------------
@@ -263,10 +277,13 @@
 !
 !----------------------------------------------------------------------
 
+   integer (int_kind), dimension (nx_global, ny_global) :: &
+      flat                 ! latitude-dependent scaling factor
+
    character (char_len) :: outstring
 
    integer (int_kind), parameter :: &
-      max_work_unit=10     ! quantize the work into values from 1,max
+      max_work_unit=10    ! quantize the work into values from 1,max
 
    integer (int_kind) :: &
       i,j,k,n            ,&! dummy loop indices
@@ -351,35 +368,27 @@
 !
 !----------------------------------------------------------------------
 
+   if (distribution_wght == 'latitude') then
+       flat = NINT(abs(ULATG*rad_to_deg), int_kind) ! linear function
+   else
+       flat = 1
+   endif
+
    allocate(nocn(nblocks_tot))
 
    nocn = 0
    do n=1,nblocks_tot
       this_block = get_block(n,n)
-      !do i=this_block%ib,this_block%ie
-      !	  ig = this_block%i_glob(i)
-      !   jg = this_block%j_glob(j)
-      !   if (KMTG(ig,jg) > puny .and.                       &
-      !       (ULATG(ig,jg) < shlat/rad_to_deg .or.          &
-      !        ULATG(ig,jg) > nhlat/rad_to_deg) )            & 
-      !	      nocn(n) = nocn(n) + 1
-      !end do
-      !end do
-      !do j=1,ny_block
       do j=this_block%jlo,this_block%jhi
          if (this_block%j_glob(j) > 0) then
             do i=this_block%ilo,this_block%ihi
                if (this_block%i_glob(i) > 0) then
 	          ig = this_block%i_glob(i)
                   jg = this_block%j_glob(j)
-#if (defined CCSM) || (defined SEQ_MCT)
-                  if (KMTG(ig,jg) > puny)                           &
-#else
                   if (KMTG(ig,jg) > puny .and.                      &
                      (ULATG(ig,jg) < shlat/rad_to_deg .or.          &
                       ULATG(ig,jg) > nhlat/rad_to_deg) )            & 
-#endif
-	              nocn(n) = nocn(n) + 1
+ 	              nocn(n) = nocn(n) + flat(ig,jg)
                endif
             end do
          endif
@@ -389,11 +398,11 @@
       !*** points, so where the block is not completely land,
       !*** reset nocn to be the full size of the block
 
-      ! NOTE - array syntax use in CICE is limited, so commenting this
-      ! out might improve performance.  However I want the CICE and POP
-      ! decompositions to be identical, so I am leaving it as is. --ech
+      ! use processor_shape = 'square-pop' and distribution_wght = 'block' 
+      ! to make CICE and POP decompositions/distributions identical.
 
-      if (nocn(n) > 0) nocn(n) = nx_block*ny_block
+      if (distribution_wght == 'block' .and. &   ! POP style
+          nocn(n) > 0) nocn(n) = nx_block*ny_block
 
    end do
 

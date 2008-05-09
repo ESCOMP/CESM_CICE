@@ -14,7 +14,7 @@
 !       needed for coupling.
 !       
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_therm_itd.F90 48 2007-01-09 23:57:33Z eclare $
+!  SVN:$Id: ice_therm_itd.F90 112 2008-03-13 21:06:56Z eclare $
 !
 ! authors William H. Lipscomb, LANL
 !         C. M. Bitz, UW
@@ -57,7 +57,7 @@
 !
       subroutine linear_itd (nx_block,    ny_block,    & 
                              icells, indxi, indxj,     & 
-                             nghost,      trcr_depend, & 
+                             trcr_depend, & 
                              aicen_init,  vicen_init,  & 
                              aicen,       trcrn,       & 
                              vicen,       vsnon,       & 
@@ -98,7 +98,6 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         nghost            , & ! number of ghost cells
          icells                ! number of grid cells with ice
 
        integer (kind=int_kind), dimension (nx_block*ny_block), &
@@ -183,7 +182,6 @@
          daice        , & ! ice area transferred across boundary
          dvice            ! ice volume transferred across boundary
 
-!      real (kind=dbl_kind), dimension(nx_block,ny_block) :: &
       real (kind=dbl_kind), dimension(icells) :: &
          vice_init, vice_final, & ! ice volume summed over categories
          vsno_init, vsno_final, & ! snow volume summed over categories
@@ -202,9 +200,8 @@
          fieldid           ! field identifier
 
       logical (kind=log_kind), parameter :: &
-         l_conservation_check = .true.   ! if true, check conservation
-!         l_conservation_check = .false.   ! if true, check conservation
-                                         ! (useful for debugging)
+         l_conservation_check = .false.   ! if true, check conservation
+                                          ! (useful for debugging)
 
        integer (kind=int_kind) :: &
          iflag         , & ! number of grid cells with remap_flag = .true.
@@ -219,8 +216,6 @@
       jstop = 0
 
       hin_max(ncat) = 999.9_dbl_kind ! arbitrary big number
-
-      if (l_stop) return
 
       !-----------------------------------------------------------------
       ! Compute volume and energy sums that linear remapping should
@@ -935,6 +930,7 @@
          qi0(nilyr)   , & ! frazil ice enthalpy
          qi0av        , & ! mean value of qi0 for new ice (J kg-1)
          vsurp        , & ! volume of new ice added to each cat
+         vtmp         , & ! total volume of new and old ice
          area1        , & ! starting fractional area of existing ice
          vice1        , & ! starting volume of existing ice
          rnilyr       , & ! real(nilyr)
@@ -1104,12 +1100,13 @@
             vsurp = hsurp(m) * aicen(i,j,n)
 
             ! update ice age due to freezing (new ice age = dt)
-            if (tr_iage) trcrn(i,j,nt_iage,n)  &
-                   = (trcrn(i,j,nt_iage,n)*vicen(i,j,n) + dt*vsurp) &
-                   / (vicen(i,j,n) + vsurp)
+            vtmp = vicen(i,j,n) + vsurp
+            if (tr_iage .and. vtmp > puny) &
+                trcrn(i,j,nt_iage,n)  &
+             = (trcrn(i,j,nt_iage,n)*vicen(i,j,n) + dt*vsurp) / vtmp
 
             ! update category volumes
-            vicen(i,j,n) = vicen(i,j,n) + vsurp
+            vicen(i,j,n) = vtmp
             vlyr(m) = vsurp/rnilyr
 
          enddo                  ! ij
@@ -1148,11 +1145,13 @@
          aicen(i,j,1) = aicen(i,j,1) + ai0new(m)
          aice0(i,j)   = aice0(i,j)   - ai0new(m)
          vicen(i,j,1) = vicen(i,j,1) + vi0new(m)
-         trcrn(i,j,nt_Tsfc,1) = (Tf(i,j)*ai0new(m) + trcrn(i,j,nt_Tsfc,1)*area1) &
-                      / aicen(i,j,1)
+         trcrn(i,j,nt_Tsfc,1) = (Tf(i,j)*ai0new(m) &
+                              + trcrn(i,j,nt_Tsfc,1)*area1) &
+                                / aicen(i,j,1)
          trcrn(i,j,nt_Tsfc,1) = min (trcrn(i,j,nt_Tsfc,1), c0)
 
-         if (tr_iage) trcrn(i,j,nt_iage,1) = &
+         if (tr_iage .and. vicen(i,j,1) > puny) &
+             trcrn(i,j,nt_iage,1) = &
             (trcrn(i,j,nt_iage,1)*vice1 + dt*vi0new(m))/vicen(i,j,1)
 
          vlyr(m)    = vi0new(m) / rnilyr
@@ -1204,7 +1203,8 @@
 ! !INTERFACE:
 !
       subroutine lateral_melt (nx_block,   ny_block,   &
-                               nghost,     dt,         &
+                               ilo, ihi,   jlo, jhi,   &
+                               dt,                     &
                                fresh,      fsalt,      &
                                fhocn,      fresh_hist, &
                                fsalt_hist, fhocn_hist, &
@@ -1221,7 +1221,7 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         nghost                ! number of ghost cells
+         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
 
       real (kind=dbl_kind), intent(in) :: &
          dt        ! time step (s)
@@ -1259,7 +1259,6 @@
          i, j        , & ! horizontal indices
          n           , & ! thickness category index
          k           , & ! layer index
-         ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
          ij          , & ! horizontal index, combines i and j loops
          icells          ! number of cells with aice > puny
 
@@ -1270,11 +1269,6 @@
          dfhocn  , & ! change in fhocn
          dfresh  , & ! change in fresh
          dfsalt      ! change in fsalt
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
       do n = 1, ncat
 

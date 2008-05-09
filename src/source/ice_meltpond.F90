@@ -74,14 +74,9 @@
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! indirect indices for cells with aicen > puny
 
-      integer (kind=int_kind) :: i, j, ij, n, iblk, ilo, ihi, jlo, jhi
-
+      integer (kind=int_kind) :: i, j, ij, n, iblk
+      
       ! Need to compute albedos before init_cpl in CCSM
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
       restart_pond = .false.
       if (trim(runtype) == 'continue') restart_pond = .true.
@@ -103,7 +98,8 @@
 !
 ! !INTERFACE:
 !
-      subroutine compute_ponds(nx_block,ny_block,nghost,   &
+      subroutine compute_ponds(nx_block,ny_block,          &
+                               ilo, ihi, jlo, jhi,         &
                                meltt, melts,  frain,       &
                                aicen, vicen,  vsnon,       &
                                trcrn, apondn, hpondn)
@@ -122,7 +118,7 @@
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         nghost
+         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
 
       real (kind=dbl_kind), dimension(nx_block,ny_block), &
          intent(in) :: &
@@ -149,17 +145,12 @@
       integer (kind=int_kind), dimension (nx_block*ny_block) :: &
          indxi, indxj     ! compressed indices for cells with ice melting
 
-      integer (kind=int_kind) :: i,j,ij,icells,ilo,ihi,jlo,jhi
+      integer (kind=int_kind) :: i,j,ij,icells
 
       real (kind=dbl_kind) :: hi,hs,dTs
 
       real (kind=dbl_kind), parameter :: &
          hi_min = p1
-
-      ilo = 1 + nghost
-      ihi = nx_block - nghost
-      jlo = 1 + nghost
-      jhi = ny_block - nghost
 
       Tsfcn(:,:) = trcrn(:,:,nt_Tsfc)
       volpn(:,:) = trcrn(:,:,nt_volpn)

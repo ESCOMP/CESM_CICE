@@ -759,7 +759,6 @@ contains
                !--- i/o fluxes computed by ice
                i2x_i%rAttr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)
                i2x_i%rAttr(index_i2x_Fioi_swpen,n)   = fswthru(i,j,iblk) ! hf from melting          
-               i2x_i%rAttr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)   
                i2x_i%rAttr(index_i2x_Fioi_meltw,n)   = fresh(i,j,iblk)   ! h2o flux from melting    ???
                i2x_i%rAttr(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
                i2x_i%rAttr(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???

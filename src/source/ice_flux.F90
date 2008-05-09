@@ -686,7 +686,7 @@
 ! !INTERFACE:
 !
       subroutine scale_fluxes (nx_block, ny_block, &
-                               nghost,   tmask,    &
+                               tmask,              &
                                aice,     Tf,       &
                                Tair,     Qa,       &
                                strairxT, strairyT, &
@@ -708,8 +708,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &
-          nx_block, ny_block, & ! block dimensions
-          nghost                ! number of ghost cells
+          nx_block, ny_block    ! block dimensions
 
       logical (kind=log_kind), dimension (nx_block,ny_block), &
           intent(in) :: &
@@ -784,7 +783,7 @@
             flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0
-            Tref    (i,j) = c0
+            Tref    (i,j) = Tair(i,j)
             Qref    (i,j) = Qa  (i,j)
             fresh   (i,j) = c0
             fsalt   (i,j) = c0

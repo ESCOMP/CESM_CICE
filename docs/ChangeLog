@@ -1,4 +1,60 @@
 ===============================================================
+cice4_0_20080508
+Originator: dbailey
+Date: Thu May  8 20:29:19 MDT 2008 
+Version: 4.0
+One-line Summary: Migrate to r126 version of CICE.
+CCSM Version compatible with: ccsm4_0_alpha29+
+Changes made:
+
+This tag involves extensive changes to accomodate padding, the new
+incremental remapping transport is now the default, some various
+enhancements and bug fixes. Note that the model exactly restarts
+when padding is not active, but does not when padding is active.
+This is a work in progress, but numerous users wanted additional
+functionality that is now available. This tag is not bfb with the
+previous tag, mainly due to the remapping transport. This did pass
+exact restart tests for B and D cases at the gx1v5 and gx3v5 
+resolutions.
+
+M            9684   bld/cice.cpl6.template
+M            9684   bld/build-namelist
+M            9684   bld/namelist_files/namelist_definition.xml
+M            9684   bld/namelist_files/namelist_defaults_cice.xml
+M            9684   src/serial/ice_timers.F90
+M            9684   src/serial/ice_communicate.F90
+M            9684   src/serial/ice_gather_scatter.F90
+M            9684   src/serial/ice_global_reductions.F90
+M            9684   src/source/ice_dyn_evp.F90
+M            9684   src/source/ice_transport_driver.F90
+M            9684   src/source/ice_domain.F90
+M            9684   src/source/ice_transport_remap.F90
+M            9684   src/source/ice_itd.F90
+M            9684   src/source/ice_shortwave.F90
+M            9684   src/source/ice_meltpond.F90
+M            9684   src/source/ice_fileunits.F90
+M            9684   src/source/ice_mechred.F90
+M            9684   src/source/ice_diagnostics.F90
+M            9684   src/source/ice_kinds_mod.F90
+M            9684   src/source/ice_therm_vertical.F90
+M            9684   src/source/ice_step_mod.F90
+M            9684   src/source/ice_flux.F90
+M            9684   src/source/ice_distribution.F90
+M            9684   src/source/ice_therm_itd.F90
+M            9684   src/source/ice_grid.F90
+M            9684   src/source/ice_forcing.F90
+M            9684   src/source/ice_history.F90
+M            9684   src/mpi/ice_boundary.F90
+M            9684   src/mpi/ice_timers.F90
+M            9684   src/mpi/ice_communicate.F90
+M            9684   src/mpi/ice_gather_scatter.F90
+M            9684   src/mpi/ice_global_reductions.F90
+M            9684   src/drivers/ccsm_sequential/ice_communicate.F90
+M            9684   src/drivers/ccsm_sequential/ice_comp_mct.F90
+M            9684   src/drivers/ccsm_concurrent/ice_coupling.F90
+M            9684   src/drivers/cice4/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20080430
 Originator: tcraig
 Date: Wed Apr 30 01:50:44 MDT 2008

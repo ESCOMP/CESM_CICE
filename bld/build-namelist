@@ -341,7 +341,9 @@ add_default($nl, 'tr_pond');
 # namelist group: domain_nml     #
 ##################################
 
+add_default($nl, 'processor_shape');
 add_default($nl, 'distribution_type');
+add_default($nl, 'distribution_wght');
 add_default($nl, 'ew_boundary_type');
 add_default($nl, 'ns_boundary_type');
 

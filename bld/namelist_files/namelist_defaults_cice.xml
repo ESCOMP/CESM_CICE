@@ -145,7 +145,9 @@
 <!--------------------------->
 
 <distribution_type cice_grid='tx0.1v2' >'spacecurve'</distribution_type>
+<processor_shape                      >'square-pop' </processor_shape>
 <distribution_type                    >'cartesian' </distribution_type>
+<distribution_wght                    >'block'     </distribution_wght>
 
 <ew_boundary_type>'cyclic'</ew_boundary_type>
 

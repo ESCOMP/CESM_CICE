@@ -249,7 +249,9 @@ cat >> $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 
  &domain_nml
     nprocs = \$NTASKS_ICE
+  , processor_shape   = 'slenderX1'
   , distribution_type = 'cartesian'
+  , distribution_wght = 'block'
   , ew_boundary_type  = 'cyclic'
   , ns_boundary_type  = 'open'
 /
