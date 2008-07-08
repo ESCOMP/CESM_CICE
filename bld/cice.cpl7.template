@@ -35,11 +35,6 @@ endif
 cat >! $CASEROOT/Buildnml_Prestage/cice.buildnml_prestage.csh << EOF1
 #! /bin/csh -f 
 
-source \$CASEROOT/env_conf         || exit -1
-source \$CASEROOT/env_run          || exit -1
-source \$CASEROOT/env_mach.\$MACH  || exit -1
-source \$CASEROOT/env_pes.\$MACH   || exit -1
-
 set exedir = \$EXEROOT/ccsm_se; cd \$exedir
 
 set inic_file        = $inic_file
@@ -130,11 +125,6 @@ EOF1
 
 cat >! $CASEROOT/Buildexe/cice.buildexe.csh << EOF2
 #! /bin/csh -f 
-
-source \$CASEROOT/env_conf || exit -1
-source \$CASEROOT/env_run  || exit -1
-source \$CASEROOT/env_mach.\$MACH  || exit -1
-source \$CASEROOT/env_pes.\$MACH  || exit -1
 
 set exedir = \$EXEROOT/ccsm_se
 set objdir = \$OBJROOT/ice/obj; cd \$objdir
