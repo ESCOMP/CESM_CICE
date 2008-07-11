@@ -8,6 +8,7 @@ if !(-d $CASEROOT/Buildexe                  ) mkdir $CASEROOT/Buildexe
 # Create cice.buildnml_prestage.csh
 #--------------------------------------------------------------------
 
+set inic_file = 'default'
 if     ($CICE_MODE == 'prognostic') then
    set mode = prognostic
    set ncat = 5
@@ -18,13 +19,14 @@ else if ($CICE_MODE == 'data_clim_1870') then
    set mode = prescribed
    set pres_mode = clim_1870
    set ncat = 1
+   set inic_file = 'none'
 else if ($CICE_MODE == 'data_clim_2000') then
    set mode = prescribed
    set pres_mode = clim_2000
    set ncat = 1
+   set inic_file = 'none'
 endif
 
-set inic_file = 'default'
 if ($RUN_TYPE == startup && $ICE_GRID =~ *gx*) then
   set inic_file = iced.0001-01-01.${ICE_GRID}_20080212
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
@@ -180,10 +182,10 @@ if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
    cp \$BLDROOT/mkSrcfiles . || exit 2
    set THREAD = FALSE ;  if (\$NTHRDS_ICE > 1) set THREAD = TRUE
    gmake complib -j \$GMAKE_J VPFILE=Filepath MODEL=cice COMPLIB=\$objdir/../libcice.a \
-      NXGLOB=\$NLON NYGLOB=\$NLAT NCAT=$ncat DEPINC=$INCROOT \
+      NXGLOB=\$NLON NYGLOB=\$NLAT NCAT=$ncat DEPINC=\$INCROOT \
       BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
       THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
-   cp -p *comp_*.mod $LIBROOT/include/
+   cp -p *comp_*.mod \$LIBROOT/include/
 endif
 mv \$objdir/iceres.new \$objdir/iceres.old
 

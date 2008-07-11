@@ -1,4 +1,23 @@
 ===============================================================
+cice4_0_20080711
+Originator: dbailey
+Date: Fri Jul 11 09:17:39 MDT 2008
+Version: 4.0
+One-line Summary: Update prescribed ice mode.
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+- Changes to CPL7 template for new build system (mvertens)
+- Changes to prescribed ice mode to make it more like the
+  standalone CAM version.
+- Change size of messages in ice_boundary for efficiency (dennis)
+
+M           bld/cice.cpl7.template
+M           src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+M           src/source/ice_boundary.F90
+M           src/source/ice_therm_vertical.F90
+
+===============================================================
 cice4_0_20080508
 Originator: dbailey
 Date: Thu May  8 20:29:19 MDT 2008 

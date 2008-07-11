@@ -247,7 +247,6 @@
 
       real (kind=dbl_kind), dimension (icells,nilyr) :: &
          qin         , & ! ice layer enthalpy, qin < 0 (J m-3)
-         qin_save    , & ! ice layer enthalpy, qin < 0 (J m-3)
          Tin             ! internal ice layer temperatures
 
       real (kind=dbl_kind), dimension (icells,nslyr) :: &
@@ -351,20 +350,6 @@
       if (l_stop) return
 
       !-----------------------------------------------------------------
-      ! If prescribed ice, save qin to use after thickness changes
-      !-----------------------------------------------------------------
-
-      if (prescribed_ice) then
-        do k = 1, nilyr
-           do ij = 1, icells
-              i = indxi(ij)
-              j = indxj(ij)
-              qin_save(ij,k) = qin(ij,k)
-           enddo ! ij
-        enddo                  ! k
-      endif
-
-      !-----------------------------------------------------------------
       ! Compute growth and/or melting at the top and bottom surfaces.
       ! Add new snowfall.
       ! Repartition ice into equal-thickness layers, conserving energy.
@@ -396,15 +381,8 @@
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
-               hin(ij) = worki(ij)
+!              hin(ij) = worki(ij)
                fhocnn(i,j) = c0             ! for diagnostics
-            enddo                  ! ij
-            do k = 1, nilyr
-               do ij = 1, icells
-                  i = indxi(ij)
-                  j = indxj(ij)
-                  qin(ij,k) = qin_save(ij,k)
-              enddo                  ! k
             enddo                  ! ij
          endif
 
@@ -1133,6 +1111,7 @@
                   write(nu_diag,*) 'Tmin =', Tmin
                   write(nu_diag,*) 'istep1, my_task, i, j:', &
                                     istep1, my_task, i, j
+                  write(nu_diag,*) 'qin', qin(ij,k)
                   l_stop = .true.
                   istop = i
                   jstop = j

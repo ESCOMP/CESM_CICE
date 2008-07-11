@@ -34,13 +34,14 @@ module ice_prescribed_mod
    use ice_kinds_mod
    use ice_fileunits
    use ice_exit,       only : abort_ice
-   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, max_blocks
+   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, nslyr, &
+                               max_blocks
    use ice_constants
    use ice_blocks,     only : nx_block, ny_block
    use ice_domain,     only : nblocks, distrb_info
    use ice_grid,       only : TLAT,TLON,hm,tmask
    use ice_calendar,   only : idate, sec
-   use ice_itd,        only : ilyr1, hin_max
+   use ice_itd,        only : ilyr1, slyr1, hin_max
    use ice_work,       only : work_g1, work_g2
 
    implicit none
@@ -748,10 +749,10 @@ subroutine ice_prescribed_phys
 
    real(kind=dbl_kind) :: slope     ! diff in underlying ocean tmp and ice surface tmp
    real(kind=dbl_kind) :: Ti        ! ice level temperature
-   real(kind=dbl_kind) :: hi        ! ice prescribed (hemispheric) ice thickness 
-   real(kind=dbl_kind) :: hs        ! snow cover
-   real(kind=dbl_kind) :: dz        ! distance freeboard below SL (m)
-   real(kind=dbl_kind) :: dhs       ! snow to remove 
+   real(kind=dbl_kind) :: Tmlt      ! ice level melt temperature
+   real(kind=dbl_kind) :: qin_save(nilyr) 
+   real(kind=dbl_kind) :: qsn_save(nslyr)
+   real(kind=dbl_kind) :: hi        ! ice prescribed (hemispheric) ice thickness
    real(kind=dbl_kind) :: zn        ! normalized ice thickness
    real(kind=dbl_kind) :: salin(nilyr)  ! salinity (ppt) 
 
@@ -763,9 +764,9 @@ subroutine ice_prescribed_phys
    ! Initialize ice state
    !-----------------------------------------------------------------
 
-   aicen(:,:,:,:) = c0
-   vicen(:,:,:,:) = c0
-   eicen(:,:,:,:) = c0
+!  aicen(:,:,:,:) = c0
+!  vicen(:,:,:,:) = c0
+!  eicen(:,:,:,:) = c0
 
 !  do nc=1,ncat
 !     trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
@@ -813,46 +814,78 @@ subroutine ice_prescribed_phys
             ! All ice in appropriate thickness category
             !----------------------------------------------------------
             do nc = 1,ncat
-               if(hin_max(nc-1) < hi .and. hi < hin_max(nc)) then
+              if(hin_max(nc-1) < hi .and. hi < hin_max(nc)) then
+                  qin_save(:) = c0
+                  qsn_save(:) = c0
+                  if (vicen(i,j,nc,iblk) > c0) then
+                     do k=1,nilyr
+                        qin_save(k) = eicen(i,j,ilyr1(nc)+k-1,iblk)         &
+                                    * real(nilyr,kind=dbl_kind)             &
+                                    / vicen(i,j,nc,iblk)
+                     enddo
+                  endif
+
+                  if (vsnon(i,j,nc,iblk) > c0) then
+                     do k=1,nslyr
+                        qsn_save(k) = esnon(i,j,slyr1(nc)+k-1,iblk)         &
+                                    * real(nslyr,kind=dbl_kind)             &
+                                    / vsnon(i,j,nc,iblk)
+                     enddo
+                  endif
+
                   aicen(i,j,nc,iblk) = ice_cov(i,j,iblk)
                   vicen(i,j,nc,iblk) = hi*aicen(i,j,nc,iblk) 
 
-                  !---------------------------------------------------------
-                  ! keep snow/ice boundary above sea level by reducing snow
-                  !---------------------------------------------------------
-                  hs = vsnon(i,j,nc,iblk)/aicen(i,j,nc,iblk)
-                  dz = hs - hi*(rhow-rhoi)/rhos
+                  ! remember enthalpy profile to compute energy
+                  do k=1,nilyr
+                     eicen(i,j,ilyr1(nc)+k-1,iblk)                          &
+                        = qin_save(k) * vicen(i,j,nc,iblk)                  &
+                        / real(nilyr,kind=dbl_kind)
+                  enddo
 
-                  if (dz > puny .and. hs > puny) then ! snow below freeboard
-                     dhs = min(dz*rhoi/rhow, hs) ! snow to remove
-                     hs = hs - dhs
-                     vsnon(i,j,nc,iblk) = hs * aicen(i,j,nc,iblk)
-                  end if
+                  do k=1,nslyr
+                     esnon(i,j,slyr1(nc)+k-1,iblk)                          &
+                        = qsn_save(k) * vsnon(i,j,nc,iblk)                  &
+                        / real(nslyr,kind=dbl_kind)
+                  enddo
 
                   !---------------------------------------------------------
                   ! make linear temp profile and compute enthalpy
                   !---------------------------------------------------------
-!                  trcrn(i,j,nt_Tsfc,nc,iblk) = min(Tair(i,j,iblk)-Tffresh,-p2)   ! deg C       
+
+                  if (abs(eicen(i,j,ilyr1(nc),iblk)) < puny) then
+
+                  if (aice(i,j,iblk) < puny) &
+                     trcrn(i,j,nt_Tsfc,nc,iblk) = Tf(i,j,iblk)
+
                   slope = Tf(i,j,iblk) - trcrn(i,j,nt_Tsfc,nc,iblk)
                   do k = 1, nilyr
                      zn = (real(k,kind=dbl_kind)-p5) / real(nilyr,kind=dbl_kind)
                      Ti = trcrn(i,j,nt_Tsfc,nc,iblk) + slope*zn
                      salin(k) = (saltmax/c2)*(c1-cos(pi*zn**(nsal/(msal+zn))))
+                     Tmlt = -salin(k)*depressT
                      eicen(i,j,ilyr1(nc)+k-1,iblk) =                        &
-                     &    (-rLfi - rcpi*(-depressT*salin(k)-Ti)             &
-                     &     -rLfidepressT*salin(k)/Ti) *vicen(i,j,nc,iblk)/nilyr
+                       -(rhoi * (cp_ice*(Tmlt-Ti) &
+                       + Lfresh*(c1-Tmlt/Ti) - cp_ocn*Tmlt)) &
+                       * vicen(i,j,nc,iblk)/real(nilyr,kind=dbl_kind)
                   enddo
 
-                  esnon(i,j,nc,iblk) =                                  &
-                     -rhos*(Lfresh - cp_ice*trcrn(i,j,nt_Tsfc,nc,iblk)) &
-                      *vsnon(i,j,nc,iblk)
+                  do k=1,nslyr
+                     esnon(i,j,slyr1(nc)+k-1,iblk) =                       &
+                        -rhos*(Lfresh - cp_ice*trcrn(i,j,nt_Tsfc,nc,iblk)) &
+                         *vsnon(i,j,nc,iblk)
+                  enddo
 
+                  endif  ! aice < puny
                end if    ! hin_max
             enddo        ! ncat
          else
             trcrn(i,j,nt_Tsfc,:,iblk) = Tf(i,j,iblk)
+            aicen(i,j,:,iblk) = c0
+            vicen(i,j,:,iblk) = c0
             vsnon(i,j,:,iblk) = c0
             esnon(i,j,:,iblk) = c0
+            eicen(i,j,:,iblk) = c0
          end if          ! ice_cov >= eps04
       end if             ! tmask
    enddo                 ! i
