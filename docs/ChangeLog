@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20080718
+Originator: mvertens
+Date: Fri Jul 18 13:56:59 MDT 2008
+Version: 4.0
+One-line Summary: More updates to prescribed ice mode.
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+Put in modifications to have cice work more flexiblity with
+"stand-alone" cam grid and processor ranges and to speed up the
+prescribed ice mode.
+
+M      bld/cice.cpl7.template
+M      bld/build-namelist
+M      bld/cice_decomp.xml
+M      bld/generate_cice_decomp.pl
+M      src/drivers/ccsm_sequential/ice_communicate.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+M      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+	
+===============================================================
 cice4_0_20080711
 Originator: dbailey
 Date: Fri Jul 11 09:17:39 MDT 2008

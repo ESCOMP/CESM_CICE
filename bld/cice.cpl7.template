@@ -8,7 +8,6 @@ if !(-d $CASEROOT/Buildexe                  ) mkdir $CASEROOT/Buildexe
 # Create cice.buildnml_prestage.csh
 #--------------------------------------------------------------------
 
-set inic_file = 'default'
 if     ($CICE_MODE == 'prognostic') then
    set mode = prognostic
    set ncat = 5
@@ -19,14 +18,13 @@ else if ($CICE_MODE == 'data_clim_1870') then
    set mode = prescribed
    set pres_mode = clim_1870
    set ncat = 1
-   set inic_file = 'none'
 else if ($CICE_MODE == 'data_clim_2000') then
    set mode = prescribed
    set pres_mode = clim_2000
    set ncat = 1
-   set inic_file = 'none'
 endif
 
+set inic_file = 'default'
 if ($RUN_TYPE == startup && $ICE_GRID =~ *gx*) then
   set inic_file = iced.0001-01-01.${ICE_GRID}_20080212
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
@@ -104,10 +102,16 @@ cd $CASEROOT/Buildnml_Prestage/ciceconf || exit -1
 
 if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
   $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-                                         -namelist "&ice_nml inic_file='${inic_file}' /" || exit -1
+                                         -namelist "&ice_nml inic_file='${inic_file}' /" \
+                                         -inputdata $CASEROOT/Buildnml_Prestage/cice.input_data_list || exit -1
 else
-  $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist || exit -1
+  $CODEROOT/ice/cice//bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+					 -inputdata $CASEROOT/Buildnml_Prestage/cice.input_data_list || exit -1
 endif
+
+cat >> $CASEROOT/Buildnml_Prestage/cice.input_data_list << EOF
+inic_file = \$DIN_LOC_ROOT/ice/cice/${inic_file}
+EOF
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in

@@ -98,7 +98,9 @@ module ice_prescribed_mod
    real(kind=dbl_kind), allocatable :: dataOutUB(:,:,:) ! output for model use
 
    real(kind=dbl_kind), allocatable :: ice_cov_global(:,:)      ! ice cover for model
-   real(kind=dbl_kind)              :: ice_cov(nx_block,ny_block,max_blocks) ! scattered ice cover 
+   real(kind=dbl_kind)              :: ice_cov_lb(nx_block,ny_block,max_blocks) ! scattered ice cover 
+   real(kind=dbl_kind)              :: ice_cov_ub(nx_block,ny_block,max_blocks) ! scattered ice cover 
+   real(kind=dbl_kind)              :: ice_cov(nx_block,ny_block,max_blocks)    ! scattered ice cover 
 
    logical(kind=log_kind) :: regrid                      ! true if remapping required
 
@@ -109,6 +111,8 @@ module ice_prescribed_mod
 
    character(len=char_len_long) :: fldList      ! list of fields in data stream
    character(len=char_len)      :: fldName      ! name of field in stream
+
+   logical :: read_data     ! must read in new ice coverage data slice
 
 ! ech moved from ice_constants.F
     real (kind=dbl_kind), parameter :: &
@@ -496,7 +500,7 @@ subroutine ice_prescribed_run(mDateIn, secIn)
 
    integer(kind=int_kind) :: mDateLB_old = -999
    integer(kind=int_kind) :: secLB_old = -999
-   integer(kind=int_kind) :: i,j,n,icnt  ! loop indices and counter
+   integer(kind=int_kind) :: i,j,n,icnt,iblk  ! loop indices and counter
 
    !------------------------------------------------------------------------
    ! get two time slices of monthly ice coverage data
@@ -509,8 +513,10 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       &                          mDateLB, dDateLB, secLB, n_lb, fileLB, &
       &                          mDateUB, dDateUB, secUB, n_ub, fileUB)
 
+      read_data = .false.
       if (mDateLB_old /= mDateLB .or. secLB_old /= secLB) then
 
+         read_data = .true.
          call ice_prescribed_readField(fileLB, fldName, n_lb, dataInLB)
          call ice_prescribed_readField(fileUB, fldName, n_ub, dataInUB)
 
@@ -566,22 +572,48 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       call shr_tInterp_getFactors(mDateLB, secLB, mDateUB, secUB, &
       &                           mDateIn, secIN, fLB, fUB)
 
-      ice_cov_global(:,:) = fLB*dataOutLB(:,:,1) + fUB*dataOutUB(:,:,1)
-
    end if    ! master_task
+   call broadcast_scalar(fLB, master_task)
+   call broadcast_scalar(fUB, master_task)
 
-  !-----------------------------------------------------------------
-  ! Scatter ice concentration to all processors
-  !-----------------------------------------------------------------
-   call scatter_global(ice_cov,   ice_cov_global, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+   !-----------------------------------------------------------------
+   ! Scatter ice concentration to all processors if read data
+   !-----------------------------------------------------------------
 
-  !-----------------------------------------------------------------
-  ! Set prescribed ice state and fluxes
-  !-----------------------------------------------------------------
+   call broadcast_scalar(read_data, master_task)
+   if (read_data) then
+      if (my_task ==  master_task) then
+         ice_cov_global(:,:) = dataOutLB(:,:,1) 
+      end if
+      call scatter_global(ice_cov_lb,   ice_cov_global, &
+           &              master_task,  distrb_info, & 
+           &              field_loc_center, field_type_scalar)
 
-   call ice_prescribed_phys
+      if (my_task ==  master_task) then
+         ice_cov_global(:,:) = dataOutUB(:,:,1)
+      end if
+      call scatter_global(ice_cov_ub,   ice_cov_global, &
+           &              master_task,  distrb_info, & 
+           &              field_loc_center, field_type_scalar)
+   end if
+
+   !-----------------------------------------------------------------
+   ! Time interpolate ice concentration data
+   !-----------------------------------------------------------------
+
+   do iblk = 1,nblocks
+   do j = 1,ny_block
+   do i = 1,nx_block
+      ice_cov(i,j,iblk) = fLB*ice_cov_lb(i,j,iblk) + fUB*ice_cov_ub(i,j,iblk)
+   enddo
+   enddo
+   enddo
+
+   !-----------------------------------------------------------------
+   ! Set prescribed ice state and fluxes
+   !-----------------------------------------------------------------
+
+   call ice_prescribed_phys()
 
 end subroutine ice_prescribed_run
 

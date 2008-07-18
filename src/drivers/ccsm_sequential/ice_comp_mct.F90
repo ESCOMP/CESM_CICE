@@ -374,10 +374,14 @@ contains
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
     
+    call t_startf ('cice_initmd')
     call init_mass_diags   ! diagnostics per timestep
+    call t_stopf ('cice_initmd')
 
     if(prescribed_ice) then  ! read prescribed ice
+       call t_startf ('cice_presc')
        call ice_prescribed_run(idate, sec)
+       call t_stopf ('cice_presc')
     endif
     
     call init_flux_atm
@@ -871,60 +875,65 @@ contains
      ! Update ghost cells for imported quantities
      !-------------------------------------------------------
 
-     call ice_HaloUpdate(sst    , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(sss    , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(uocn   , halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(vocn   , halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(zlvl   , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(uatm   , halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(vatm   , halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(potT   , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(Tair   , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(Qa     , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(rhoa   , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(ss_tltx, halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(ss_tlty, halo_info, field_loc_center, &
-                                             field_type_vector)
-     call ice_HaloUpdate(frzmlt , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(swvdr  , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(swidr  , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(swvdf  , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(swidf  , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(flw    , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(frain  , halo_info, field_loc_center, &
-                                             field_type_scalar)
-     call ice_HaloUpdate(fsnow  , halo_info, field_loc_center, &
-                                             field_type_scalar)
+     if (.not.prescribed_ice) then
+        call t_startf ('cice_imp_halo')
+        call ice_HaloUpdate(sst    , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(sss    , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(uocn   , halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(vocn   , halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(zlvl   , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(uatm   , halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(vatm   , halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(potT   , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(Tair   , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(Qa     , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(rhoa   , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(ss_tltx, halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(ss_tlty, halo_info, field_loc_center, &
+                                                field_type_vector)
+        call ice_HaloUpdate(frzmlt , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(swvdr  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(swidr  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(swvdf  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(swidf  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(flw    , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(frain  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call ice_HaloUpdate(fsnow  , halo_info, field_loc_center, &
+                                                field_type_scalar)
+        call t_stopf ('cice_imp_halo')
+     end if
 
-      !-----------------------------------------------------------------
-      ! rotate zonal/meridional vectors to local coordinates
-      ! compute data derived quantities
-      !-----------------------------------------------------------------
-
-      ! Vector fields come in on T grid, but are oriented geographically
-      ! need to rotate to pop-grid FIRST using ANGLET
-      ! then interpolate to the U-cell centers  (otherwise we
-      ! interpolate across the pole)
-      ! use ANGLET which is on the T grid !
- 
+     !-----------------------------------------------------------------
+     ! rotate zonal/meridional vectors to local coordinates
+     ! compute data derived quantities
+     !-----------------------------------------------------------------
+     
+     ! Vector fields come in on T grid, but are oriented geographically
+     ! need to rotate to pop-grid FIRST using ANGLET
+     ! then interpolate to the U-cell centers  (otherwise we
+     ! interpolate across the pole)
+     ! use ANGLET which is on the T grid !
+     
+     call t_startf ('cice_imp_ocn')
      !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
      do iblk = 1, nblocks
 
@@ -955,19 +964,25 @@ contains
        enddo
       enddo
       !$OMP END PARALLEL DO
+      call t_stopf ('cice_imp_ocn')
 
       ! Interpolate ocean dynamics variables from T-cell centers to 
       ! U-cell centers.
 
-      call t2ugrid_vector(uocn)
-      call t2ugrid_vector(vocn)
-      call t2ugrid_vector(ss_tltx)
-      call t2ugrid_vector(ss_tlty)
+      if (.not.prescribed_ice) then
+         call t_startf ('cice_imp_t2u')
+         call t2ugrid_vector(uocn)
+         call t2ugrid_vector(vocn)
+         call t2ugrid_vector(ss_tltx)
+         call t2ugrid_vector(ss_tlty)
+         call t_stopf ('cice_imp_t2u')
+      end if
 
       ! Atmosphere variables are needed in T cell centers in
       ! subroutine stability and are interpolated to the U grid
       ! later as necessary.
 
+      call t_startf ('cice_imp_atm')
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
       do iblk = 1, nblocks
          do j = 1, ny_block
@@ -988,6 +1003,7 @@ contains
          enddo
       enddo
       !$OMP END PARALLEL DO
+      call t_stopf ('cice_imp_atm')
 
    end subroutine ice_import_mct
 

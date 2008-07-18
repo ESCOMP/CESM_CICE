@@ -32,7 +32,27 @@
      <nlons>3600</nlons>
      <nlats>2400</nlats>
   </size>
+  <size res="T5">
+     <nlons>16</nlons>
+     <nlats>8</nlats>
+  </size>
+  <size res="8x16">
+     <nlons>16</nlons>
+     <nlats>8</nlats>
+  </size>
+  <size res="T21">
+     <nlons>64</nlons>
+     <nlats>32</nlats>
+  </size>
+  <size res="32x64">
+     <nlons>64</nlons>
+     <nlats>32</nlats>
+  </size>
   <size res="T31">
+     <nlons>96</nlons>
+     <nlats>48</nlats>
+  </size>
+  <size res="48x96">
      <nlons>96</nlons>
      <nlats>48</nlats>
   </size>
@@ -40,13 +60,33 @@
      <nlons>128</nlons>
      <nlats>64</nlats>
   </size>
+  <size res="64x128">
+     <nlons>128</nlons>
+     <nlats>64</nlats>
+  </size>
   <size res="T85">
      <nlons>256</nlons>
      <nlats>128</nlats>
   </size>
+  <size res="128x256">
+     <nlons>256</nlons>
+     <nlats>128</nlats>
+  </size>
+  <size res="T170">
+     <nlons>256</nlons>
+     <nlats>512</nlats>
+  </size>
+  <size res="10x15">
+     <nlons>19</nlons>
+     <nlats>24</nlats>
+  </size>
   <size res="4x5">
      <nlons>72</nlons>
      <nlats>46</nlats>
+  </size>
+  <size res="2x2.5">
+     <nlons>144</nlons>
+     <nlats>91</nlats>
   </size>
   <size res="1.9x2.5">
      <nlons>144</nlons>
@@ -59,6 +99,10 @@
   <size res="0.47x0.63">
      <nlons>576</nlons>
      <nlats>384</nlats>
+  </size>
+  <size res="0.23x0.31">
+     <nlons>768</nlons>
+     <nlats>1152</nlats>
   </size>
 
 <!-- -------------------------------------------------------------------------------- -->
@@ -291,60 +335,6 @@
     <bsize_x   >5</bsize_x>
     <bsize_y   >58</bsize_y>
     <decomptype>cartesian</decomptype>
-  </decomp>
-
-<!-- -------------------------------------------------------------------------------- -->
-<!-- -------------------------------------------------------------------------------- -->
-  <!--CAM/CICE-->
-  <decomp nproc="64" res="1.9x2.5" model="cice">
-    <maxblocks >4</maxblocks>
-    <bsize_x   >8</bsize_x>
-    <bsize_y   >96</bsize_y>
-    <decomptype>spacecurve</decomptype>
-  </decomp>
-
-  <decomp nproc="32" res="1.9x2.5" model="cice">
-    <maxblocks >1</maxblocks>
-    <bsize_x   >9</bsize_x>
-    <bsize_y   >48</bsize_y>
-    <decomptype>cartesian</decomptype>
-  </decomp>
-
-  <decomp nproc="16" res="1.9x2.5" model="cice">
-    <maxblocks >1</maxblocks>
-    <bsize_x   >18</bsize_x>
-    <bsize_y   >48</bsize_y>
-    <decomptype>cartesian</decomptype>
-  </decomp>
-
-  <decomp nproc="8" res="1.9x2.5" model="cice">
-    <maxblocks >1</maxblocks>
-    <bsize_x   >36</bsize_x>
-    <bsize_y   >48</bsize_y>
-    <decomptype>cartesian</decomptype>
-  </decomp>
-
-  <decomp nproc="1" res="1.9x2.5" model="cice">
-    <maxblocks >1</maxblocks>
-    <bsize_x   >144</bsize_x>
-    <bsize_y   >96</bsize_y>
-    <decomptype>cartesian</decomptype>
-  </decomp>
-
-<!-- -------------------------------------------------------------------------------- -->
-  <!-- CAM -->
-     <!-- nlons>576</nlons-->
-     <!-- nlats>384</nlats-->
-     <!-- nlevs>26</nlevs-->
-  <decomp nproc="100" res="fv0.47x0.63" model="cam" platform="XT">
-     <npr_y>50</npr_y>
-     <npr_z>2</npr_z>
-     <modcomm_gatscat>0</modcomm_gatscat>
-  </decomp>
-  <decomp nproc="200" res="fv0.47x0.63" model="cam" platform="XT">
-     <npr_y>50</npr_y>
-     <npr_z>4</npr_z>
-     <modcomm_gatscat>0</modcomm_gatscat>
   </decomp>
 
 </configInfo>

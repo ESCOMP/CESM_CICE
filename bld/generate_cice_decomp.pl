@@ -63,6 +63,8 @@ OPTIONS
      -thrds <number>      (or -t)   Number of threads per processsor    (default 1)
      -output <type>	  (or -o)   Either output: all, maxblocks, bsize-x, bsize-y, or decomptype
 			  (default: $output)
+     -spacecurve          (or -s)   Forces spacecurve computation if the decomposition is not in the xml file        
+                                    (default is off)
 EXAMPLES
 
    $ProgName -res gx1v5 -model cice -platform XT -nproc 80 -output maxblocks
@@ -75,15 +77,16 @@ EOF
 #------------------------------------------------------------------------------------------------
 
   my %opts = (
-                res      => $res,
-                model    => $model,
-                platform => $platform,
-                nproc    => undef,
-                thrds    => 1,
-                output   => $output,
-                printing => 1,
-                help     => 0,
-                file     => "$cfgdir/cice_decomp.xml",
+                res        => $res,
+                model      => $model,
+                platform   => $platform,
+                nproc      => undef,
+                thrds      => 1,
+                output     => $output,
+                printing   => 1,
+                help       => 0,
+                file       => "$cfgdir/cice_decomp.xml",
+                spacecurve => 0,
            );
 
   my $cmdline = @ARGV;
@@ -95,6 +98,7 @@ EOF
               "t|thrds=i"    => \$opts{'thrds'},
               "o|output=s"   => \$opts{'output'},
               "h|elp"        => \$opts{'help'},
+              "s|spacecurve" => \$opts{'spacecurve'},
           ) or usage();
 
   # Check for unparsed arguments
@@ -126,14 +130,21 @@ EOF
                  nlats=>0, nlons=>0 );
   my $matches = $dcmp->ReadXML( $opts{'file'}, \%decomp );
 
+if ($decomp{'nlats'} == 0 ) {
+   die <<"EOF";
+** resolution $res is currently not supported in cice_decomp.xml file***
+EOF
+}    
+
 # if no xml entry, try to generate something
   if ( $decomp{'maxblocks'} == 0) {
      %decomp = CalcDecompInfo( $decomp{'nlats'}, $decomp{'nlons'}, \%opts);
   }
  
 # adjust maxblocks to take into account threading
-  $decomp{'maxblocks'} = $decomp{'maxblocks'} * $opts{'thrds'};
-
+  if ($decomp{'decomptype'} ne "spacecurve")  {
+     $decomp{'maxblocks'} = $decomp{'maxblocks'} * $opts{'thrds'};
+  }
 
   if ( $decomp{'maxblocks'} == 0 ) {
      printf "%d %s",-1, "ERROR:($ProgName) No Decomp Created \n";
@@ -175,6 +186,7 @@ sub CalcDecompInfo {
   my %opts   = %$opts_ref;
   my $nprocs = $opts{'nproc'};
   my $model  = $opts{'model'};
+  my $spacecurve = $opts{'spacecurve'};
 
   my ($maxblocks,$bsize_x,$bsize_y,$decomptype);
   my %decomp;
@@ -189,44 +201,248 @@ sub CalcDecompInfo {
   my $nscore = 0.0 ;
   my $bscore = $nlons * $nlats * $nprocs ;
 
+  if (!$spacecurve) {
 # cartesian decomp
-  $nn = 0;
-  do {
-     $nn = $nn + 1;
-     $ny = $nn;
-     $nx = int($nprocs/$ny);
-     if ($ny * $nx == $nprocs &&
-         $nlats % $ny == 0 &&
-         $nlons % $nx == 0) {
-       if ($model eq "cice") {
-  	    $nprocsx = $nx;
-            $nprocsy = $ny;
-            $set = 1;
-            $done = 1;
-       }
-       if ($model eq "pop") {
-          $tmp = ($nlons/$nx * $ny/$nlats) - 1.0 ;
-          $nscore = $tmp * $tmp;
-          if ($nscore < $bscore) {
-            $bscore = $nscore;
-   	    $nprocsx = $nx;
-            $nprocsy = $ny;
-            $set = 1;
-            $done = 0;
+      $nn = 0;
+      do {
+	  $nn = $nn + 1;
+	  $ny = $nn;
+	  $nx = int($nprocs/$ny);
+	  if ($ny * $nx == $nprocs &&
+	      $nlats % $ny == 0 &&
+	      $nlons % $nx == 0) {
+	      if ($model eq "cice") {
+		  $nprocsx = $nx;
+		  $nprocsy = $ny;
+		  $set = 1;
+		  $done = 1;
+	      }
+	      if ($model eq "pop") {
+		  $tmp = ($nlons/$nx * $ny/$nlats) - 1.0 ;
+		  $nscore = $tmp * $tmp;
+		  if ($nscore < $bscore) {
+		      $bscore = $nscore;
+		      $nprocsx = $nx;
+		      $nprocsy = $ny;
+		      $set = 1;
+		      $done = 0;
+		  }
+	      }
 	  }
-       }
-     }
-
-#     print "debug $nn $nx $ny $nprocsx $nprocsy $nscore $bscore $set \n";  
-
-  } until ($done == 1 || $nn == $nprocs);
+	  # print "debug $nn $nx $ny $nprocsx $nprocsy $nscore $bscore $set \n";  
+      } until ($done == 1 || $nn == $nprocs);
+  }
 
 # space filling curves
   if ($set == 0) {
-#    what do we do here?     
-#    $set = 2
-  }
 
+      # redefine nproc to be total procs NOT nproc*thrds
+      $opts{'nproc'} = $opts{'nproc'} / $opts{'thrds'};
+
+      # fv 0.23x0.31
+      if ($nlats == 768 && $nlons == 1152) {
+	  if ($nprocs >= 37 && $nprocs <= 144) {
+	      $decomp{'bsize_x'} = 64;
+	      $decomp{'bsize_y'} = 96;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 145 && $nprocs < 576) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 48;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 577 && $nprocs < 2304) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 24;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 2305 && $nprocs < 6144) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 12;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 6145 && $nprocs < 24575) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 6;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 24576 && $nprocs < 98393) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 2;
+	  }
+      }	  
+
+      # fv 0.47x0.63
+      if ($nlats == 384 && $nlons == 576) {
+	  if ($nprocs >= 37  && $nprocs <= 144) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 48;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 145  && $nprocs <= 576 ) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 24;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 577 && $nprocs <= 2304 ) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 12;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 2305 && $nprocs <= 6144 ) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 6;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 6145  && $nprocs <= 24575 ) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 2;
+	  }
+	  if ($nprocs == 24576) {
+	      $decomp{'bsize_x'} = 3;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 1;
+	  }
+      }
+
+      # fv 0.9x1.25
+      if ($nlats == 192 && $nlons == 288) {
+	  if ($nprocs >= 10 && $nprocs <= 36) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 48;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 37 && $nprocs <= 144) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 24;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 145 && $nprocs <= 576) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 12;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 577 && $nprocs <= 2304) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 6;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 2305 && $nprocs <= 6143) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 2;
+	  }
+	  if ($nprocs == 6144) {
+	      $decomp{'bsize_x'} = 3;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 1;
+	  }
+      }
+
+      # fv 1.9x2.5
+      if ($nlats == 96 && $nlons == 144) {
+	  if ($nprocs >= 10 && $nprocs <= 36) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 24;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 37 && $nprocs <= 144) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 12;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 145 && $nprocs <= 576) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 6;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 577 && $nprocs <= 1535) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 2;
+	  }
+	  if ($nprocs == 1536) {
+	      $decomp{'bsize_x'} = 3;
+	      $decomp{'bsize_y'} = 3;
+	      $decomp{'maxblocks'} = 1;
+	  }
+      }
+
+      # T170
+      if ($nlats == 256 && $nlons == 612) {
+	  if ($nprocs >= 16 && $nprocs <= 64) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 64;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 65 && $nprocs <= 256) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 32;
+	      $decomp{'maxblocks'} = 4;
+	  }
+      }
+
+      # T85
+      if ($nlats == 128 && $nlons == 256) {
+	  if ($nprocs >= 4 && $nprocs <= 16) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 64;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 17 && $nprocs <= 64) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 32;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 64 && $nprocs <= 128) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 16;
+	      $decomp{'maxblocks'} = 4;
+	  }
+      }
+
+      # T42
+      if ($nlats == 64 && $nlons == 128) {
+	  if ($nprocs >= 1 && $nprocs <= 4) {
+	      $decomp{'bsize_x'} = 32;
+	      $decomp{'bsize_y'} = 64;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 5 && $nprocs <= 16) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 32;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 17 && $nprocs <= 64) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 16;
+	      $decomp{'maxblocks'} = 4;
+	  }
+      }
+
+      # T21
+      if ($nlats == 32 && $nlons == 64) {
+	  if ($nprocs >= 1 && $nprocs <= 4) {
+	      $decomp{'bsize_x'} = 16;
+	      $decomp{'bsize_y'} = 32;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 5 && $nprocs <= 16) {
+	      $decomp{'bsize_x'} = 8;
+	      $decomp{'bsize_y'} = 16;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 17 && $nprocs <= 32) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 8;
+	      $decomp{'maxblocks'} = 4;
+	  }
+      }
+
+      $set = 2;
+  }
 
   if ($set == 1) {
     $decomp{'nlats'}      = $nlats;
@@ -235,6 +451,12 @@ sub CalcDecompInfo {
     $decomp{'decomptype'} = "cartesian";
     $decomp{'bsize_x'}    = int( $nlons / $nprocsx );
     $decomp{'bsize_y'}    = int( $nlats / $nprocsy );
+  }
+
+  if ($set == 2) {
+    $decomp{'nlats'}      = $nlats;
+    $decomp{'nlons'}      = $nlons;
+    $decomp{'decomptype'} = "spacecurve";
   }
 
   return(%decomp);

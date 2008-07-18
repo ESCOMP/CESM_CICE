@@ -17,6 +17,7 @@
 # Date        Contributor      Modification
 # -------------------------------------------------------------------------------------------
 # 2009-01-20  Vertenstein      Original version
+# 2008-07-15  Sean Santos      Added -inputdata functionality
 #--------------------------------------------------------------------------------------------
 
 use strict;
@@ -42,6 +43,8 @@ OPTIONS
                            Default: current working directory.
      -help [or -h]         Print usage to STDOUT.
      -infile "filepath"    Specify a file containing namelists to read values from.
+     -inputdata "filepath" Writes out a list containing pathnames for required input datasets in
+                           specified file.
      -namelist "namelist"  Specify namelist settings directly on the commandline by supplying 
                            a string containing FORTRAN namelist syntax, e.g.,
                               -namelist "&ice_nml dt=1800 /"
@@ -97,6 +100,7 @@ GetOptions(
     "d|dir=s"                   => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
     "infile=s"                  => \$opts{'infile'},
+    "inputdata=s"               => \$opts{'inputdata'},
     "namelist=s"                => \$opts{'namelist'},
     "s|silent"                  => \$opts{'silent'},
     "test"                      => \$opts{'test'},
@@ -343,7 +347,7 @@ add_default($nl, 'tr_pond');
 
 add_default($nl, 'processor_shape');
 add_default($nl, 'distribution_type');
-add_default($nl, 'distribution_wght');
+add_default($nl, 'distribution_type');
 add_default($nl, 'ew_boundary_type');
 add_default($nl, 'ns_boundary_type');
 
@@ -425,6 +429,19 @@ my @groups = qw(ice_nml tracer_nml domain_nml ice_prescribed_nml icefields_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# Test that input files exist locally.
+if ($opts{'test'}) {
+    print "Checking whether input datasets exist locally...$eol";
+    check_input_files($nl);
+}
+
+# Output input dataset list.
+if ($opts{'inputdata'}) {
+    check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+}
+
 
 # END OF MAIN SCRIPT
 #===============================================================================================
@@ -521,6 +538,79 @@ sub add_default {
 
 #-----------------------------------------------------------------------------------------------
 
+sub check_input_files {
+
+# For each variable in the namelist which is an input dataset, check to see if it
+# exists locally.
+#
+# ***** N.B. ***** This routine assumes the following variables are in package main::
+#  $definition        -- the namelist definition object
+
+    my $nl = shift;     # namelist object
+    my $inputdata_rootdir = shift;    # if false prints test, else creates inputdata file
+    my $outfile = shift;
+    open(OUTFILE, ">>$outfile") if defined $inputdata_rootdir;
+
+    # Look through all namelist groups
+    my @groups = $nl->get_group_names();
+    foreach my $group (@groups) {
+
+	# Look through all variables in each group
+	my @vars = $nl->get_variable_names($group);
+	foreach my $var (@vars) {
+
+	    # Is the variable an input dataset?
+	    my $input_pathname_type = $definition->is_input_pathname($var);
+
+	    # If it is, check whether it exists locally and print status
+	    if ($input_pathname_type) {
+
+		# Get pathname of input dataset
+		my $pathname = $nl->get_variable_value($group, $var);
+		# Need to strip the quotes
+		$pathname =~ s/['"]//g;
+
+		if ($input_pathname_type eq 'abs') {
+                    if ($inputdata_rootdir) {
+                        $pathname =~ s:$inputdata_rootdir::;
+                        print OUTFILE "$var = $pathname\n";
+                    }
+                    else {
+		        if (-e $pathname) {  # use -e rather than -f since the absolute pathname
+			                     # might be a directory
+			    print "OK -- found $var = $pathname\n";
+		        }
+		        else {
+			    print "NOT FOUND:  $var = $pathname\n";
+		        }
+                    }
+		}
+		elsif ($input_pathname_type =~ m/rel:(.+)/o) {
+		    # The match provides the namelist variable that contains the
+		    # root directory for a relative filename
+		    my $rootdir_var = $1;
+		    my $rootdir = $nl->get_variable_value($group, $rootdir_var);
+		    $rootdir =~ s/['"]//g;
+                    if ($inputdata_rootdir) {
+                        $pathname = "$rootdir/$pathname";
+                        $pathname =~ s:$inputdata_rootdir::;
+                        print OUTFILE "$var = $pathname\n";
+                    }
+                    else {
+		        if (-f "$rootdir/$pathname") {
+			    print "OK -- found $var = $rootdir/$pathname\n";
+		        }
+		        else {
+			    print "NOT FOUND:  $var = $rootdir/$pathname\n";
+		        }
+                    }
+		}
+	    }
+	}
+    }
+    close OUTFILE if defined $inputdata_rootdir;
+    return 0 if defined $inputdata_rootdir;
+}
 
 #-----------------------------------------------------------------------------------------------
 
@@ -674,4 +764,3 @@ sub version {
 
 }
 
-#-------------------------------------------------------------------------------
