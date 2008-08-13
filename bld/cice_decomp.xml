@@ -77,8 +77,8 @@
      <nlats>512</nlats>
   </size>
   <size res="10x15">
-     <nlons>19</nlons>
-     <nlats>24</nlats>
+     <nlons>24</nlons>
+     <nlats>19</nlats>
   </size>
   <size res="4x5">
      <nlons>72</nlons>

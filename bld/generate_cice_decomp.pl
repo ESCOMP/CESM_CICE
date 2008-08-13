@@ -238,6 +238,7 @@ sub CalcDecompInfo {
 
       # redefine nproc to be total procs NOT nproc*thrds
       $opts{'nproc'} = $opts{'nproc'} / $opts{'thrds'};
+      $nprocs = $opts{'nproc'}; 
 
       # fv 0.23x0.31
       if ($nlats == 768 && $nlons == 1152) {
@@ -256,20 +257,20 @@ sub CalcDecompInfo {
 	      $decomp{'bsize_y'} = 24;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 2305 && $nprocs < 6144) {
+	  if ($nprocs >= 2305 && $nprocs < 9216) {
 	      $decomp{'bsize_x'} = 8;
 	      $decomp{'bsize_y'} = 12;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 6145 && $nprocs < 24575) {
+	  if ($nprocs >= 9217 && $nprocs < 36864) {
 	      $decomp{'bsize_x'} = 4;
 	      $decomp{'bsize_y'} = 6;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 24576 && $nprocs < 98393) {
+	  if ($nprocs >= 36864 && $nprocs < 145456) {
 	      $decomp{'bsize_x'} = 2;
 	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 2;
+	      $decomp{'maxblocks'} = 4;
 	  }
       }	  
 
@@ -290,20 +291,15 @@ sub CalcDecompInfo {
 	      $decomp{'bsize_y'} = 12;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 2305 && $nprocs <= 6144 ) {
+	  if ($nprocs >= 2305 && $nprocs <= 9216 ) {
 	      $decomp{'bsize_x'} = 4;
 	      $decomp{'bsize_y'} = 6;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 6145  && $nprocs <= 24575 ) {
+	  if ($nprocs >= 9217  && $nprocs <= 36864 ) {
 	      $decomp{'bsize_x'} = 2;
 	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 2;
-	  }
-	  if ($nprocs == 24576) {
-	      $decomp{'bsize_x'} = 3;
-	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 1;
+	      $decomp{'maxblocks'} = 4;
 	  }
       }
 
@@ -329,15 +325,10 @@ sub CalcDecompInfo {
 	      $decomp{'bsize_y'} = 6;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 2305 && $nprocs <= 6143) {
+	  if ($nprocs >= 2305 && $nprocs <= 9216) {
 	      $decomp{'bsize_x'} = 2;
 	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 2;
-	  }
-	  if ($nprocs == 6144) {
-	      $decomp{'bsize_x'} = 3;
-	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 1;
+	      $decomp{'maxblocks'} = 4;
 	  }
       }
 
@@ -358,15 +349,10 @@ sub CalcDecompInfo {
 	      $decomp{'bsize_y'} = 6;
 	      $decomp{'maxblocks'} = 4;
 	  }
-	  if ($nprocs >= 577 && $nprocs <= 1535) {
+	  if ($nprocs >= 577 && $nprocs <= 2304) {
 	      $decomp{'bsize_x'} = 2;
 	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 2;
-	  }
-	  if ($nprocs == 1536) {
-	      $decomp{'bsize_x'} = 3;
-	      $decomp{'bsize_y'} = 3;
-	      $decomp{'maxblocks'} = 1;
+	      $decomp{'maxblocks'} = 4;
 	  }
       }
 
@@ -422,6 +408,25 @@ sub CalcDecompInfo {
 	  }
       }
 
+      # T31
+      if ($nlats == 48 && $nlons == 96) {
+	  if ($nprocs >= 1 && $nprocs <= 4) {
+	      $decomp{'bsize_x'} = 24;
+	      $decomp{'bsize_y'} = 48;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 5 && $nprocs <= 16) {
+	      $decomp{'bsize_x'} = 12;
+	      $decomp{'bsize_y'} = 24;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 17 && $nprocs <= 64) {
+	      $decomp{'bsize_x'} = 6;
+	      $decomp{'bsize_y'} = 8;
+	      $decomp{'maxblocks'} = 4;
+	  }
+      }
+
       # T21
       if ($nlats == 32 && $nlons == 64) {
 	  if ($nprocs >= 1 && $nprocs <= 4) {
@@ -440,7 +445,6 @@ sub CalcDecompInfo {
 	      $decomp{'maxblocks'} = 4;
 	  }
       }
-
       $set = 2;
   }
 

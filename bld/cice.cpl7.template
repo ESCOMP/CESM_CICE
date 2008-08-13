@@ -1,4 +1,4 @@
-#! /bin/csh -fv
+#! /bin/csh -f
 
 if !(-d $CASEROOT/Buildnml_Prestage         ) mkdir $CASEROOT/Buildnml_Prestage
 if !(-d $CASEROOT/Buildnml_Prestage/ciceconf) mkdir $CASEROOT/Buildnml_Prestage/ciceconf

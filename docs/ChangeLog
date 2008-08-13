@@ -1,3 +1,19 @@
+cice4_0_20080813
+Originator: mvertens
+Date: Wed Aug 13 14:36:33 MDT 2008
+Version: 4.0
+One-line Summary: Updates to cice decomp generation
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+Put in updates and bug fixes for decomposition generation needed
+for stand-alone cam
+
+M      bld/cice.cpl7.template
+M      bld/cice_decomp.xml
+M      bld/generate_cice_decomp.pl
+
+	
 ===============================================================
 cice4_0_20080718
 Originator: mvertens
