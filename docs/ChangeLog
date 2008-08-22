@@ -1,3 +1,18 @@
+cice4_0_20080822
+Originator: jet,mvertens
+Date: Wed Aug 13 14:36:33 MDT 2008
+Version: 4.0
+One-line Summary: fix for single column cam mode
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+Put in updates and bug fixes for scam
+
+M      src/source/ice_grid.F90
+M      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+	
+===============================================================
 cice4_0_20080813
 Originator: mvertens
 Date: Wed Aug 13 14:36:33 MDT 2008

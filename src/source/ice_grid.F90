@@ -917,6 +917,10 @@
            count(2)           ! Number of points to read in
 
       integer (kind=int_kind) :: &
+           start3(3), &        ! Start index to read in
+           count3(3)           ! Number of points to read in
+
+      integer (kind=int_kind) :: &
         status                ! status flag
 
       real (kind=dbl_kind), allocatable :: &
@@ -964,11 +968,16 @@
          allocate(pos_lons(ni))
          allocate(glob_grid(ni,nj))
 
-         call ice_read_global_nc(ncid, 1, 'xc', glob_grid, diag=.true.)
+         start3=(/1,1,1/)
+         count3=(/ni,nj,1/)
+         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid,start3, count3, glob_grid), subname)
          do i = 1,ni
             lons(i) = glob_grid(i,1)
          end do
-         call ice_read_global_nc(ncid, 1, 'yc', glob_grid, diag=.true.)
+
+         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid,start3, count3, glob_grid), subname)
          do j = 1,nj
             lats(j) = glob_grid(1,j) 
          end do
@@ -997,7 +1006,10 @@
          call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
          call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
          tarea = scamdata
-         call check_ret(nf_inq_varid(ncid, 'hm' , varid), subname)
+         call check_ret(nf_inq_varid(ncid, 'mask' , varid), subname)
+         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         hm = scamdata
+         call check_ret(nf_inq_varid(ncid, 'frac' , varid), subname)
          call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
          ocn_gridcell_frac = scamdata
       else

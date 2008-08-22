@@ -43,6 +43,9 @@ module ice_prescribed_mod
    use ice_calendar,   only : idate, sec
    use ice_itd,        only : ilyr1, slyr1, hin_max
    use ice_work,       only : work_g1, work_g2
+   use shr_scam_mod,   only : shr_scam_getCloseLatLon
+   use ice_scam,       only : scmlat, scmlon, single_column
+   use ice_read_write
 
    implicit none
    save
@@ -75,6 +78,9 @@ module ice_prescribed_mod
    character(len=char_len_long), public :: stream_domMaskName
    character(len=char_len_long), public :: stream_domFileName
    logical(kind=log_kind)      , public :: prescribed_ice_fill ! true if data fill required
+   real(kind=dbl_kind)    :: closelat,closelon ! closest lat/lon in dataset to scmlat
+   integer(kind=int_kind) :: latidx,lonidx     ! index of closest lat/lon in dataset to scmlat
+   integer(kind=int_kind) :: ncid              ! netcdf file index
 
 !EOP
 
@@ -378,7 +384,15 @@ subroutine ice_prescribed_init
       !------------------------------------------------------------------
       ! Determine if need to regrid
       !------------------------------------------------------------------
-      call ice_prescribed_checkDomain(work_g2, work_g1, dataXCoord, dataYCoord, regrid)
+      if (single_column) then 
+               call ice_open_nc (domain_info_fn, ncid)
+               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+               call ice_close_nc (ncid)
+               regrid=( dataYCoord(lonidx,latidx) /= work_g1(1,1) .or. dataXCoord(lonidx,latidx) /= work_g2(1,1))
+      else
+         call ice_prescribed_checkDomain(work_g2, work_g1, dataXCoord, dataYCoord, regrid)
+
+      end if
 
       !------------------------------------------------------------------
       ! If regrid, read in domain again, obtain mask array and initialize mapping
@@ -559,9 +573,19 @@ subroutine ice_prescribed_run(mDateIn, secIn)
                enddo
             enddo
          else       ! no regrid
-            dataOutLB = dataInLB
-            dataOutUB = dataInUB
-
+            if (single_column) then 
+               call ice_open_nc (fileLB, ncid)
+               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+               call ice_close_nc (ncid)
+               dataOutLB(1,1,:) = dataInLB(lonidx,latidx,:)
+               call ice_open_nc (fileUB, ncid)
+               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+               call ice_close_nc (ncid)
+               dataOutUB(1,1,:) = dataInUB(lonidx,latidx,:)
+	    else
+               dataOutLB = dataInLB
+               dataOutUB = dataInUB
+            end if    ! single_column
          end if    ! regrid
 
          mDateLB_old = mDateLB
