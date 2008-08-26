@@ -25,8 +25,10 @@ else if ($CICE_MODE == 'data_clim_2000') then
 endif
 
 set inic_file = 'default'
-if ($RUN_TYPE == startup && $ICE_GRID =~ *gx*) then
-  set inic_file = iced.0001-01-01.${ICE_GRID}_20080212
+if ($RUN_TYPE == startup) then
+  if ($ICE_GRID =~ *gx* && $mode != prescribed) then
+     set inic_file = iced.0001-01-01.${ICE_GRID}_20080212
+  endif 
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
   set datedash  = $RUN_REFDATE-00000
   set inic_file = $RUN_REFCASE.cice.r.$datedash

@@ -1,3 +1,17 @@
+cice4_0_20080826
+Originator: mvertens
+Date: Wed Aug 13 14:36:33 MDT 2008
+Version: 4.0
+One-line Summary: fix for prescribed mode on non lat/lon grid 
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+Put in updates and bug fixes running cice in prescribed mode 
+in gx1v5 or gx3v5 grid
+
+M      bld/cice.cpl7.template
+	
+===============================================================
 cice4_0_20080822
 Originator: jet,mvertens
 Date: Wed Aug 13 14:36:33 MDT 2008
