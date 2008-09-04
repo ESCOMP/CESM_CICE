@@ -1,3 +1,17 @@
+cice4_0_20080903
+Originator: mvertens
+Wed Sep  3 23:38:09 MDT 2008
+Version: 4.0
+One-line Summary: Fixed bugs for prestaging 
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+Fixed bugs for prestaging and interaction with new data checking 
+scripts
+
+M      bld/cice.cpl7.template
+	
+===============================================================
 cice4_0_20080826
 Originator: mvertens
 Date: Wed Aug 13 14:36:33 MDT 2008
