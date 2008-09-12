@@ -183,7 +183,7 @@ method to use for distributing blocks
 Default: square-pop
 </entry>
 
-<entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve">
+<entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve,DECOMPTYPE">
 method to use for distributing blocks
 Default: cartesian
 </entry>

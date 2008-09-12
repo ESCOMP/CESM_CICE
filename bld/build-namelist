@@ -170,15 +170,35 @@ validate_options("commandline", \%opts);
 
 # The root directory for the input data files must be specified.
 
+my $perl5lib_dir = "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib";
+
 # The XML::Lite module is required to parse the XML files.
-(-f "$cfgdir/perl5lib/XML/Lite.pm")  or  die <<"EOF";
-** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/perl5lib\" **
+(-f "$perl5lib_dir/XML/Lite.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory \"$perl5lib_dir\" **
 EOF
 
 # The Build::Config module provides utilities to access the configuration information
 # in the config_cache.xml file
-(-f "$cfgdir/perl5lib/Build/Config.pm")  or  die <<"EOF";
-** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory \"$cfgdir/perl5lib\" **
+(-f "$perl5lib_dir/Build/Config.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory \"$perl5lib_dir\" **
+EOF
+
+# The Build::NamelistDefinition module provides utilities to validate that the output
+# namelists are consistent with the namelist definition file
+(-f "$perl5lib_dir/Build/NamelistDefinition.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory \"$perl5lib_dir\" **
+EOF
+
+# The Build::NamelistDefaults module provides a utility to obtain default values of namelist
+# variables based on finding a best fit with the attributes specified in the defaults file.
+(-f "$perl5lib_dir/Build/NamelistDefaults.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory \"$perl5lib_dir\" **
+EOF
+
+# The Build::Namelist module provides utilities to parse input namelists, to query and modify
+# namelists, and to write output namelists.
+(-f "$perl5lib_dir/Build/Namelist.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory \"$perl5lib_dir\" **
 EOF
 
 # The namelist definition file contains entries for all namelist variables that
@@ -189,12 +209,6 @@ my $nl_definition_file = "$cfgdir/namelist_files/namelist_definition.xml";
 EOF
 if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol"; }
 
-# The Build::NamelistDefinition module provides utilities to validate that the output
-# namelists are consistent with the namelist definition file
-(-f "$cfgdir/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
-** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory \"$cfgdir/perl5lib\" **
-EOF
-
 # The namelist defaults file contains default values for all required namelist variables.
 my $nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_cice.xml";
 (-f "$nl_defaults_file")  or  die <<"EOF";
@@ -202,21 +216,10 @@ my $nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_cice.xml";
 EOF
 if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
 
-# The Build::NamelistDefaults module provides a utility to obtain default values of namelist
-# variables based on finding a best fit with the attributes specified in the defaults file.
-(-f "$cfgdir/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
-** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory \"$cfgdir/perl5lib\" **
-EOF
-
-# The Build::Namelist module provides utilities to parse input namelists, to query and modify
-# namelists, and to write output namelists.
-(-f "$cfgdir/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
-** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory \"$cfgdir/perl5lib\" **
-EOF
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-unshift @INC, "$cfgdir/perl5lib";
+unshift @INC, "$perl5lib_dir";
 require XML::Lite;
 require Build::Config;
 require Build::NamelistDefinition;

@@ -1,9 +1,39 @@
+cice4_0_20080912
+Originator: mvertens
+Date: Fri Sep 12 07:48:51 MDT 2008
+Version: 4.0
+One-line Summary: removed local copy of perl5lib
+CCSM Version compatible with: ccsm4_0_alpha36
+Changes made:
+
+- Removed local copy of perl5 lib and are now pointing to 
+  the perl5 lib in $ccsmroot/scripts/ccsm_utils/Tools
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+D      bld/perl5lib
+D      bld/perl5lib/Build
+D      bld/perl5lib/Build/NamelistDefaults.pm
+D      bld/perl5lib/Build/Config.pm
+D      bld/perl5lib/Build/NamelistDefinition.pm
+D      bld/perl5lib/Build/Namelist.pm
+D      bld/perl5lib/XML
+D      bld/perl5lib/XML/Changes
+D      bld/perl5lib/XML/Lite.pm
+D      bld/perl5lib/XML/Lite
+D      bld/perl5lib/XML/Lite/Element.pm
+D      bld/perl5lib/XML/README
+D      bld/perl5lib/XML/man3
+D      bld/perl5lib/XML/man3/XML::Lite::Element.3
+D      bld/perl5lib/XML/man3/XML::Lite.3
+===============================================================
+	
 cice4_0_20080911
 Originator: mvertens
-Thu Sep 11 20:52:43 MDT 2008
+Date: Thu Sep 11 20:52:43 MDT 2008
 Version: 4.0
 One-line Summary: removed cpl6 references and fixed more prestaging bugs
-CCSM Version compatible with: ccsm4_0_alpha33+
+CCSM Version compatible with: ccsm4_0_alpha35+
 Changes made:
 
 - Fixed more bugs for prestaging and interaction with new data checking 
@@ -24,7 +54,7 @@ D      src/drivers/ccsm_concurrent/ice_prescribed_mod.F90
 	
 cice4_0_20080903
 Originator: mvertens
-Wed Sep  3 23:38:09 MDT 2008
+Date: Wed Sep  3 23:38:09 MDT 2008
 Version: 4.0
 One-line Summary: Fixed bugs for prestaging 
 CCSM Version compatible with: ccsm4_0_alpha33+
