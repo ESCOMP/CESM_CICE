@@ -1,3 +1,17 @@
+===============================================================
+cice4_0_20080913
+Originator: mvertens
+Date: Fri Sep 12 09:24:08 MDT 2008
+Version: 4.0
+One-line Summary: added changes for Gregorian calendar
+CCSM Version compatible with: ccsm4_0_alpha36
+Changes made:
+
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+M      src/source/ice_calendar.F90
+M      src/source/ice_orbital.F90
+
+===============================================================
 cice4_0_20080912
 Originator: mvertens
 Date: Fri Sep 12 07:48:51 MDT 2008

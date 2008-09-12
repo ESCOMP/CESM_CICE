@@ -49,6 +49,13 @@
       data daymo365 /   31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
       data daycal365/ 0,31, 59, 90,120,151,181,212,243,273,304,334,365/
 
+      ! 366-day year data (leap year)
+      integer (kind=int_kind) :: &
+         daymo366(12)         , & ! number of days in each month
+         daycal366(13)            ! day number at end of month
+      data daymo366 /   31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+      data daycal366/ 0,31, 60, 91,121,152,182,213,244,274,305,335,366/
+
       integer (kind=int_kind) :: &
          istep    , & ! local step counter for time loop
          istep0   , & ! counter, number of steps taken in previous run
@@ -59,6 +66,7 @@
          monthp   , & ! last month
          year_init, & ! initial year
          nyr      , & ! year number
+         ndyn_dt  , & ! reduced timestep for dynamics: ndyn_dt=dt/dyn_dt
          idate    , & ! date (yyyymmdd)
          idate0   , & ! initial date (yyyymmdd)
          sec      , & ! elapsed seconds into date
@@ -73,7 +81,6 @@
       real (kind=dbl_kind) :: &
          dt             , & ! thermodynamics timestep (s)
          dyn_dt         , & ! dynamics/transport/ridging timestep (s)
-         xndyn_dt       , & ! reduced timestep for dynamics: xndyn_dt=dt/dyn_dt
          time           , & ! total elapsed time (s)
          time_forc      , & ! time of last forcing update (s)
          yday           , & ! day of the year
@@ -91,6 +98,8 @@
       character (len=1) :: &
          histfreq       , & ! history output frequency, 'y','m','d','h','1'
          dumpfreq           ! restart frequency, 'y','m','d'
+
+      character (len=char_len) :: calendar_type
 
 !=======================================================================
 
@@ -134,7 +143,7 @@
       istep1 = istep0   ! number of steps at current timestep
                         ! real (dumped) or imagined (use to set calendar)
       stop_now = 0      ! end program execution if stop_now=1
-      dyn_dt = dt/xndyn_dt ! dynamics et al timestep
+      dyn_dt = dt/real(ndyn_dt, kind=dbl_kind) ! dynamics et al timestep
 
       dayyr = real(days_per_year, kind=dbl_kind)
       if (days_per_year.eq.360) then
@@ -191,7 +200,7 @@
 !EOP
 !
       integer (kind=int_kind) :: &
-         k                          , &
+         k, ileap                   , &
          nyrp,mdayp,hourp           , & ! previous year, day, hour
          elapsed_days               , & ! since beginning this run
          elapsed_months             , & ! since beginning this run
@@ -227,10 +236,32 @@
 #if (!defined CCSM) && (!defined SEQ_MCT)
       if (istep >= npt+1)  stop_now = 1
 #endif
+
       if (nyr   /= nyrp)   new_year = .true.
       if (month /= monthp) new_month = .true.
       if (mday  /= mdayp)  new_day = .true.
       if (hour  /= hourp)  new_hour = .true.
+
+      if (calendar_type == "GREGORIAN") then
+
+      ileap = 0
+      if (mod(nyr+year_init-1,  4) == 0) ileap = 1
+      if (mod(nyr+year_init-1,100) == 0) ileap = 0
+      if (mod(nyr+year_init-1,400) == 0) ileap = 1
+
+      if (ileap == 1) then
+         daycal = daycal366
+         yday = mod(tday-c1,dayyr+c1) + c1    ! day of the year
+         do k = 1, 12
+           if (yday > real(daycal(k),kind=dbl_kind)) month = k
+         enddo
+         mday = int(yday) - daycal(month)  ! day of the month
+         idate = (nyr+year_init-1)*10000 + month*100 + mday ! date (yyyymmdd) 
+      else
+         daycal = daycal365
+      endif
+
+      endif ! calendar_type GREGORIAN
 
       if (histfreq == '1') write_history=.true.
 

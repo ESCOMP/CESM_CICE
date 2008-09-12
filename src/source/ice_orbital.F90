@@ -108,7 +108,7 @@
 !
 ! !USES:
 !
-      use ice_calendar, only: yday, sec, secday
+      use ice_calendar, only: yday, sec, secday, days_per_year, calendar_type
 ! 
 ! !INPUT/OUTPUT PARAMETERS: 
 ! 
@@ -141,7 +141,11 @@
  
 ! Solar declination for next time step
  
-      ydayp1 = yday + sec/secday
+      if (calendar_type == "GREGORIAN") then
+         ydayp1 = min(yday, days_per_year) + sec/secday
+      else
+         ydayp1 = yday + sec/secday
+      endif
  
       call shr_orb_decl(ydayp1, eccen, mvelpp, lambm0, &
                         obliqr, delta, eccf)

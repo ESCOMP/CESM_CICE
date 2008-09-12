@@ -23,8 +23,10 @@ module ice_comp_mct
   use seq_infodata_mod,only : seq_infodata_type, seq_infodata_getdata,       &
 		              seq_infodata_putdata, seq_infodata_start_type_cont, &
 		              seq_infodata_start_type_brnch, seq_infodata_start_type_start
-  use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, seq_timemgr_restartalarmison, &
-		              seq_timemgr_eclockdateinsync, seq_timemgr_stopalarmison
+  use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
+                              seq_timemgr_restartalarmison, &
+		              seq_timemgr_eclockdateinsync, &
+                              seq_timemgr_stopalarmison
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
@@ -44,7 +46,7 @@ module ice_comp_mct
 		              field_loc_center, field_type_scalar, field_type_vector
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
-		              sec, dt, dyn_dt, xndyn_dt, calendar
+		              sec, dt, dyn_dt, xndyn_dt, calendar, calendar_type
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
 !  use ice_init
@@ -174,7 +176,7 @@ contains
     ! Set ice dtime to ice coupling frequency
     !=============================================================
 
-    call seq_timemgr_EClockGetData(EClock, dtime=dtime)
+    call seq_timemgr_EClockGetData(EClock, dtime=dtime, calendar=calendar_type)
     dt = real(dtime)
 
     !=============================================================
