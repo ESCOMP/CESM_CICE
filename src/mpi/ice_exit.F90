@@ -52,7 +52,7 @@
 !
       use ice_fileunits
       use ice_communicate
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       use shr_sys_mod
 #endif
 
@@ -67,7 +67,7 @@
 !
       integer (int_kind) :: ierr ! MPI error flag
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       call shr_sys_abort(error_message)
 #else
       call flush_fileunit(nu_diag)

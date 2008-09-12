@@ -53,7 +53,7 @@
       use ice_timers
       use ice_transport_driver
       use ice_transport_remap
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       use ice_prescribed_mod
 #endif
 

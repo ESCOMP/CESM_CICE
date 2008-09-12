@@ -125,7 +125,7 @@
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
       use ice_work, only: work1, work2
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       use ice_prescribed_mod, only : prescribed_ice
 #endif
 !
@@ -645,7 +645,7 @@
 
         if (print_global) then  ! global diags for conservations checks
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
         if (prescribed_ice) then
           write (nu_diag,*) '----------------------------'
           write (nu_diag,*)   'This is the prescribed ice option.'
@@ -668,7 +668,7 @@
           write (nu_diag,801) 'arwt water flux        = ',fluxn
           write (nu_diag,*) '(=rain+snow+evap+frzl-fresh)  '
           write (nu_diag,801) 'water flux error       = ',werrn
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
          endif                    ! prescribed_ice
 #endif       
          write (nu_diag,*) '----------------------------'

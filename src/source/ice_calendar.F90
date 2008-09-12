@@ -233,7 +233,7 @@
 
       idate = (nyr+year_init-1)*10000 + month*100 + mday ! date (yyyymmdd) 
 
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       if (istep >= npt+1)  stop_now = 1
 #endif
 

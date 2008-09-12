@@ -32,7 +32,7 @@
 !
 ! !USES:
       use ice_kinds_mod
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
       use shr_file_mod
 #endif
 !
@@ -102,7 +102,7 @@ contains
 
          nu_diag = ice_stdout  ! default
 
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
          ice_IOUnitsInUse = .false.
          ice_IOUnitsInUse(ice_stdin)  = .true. ! reserve unit 5
          ice_IOUnitsInUse(ice_stdout) = .true. ! reserve unit 6
@@ -169,7 +169,7 @@ contains
 
    logical (kind=log_kind) :: alreadyInUse
 
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
    iunit = shr_file_getUnit()
 #else
    srch_units: do n=ice_IOUnitsMinUnits, ice_IOUnitsMaxUnits
@@ -206,7 +206,7 @@ contains
 ! !DESCRIPTION:
 !  This routine releases unit numbers at the end of a run. 
 
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
  	 call shr_file_freeUnit(nu_grid) 
  	 call shr_file_freeUnit(nu_kmt) 
  	 call shr_file_freeUnit(nu_forcing) 
@@ -287,7 +287,7 @@ contains
 !
 ! !USES:
 
-#ifdef CCSM
+#ifdef CCSMCOUPLED
       use shr_sys_mod, only : shr_sys_flush
 #endif
 
@@ -310,7 +310,7 @@ contains
    call flush_(iunit)
 #endif
 
-#ifdef CCSM
+#ifdef CCSMCOUPLED
    call shr_sys_flush(iunit)
 #endif
 

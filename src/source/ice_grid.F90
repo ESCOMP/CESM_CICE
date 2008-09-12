@@ -310,7 +310,7 @@
          endif 
       elseif (trim(grid_type) == 'panarctic') then
          call panarctic_grid    ! pan-Arctic grid
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
       elseif (trim(grid_type) == 'latlon') then
          call latlongrid        ! lat lon grid for sequential CCSM (CAM mode)
          return
@@ -859,7 +859,7 @@
       if (my_task == master_task) close (nu_grid)
 
       end subroutine panarctic_grid
-#ifdef SEQ_MCT
+#ifdef CCSMCOUPLED
 !=======================================================================
 !BOP
 !

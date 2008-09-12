@@ -34,7 +34,7 @@
       implicit none
       save
 
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       character(len=char_len) :: & 
          ice_ic      ! method of ice cover initialization
                      ! 'default'  => latitude and sst dependent
@@ -72,15 +72,11 @@
       use ice_calendar, only: year_init, istep0, histfreq, histfreq_n, &
                               dumpfreq, dumpfreq_n, diagfreq, &
                               npt, dt, xndyn_dt, days_per_year
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
           runid, runtype 
-#elif (defined CCSM)
-      use ice_restart, only:  &
-           inic_file, restart_dir, restart_file, pointer_file, &
-           runid, runtype 
-#elif (defined SEQ_MCT)
+#else
       use ice_restart, only:  &
            inic_file, restart_dir, restart_file, pointer_file, &
            runid, runtype 
@@ -118,7 +114,7 @@
         ntr           ! counter for number of tracers turned on
 
       character (len=6) :: chartmp
-#if (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       logical :: exists                    ! true if file exists
 #endif
 
@@ -127,13 +123,10 @@
       ! NOTE: Not all of these are used by both models.
       !-----------------------------------------------------------------
 
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       namelist /ice_nml/ &
            restart, ice_ic, runid, runtype
-#elif (defined CCSM)
-      namelist /ice_nml/ &
-           inic_file, runid, runtype
-#elif (defined SEQ_MCT)
+#else
       namelist /ice_nml/ &
            inic_file
 #endif
@@ -173,7 +166,7 @@
       year_init = 0          ! initial year
       istep0 = 0             ! no. of steps taken in previous integrations,
                              ! real (dumped) or imagined (to set calendar)
-#if (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       dt = 3600.0_dbl_kind   ! time step, s 
 #endif
       npt = 99999            ! total number of time steps (dt) 
@@ -187,7 +180,7 @@
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
       history_dir  = ' '     ! Write to executable dir for default
       history_file = 'iceh'  ! history file name prefix
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       history_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
 #else
       history_format = 'bin' ! file format ('bin'=binary or 'nc'=netcdf)
@@ -197,16 +190,12 @@
       dumpfreq='y'           ! restart frequency option
       dumpfreq_n = 1         ! restart frequency
 
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       restart = .false.      ! if true, read restart files for initialization
       ice_ic  = 'default'    ! latitude and sst-dependent
       runid   = 'unknown'    ! namelist run ID
       runtype = 'unknown'    ! namelist run type
-#elif (defined CCSM)
-      inic_file = 'default'  ! 'default', 'none' or restart filename
-      runid   = 'unknown'    ! namelist run ID, only used in CCSM 
-      runtype = 'unknown'    ! namelist run type, only used in CCSM
-#elif (defined SEQ_MCT)
+#else
       inic_file = 'default'  ! 'default', 'none' or restart file 
 #endif
       restart_dir  = ' '                  ! Write to executable dir for default
@@ -320,8 +309,8 @@
       ! set up diagnostics output and resolve conflicts
       !-----------------------------------------------------------------
 
-#ifdef SEQ_MCT
-      ! Note that diag_file is not utilized in SEQ_MCT mode
+#ifdef CCSMCOUPLED
+      ! Note that diag_file is not utilized in CCSMCOUPLED mode
       if (my_task == master_task) then
          inquire(file='ice_modelio.nml',exist=exists)
          if (exists) then
@@ -333,8 +322,8 @@
       if (trim(diag_type) == 'file') call get_fileunit(nu_diag)
 #endif
 
-#ifdef SEQ_MCT
-      ! Note in SEQ_MCT mode the runid and runtype flag are obtained from the
+#ifdef CCSMCOUPLED
+      ! Note in CCSMCOUPLED mode the runid and runtype flag are obtained from the
       ! sequential driver - not from the cice namelist 
       if (my_task == master_task) then
          history_file  = trim(runid) // ".cice.h"
@@ -384,7 +373,7 @@
       call broadcast_scalar(restart_file,       master_task)
       call broadcast_scalar(restart_dir,        master_task)
       call broadcast_scalar(pointer_file,       master_task)
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       call broadcast_scalar(restart,            master_task)
       call broadcast_scalar(ice_ic,             master_task)
 #else
@@ -449,7 +438,7 @@
 
       if (my_task == master_task) then
 
-#if !(defined SEQ_MCT)
+#ifndef CCSMCOUPLED
          if (trim(diag_type) == 'file') then
             write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
             open (nu_diag, file=diag_file, status='unknown')
@@ -463,7 +452,7 @@
          write(nu_diag,*) ' Document ice_in namelist parameters:'
          write(nu_diag,*) ' ==================================== '
          write(nu_diag,*) ' '
-#ifndef SEQ_MCT
+#ifndef CCSMCOUPLED
          if (trim(runid) /= 'unknown') &
           write(nu_diag,*)    ' runid                     = ', &
                                trim(runid)
@@ -504,7 +493,7 @@
                                trim(restart_file)
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
          write(nu_diag,1010) ' restart                   = ', restart
          write(nu_diag,1030) ' ice_ic                    = ', ice_ic
 #else 
@@ -787,7 +776,7 @@
       use ice_therm_vertical, only: Tmlt
       use ice_itd, only: ilyr1, slyr1, hin_max
       use ice_state, only: nt_Tsfc
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       use ice_restart, only: inic_file
 #endif	
 !
@@ -879,7 +868,7 @@
       eicen(:,:,:) = c0
       esnon(:,:,:) = c0
 
-#if (!defined CCSM) && (!defined SEQ_MCT)
+#ifndef CCSMCOUPLED
       if (trim(ice_ic) == 'default') then
 #else
       if (trim(inic_file) == 'default') then

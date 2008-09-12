@@ -44,15 +44,15 @@
                            ! 'default'  => latitude and sst dependent
                            ! 'none'     => no ice 
                            ! restart filename (can be a full path)
-                           ! only used if CCSM or SEQ_MCT is defined
+                           ! only used if CCSMCOUPLED is defined
 
       logical (kind=log_kind) :: &
-         restart ! ONLY USED if CCSM or SEQ_MCT are not defined
+         restart ! ONLY USED if CCSMCOUPLED is  not defined
                  ! if true, initialize using restart file instead of defaults
                  ! ice_forcing uses this variable, so cannot use a ccp if-def here
                  
       character (len=char_len) :: &       	 
-         runtype           ! ONLY USED if CCSM or SEQ_MCT are defined
+         runtype           ! ONLY USED if CCSMCOUPLED is defined
                            ! initial, continue, branch or hybrid 
                            ! branch/hybrid applies to ccsm concurrent mode
                            ! branch applies to ccsm sequential model

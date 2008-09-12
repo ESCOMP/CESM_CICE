@@ -321,7 +321,7 @@
       use ice_constants
       use ice_calendar, only: yday, days_per_year
       use ice_flux, only: mlt_onset, frz_onset
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       use ice_restart, only: inic_file
 #else
       use ice_restart, only: restart
@@ -618,7 +618,7 @@
         vunit(n_apondn+n-1) = ' ' ! apondn
       enddo
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       ! redefine for CCSM conventions
       vunit(n_aice      ) = '%'
       vunit(n_uvel      ) = 'cm/s'
@@ -941,7 +941,7 @@
          conb(k) = c0   ! add 0.
       enddo
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       if (trim(inic_file) /= 'default' .and. trim(inic_file) /= 'none' .and. yday >= c2) then
 #else
       if (restart .and. yday >= c2) then
@@ -994,7 +994,7 @@
 
       cona(n_iage)   = c1/(secday*days_per_year) ! seconds to years
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       ! CCSM conventions
       cona(n_aice  ) = c100             ! aice  fraction to %
       do n = 1, ncat_hist
@@ -1475,7 +1475,7 @@
       character (len=8) :: cdate
 
 ! Info for lat, lon and time invariant variables
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 10
 #else
       INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 4
@@ -1616,7 +1616,7 @@
       var(ind)%req = coord_attributes('uarea', 'area of U grid cells', &
                                 'm^2')
       var(ind)%coordinates = 'ULON ULAT'
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
       ind = ind + 1
       var(ind)%req = coord_attributes('dxt', &
                      'T cell width through middle', 'm')
@@ -1774,7 +1774,7 @@
       !-----------------------------------------------------------------
       ! ... the user should change these to something useful ...
       !-----------------------------------------------------------------
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
         status = nf90_put_att(ncid,nf90_global,'title',runid)
         if (status /= nf90_noerr) call abort_ice( &
                       'ice: Error in global attribute title')
@@ -2078,7 +2078,7 @@
         write (nu_hdr, 999) 'source',title,' '
 
         write (nu_hdr, 999) 'file name contains model date',trim(ncfile),' '
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
         write (nu_hdr, 999) 'runid',runid,' '
 #endif
         write (nu_hdr, 999) 'calendar','noleap',' '

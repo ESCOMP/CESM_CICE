@@ -17,7 +17,7 @@
 ! !USES:
 
    use ice_kinds_mod
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
    use cpl_interface_mod, only : cpl_interface_init
    use cpl_fields_mod, only : cpl_fields_icename
 #endif
@@ -86,7 +86,7 @@
 !
 !-----------------------------------------------------------------------
 
-#if (defined CCSM) || (defined SEQ_MCT)
+#ifdef CCSMCOUPLED
 
    ! CCSM standard coupled mode
    call cpl_interface_init(cpl_fields_icename, MPI_COMM_ICE)
