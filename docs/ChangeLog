@@ -1,3 +1,27 @@
+cice4_0_20080911
+Originator: mvertens
+Thu Sep 11 20:52:43 MDT 2008
+Version: 4.0
+One-line Summary: removed cpl6 references and fixed more prestaging bugs
+CCSM Version compatible with: ccsm4_0_alpha33+
+Changes made:
+
+- Fixed more bugs for prestaging and interaction with new data checking 
+- scripts 
+- Removed cpl6 references 
+
+M      bld/cice.cpl7.template
+D      bld/cice.cpl6.template
+D      bld/cice.cpl6.template.streams.xml
+D      src/drivers/ccsm_concurrent
+D      src/drivers/ccsm_concurrent/CICE_InitMod.F90
+D      src/drivers/ccsm_concurrent/CICE_RunMod.F90
+D      src/drivers/ccsm_concurrent/CICE_FinalMod.F90
+D      src/drivers/ccsm_concurrent/ice.F90
+D      src/drivers/ccsm_concurrent/ice_coupling.F90
+D      src/drivers/ccsm_concurrent/ice_prescribed_mod.F90
+===============================================================
+	
 cice4_0_20080903
 Originator: mvertens
 Wed Sep  3 23:38:09 MDT 2008
