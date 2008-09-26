@@ -185,17 +185,14 @@ endif
 if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
    cp \$BLDROOT/mkDepends . || exit 2
    cp \$BLDROOT/mkSrcfiles . || exit 2
-   set THREAD = FALSE ;  if (\$NTHRDS_ICE > 1) set THREAD = TRUE
-   gmake complib -j \$GMAKE_J VPFILE=Filepath MODEL=cice COMPLIB=\$objdir/../libcice.a \
-      NXGLOB=\$NLON NYGLOB=\$NLAT NCAT=$ncat DEPINC=\$INCROOT \
-      BLCKX=\$BLCKX BLCKY=\$BLCKY MXBLCKS=\$MXBLCKS \
-      THREAD=\$THREAD -f \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH || exit 2
+   set SMP = FALSE ;  if (\$NTHRDS_ICE > 1) set SMP = TRUE
+   gmake complib -j \$GMAKE_J MODEL=cice COMPLIB=\$LIBROOT/libice.a SMP=\$SMP MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="-DNXGLOB=\$NLON -DNYGLOB=\$NLAT -DNCAT=$ncat -DBLCKX=\$BLCKX -DBLCKY=\$BLCKY -DMXBLCKS=\$MXBLCKS -Dncdf" -f \$BLDROOT/Makefile || exit 2
    cp -p *comp_*.mod \$LIBROOT/include/
 endif
 mv \$objdir/iceres.new \$objdir/iceres.old
 
 wait 
-if !(-f \$objdir/../libcice.a) then
+if !(-f \$LIBROOT/libice.a) then
   echo "ERROR: cice library not available, check SETBLD"
   exit -1
 endif

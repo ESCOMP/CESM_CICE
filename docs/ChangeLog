@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20080926
+Originator: mvertens	
+Date: Fri Sep 26 16:32:05 MDT 2008
+Version: 4.0
+One-line Summary: changes for unification of cam/clm/ccsm builds
+CCSM Version compatible with: ccsm4_0_alpha37
+Changes made: 
+
+M      bld/cice.cpl7.template
+M      bld/namelist_files/namelist_defaults_cice.xml
+	
+===============================================================
 cice4_0_20080914
 Originator: dbailey
 Date: Fri Sep 12 10:52:45 MDT 2008

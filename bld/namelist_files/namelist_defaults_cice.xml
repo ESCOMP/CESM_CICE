@@ -219,6 +219,27 @@
 <stream_year_last   cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 0 </stream_year_last>
 <model_year_align   cice_mode="prescribed" cice_grid="2x2.5" cice_prestype="clim_2000" > 1 </model_year_align>
 
+<stream_domFileName cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="0.9x1.25" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="0.47x0.63" cice_prestype="clim_2000" > 1 </model_year_align>
+
+<stream_domFileName cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_domFileName>
+<stream_fldFileName cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 'atm/cam/sst/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_fldFileName>
+<stream_fldVarName  cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 'ice_cov' </stream_fldVarName>
+<stream_year_first  cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 0 </stream_year_first>
+<stream_year_last   cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 0 </stream_year_last>
+<model_year_align   cice_mode="prescribed" cice_grid="0.23x0.31" cice_prestype="clim_2000" > 1 </model_year_align>
+
 <stream_domFileName cice_mode="prescribed" cice_prestype="clim_2000"> 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_domFileName>
 <stream_fldFileName cice_mode="prescribed" cice_prestype="clim_2000"> 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_fldFileName>
 <stream_fldVarName  cice_mode="prescribed" cice_prestype="clim_2000"> 'ifrac' </stream_fldVarName>
