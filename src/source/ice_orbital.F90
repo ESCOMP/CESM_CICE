@@ -142,7 +142,7 @@
 ! Solar declination for next time step
  
       if (calendar_type == "GREGORIAN") then
-         ydayp1 = min(yday, days_per_year) + sec/secday
+         ydayp1 = min(yday, real(days_per_year,kind=dbl_kind)) + sec/secday
       else
          ydayp1 = yday + sec/secday
       endif

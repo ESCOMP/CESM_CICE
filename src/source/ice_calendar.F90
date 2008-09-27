@@ -66,7 +66,6 @@
          monthp   , & ! last month
          year_init, & ! initial year
          nyr      , & ! year number
-         ndyn_dt  , & ! reduced timestep for dynamics: ndyn_dt=dt/dyn_dt
          idate    , & ! date (yyyymmdd)
          idate0   , & ! initial date (yyyymmdd)
          sec      , & ! elapsed seconds into date
@@ -85,6 +84,7 @@
          time_forc      , & ! time of last forcing update (s)
          yday           , & ! day of the year
          tday           , & ! absolute day number
+         xndyn_dt       , & ! reduced timestep for dynamics: xndyn_dt=dt/dyn_dt
          dayyr              ! number of days per year
 
       logical (kind=log_kind) :: &
@@ -143,7 +143,7 @@
       istep1 = istep0   ! number of steps at current timestep
                         ! real (dumped) or imagined (use to set calendar)
       stop_now = 0      ! end program execution if stop_now=1
-      dyn_dt = dt/real(ndyn_dt, kind=dbl_kind) ! dynamics et al timestep
+      dyn_dt = dt/xndyn_dt ! dynamics et al timestep
 
       dayyr = real(days_per_year, kind=dbl_kind)
       if (days_per_year.eq.360) then

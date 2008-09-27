@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20080927
+Originator: dbailey
+Date: Sat Sep 27 14:20:24 MDT 2008
+Version: 4.0
+One-line Summary: syntax fixes in ice_calendar and ice_orbital
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+M      src/source/ice_calendar.F90
+M      src/source/ice_orbital.F90
+ 
+===============================================================
 cice4_0_20080926
 Originator: mvertens	
 Date: Fri Sep 26 16:32:05 MDT 2008
