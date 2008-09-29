@@ -1,3 +1,13 @@
+cice4_0_20080928
+Originator: mvertens
+Date: Sun Sep 28 20:04:12 MDT 2008
+Version: 4.0
+One-line Summary: added -DCCSMCOUPLED to cpp defs in cice.cpl7.template
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+	
+M      bld/cice.cpl7.template
+	
 ===============================================================
 cice4_0_20080927
 Originator: dbailey

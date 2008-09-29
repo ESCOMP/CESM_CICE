@@ -186,7 +186,7 @@ if (\$BLDTYPE == 'TRUE' || \$recompile == 'TRUE') then
    cp \$BLDROOT/mkDepends . || exit 2
    cp \$BLDROOT/mkSrcfiles . || exit 2
    set SMP = FALSE ;  if (\$NTHRDS_ICE > 1) set SMP = TRUE
-   gmake complib -j \$GMAKE_J MODEL=cice COMPLIB=\$LIBROOT/libice.a SMP=\$SMP MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="-DNXGLOB=\$NLON -DNYGLOB=\$NLAT -DNCAT=$ncat -DBLCKX=\$BLCKX -DBLCKY=\$BLCKY -DMXBLCKS=\$MXBLCKS -Dncdf" -f \$BLDROOT/Makefile || exit 2
+   gmake complib -j \$GMAKE_J MODEL=cice COMPLIB=\$LIBROOT/libice.a SMP=\$SMP MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="-DCCSMCOUPLED -DNXGLOB=\$NLON -DNYGLOB=\$NLAT -DNCAT=$ncat -DBLCKX=\$BLCKX -DBLCKY=\$BLCKY -DMXBLCKS=\$MXBLCKS -Dncdf" -f \$BLDROOT/Makefile || exit 2
    cp -p *comp_*.mod \$LIBROOT/include/
 endif
 mv \$objdir/iceres.new \$objdir/iceres.old
