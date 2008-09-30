@@ -1,3 +1,15 @@
+===============================================================
+cice4_0_20080930
+Originator: mvertens
+Date: Tue Sep 30 14:42:31 MDT 2008
+Version: 4.0
+One-line Summary: comment line issues in xml file
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+	
+M      bld/namelist_files/namelist_defaults_cice.xml
+	
+===============================================================
 cice4_0_20080928
 Originator: mvertens
 Date: Sun Sep 28 20:04:12 MDT 2008

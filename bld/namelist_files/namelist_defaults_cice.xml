@@ -82,7 +82,7 @@
 <kmt_file cice_grid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'                     </kmt_file> 
 <kmt_file cice_grid="tx0.1v2"   >'ice/cice/kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da'</kmt_file> 
 
-<! --- ice albedods --->
+<!--- ice albedos --->
 
 <albicev  cice_grid="gx3v5" >0.68</albicev> 
 <albicev                    >0.75</albicev> 
@@ -95,7 +95,7 @@
 
 <albedo_type>'default'</albedo_type>
 
-<! --- parameterization information --->
+<!--- parameterization information --->
 
 <kitd  cice_mode='prescribed'  > 0 </kitd> 
 <kitd  cice_mode='thermo_only' > 0 </kitd> 
@@ -120,17 +120,17 @@
 
 <advection>'remap'</advection>
 
-<! --- history information --->
+<!--- history information --->
 
 <histfreq    >'m'     </histfreq> 
 <histfreq_n  >1       </histfreq_n>
 <hist_avg    >.true.  </hist_avg> 
 
-<! --- diagnostic information --->
+<!--- diagnostic information --->
 
 <diagfreq> 24   </diagfreq>
 
-<! --- restart information --->
+<!--- restart information --->
 <pointer_file>rpointer.ice</pointer_file>
 
 <!--------------------------->
