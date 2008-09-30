@@ -68,7 +68,6 @@
          dragio = 0.00536_dbl_kind                ,&! ice-ocn drag coefficient
 !        rho_air   = SHR_CONST_RHODAIR,&! ambient air density (kg/m^3)
          spval_dbl = SHR_CONST_SPVAL  ,&! special value
-         rfrac     = 0.85_dbl_kind    ,&! water runoff fraction for melt ponds
          snowpatch = 0.005_dbl_kind     ! parameter for fractional snow area (m)
 #else
 #ifdef AOMIP

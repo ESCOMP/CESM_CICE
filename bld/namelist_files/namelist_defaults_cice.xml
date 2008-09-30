@@ -116,7 +116,9 @@
 
 <evp_damping>.false.</evp_damping> 
 
-<shortwave>'default'</shortwave>
+<shortwave>'dEdd'</shortwave>
+
+<R_snw> 1.5 </R_snw>
 
 <advection>'remap'</advection>
 
@@ -138,7 +140,7 @@
 <!--------------------------->
 
 <tr_iage> .false. </tr_iage>
-<tr_pond> .false. </tr_pond>
+<tr_pond> .true. </tr_pond>
 
 <!--------------------------->
 <!-- Domain namelist- --->
@@ -405,5 +407,8 @@
 
 <f_frazil                       >.true. </f_frazil>  
 <f_frazil cice_mode='prescribed'>.false.</f_frazil> 
+
+<f_apondn                       >.true. </f_apondn>  
+<f_apondn cice_mode='prescribed'>.false.</f_apondn> 
 
 </namelist_defaults>

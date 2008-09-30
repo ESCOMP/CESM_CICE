@@ -147,7 +147,7 @@
 
       integer (kind=int_kind) :: i,j,ij,icells
 
-      real (kind=dbl_kind) :: hi,hs,dTs
+      real (kind=dbl_kind) :: hi,hs,dTs,rfrac,asnow
 
       real (kind=dbl_kind), parameter :: &
          hi_min = p1
@@ -178,6 +178,9 @@
          hs = vsnon(i,j)/aicen(i,j)
          dTs = Timelt - Tsfcn(i,j)
 
+! Make the runoff fraction proportional to ice area.
+         rfrac = 0.85_dbl_kind - 0.7_dbl_kind*aicen(i,j)
+
          volpn(i,j) = volpn(i,j) + (c1-rfrac) &
             * (meltt(i,j)*(rhoi/rhofresh) + melts(i,j)*(rhos/rhofresh) &
             + frain(i,j)*dt/rhofresh)
@@ -203,8 +206,18 @@
 !        If we are freezing, do not change albedo
 !        if (Tsfcn(i,j) .lt. Timelt-0.15) apondn(i,j) = c0
 
-!        If we have snow, do not change albedo
-         if ( hs .gt. puny ) apondn(i,j) = c0
+         ! fractional area of snow cover
+         if (hs > puny) then
+            asnow = hs / (hs + snowpatch)
+         else
+            asnow = c0
+         endif
+
+!        If we have snow, reduce ponds
+         if ( hs .gt. puny ) then
+            apondn(i,j) = (c1-asnow)*apondn(i,j)
+            hpondn(i,j) = 0.8_dbl_kind * apondn(i,j)
+         endif
 
 !        remove ponds if ice becomes very thin
          if (hi .lt. hi_min) then

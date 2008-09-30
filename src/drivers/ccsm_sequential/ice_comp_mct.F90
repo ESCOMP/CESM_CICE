@@ -311,8 +311,11 @@ contains
 !
 ! !USES:
     use ice_step_mod
+    use ice_age, only: tr_iage, write_restart_age
     use ice_history
+    use ice_meltpond, only: tr_pond, write_restart_pond
     use ice_restart
+    use ice_shortwave, only: shortwave, write_restart_dEdd
     use ice_diagnostics
 
 ! !ARGUMENTS:
@@ -472,6 +475,9 @@ contains
 !       call dumpfile(fname)
 #else
        call dumpfile(fname)
+       if (tr_iage) call write_restart_age
+       if (tr_pond) call write_restart_pond
+       if (trim(shortwave) == 'dEdd') call write_restart_dEdd
 #endif
     end if
 

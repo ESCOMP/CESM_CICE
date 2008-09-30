@@ -157,7 +157,11 @@ Default:'default'
 
 <entry id="shortwave" type="char*80"  category="cice" group="ice_nml" valid_values="default,dEdd">
 shortwave method, 'default' ('ccsm3') or 'dEdd'
-Default:'default'
+Default:'dEdd'
+</entry>
+
+<entry id="R_snw" type="real"  category="cice" group="ice_nml" valid_values="">
+snow grain radius tunable parameter for dEdd albedo
 </entry>
 
 <!----------------------------->
@@ -171,7 +175,7 @@ Default: FALSE
 
 <entry id="tr_pond" type="logical"  category="cice" group="tracer_nml" valid_values="">
 Pond volume tracer.
-Default: FALSE
+Default: TRUE
 </entry>
 
 <!----------------------------->
@@ -408,6 +412,9 @@ Default: TRUE
 Default: TRUE
 </entry>
 <entry id="f_frazil" type="logical"  category="cice"  group="icefields_nml" valid_values="">
+Default: TRUE
+</entry>
+<entry id="f_apondn" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
 

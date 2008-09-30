@@ -327,6 +327,7 @@ add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'albedo_type');
 add_default($nl, 'shortwave');
+add_default($nl, 'R_snw');
 add_default($nl, 'kitd');
 add_default($nl, 'kdyn');
 add_default($nl, 'kstrength');
@@ -423,6 +424,7 @@ add_default($nl, 'f_meltl');
 add_default($nl, 'f_uvel');
 add_default($nl, 'f_vvel');
 add_default($nl, 'f_frazil');
+add_default($nl, 'f_apondn');
 
 #-----------------------------------------------------------------------------------------------
 # Write output files
