@@ -211,42 +211,42 @@ use prescribed ice mode if true
 Default: FALSE
 </entry>
 
-<entry id="stream_fldVarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_fldvarname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 ifrac variable name on sst/ifrac dataset
 Default: 'ice_cov'
 </entry>
 
-<entry id="stream_fldFileName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
+<entry id="stream_fldfilename" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
        input_pathname="abs" >
 file name containing sst/ifrac data 
 </entry>
 
-<entry id="stream_domTvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domtvarname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: time-dim var name
 Default: time
 </entry>
 
-<entry id="stream_domXvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domxvarname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: x-dim var name
 Default: lon
 </entry>
 
-<entry id="stream_domYvarName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domyvarname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: y-dim varname
 Default: lat
 </entry>
 
-<entry id="stream_domAreaName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_domareaname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: area varname
 Default: area
 </entry>
 
-<entry id="stream_domMaskName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+<entry id="stream_dommaskname" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
 domain file: mask varname
 Default: mask
 </entry>
 
-<entry id="stream_domFileName" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
+<entry id="stream_domfilename" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
        input_pathname="abs" >
 domain file name
 </entry>

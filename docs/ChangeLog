@@ -1,6 +1,17 @@
 ===============================================================
+cice4_0_20080930b
+Originator: dbailey
+Date: Tue Sep 30 16:07:49 MDT 2008
+Version: 4.0
+One-line Summary: change case of entries in definitions
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+	
+M      bld/namelist_files/namelist_definition.xml
+
+===============================================================
 cice4_0_20080930
-Originator: mvertens
+Originator: dbailey
 Date: Tue Sep 30 14:42:31 MDT 2008
 Version: 4.0
 One-line Summary: comment line issues in xml file
