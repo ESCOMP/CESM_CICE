@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20081003
+Originator: dbailey
+Date: Fri Oct  3 14:08:55 MDT 2008
+Version: 4.0
+One-line Summary: bug fix for special values in eliminated land
+                  blocks
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+M      src/mpi/ice_gather_scatter.F90
+M      src/serial/ice_gather_scatter.F90
+
+===============================================================
 cice4_0_20080930c
 Originator: dbailey
 Date: Tue Sep 30 16:14:08 MDT 2008
