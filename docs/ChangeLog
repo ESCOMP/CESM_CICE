@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20081006
+Originator: dbailey
+Date: Mon Oct  6 11:05:07 MDT 2008
+Version: 4.0
+One-line Summary: better memory management in prescribed ice (bfb)
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+m      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20081003
 Originator: dbailey
 Date: Fri Oct  3 14:08:55 MDT 2008

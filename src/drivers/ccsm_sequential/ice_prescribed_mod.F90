@@ -417,21 +417,11 @@ subroutine ice_prescribed_init
          &                   name='csim_map',type='remap',algo='bilinear', &
          &                   mask='dstmask',vect='scalar')
          deallocate(dataMask)
+
       end if
 
-      !------------------------------------------------------------------
-      ! Allocate input and output bundles
-      !------------------------------------------------------------------
-      allocate(dataInLB(nlon,nlat,nflds))      ! netCDF input data size
-      allocate(dataInUB(nlon,nlat,nflds))
-      allocate(dataSrcLB(nflds,nlon*nlat))     ! reformed data for mapping
-      allocate(dataSrcUB(nflds,nlon*nlat))
-
-      allocate(dataDstLB(nflds,nx_global*ny_global))  ! output from mapping
-      allocate(dataDstUB(nflds,nx_global*ny_global))
       allocate(dataOutLB(nx_global,ny_global,nflds))  ! output for model use
       allocate(dataOutUB(nx_global,ny_global,nflds))
-      allocate(ice_cov_global(nx_global,ny_global))   ! Assumes 1 field
 
       !--------------------------------------------------------------------
       ! Check to see that ice concentration is in fraction, not percent
@@ -452,7 +442,6 @@ subroutine ice_prescribed_init
 
    else
 
-      allocate(ice_cov_global(1,1))   
       deallocate(work_g1,work_g2)
       deallocate(csim_mask_g)
 
@@ -530,11 +519,21 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       read_data = .false.
       if (mDateLB_old /= mDateLB .or. secLB_old /= secLB) then
 
+         allocate(dataInLB(nlon,nlat,nflds))      ! netCDF input data size
+         allocate(dataInUB(nlon,nlat,nflds))
+         allocate(ice_cov_global(nx_global,ny_global))   ! Assumes 1 field
+
          read_data = .true.
          call ice_prescribed_readField(fileLB, fldName, n_lb, dataInLB)
          call ice_prescribed_readField(fileUB, fldName, n_ub, dataInUB)
 
          if (regrid) then
+
+            allocate(dataSrcLB(nflds,nlon*nlat))     ! reformed data for mapping
+            allocate(dataSrcUB(nflds,nlon*nlat))
+            allocate(dataDstLB(nflds,nx_global*ny_global)) ! output from mapping
+            allocate(dataDstUB(nflds,nx_global*ny_global))
+
             !-------------------------------------------------
             ! copy input data to arrays ordered for mapping
             !-------------------------------------------------
@@ -619,6 +618,10 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       call scatter_global(ice_cov_ub,   ice_cov_global, &
            &              master_task,  distrb_info, & 
            &              field_loc_center, field_type_scalar)
+
+      if (my_task ==  master_task) then
+         deallocate(ice_cov_global)
+      endif
    end if
 
    !-----------------------------------------------------------------
