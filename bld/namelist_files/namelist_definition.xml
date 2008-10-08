@@ -8,7 +8,7 @@
 <!---General namelist input---->
 <!----------------------------->
 
-<entry id="inic_file" type="char*80" category="cice" group="ice_nml" valid_values="" >
+<entry id="inic_file" type="char*256" category="cice" group="ice_nml" valid_values="" >
 Method of ice cover initialization.
 'default'=>latitude and sst dependent, 'none'=>no ice, restart filename (must be a full path)
 Default: 'default'
