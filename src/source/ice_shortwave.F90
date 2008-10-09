@@ -1447,10 +1447,10 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fi,                     alvdr,    alvdf,       &
-                                  alidr,    alidf,       &
-                                  fswsfc,   fswint,      &
-                                  fswthru,  Sswabs,      &
+             fi,                     alvdr,    alvdf,      &
+                                  alidr,    alidf,         &
+                                  fswsfc,   fswint,        &
+                                  fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
 
 !DIR$ CONCURRENT !Cray
@@ -1482,10 +1482,10 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fs,                     alvdr,    alvdf,       &
-                                  alidr,    alidf,       &
-                                  fswsfc,   fswint,      &
-                                  fswthru,  Sswabs,      &
+             fs,                     alvdr,    alvdf,      &
+                                  alidr,    alidf,         &
+                                  fswsfc,   fswint,        &
+                                  fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
 
 !DIR$ CONCURRENT !Cray
@@ -1517,10 +1517,10 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fp,                     alvdr,    alvdf,       &
-                                  alidr,    alidf,       &
-                                  fswsfc,   fswint,      &
-                                  fswthru,  Sswabs,      &
+             fp,                     alvdr,    alvdf,      &
+                                  alidr,    alidf,         &
+                                  fswsfc,   fswint,        &
+                                  fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
 
       if (print_points) then

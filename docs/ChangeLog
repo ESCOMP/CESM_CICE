@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20081009
+Originator: dbailey
+Date: Thu Oct  9 08:54:11 MDT 2008
+Version: 4.0
+One-line Summary: bug fix for out of bounds in shortwave and
+                  prescribed ice allocation.
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+M      src/source/ice_shortwave.F90
+M      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20081008
 Originator: mvertens
 Date: Wed Oct  8 14:33:28 MDT 2008
