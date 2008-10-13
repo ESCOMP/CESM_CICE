@@ -43,6 +43,7 @@
 !            (6) included algae absorption for sea ice lowest layer
 !            (7) very complete internal documentation included
 ! 2007, ECH: Improved efficiency
+! 2008, BPB: Added aerosols to Delta Eddington code
 !
 ! !INTERFACE:
 !
@@ -248,14 +249,14 @@
 
          do iblk=1,nblocks
 
-            this_block = get_block(blocks_ice(iblk),iblk)         
+            this_block = get_block(blocks_ice(iblk),iblk)
             ilo = this_block%ilo
             ihi = this_block%ihi
             jlo = this_block%jlo
             jhi = this_block%jhi
 
             if (trim(shortwave) == 'dEdd') then
-
+   
                ! identify ice-ocean cells
                icells = 0
                do j = 1, ny_block
@@ -273,15 +274,15 @@
                                     indxi,            indxj,          &
                                     tlat  (:,:,iblk), tlon(:,:,iblk), &
                                     coszen(:,:,iblk), dt)
-   
+
             else
 
                coszen(:,:,iblk) = p5 ! sun above the horizon
-   
+
             endif
 
             do n=1,ncat
-   
+
                icells = 0
                do j = jlo, jhi
                do i = ilo, ihi
@@ -313,7 +314,7 @@
                                      apondn(:,:,n,iblk),hpondn(:,:,n,iblk))
 
                ! Aggregate albedos for coupler
-   
+
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
@@ -327,12 +328,12 @@
                   alidr(i,j,iblk) = alidr(i,j,iblk) &
                      + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
                enddo
-   
+
             enddo ! ncat
 
             do j = 1, ny_block
             do i = 1, nx_block
-   
+
                if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
                   ar = c1 /  aice(i,j,iblk)
                   alvdf(i,j,iblk) = alvdf(i,j,iblk) * ar
@@ -1088,9 +1089,6 @@
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! indirect indices for cells with aicen > puny
 
-      type (block) :: &
-         this_block      ! block information for current block
-
       ! snow variables for Delta-Eddington shortwave
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          fsn             ! snow horizontal fraction
@@ -1109,6 +1107,8 @@
          il1, il2    , & ! ice layer indices for eice
          sl1, sl2        ! snow layer indices for esno
 
+      type (block) :: &
+         this_block      ! block information for current block
 
       ! Need to compute albedos before init_cpl in CCSM
 
@@ -1183,6 +1183,7 @@
                               vsnon(:,:,n,iblk), fsn,                 &
                               rhosnwn,           rsnwn,               &
                               fpn,               hpn,                 &
+                              trcrn(:,:,:,n,iblk),tarea(:,:,iblk),    &
                               swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                               swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                               alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
@@ -1248,6 +1249,7 @@
                                   vsno,     fs,          & 
                                   rhosnw,   rsnw,        &
                                   fp,       hp,          &
+                                  trcr,     tarea,       &
                                   swvdr,    swvdf,       &
                                   swidr,    swidf,       &
                                   alvdr,    alvdf,       &
@@ -1285,6 +1287,7 @@
 !
 ! author:  Bruce P. Briegleb, NCAR 
 ! update:  8 February 2007
+! update:  September 2008 added aerosols
 !
 ! !USES:
 !
@@ -1292,6 +1295,7 @@
 
 ! BPB 8 February 2007  For diagnostic prints
       use ice_diagnostics
+      use ice_state, only: nt_aero
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1321,7 +1325,18 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(in) :: &
          fp      , & ! pond fractional coverage (0 to 1) 
-         hp      , & ! pond depth (m) 
+         hp          ! pond depth (m) 
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+         intent(in) :: &
+         trcr        ! aerosol tracers
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block), &
+         intent(in) :: &
+         tarea       ! t-grid cell area in m2
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block), &
+         intent(in) :: &
          swvdr   , & ! sw down, visible, direct  (W/m^2)
          swvdf   , & ! sw down, visible, diffuse (W/m^2)
          swidr   , & ! sw down, near IR, direct  (W/m^2)
@@ -1357,6 +1372,9 @@
          hi       , & ! ice thickness (all sea ice layers, m)
          fi           ! snow/bare ice fractional coverage (0 to 1)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr) :: &
+         aero_mp      ! aerosol mass path in kg/m2
+
       integer (kind=int_kind), dimension(nx_block,ny_block) :: &
          srftyp       ! surface type over ice: (0=air, 1=snow, 2=pond)
  
@@ -1365,6 +1383,7 @@
          j        , & ! latitude index
          ij       , & ! horizontal index, combines i and j loops
          k        , & ! level index
+         na       , & ! aerosol index
          icells_DE    ! number of cells in Delta-Eddington calculation
  
       integer (kind=int_kind), dimension (nx_block*ny_block) :: &
@@ -1376,6 +1395,9 @@
          hsmax    , & ! maximum snow depth below which Sswabs adjustment
          hs_ssl   , & ! assumed snow surface scattering layer for Sswabs adj
          frcadj       ! fractional Sswabs adjustment
+      real (kind=dbl_kind) :: &
+         area_s   , & ! area of snow covering sea ice (m2)
+         area_i       ! area of sea ice (m2)
       data hpmin  / .005_dbl_kind /
       data hs_ssl / .040_dbl_kind /
 
@@ -1414,6 +1436,30 @@
       Sswabs(:,:,:) = c0
       Iswabs(:,:,:) = c0
 
+      ! compute aerosol mass path
+
+      aero_mp(:,:,:) = c0
+      if( tr_aero ) then
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+         ! assume 4 layers for each aerosol, a snow SSL, snow below SSL,
+         ! sea ice SSL, and sea ice below SSL, in that order.
+         do na=1,4*n_aero,4
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+               ! sea ice points with sun above horizon
+               if (aice(i,j) > puny .and. coszen(i,j) > puny) then
+                  aero_mp(i,j,na  ) = trcr(i,j,nt_aero-1+na  )*vsno(i,j)
+                  aero_mp(i,j,na+1) = trcr(i,j,nt_aero-1+na+1)*vsno(i,j)
+                  aero_mp(i,j,na+2) = trcr(i,j,nt_aero-1+na+2)*vice(i,j)
+                  aero_mp(i,j,na+3) = trcr(i,j,nt_aero-1+na+3)*vice(i,j)
+               endif                  ! aice > 0 and coszen > 0
+            enddo                     ! ij
+         enddo      ! na
+      endif      ! if aerosols
+
       ! compute shortwave radiation accounting for snow/ice (both snow over 
       ! ice and bare ice) and ponded ice (if any):
  
@@ -1447,7 +1493,7 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fi,                     alvdr,    alvdf,      &
+             fi,        aero_mp,    alvdr,    alvdf,       &
                                   alidr,    alidf,         &
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
@@ -1482,7 +1528,7 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fs,                     alvdr,    alvdf,      &
+             fs,        aero_mp,    alvdr,    alvdf,       &
                                   alidr,    alidf,         &
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
@@ -1517,7 +1563,7 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fp,                     alvdr,    alvdf,      &
+             fp,        aero_mp,    alvdr,    alvdf,       &
                                   alidr,    alidf,         &
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
@@ -1598,7 +1644,7 @@
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
              swvdr,     swvdf,    swidr,    swidf, srftyp, &
              hs,        rhosnw,   rsnw,     hi,    hp,     &
-             fi,                     alvdr,    alvdf,       &
+             fi,        aero_mp,    alvdr,    alvdf,       &
                                   alidr,    alidf,       &
                                   fswsfc,   fswint,      &
                                   fswthru,  Sswabs,      &
@@ -1613,6 +1659,7 @@
 !
 ! author:  Bruce P. Briegleb, NCAR 
 ! update:  8 February 2007
+! update:  September 2008 added aerosols
 !
 ! !USES:
 !
@@ -1655,6 +1702,10 @@
          hi      , & ! ice thickness (m)
          hp      , & ! pond depth (m)
          fi          ! snow/bare ice fractional coverage (0 to 1)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+         intent(in) :: &
+         aero_mp     ! aerosol mass path in kg/m2
  
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
@@ -1953,6 +2004,28 @@
          sig_p        , & ! pond scattering coefficient (/m)
          kext             ! weighted extinction coefficient (/m)
 
+      ! aerosol optical properties from Mark Flanner, 26 June 2008
+      ! order assumed: hydrophobic black carbon, hydrophilic black carbon, 
+      ! four dust aerosols by particle size range:
+      ! dust1(.05-0.5 micron), dust2(0.5-1.25 micron), 
+      ! dust3(1.25-2.5 micron), dust4(2.5-5.0 micron) 
+      ! spectral bands same as snow/sea ice: (0.3-0.7 micron, 0.7-1.19 micron
+      ! and 1.19-5.0 micron in wavelength)
+      integer (kind=int_kind), parameter :: & 
+         nmbaer  = 6                ! number of aerosols
+
+      integer (kind=int_kind) :: &
+         nmbaer_actual,          &  ! actual number of aerosols used
+         na                         ! aerosol index
+
+      real (kind=dbl_kind) :: &
+         kaer_tab(nspint,nmbaer), & ! aerosol mass extinction cross section (m2/kg)
+         waer_tab(nspint,nmbaer), & ! aerosol single scatter albedo (fraction)
+         gaer_tab(nspint,nmbaer), & ! aerosol asymmetry parameter (cos(theta))
+         taer                   , & ! total aerosol extinction optical depth
+         waer                   , & ! total aerosol single scatter albedo
+         gaer                       ! total aerosol asymmetry parameter
+
       ! snow grain radii (micro-meters) for table
       data rsnw_tab/ &
           5._dbl_kind,    7._dbl_kind,   10._dbl_kind,   15._dbl_kind, &
@@ -2118,6 +2191,30 @@
       ! ice to pond parameters
       data hpmin  / .005_dbl_kind / ! minimum allowable pond depth (m)
       data hp0    / .200_dbl_kind / ! pond depth below which transition to bare sea ice
+
+      ! aerosol optical properties   -> band  | 
+      !                                       v aerosol
+      data kaer_tab/ &
+          11398.45407,   5446.81622,   2662.62669, &
+          25368.61120,  11312.00470,   4467.59516, &
+           2686.90326,   2220.83622,    750.32954, &
+            841.08943,   1036.77755,   1106.79291, &
+            387.85424,    414.18484,    459.02257, &
+            196.63806,    204.36269,    218.65024  /
+      data waer_tab/ &
+              0.28769,      0.17060,      0.06065, &
+              0.51595,      0.41222,      0.19629, &
+              0.97891,      0.99397,      0.96961, &
+              0.94375,      0.98548,      0.98663, &
+              0.90405,      0.96555,      0.97548, &
+              0.84982,      0.94242,      0.95433  /
+      data gaer_tab/ &
+              0.35023,      0.19535,      0.08230, &
+              0.52152,      0.31925,      0.13930, &
+              0.69091,      0.70632,      0.51110, &
+              0.69948,      0.66296,      0.71075, &
+              0.78564,      0.73318,      0.65122, &
+              0.82975,      0.78243,      0.74100  /
 
 !-----------------------------------------------------------------------
 ! Initialize and tune bare ice/ponded ice iops
@@ -2289,6 +2386,46 @@
               endif
               w0(k,ij)  = ws(ns)
               g(k,ij)   = gs(ns)
+              ! aerosol in snow
+              nmbaer_actual = min(n_aero,nmbaer)
+              if( k == 0 ) then  ! snow SSL
+                taer = c0
+                waer = c0
+                gaer = c0
+                do na=1,4*nmbaer_actual,4  
+                  taer = taer + &
+                       aero_mp(i,j,na)*kaer_tab(ns,(1+(na-1)/4))
+                  waer = waer + & 
+                       aero_mp(i,j,na)*kaer_tab(ns,(1+(na-1)/4))* &
+                         waer_tab(ns,(1+(na-1)/4))
+                  gaer = gaer + &
+                       aero_mp(i,j,na)*kaer_tab(ns,(1+(na-1)/4))* &
+                         waer_tab(ns,(1+(na-1)/4))*gaer_tab(ns,(1+(na-1)/4))
+                enddo       ! na
+                gaer = gaer/(waer+puny)
+                waer = waer/(taer+puny)
+              else if ( k > 0 ) then  ! snow below SSL
+                taer = c0
+                waer = c0
+                gaer = c0
+                do na=1,4*nmbaer_actual,4
+                  taer = taer + &
+                       (aero_mp(i,j,na+1)/real(nslyr))*kaer_tab(ns,(1+(na-1)/4))
+                  waer = waer + & 
+                       (aero_mp(i,j,na+1)/real(nslyr))*kaer_tab(ns,(1+(na-1)/4))* &
+                         waer_tab(ns,(1+(na-1)/4))
+                  gaer = gaer + &
+                       (aero_mp(i,j,na+1)/real(nslyr))*kaer_tab(ns,(1+(na-1)/4))* &
+                         waer_tab(ns,(1+(na-1)/4))*gaer_tab(ns,(1+(na-1)/4))
+                enddo       ! na
+                gaer = gaer/(waer+puny)
+                waer = waer/(taer+puny)
+              endif
+              g(k,ij)   = (g(k,ij)*w0(k,ij)*tau(k,ij) + gaer*waer*taer) / &
+                                  (w0(k,ij)*tau(k,ij) + waer*taer)
+              w0(k,ij)  = (w0(k,ij)*tau(k,ij) + waer*taer) / &
+                                   (tau(k,ij) + taer)
+              tau(k,ij) = tau(k,ij) + taer
             enddo       ! k
           ! pond
           else !if( srftyp(i,j) == 2 ) then
@@ -2298,6 +2435,7 @@
               tau(k,ij) = kw(ns)*dz
               w0(k,ij)  = ww(ns)
               g(k,ij)   = gw(ns)
+              ! no aerosol in pond
             enddo       ! k
           endif        ! srftyp
         enddo         ! ij ... optical properties above sea ice set
@@ -2349,6 +2487,48 @@
                 tau(k,ij) = (kabs+sig)*dz
                 w0(k,ij)  = (sig/(sig+kabs))
                 g(k,ij)   = gi_int(ns)
+              ! aerosol in sea ice
+              nmbaer_actual = min(n_aero,nmbaer)
+              do k = kice, klev
+                if( k == kice ) then  ! sea ice SSL
+                  taer = c0
+                  waer = c0
+                  gaer = c0
+                  do na=1,4*nmbaer_actual,4
+                    taer = taer + &
+                         aero_mp(i,j,na+2)*kaer_tab(ns,(1+(na-1)/4))
+                    waer = waer + & 
+                         aero_mp(i,j,na+2)*kaer_tab(ns,(1+(na-1)/4))* &
+                           waer_tab(ns,(1+(na-1)/4))
+                    gaer = gaer + &
+                         aero_mp(i,j,na+2)*kaer_tab(ns,(1+(na-1)/4))* &
+                           waer_tab(ns,(1+(na-1)/4))*gaer_tab(ns,(1+(na-1)/4))
+                  enddo       ! na
+                  gaer = gaer/(waer+puny)
+                  waer = waer/(taer+puny)
+                else if ( k > kice ) then  ! sea ice below SSL
+                  taer = c0
+                  waer = c0
+                  gaer = c0
+                  do na=1,4*nmbaer_actual,4
+                    taer = taer + &
+                         (aero_mp(i,j,na+3)/real(nilyr))*kaer_tab(ns,(1+(na-1)/4))
+                    waer = waer + & 
+                         (aero_mp(i,j,na+3)/real(nilyr))*kaer_tab(ns,(1+(na-1)/4))* &
+                           waer_tab(ns,(1+(na-1)/4))
+                    gaer = gaer + &
+                         (aero_mp(i,j,na+3)/real(nilyr))*kaer_tab(ns,(1+(na-1)/4))* &
+                           waer_tab(ns,(1+(na-1)/4))*gaer_tab(ns,(1+(na-1)/4))
+                  enddo       ! na
+                  gaer = gaer/(waer+puny)
+                  waer = waer/(taer+puny)
+                endif
+                g(k,ij)   = (g(k,ij)*w0(k,ij)*tau(k,ij) + gaer*waer*taer) / &
+                                    (w0(k,ij)*tau(k,ij) + waer*taer)
+                w0(k,ij)  = (w0(k,ij)*tau(k,ij) + waer*taer) / &
+                                     (tau(k,ij) + taer)
+                tau(k,ij) = tau(k,ij) + taer
+              enddo ! k
           ! sea ice layers under ponds
           else !if( srftyp(i,j) == 2 ) then
               k = kice

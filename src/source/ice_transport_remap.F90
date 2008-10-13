@@ -3833,13 +3833,12 @@
                   i = indxi(ij)
                   j = indxj(ij)
 
-                  if (abs(tm(i,j,nt1)) > puny) then
+                  if (abs(tm(i,j,nt1)) > c0) then
                      w1  = mtflxe(i,j,nt) - mtflxe(i-1,j,nt)   &
                          + mtflxn(i,j,nt) - mtflxn(i,j-1,nt)
                      tm(i,j,nt) = (mtold(i,j,nt) - w1*tarear(i,j))   &
                                  / (mm(i,j) * tm(i,j,nt1))
                   endif
-
                enddo            ! ij
 
             elseif (tracer_type(nt)==3) then ! depends on two tracers
@@ -3853,15 +3852,14 @@
                   i = indxi(ij)
                   j = indxj(ij)
 
-                  if (abs(tm(i,j,nt1)) > puny .and.   &
-                      abs(tm(i,j,nt2)) > puny) then
+                  if (abs(tm(i,j,nt1)) > c0 .and.   &
+                      abs(tm(i,j,nt2)) > c0) then
                      w1  = mtflxe(i,j,nt) - mtflxe(i-1,j,nt)   &
                          + mtflxn(i,j,nt) - mtflxn(i,j-1,nt)
                      tm(i,j,nt) = (mtold(i,j,nt) - w1*tarear(i,j))   &
                               / (mm(i,j) * tm(i,j,nt2) * tm(i,j,nt1))
                   endif
                enddo            ! ij
-
             endif               ! tracer_type
          enddo                  ! nt
       endif                     ! present(tm)

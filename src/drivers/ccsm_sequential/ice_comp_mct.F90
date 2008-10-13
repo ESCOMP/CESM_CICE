@@ -46,7 +46,8 @@ module ice_comp_mct
 		              field_loc_center, field_type_scalar, field_type_vector
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
-		              sec, dt, dyn_dt, xndyn_dt, calendar, calendar_type
+		              sec, dt, dyn_dt, xndyn_dt, calendar,      &
+                              calendar_type
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
 !  use ice_init
@@ -55,6 +56,7 @@ module ice_comp_mct
   use ice_fileunits,   only : nu_diag
   use ice_dyn_evp,     only:  kdyn
   use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
+  use ice_prescaero_mod
 
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -247,11 +249,12 @@ contains
              + start_tod
        call shr_sys_flush(nu_diag)
     end if
+
     call calendar(time)     ! update calendar info
  
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Initialize MCT attribute vectors and indices
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call t_startf ('cice_mct_init')
 
@@ -311,9 +314,10 @@ contains
 !
 ! !USES:
     use ice_step_mod
+    use ice_aerosol, only: tr_aero, write_restart_aero
     use ice_age, only: tr_iage, write_restart_age
-    use ice_history
     use ice_meltpond, only: tr_pond, write_restart_pond
+    use ice_history
     use ice_restart
     use ice_shortwave, only: shortwave, write_restart_dEdd
     use ice_diagnostics
@@ -389,6 +393,10 @@ contains
        call t_stopf ('cice_presc')
     endif
     
+    if(prescribed_aero) then  ! read prescribed ice
+       call ice_prescaero_run(idate, sec)
+    endif
+
     call init_flux_atm
 
     !-----------------------------------------------------------------
@@ -475,6 +483,7 @@ contains
 !       call dumpfile(fname)
 #else
        call dumpfile(fname)
+       if (tr_aero) call write_restart_aero
        if (tr_iage) call write_restart_age
        if (tr_pond) call write_restart_pond
        if (trim(shortwave) == 'dEdd') call write_restart_dEdd

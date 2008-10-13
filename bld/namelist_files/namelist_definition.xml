@@ -178,6 +178,11 @@ Pond volume tracer.
 Default: TRUE
 </entry>
 
+<entry id="tr_aero" type="logical"  category="cice" group="tracer_nml" valid_values="">
+Aerosol tracers.
+Default: FALSE
+</entry>
+
 <!----------------------------->
 <!---Domain information    ---->
 <!----------------------------->
@@ -272,6 +277,20 @@ Default: 1
 
 <entry id="prescribed_ice_fill" type="logical"  category="cice" group="ice_prescribed_nml" valid_values="">
 true => pice data fill required
+Default: FALSE
+</entry>
+
+<!--------------------------------->
+<!-- Prescribed aerosol namelist -->
+<!--------------------------------->
+
+<entry id="prescribed_aero" type="logical"  category="cice" group="ice_prescaero_nml" valid_values="">
+use prescribed aerosol mode if true
+Default: FALSE
+</entry>
+
+<entry id="prescribed_aero_fill" type="logical"  category="cice" group="ice_prescaero_nml" valid_values="">
+true => prescribed aerosol data fill required
 Default: FALSE
 </entry>
 

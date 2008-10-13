@@ -129,7 +129,8 @@
                             dardg1dt,    dardg2dt,   &
                             dvirdgdt,    opening,    &
                             fresh,       fresh_hist, &
-                            fhocn,       fhocn_hist)
+                            fhocn,       fhocn_hist, &
+                            fsoot)
 !
 ! !USES:
 !
@@ -192,6 +193,9 @@
          fresh_hist, & ! fresh water flux to ocean (kg/m^2/s)
          fhocn     , & ! net heat flux to ocean (W/m^2)
          fhocn_hist    ! net heat flux to ocean (W/m^2)
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+         intent(inout), optional :: &
+         fsoot      ! 
 !
 !EOP
 !
@@ -211,6 +215,8 @@
          virdg      , & ! ice volume ridged
          aopen          ! area opening due to divergence/shear
 
+      real (kind=dbl_kind), dimension (icells,n_aero) :: &
+         msoot       ! mass of soot added to ocean (kg m-2)
 
       real (kind=dbl_kind), dimension (icells,0:ncat) :: &
          apartic          ! participation function; fraction of ridging
@@ -258,6 +264,7 @@
       do ij = 1, icells
          msnow_mlt(ij) = c0
          esnow_mlt(ij) = c0
+         msoot    (ij,:) = c0
          ardg1    (ij) = c0
          ardg2    (ij) = c0
          virdg    (ij) = c0
@@ -343,6 +350,7 @@
                            ardg1,     ardg2,           &
                            virdg,     aopen,           &
                            msnow_mlt, esnow_mlt,       &
+                           msoot,                      &
                            l_stop,                     &
                            istop,     jstop)
 
@@ -497,6 +505,13 @@
       ! Update fresh water and heat fluxes due to snow melt.
       !-----------------------------------------------------------------
 
+      if (present(fsoot)) then
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            fsoot(i,j,:) = fsoot(i,j,:) + msoot(ij,:)*dti
+         enddo
+      endif
       if (present(fresh)) then
          do ij = 1, icells
             i = indxi(ij)
@@ -1111,10 +1126,13 @@
                               ardg1,       ardg2,           &
                               virdg,       aopen,           &
                               msnow_mlt,   esnow_mlt,       &
+                              msoot,                        &
                               l_stop,                       &
                               istop,       jstop)
 !
 ! !USES:
+!
+      use ice_state, only: nt_aero
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1179,6 +1197,9 @@
          msnow_mlt, & ! mass of snow added to ocean (kg m-2)
          esnow_mlt    ! energy needed to melt snow in ocean (J m-2)
 
+      real (kind=dbl_kind), dimension(icells,n_aero), intent(inout) :: &
+         msoot      ! mass of soot added to ocean (kg m-2)
+
       logical (kind=log_kind), intent(inout) :: &
          l_stop   ! if true, abort on return
 
@@ -1194,6 +1215,8 @@
          it            , & ! tracer index
          ij, m         , & ! horizontal indices, combine i and j loops
          iridge            ! number of cells with nonzero ridging
+      integer (kind=int_kind) :: &
+         iaero             ! index for number of aerosol tracers
 
       integer (kind=int_kind), dimension (icells) :: &
          indxii, indxjj  , & ! compressed indices
@@ -1470,6 +1493,17 @@
       !-----------------------------------------------------------------
 
             msnow_mlt(m) = msnow_mlt(m) + rhos*vsrdgn(ij)*(c1-fsnowrdg)
+
+      !-----------------------------------------------------------------
+      !  Place part of the soot lost by ridging into the ocean.
+      !-----------------------------------------------------------------
+
+            do iaero=1,n_aero
+             msoot(m,iaero) = msoot(m,iaero) &
+                     + vsrdgn(ij)*(c1-fsnowrdg) &
+                     *(trcrn(i,j,nt_aero  +4*(iaero-1),n)   &
+                     + trcrn(i,j,nt_aero+1+4*(iaero-1),n))
+            enddo
 
       !-----------------------------------------------------------------
       ! Compute quantities used to apportion ice among categories

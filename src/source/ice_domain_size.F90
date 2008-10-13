@@ -39,8 +39,11 @@
         ntilyr    = ncat*nilyr, & ! number of ice layers in all categories
         nslyr     =   1       , & ! number of snow layers per category
         ntslyr    = ncat*nslyr, & ! number of snow layers in all categories
-        ntrcr     =   2           ! number of tracers (defined in ice_state)
+        n_aero    =   1       , & ! number of aerosols
+        ntrcr     =   2          ! number of tracers (defined in ice_state)
                                   ! 1 = surface temperature
+                                  ! ice age, pond volume
+                                  ! plus 4 for each of the n_aero aerosols MH
 
       integer (kind=int_kind), parameter :: &
         block_size_x = BLCKX  , & ! size of block in first horiz dimension

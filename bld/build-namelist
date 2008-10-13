@@ -344,6 +344,7 @@ add_default($nl, 'ndte');
 
 add_default($nl, 'tr_iage');
 add_default($nl, 'tr_pond');
+add_default($nl, 'tr_aero');
 
 ##################################
 # namelist group: domain_nml     #
@@ -366,15 +367,22 @@ add_default($nl, 'prescribed_ice_fill');
 add_default($nl, 'model_year_align');
 add_default($nl, 'stream_year_first');
 add_default($nl, 'stream_year_last');
-add_default($nl, 'stream_fldVarName');
-add_default($nl, 'stream_fldFileName');
-add_default($nl, 'stream_domTvarName');
-add_default($nl, 'stream_domXvarName');
-add_default($nl, 'stream_domYvarName');
-add_default($nl, 'stream_domAreaName');
-add_default($nl, 'stream_domMaskName');
-add_default($nl, 'stream_domFileName');
+add_default($nl, 'stream_fldvarname');
+add_default($nl, 'stream_fldfilename');
+add_default($nl, 'stream_domtvarname');
+add_default($nl, 'stream_domxvarname');
+add_default($nl, 'stream_domyvarname');
+add_default($nl, 'stream_domareaname');
+add_default($nl, 'stream_dommaskname');
+add_default($nl, 'stream_domfilename');
 }
+
+######################################
+# namelist group: ice_prescaero_nml #
+######################################
+
+add_default($nl, 'prescribed_aero');
+add_default($nl, 'prescribed_aero_fill');
 
 ######################################
 # namelist group: ice_fields_nml     #
@@ -430,7 +438,7 @@ add_default($nl, 'f_apondn');
 # Write output files
 
 # Sea ice component 
-my @groups = qw(ice_nml tracer_nml domain_nml ice_prescribed_nml icefields_nml);
+my @groups = qw(ice_nml tracer_nml domain_nml ice_prescribed_nml ice_prescaero_nml icefields_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }

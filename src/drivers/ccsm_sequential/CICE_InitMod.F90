@@ -24,6 +24,7 @@
 !
 ! !USES:
 !
+      use ice_aerosol, only: tr_aero, init_aerosol    !MH
       use ice_age
       use ice_calendar
       use ice_communicate
@@ -50,6 +51,7 @@
       use ice_transport_remap
       use ice_work
       use ice_prescribed_mod
+      use ice_prescaero_mod
 
       implicit none
       private
@@ -103,7 +105,6 @@
       call ice_timer_start(timer_total)   ! start timing entire run
       call init_grid2           ! grid variables
 
-      call init_transport       ! initialize horizontal transport
       call init_calendar        ! initialize some calendar stuff
       call init_hist (dt)       ! initialize output history file
       call init_evp (dt)        ! define evp dynamics parameters, variables
@@ -115,7 +116,9 @@
       call init_itd             ! initialize ice thickness distribution
       call calendar(time)       ! determine the initial date
       call init_state           ! initialize the ice state
+      call init_transport       ! initialize horizontal transport
       call ice_prescribed_init
+      call ice_prescaero_init
 
       if (runtype /= 'continue') then
          ! for non-continuation run, determine if should read restart file
@@ -131,6 +134,7 @@
       ! tracers
       if (tr_iage) call init_age        ! ice age tracer
       if (tr_pond) call init_meltponds  ! melt ponds
+      if (tr_aero) call init_aerosol    ! ice aerosol MH
 
       call init_shortwave       ! initialize radiative transfer
       call init_diags           ! initialize diagnostic output points

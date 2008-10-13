@@ -254,8 +254,8 @@
       ! variables related to optional bug checks
 
       logical (kind=log_kind), parameter ::     &
-         l_conservation_check = .false. ,&! if true, check conservation
-         l_monotonicity_check = .false.   ! if true, check monotonicity
+         l_conservation_check = .true. ,&! if true, check conservation
+         l_monotonicity_check = .true.   ! if true, check monotonicity
 
       real (kind=dbl_kind), dimension(0:ncat) ::     &
          asum_init      ,&! initial global ice area
@@ -399,7 +399,7 @@
          tmin(:,:,:,:,:) = c0
          tmax(:,:,:,:,:) = c0
 
-         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi)
+         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -443,7 +443,7 @@
                               field_loc_center, field_type_scalar)
          call ice_timer_stop(timer_bound)
 
-         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi)
+         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -469,7 +469,7 @@
     !  of the velocity field.  Otherwise, initialize edgearea.
     !-------------------------------------------------------------------
 
-         !$OMP PARALLEL DO PRIVATE(iblk)
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -596,9 +596,9 @@
                                       asum_init(0), asum_final(0))
 
             if (l_stop) then
-               write (nu_diag,*) 'istep1, my_task, iblk =',     &
-                                  istep1, my_task, iblk
+               write (nu_diag,*) 'istep1 =', istep1
                write (nu_diag,*) 'transport: conservation error, cat 0'
+               l_stop = .false.
                call abort_ice('ice remap transport: conservation error')
             endif
 
@@ -609,9 +609,10 @@
                                       atsum_init(:,n), atsum_final(:,n))
 
                if (l_stop) then
-                  write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
-                                     istep1, my_task, iblk, n
+                  write (nu_diag,*) 'istep1, cat =',     &
+                                     istep1, n
                   write (nu_diag,*) 'transport: conservation error, cat ',n
+                  l_stop = .false.
                   call abort_ice     &
                        ('ice remap transport: conservation error')
                endif
@@ -1498,7 +1499,7 @@
             enddo
             enddo
 
-         elseif (tracer_type(nt)==2) then ! depends on another tracer
+         elseif (tracer_type(nt)==3) then ! depends on another tracer
 
             nt1 = depend(nt)
             nt2 = depend(nt1)
@@ -1654,7 +1655,7 @@
                   works(i,j,narrays+it) = vicen(i,j,n)*trcrn(i,j,it,n)
                enddo
                enddo
-            elseif (trcr_depend(it) ==1) then
+            elseif (trcr_depend(it) ==2) then
                do j = 1, ny_block
                do i = 1, nx_block
                   works(i,j,narrays+it) = vsnon(i,j,n)*trcrn(i,j,it,n)

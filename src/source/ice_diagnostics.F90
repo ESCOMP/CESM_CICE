@@ -27,6 +27,8 @@
       use ice_constants
       use ice_calendar, only: diagfreq, istep1, istep
       use ice_fileunits
+      use ice_aerosol, only: tr_aero   !MH
+      use ice_domain_size
 !
 !EOP
 !
@@ -80,6 +82,9 @@
          totmis           , & ! total ice water mass (sh)
          toten            , & ! total ice/snow energy (J)
          totes                ! total ice/snow energy (J)
+      real (kind=dbl_kind), dimension(n_aero) :: &
+         totaeron         , & ! total aerosol mass
+         totaeros             ! total aerosol mass
 
       ! printing info for routine print_state
       character (char_len) :: plabel
@@ -119,7 +124,7 @@
       use ice_global_reductions
       use ice_blocks
       use ice_domain
-      use ice_domain_size
+!MH      use ice_domain_size
       use ice_flux
       use ice_state
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
@@ -156,7 +161,15 @@
          sfsalts, sfreshs, evps, fluxs , delmxs,  delmis, &
          delein, werrn, herrn, msltn, delmsltn, serrn, &
          deleis, werrs, herrs, mslts, delmslts, serrs, &
-         ftmp
+         ftmp,faeron,faeros,fsootn,fsoots
+
+! MH for aerosol diagnostics
+      integer (kind=int_kind) :: &
+        kaero, naero
+      real (kind=dbl_kind) :: &
+        aeromx1n, aeromx1s, aeromx2n, aeromx2s, &
+        aeromx3n, aeromx3s, aoermx4, &
+        aerototn, aerotots     !MH
 
       ! fields at diagnostic points
       real (kind=dbl_kind), dimension(npnt) :: &
@@ -303,6 +316,93 @@
       hmaxn = global_maxval(vice, distrb_info, lmask_n)
       hmaxs = global_maxval(vice, distrb_info, lmask_s)
 
+! MH put in aerosol diagnostics
+      if (tr_aero) then
+         ! aerosols
+        do naero=1,n_aero
+         faeron = global_sum_prod(faero(:,:,naero,:), aice_init, distrb_info, &
+                               field_loc_center, tarean)
+         faeros = global_sum_prod(faero(:,:,naero,:), aice_init, distrb_info, &
+                               field_loc_center, tareas)
+         faeron = faeron*dt
+         faeros = faeros*dt
+
+         fsootn = global_sum_prod(fsoot(:,:,naero,:), aice, distrb_info, &
+                               field_loc_center, tarean)
+         fsoots = global_sum_prod(fsoot(:,:,naero,:), aice, distrb_info, &
+                               field_loc_center, tareas)
+         fsootn = fsootn*dt
+         fsoots = fsoots*dt
+
+         do iblk = 1, nblocks
+           do j = 1, ny_block
+           do i = 1, nx_block
+            work1(i,j,iblk) = trcr(i,j,nt_aero  +4*(naero-1),iblk)  *vsno(i,j,iblk) &
+                            + trcr(i,j,nt_aero+1+4*(naero-1),iblk)*vsno(i,j,iblk) &
+                            + trcr(i,j,nt_aero+2+4*(naero-1),iblk)*vice(i,j,iblk) &
+                            + trcr(i,j,nt_aero+3+4*(naero-1),iblk)*vice(i,j,iblk)
+           enddo
+           enddo
+         enddo
+         aerototn= global_sum(work1, distrb_info, field_loc_center, tarean)
+         aerotots= global_sum(work1, distrb_info, field_loc_center, tareas)
+         aeromx1n = global_maxval(work1, distrb_info, lmask_n)
+         aeromx1s = global_maxval(work1, distrb_info, lmask_s)
+         if (my_task == master_task) then
+          write(nu_diag,*) 'aero: ',naero,' faero         : ',&
+                faeron, faeros
+          write(nu_diag,*) 'aero: ',naero,' fsoot         : ',&
+                fsootn, fsoots
+          write(nu_diag,*) 'aero: ',naero,' faero-fsoot   : ',&
+                faeron-fsootn, faeros-fsoots
+          write(nu_diag,*) 'aero: ',naero,' aerotot       : ',&
+                aerototn, aerotots
+          write(nu_diag,*) 'aero: ',naero,' aerotot change: ',&
+                aerototn-totaeron(naero), aerotots-totaeros(naero)
+          write(nu_diag,*) 'aero: ',naero,' aeromax agg: ',&
+                aeromx1n,aeromx1s
+         endif
+
+!         do kaero=1,ncat
+!          do iblk = 1, nblocks
+!           do j = 1, ny_block
+!           do i = 1, nx_block
+!            work1(i,j,iblk) = trcrn(i,j,nt_aero,kaero,iblk)
+!           enddo
+!           enddo
+!          enddo
+!          aeromx1n = global_maxval(work1, distrb_info, lmask_n)
+!          aeromx1s = global_maxval(work1, distrb_info, lmask_s)
+!          if (my_task == master_task) &
+!           write(nu_diag,*) 'MH aeromx1s: ',aeromx1n,aeromx1s,kaero
+!         enddo
+
+!       do iblk = 1, nblocks
+!         do j = 1, ny_block
+!         do i = 1, nx_block
+!            work1(i,j,iblk) = trcrn(i,j,nt_aero+1,1,iblk)
+!         enddo
+!         enddo
+!       enddo
+!       aeromx2n = global_maxval(work1, distrb_info, lmask_n)
+!       write(nu_diag,*) 'MH aeromx2n: ',aeromx2n
+!       aeromx2s = global_maxval(work1, distrb_info, lmask_s)
+!       write(nu_diag,*) 'MH aeromx2s: ',aeromx2s
+!
+!       do iblk = 1, nblocks
+!         do j = 1, ny_block
+!         do i = 1, nx_block
+!            work1(i,j,iblk) = trcrn(i,j,nt_aero+2,1,iblk)
+!         enddo
+!         enddo
+!       enddo
+!       aeromx3n = global_maxval(work1, distrb_info, lmask_n)
+!       write(nu_diag,*) 'MH aeromx2n: ',aeromx3n
+!       aeromx3s = global_maxval(work1, distrb_info, lmask_s)
+!       write(nu_diag,*) 'MH aeromx2s: ',aeromx3s
+        enddo ! n_aero
+      endif  ! tr_aero
+    
       ! maximum ice speed
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -844,6 +944,7 @@
 !EOP
 !
       integer (kind=int_kind) :: n, k, ii, jj, i, j, iblk
+      integer (kind=int_kind) :: naero
 
       real (kind=dbl_kind) :: &
          shmaxn, snwmxn,  shmaxs, snwmxs
@@ -878,6 +979,23 @@
       
       toten = global_sum(work1, distrb_info, field_loc_center, tarean)
       totes = global_sum(work1, distrb_info, field_loc_center, tareas)
+
+      if (tr_aero) then
+       do naero=1,n_aero
+        do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            work1(i,j,iblk) = trcr(i,j,nt_aero  +4*(naero-1),iblk)*vsno(i,j,iblk) &
+                            + trcr(i,j,nt_aero+1+4*(naero-1),iblk)*vsno(i,j,iblk) &
+                            + trcr(i,j,nt_aero+2+4*(naero-1),iblk)*vice(i,j,iblk) &
+                            + trcr(i,j,nt_aero+3+4*(naero-1),iblk)*vice(i,j,iblk)
+         enddo
+         enddo
+        enddo
+        totaeron(naero)= global_sum(work1, distrb_info, field_loc_center, tarean)
+        totaeros(naero)= global_sum(work1, distrb_info, field_loc_center, tareas)
+       enddo
+      endif
 
       if (print_points) then
 
@@ -1018,7 +1136,7 @@
             ! communicate to all processors
             piloc(n) = global_maxval(piloc(n), distrb_info)
             pjloc(n) = global_maxval(pjloc(n), distrb_info)
-            pbloc(n) = global_maxval(pbloc(n), distrb_info)            
+            pbloc(n) = global_maxval(pbloc(n), distrb_info)
             pmloc(n) = global_maxval(pmloc(n), distrb_info)
             plat(n)  = global_maxval(plat(n), distrb_info)
             plon(n)  = global_maxval(plon(n), distrb_info)
@@ -1070,7 +1188,7 @@
 !
 ! !USES:
 !
-      use ice_domain_size
+!MH      use ice_domain_size
       use ice_state
       use ice_itd
       use ice_flux

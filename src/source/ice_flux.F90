@@ -121,6 +121,10 @@
          frain   , & ! rainfall rate (kg/m^2 s)
          fsnow       ! snowfall rate (kg/m^2 s)
 
+      real (kind=dbl_kind), &
+         dimension (nx_block,ny_block,n_aero,max_blocks) :: &
+         faero    ! aerosol deposition rate (kg/m^2 s)  MH
+
        ! in from ocean
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
@@ -156,6 +160,10 @@
          fsalt   , & ! salt flux to ocean (kg/m^2/s)
          fhocn   , & ! net heat flux to ocean (W/m^2)
          fswthru     ! shortwave penetrating to ocean (W/m^2)
+
+      real (kind=dbl_kind), &
+        dimension (nx_block,ny_block,n_aero,max_blocks) :: &
+         fsoot        
 
       !-----------------------------------------------------------------
       ! quantities passed from ocean mixed layer to atmosphere
@@ -275,6 +283,7 @@
       flw   (:,:,:) = c180            ! incoming longwave rad (W/m^2)
       frain (:,:,:) = c0              ! rainfall rate (kg/m2/s)
       fsnow (:,:,:) = 4.0e-6_dbl_kind ! snowfall rate (kg/m2/s)
+      faero (:,:,:,:) = c0            ! aerosol deposition rate (kg/m2/s) MH
 
       !-----------------------------------------------------------------
       ! fluxes received from ocean
@@ -415,6 +424,7 @@
       fresh  (:,:,:)  = c0
       fsalt  (:,:,:)  = c0
       fhocn  (:,:,:)  = c0
+      fsoot  (:,:,:,:)  = c0
       fswthru(:,:,:)  = c0
 
       end subroutine init_flux_ocn
@@ -696,6 +706,7 @@
                                Tref,     Qref,     &
                                fresh,    fsalt,    &
                                fhocn,    fswthru,  &
+                               fsoot,              &
                                alvdr,    alidr,    &
                                alvdf,    alidf)
 !
@@ -708,7 +719,7 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &
-          nx_block, ny_block    ! block dimensions
+          nx_block, ny_block   ! block dimensions
 
       logical (kind=log_kind), dimension (nx_block,ny_block), &
           intent(in) :: &
@@ -741,6 +752,10 @@
           alidr   , & ! near-ir, direct   (fraction)
           alvdf   , & ! visible, diffuse  (fraction)
           alidf       ! near-ir, diffuse  (fraction)
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+          intent(inout):: &
+          fsoot       ! 
 !
 !EOP
 !
@@ -774,6 +789,7 @@
             alidr   (i,j) = alidr   (i,j) * ar
             alvdf   (i,j) = alvdf   (i,j) * ar
             alidf   (i,j) = alidf   (i,j) * ar
+            fsoot   (i,j,:) = fsoot (i,j,:) * ar
          else                   ! zero out fluxes
             strairxT(i,j) = c0
             strairyT(i,j) = c0
@@ -788,6 +804,7 @@
             fresh   (i,j) = c0
             fsalt   (i,j) = c0
             fhocn   (i,j) = c0
+            fsoot   (i,j,:) = c0
             fswthru (i,j) = c0
             alvdr   (i,j) = c0  ! zero out albedo where ice is absent
             alidr   (i,j) = c0

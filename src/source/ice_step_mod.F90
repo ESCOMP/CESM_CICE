@@ -26,6 +26,7 @@
 !
 ! !USES:
 !
+      use ice_aerosol       !MH
       use ice_age
       use ice_atmo
       use ice_calendar
@@ -53,9 +54,6 @@
       use ice_timers
       use ice_transport_driver
       use ice_transport_remap
-#ifdef CCSMCOUPLED
-      use ice_prescribed_mod
-#endif
 
       implicit none
       private
@@ -198,7 +196,16 @@
          melts_old, &
          meltt_old, &
          melts_tmp, &
-         meltt_tmp
+         meltt_tmp, wrktmp
+      ! Local variables to keep track of mass budget for aerosols MH
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         meltb_old,  &
+         congel_old, &
+         snoice_old, &
+         meltb_tmp,  &
+         congel_tmp, &
+         snoice_tmp, &
+         vsno_old   
 
       type (block) :: &
          this_block      ! block information for current block
@@ -218,11 +225,11 @@
       worka(:,:) = c0
       workb(:,:) = c0
 
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
+      this_block = get_block(blocks_ice(iblk),iblk)         
+      ilo = this_block%ilo
+      ihi = this_block%ihi
+      jlo = this_block%jlo
+      jhi = this_block%jhi
 
       !-----------------------------------------------------------------
       ! Save the ice area passed to the coupler (so that history fields
@@ -230,25 +237,25 @@
       ! Save the initial ice area and volume in each category.
       !-----------------------------------------------------------------
 
-         do j = 1, ny_block
-         do i = 1, nx_block
-            aice_init (i,j,  iblk) = aice (i,j,  iblk)
-         enddo
-         enddo
+      do j = 1, ny_block
+      do i = 1, nx_block
+         aice_init (i,j,  iblk) = aice (i,j,  iblk)
+      enddo
+      enddo
 
-         do n = 1, ncat
-         do j = 1, ny_block
-         do i = 1, nx_block
-            aicen_init(i,j,n,iblk) = aicen(i,j,n,iblk)
-            vicen_init(i,j,n,iblk) = vicen(i,j,n,iblk)
-         enddo
-         enddo
-         enddo
+      do n = 1, ncat
+      do j = 1, ny_block
+      do i = 1, nx_block
+         aicen_init(i,j,n,iblk) = aicen(i,j,n,iblk)
+         vicen_init(i,j,n,iblk) = vicen(i,j,n,iblk)
+      enddo
+      enddo
+      enddo
 
-         if (mod(time-dt,dyn_dt) == c0) then
-            strairxT_accum(:,:,iblk) = c0
-            strairyT_accum(:,:,iblk) = c0
-         endif
+      if (mod(time-dt,dyn_dt) == c0) then
+         strairxT_accum(:,:,iblk) = c0
+         strairyT_accum(:,:,iblk) = c0
+      endif
 
       !-----------------------------------------------------------------
       ! Adjust frzmlt to account for ice-ocean heat fluxes since last
@@ -256,34 +263,34 @@
       ! Compute lateral and bottom heat fluxes.
       !-----------------------------------------------------------------
 
-         call frzmlt_bottom_lateral                                      &
-                                (nx_block,           ny_block,           &
-                                 ilo, ihi,           jlo, jhi,           &
-                                 dt,                                     &
-                                 aice  (:,:,  iblk), frzmlt(:,:,  iblk), &
-                                 eicen (:,:,:,iblk), esnon (:,:,:,iblk), &
-                                 sst   (:,:,  iblk), Tf    (:,:,  iblk), &
-                                 strocnxT(:,:,iblk), strocnyT(:,:,iblk), &
-                                 Tbot,               fbot,               &
-                                 rside (:,:,  iblk) )
+      call frzmlt_bottom_lateral                                      &
+                             (nx_block,           ny_block,           &
+                              ilo, ihi,           jlo, jhi,           &
+                              dt,                                     &
+                              aice  (:,:,  iblk), frzmlt(:,:,  iblk), &
+                              eicen (:,:,:,iblk), esnon (:,:,:,iblk), &
+                              sst   (:,:,  iblk), Tf    (:,:,  iblk), &
+                              strocnxT(:,:,iblk), strocnyT(:,:,iblk), &
+                              Tbot,               fbot,               &
+                              rside (:,:,  iblk) )
 
 
-         do n = 1, ncat
+      do n = 1, ncat
 
       !-----------------------------------------------------------------
       ! Identify cells with nonzero ice area
       !-----------------------------------------------------------------
            
-            icells = 0
-            do j = jlo, jhi
-            do i = ilo, ihi
-               if (aicen(i,j,n,iblk) > puny) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
-               endif
-            enddo               ! i
-            enddo               ! j
+         icells = 0
+         do j = jlo, jhi
+         do i = ilo, ihi
+            if (aicen(i,j,n,iblk) > puny) then
+               icells = icells + 1
+               indxi(icells) = i
+               indxj(icells) = j
+            endif
+         enddo               ! i
+         enddo               ! j
 
       !-----------------------------------------------------------------
       ! Atmosphere boundary layer calculation; compute coefficients
@@ -294,33 +301,33 @@
       !       components are set to the data values.
       !-----------------------------------------------------------------
 
-            if (trim(atmbndy) == 'constant') then
-               call atmo_boundary_const(nx_block,      ny_block,        &
-                                        'ice',          icells,         &
-                                        indxi,          indxj,          &
-                                        uatm(:,:,iblk), vatm(:,:,iblk), &
-                                        wind(:,:,iblk), rhoa(:,:,iblk), &
-                                        strairxn,       strairyn,       &
-                                        lhcoef,         shcoef)
-            else ! default
-               call atmo_boundary_layer(nx_block,       ny_block,       &
-                                        'ice',          icells,         &
-                                        indxi,          indxj,          &
-                                        trcrn(:,:,nt_Tsfc,n,iblk),      &
-                                        potT(:,:,iblk),                 &
-                                        uatm(:,:,iblk), vatm(:,:,iblk), &
-                                        wind(:,:,iblk), zlvl(:,:,iblk), &
-                                        Qa  (:,:,iblk), rhoa(:,:,iblk), &
-                                        strairxn,       strairyn,       &
-                                        Trefn,          Qrefn,          &
-                                        worka,          workb,          &
-                                        lhcoef,         shcoef)
-            endif ! atmbndy
+         if (trim(atmbndy) == 'constant') then
+            call atmo_boundary_const(nx_block,      ny_block,        &
+                                     'ice',          icells,         &
+                                     indxi,          indxj,          &
+                                     uatm(:,:,iblk), vatm(:,:,iblk), &
+                                     wind(:,:,iblk), rhoa(:,:,iblk), &
+                                     strairxn,       strairyn,       &
+                                     lhcoef,         shcoef)
+         else ! default
+            call atmo_boundary_layer(nx_block,       ny_block,       &
+                                     'ice',          icells,         &
+                                     indxi,          indxj,          &
+                                     trcrn(:,:,nt_Tsfc,n,iblk),      &
+                                     potT(:,:,iblk),                 &
+                                     uatm(:,:,iblk), vatm(:,:,iblk), &
+                                     wind(:,:,iblk), zlvl(:,:,iblk), &
+                                     Qa  (:,:,iblk), rhoa(:,:,iblk), &
+                                     strairxn,       strairyn,       &
+                                     Trefn,          Qrefn,          &
+                                     worka,          workb,          &
+                                     lhcoef,         shcoef)
+         endif ! atmbndy
 
-            if (.not.(calc_strair)) then
-               strairxn(:,:) = strax(:,:,iblk)
-               strairyn(:,:) = stray(:,:,iblk)
-            endif
+         if (.not.(calc_strair)) then
+            strairxn(:,:) = strax(:,:,iblk)
+            strairyn(:,:) = stray(:,:,iblk)
+         endif
 
       !-----------------------------------------------------------------
       ! Update ice age
@@ -328,53 +335,57 @@
       ! Melting does not alter the ice age.
       !-----------------------------------------------------------------
 
-            if (tr_iage) then
-               call increment_age (nx_block, ny_block,      &
-                                   dt, icells,              &
-                                   indxi, indxj,            &
-                                   trcrn(:,:,nt_iage,n,iblk))
-            endif
+         if (tr_iage) then
+            call increment_age (nx_block, ny_block,      &
+                                dt, icells,              &
+                                indxi, indxj,            &
+                                trcrn(:,:,nt_iage,n,iblk))
+         endif
 
       !-----------------------------------------------------------------
       ! Vertical thermodynamics: Heat conduction, growth and melting.
       !----------------------------------------------------------------- 
 
-            il1 = ilyr1(n)
-            il2 = ilyrn(n)
-            sl1 = slyr1(n)
-            sl2 = slyrn(n)
+         il1 = ilyr1(n)
+         il2 = ilyrn(n)
+         sl1 = slyr1(n)
+         sl2 = slyrn(n)
 
-            melts_old = melts(:,:,iblk)
-            meltt_old = meltt(:,:,iblk)
+         melts_old = melts(:,:,iblk)
+         meltt_old = meltt(:,:,iblk)
+         meltb_old = meltb(:,:,iblk)    !MH
+         congel_old = congel(:,:,iblk)  !MH
+         snoice_old = snoice(:,:,iblk)  !MH
+         vsno_old   = vsnon(:,:,n,iblk) !MH
 
-            call thermo_vertical                                       &
-                            (nx_block,            ny_block,            &
-                             dt,                  icells,              &
-                             indxi,               indxj,               &
-                             aicen(:,:,n,iblk),                        &
-                             trcrn(:,:,nt_Tsfc,n,iblk),                &
-                             vicen(:,:,n,iblk),   vsnon(:,:,n,iblk),   &
-                             eicen  (:,:,il1:il2,iblk),                &
-                             esnon  (:,:,sl1:sl2,iblk),                &
-                             flw    (:,:,iblk),   potT (:,:,iblk),     &
-                             Qa     (:,:,iblk),   rhoa (:,:,iblk),     &
-                             fsnow  (:,:,iblk),                        &
-                             fbot,                Tbot,                &
-                             lhcoef,              shcoef,              &
-                             fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
-                             fswthrun(:,:,n,iblk),                     &
-                             Sswabsn(:,:,sl1:sl2,iblk),                &
-                             Iswabsn(:,:,il1:il2,iblk),                &
-                             fsensn,              flatn,               &
-                             fswabsn,             flwoutn,             &
-                             evapn,               freshn,              &
-                             fsaltn,              fhocnn,              &
-                             meltt   (:,:,iblk),  melts(:,:,iblk),     &
-                             meltb   (:,:,iblk),                       &
-                             congel  (:,:,iblk),  snoice  (:,:,iblk),  &
-                             mlt_onset(:,:,iblk), frz_onset(:,:,iblk), &
-                             yday,                l_stop,              &
-                             istop,               jstop)
+         call thermo_vertical                                       &
+                         (nx_block,            ny_block,            &
+                          dt,                  icells,              &
+                          indxi,               indxj,               &
+                          aicen(:,:,n,iblk),                        &
+                          trcrn(:,:,:,n,iblk),                      &
+                          vicen(:,:,n,iblk),   vsnon(:,:,n,iblk),   &
+                          eicen  (:,:,il1:il2,iblk),                &
+                          esnon  (:,:,sl1:sl2,iblk),                &
+                          flw    (:,:,iblk),   potT (:,:,iblk),     &
+                          Qa     (:,:,iblk),   rhoa (:,:,iblk),     &
+                          fsnow  (:,:,iblk),                        &
+                          fbot,                Tbot,                &
+                          lhcoef,              shcoef,              &
+                          fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
+                          fswthrun(:,:,n,iblk),                     &
+                          Sswabsn(:,:,sl1:sl2,iblk),                &
+                          Iswabsn(:,:,il1:il2,iblk),                &
+                          fsensn,              flatn,               &
+                          fswabsn,             flwoutn,             &
+                          evapn,               freshn,              &
+                          fsaltn,              fhocnn,              &
+                          meltt   (:,:,iblk),  melts(:,:,iblk),     &
+                          meltb   (:,:,iblk),                       &
+                          congel  (:,:,iblk),  snoice  (:,:,iblk),  &
+                          mlt_onset(:,:,iblk), frz_onset(:,:,iblk), &
+                          yday,                l_stop,              &
+                          istop,               jstop)
 
          if (l_stop) then
             write (nu_diag,*) 'istep1, my_task, iblk =', &
@@ -388,6 +399,37 @@
                                  TLAT(istop,jstop,iblk)*rad_to_deg, &
                                  TLON(istop,jstop,iblk)*rad_to_deg
             call abort_ice ('ice: Vertical thermo error')
+         endif
+
+      !-----------------------------------------------------------------
+      ! Aerosol update  MH
+      !-----------------------------------------------------------------
+         if (tr_aero) then
+            melts_tmp  = melts(:,:,iblk)  - melts_old
+            meltt_tmp  = meltt(:,:,iblk)  - meltt_old
+            meltb_tmp  = meltb(:,:,iblk)  - meltb_old
+            congel_tmp = congel(:,:,iblk) - congel_old
+            snoice_tmp = snoice(:,:,iblk) - snoice_old
+
+            if (icells > 0) then
+
+               call update_aerosol (nx_block, ny_block,                  &
+                                    dt, icells,                          &
+                                    indxi, indxj,                        &
+                                    meltt_tmp, melts_tmp,                &
+                                    meltb_tmp, congel_tmp, snoice_tmp,   &
+                                    fsnow(:,:,iblk),                     &
+                                    trcrn(:,:,:,n,iblk),                 &
+                                    aicen_init(:,:,n,iblk),              &
+                                    vicen_init(:,:,n,iblk),              &
+                                    vsno_old,                            &
+                                    vicen(:,:,n,iblk),                   &
+                                    vsnon(:,:,n,iblk),                   &
+                                    aicen(:,:,n,iblk),faero(:,:,:,iblk), &
+                                    fsoot(:,:,:,iblk))
+
+            endif
+
          endif
 
       !-----------------------------------------------------------------
@@ -439,37 +481,37 @@
                             fhocn   (:,:,iblk), fhocn_hist(:,:,iblk), &
                             fswthru (:,:,iblk), fswthru_hist(:,:,iblk))
 
-         enddo                  ! ncat
+      enddo                  ! ncat
+
 
 ! Accumulate stresses when super-cycling the dynamics. Otherwise just
 ! use the stresses as computed.
 
-         if (dt < dyn_dt) then
-            strairxT_accum(:,:,iblk) = strairxT_accum(:,:,iblk) &
-                                     + strairxT(:,:,iblk) * dt / dyn_dt
-            strairyT_accum(:,:,iblk) = strairyT_accum(:,:,iblk) &
-                                     + strairyT(:,:,iblk) * dt / dyn_dt
-         else
-            strairxT_accum(:,:,iblk) = strairxT(:,:,iblk)
-            strairyT_accum(:,:,iblk) = strairyT(:,:,iblk)
-         endif
+      if (dt < dyn_dt) then
+         strairxT_accum(:,:,iblk) = strairxT_accum(:,:,iblk) &
+                                  + strairxT(:,:,iblk) * dt / dyn_dt
+         strairyT_accum(:,:,iblk) = strairyT_accum(:,:,iblk) &
+                                  + strairyT(:,:,iblk) * dt / dyn_dt
+      else
+         strairxT_accum(:,:,iblk) = strairxT(:,:,iblk)
+         strairyT_accum(:,:,iblk) = strairyT(:,:,iblk)
+      endif
 
       !-----------------------------------------------------------------
       ! Update mixed layer with heat and radiation from ice.
       !-----------------------------------------------------------------
 
-         if (oceanmixed_ice) then
-            do j = jlo, jhi
-            do i = ilo, ihi
-               if (hmix(i,j,iblk) > puny) then
-                  sst(i,j,iblk) = sst(i,j,iblk) &
-                       + (fhocn(i,j,iblk) + fswthru(i,j,iblk))*dt &
-                       / (cprho*hmix(i,j,iblk))
-               endif
-            enddo
-            enddo
-         endif
-
+      if (oceanmixed_ice) then
+         do j = jlo, jhi
+         do i = ilo, ihi
+            if (hmix(i,j,iblk) > puny) then
+               sst(i,j,iblk) = sst(i,j,iblk) &
+                    + (fhocn(i,j,iblk) + fswthru(i,j,iblk))*dt &
+                    / (cprho*hmix(i,j,iblk))
+            endif
+         enddo
+         enddo
+      endif
 
       end subroutine step_therm1_iblk
 
@@ -760,13 +802,15 @@
                          fresh_hist(:,:,  iblk), &
                          fsalt_hist(:,:,  iblk), &
                          fhocn_hist(:,:,  iblk), &
+                         fsoot     (:,:,:,iblk), &
                          rside     (:,:,  iblk), &
                          meltl     (:,:,  iblk), &
                          aicen     (:,:,:,iblk), &
                          vicen     (:,:,:,iblk), &
                          vsnon     (:,:,:,iblk), &
                          eicen     (:,:,:,iblk), &
-                         esnon     (:,:,:,iblk) )
+                         esnon     (:,:,:,iblk), &
+                         trcrn     (:,:,:,:,iblk) )
 
       !-----------------------------------------------------------------
       ! For the special case of a single category, adjust the area and
@@ -778,7 +822,7 @@
 
 !         if (ncat==1) &
 !              call reduce_area (nx_block, ny_block,     &
-!                                nghost,                 &
+!                                ilo, ihi, jlo, jhi,     &
 !                                tmask     (:,:,  iblk), &
 !                                aicen     (:,:,:,iblk), &
 !                                vicen     (:,:,:,iblk), &
@@ -801,6 +845,7 @@
                         fresh   (:,:,  iblk), fresh_hist(:,:,iblk), &
                         fsalt   (:,:,  iblk), fsalt_hist(:,:,iblk), &
                         fhocn   (:,:,  iblk), fhocn_hist(:,:,iblk), &
+                        fsoot   (:,:,:,iblk), tr_aero,              &
                         l_stop,                                     &
                         istop,                jstop)
 
@@ -936,7 +981,8 @@
                          dardg1dt(:,:,iblk),   dardg2dt  (:,:,iblk),     &
                          dvirdgdt(:,:,iblk),   opening   (:,:,iblk),     &
                          fresh   (:,:,iblk),   fresh_hist(:,:,iblk),     &
-                         fhocn   (:,:,iblk),   fhocn_hist(:,:,iblk))      
+                         fhocn   (:,:,iblk),   fhocn_hist(:,:,iblk),     &
+                         fsoot   (:,:,:,iblk))
 
          if (l_stop) then
             write (nu_diag,*) 'istep1, my_task, iblk =', &
@@ -981,6 +1027,7 @@
                            fresh   (:,:,  iblk), fresh_hist(:,:,iblk), &
                            fsalt   (:,:,  iblk), fsalt_hist(:,:,iblk), &
                            fhocn   (:,:,  iblk), fhocn_hist(:,:,iblk), &
+                           fsoot   (:,:,:,iblk), tr_aero,              &
                            l_stop,                                     &
                            istop,                jstop)
 
@@ -1461,6 +1508,7 @@
                                 vsnon(:,:,n,iblk), fsn,                 &
                                 rhosnwn,           rsnwn,               &
                                 fpn,               hpn,                 &
+                                trcrn(:,:,:,n,iblk), tarea(:,:,iblk),   &
                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
@@ -1532,6 +1580,7 @@
                          Tref     (:,:,iblk), Qref    (:,:,iblk), &
                          fresh    (:,:,iblk), fsalt   (:,:,iblk), &
                          fhocn    (:,:,iblk), fswthru (:,:,iblk), &
+                         fsoot    (:,:,:,iblk),                   &
                          alvdr    (:,:,iblk), alidr   (:,:,iblk), &
                          alvdf    (:,:,iblk), alidf   (:,:,iblk))
       

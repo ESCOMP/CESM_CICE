@@ -1,4 +1,35 @@
 ===============================================================
+cice4_0_20081013
+Originator: dbailey
+Date: Mon Oct 13 13:22:51 MDT 2008
+Version: 4.0
+One-line Summary: New aerosol deposition/prescribed option.
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_itd.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_fileunits.F90
+A      src/source/ice_aerosol.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_mechred.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_therm_itd.F90
+M      src/source/ice_state.F90
+A      src/source/ice_prescaero_mod.F90
+M      src/source/ice_domain_size.F90
+M      src/source/ice_history.F90
+M      src/drivers/ccsm_sequential/CICE_InitMod.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20081009
 Originator: dbailey
 Date: Thu Oct  9 08:54:11 MDT 2008

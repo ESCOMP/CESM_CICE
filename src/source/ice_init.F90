@@ -104,6 +104,8 @@
       use ice_transport_driver, only: advection
       use ice_age, only: tr_iage, restart_age
       use ice_meltpond, only: tr_pond, restart_pond
+      use ice_aerosol, only: tr_aero, restart_aero     !MH for soot
+      use ice_state, only: nt_Tsfc, nt_iage, nt_volpn, nt_aero
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -156,7 +158,8 @@
 
       namelist /tracer_nml/   &
         tr_iage, restart_age, &
-        tr_pond, restart_pond
+        tr_pond, restart_pond,&       !MH for soot
+        tr_aero, restart_aero         !MH for soot
 
       !-----------------------------------------------------------------
       ! default values
@@ -256,6 +259,8 @@
       restart_age  = .false. ! ice age restart
       tr_pond      = .false. ! explicit melt ponds
       restart_pond = .false. ! melt ponds restart
+      tr_aero      = .false. ! aerosols          MH 
+      restart_aero = .false. ! aerosol restart   MH
 
       !-----------------------------------------------------------------
       ! read from input file
@@ -431,6 +436,8 @@
       call broadcast_scalar(restart_age,        master_task)
       call broadcast_scalar(tr_pond,            master_task)
       call broadcast_scalar(restart_pond,       master_task)
+      call broadcast_scalar(tr_aero,            master_task) !MH
+      call broadcast_scalar(restart_aero,       master_task) !MH
 
       !-----------------------------------------------------------------
       ! spew
@@ -593,10 +600,32 @@
          write(nu_diag,1010) ' restart_age               = ', restart_age
          write(nu_diag,1010) ' tr_pond                   = ', tr_pond
          write(nu_diag,1010) ' restart_pond              = ', restart_pond
+         write(nu_diag,1010) ' tr_aero                   = ', tr_aero !MH
+         write(nu_diag,1010) ' restart_aero              = ', restart_aero !MH
 
          ntr = 1 ! count tracers, starting with Tsfc = 1
-         if (tr_iage) ntr = ntr + 1
-         if (tr_pond) ntr = ntr + 1
+         if (tr_iage) then
+            ntr = ntr + 1
+            nt_iage = nt_Tsfc + 1
+            write(nu_diag,1020) ' nt_iage                    = ', nt_iage
+         else
+            nt_iage = 1
+         endif
+         if (tr_pond) then
+            ntr = ntr + 1
+            nt_volpn = nt_iage + 1
+            write(nu_diag,1020) ' nt_volpn                   = ', nt_volpn
+         else
+            nt_volpn = nt_iage
+         endif
+         if (tr_aero) then
+            ntr = ntr + n_aero*4 !MH 2 for snow soot and 2 for ice
+                                 !MH for multiple (n_aero) aerosols
+            nt_aero = nt_volpn + 1
+            write(nu_diag,1020) ' nt_aero                    = ', nt_aero
+         else
+            nt_aero = nt_volpn
+         endif
          if (ntr /= ntrcr) &
             write(nu_diag,*) 'WARNING: ntrcr > number of tracers requested'
          if (ntr > ntrcr) then
@@ -620,6 +649,10 @@
          endif
 
       endif                     ! my_task = master_task
+
+      call broadcast_scalar(nt_iage,            master_task)
+      call broadcast_scalar(nt_volpn,           master_task)
+      call broadcast_scalar(nt_aero,            master_task)
 
       end subroutine input_data
 
@@ -652,6 +685,7 @@
       use ice_exit
       use ice_age, only: tr_iage
       use ice_meltpond, only: tr_pond
+      use ice_aerosol, only: tr_aero  ! MH for soot
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -661,6 +695,8 @@
          i, j        , & ! horizontal indices
          it          , & ! tracer index
          iblk            ! block index
+      integer (kind=int_kind) :: &
+         n
 
       !-----------------------------------------------------------------
       ! Check number of layers in ice and snow.
@@ -683,9 +719,15 @@
       !-----------------------------------------------------------------
 
       trcr_depend(nt_Tsfc)  = 0   ! ice/snow surface temperature
+
       if (tr_iage) trcr_depend(nt_iage)  = 1   ! volume-weighted ice age
       if (tr_pond) trcr_depend(nt_volpn) = 0   ! melt pond volume
-
+      if (tr_aero) then
+        do n=1,n_aero
+         trcr_depend(nt_aero+(n-1)*4  :nt_aero+(n-1)*4+1) = 2 ! snow volume-weighted MH
+         trcr_depend(nt_aero+(n-1)*4+2:nt_aero+(n-1)*4+3) = 1 ! volume-weighted MH
+        enddo
+      endif
 
       !$OMP PARALLEL DO PRIVATE(iblk,it)
       do iblk = 1, nblocks
@@ -798,7 +840,7 @@
          Tf      , & ! freezing temperature (C) 
          sst         ! sea surface temperature (C) 
 
-      integer (kind=int_kind), dimension (ntrcr), intent(inout) :: &
+      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &

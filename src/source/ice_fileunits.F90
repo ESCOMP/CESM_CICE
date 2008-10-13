@@ -58,6 +58,8 @@
          nu_restart_dEdd, &
          nu_dump_age   , &  ! dump file for restarting ice age tracer
          nu_restart_age, &  ! restart input file for ice age tracer
+         nu_dump_aero  , &  ! dump file for restarting ice aerosol tracer MH
+         nu_restart_aero, &  ! restart input file for ice aerosol tracer MH
          nu_rst_pointer, &  ! pointer to latest restart file
          nu_history    , &  ! binary history output file
          nu_hdr        , &  ! header file for binary history output
@@ -119,6 +121,8 @@ contains
          nu_restart_dEdd = shr_file_getUnit()
          nu_dump_age   = shr_file_getUnit()
          nu_restart_age = shr_file_getUnit()
+         nu_dump_aero  = shr_file_getUnit()    !MH
+         nu_restart_aero= shr_file_getUnit()   !MH
          nu_rst_pointer = shr_file_getUnit()
          nu_history     = shr_file_getUnit()
          nu_hdr         = shr_file_getUnit()
@@ -134,6 +138,8 @@ contains
          call get_fileunit(nu_restart_dEdd)
          call get_fileunit(nu_dump_age)
          call get_fileunit(nu_restart_age)
+         call get_fileunit(nu_dump_aero)     !MH
+         call get_fileunit(nu_restart_aero)  !MH
          call get_fileunit(nu_rst_pointer)
          call get_fileunit(nu_history)
          call get_fileunit(nu_hdr)
@@ -224,6 +230,8 @@ contains
          call release_fileunit(nu_restart)
          call release_fileunit(nu_dump_age)
          call release_fileunit(nu_restart_age)
+         call release_fileunit(nu_dump_aero)     !MH
+         call release_fileunit(nu_restart_aero)  !MH
          call release_fileunit(nu_rst_pointer)
          call release_fileunit(nu_history)
          call release_fileunit(nu_hdr)

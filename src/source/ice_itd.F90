@@ -806,10 +806,10 @@
 !
 ! !INTERFACE:
 !
-      subroutine reduce_area (nx_block, ny_block, &
-                              ilo, ihi, jlo, jhi, &
-                              tmask,              &
-                              aicen,     vicen,   &
+      subroutine reduce_area (nx_block,  ny_block, &
+                              ilo, ihi,  jlo, jhi, &
+                              tmask,               &
+                              aicen,     vicen,    &
                               hicen_old, hicen)
 !
 ! !DESCRIPTION:
@@ -977,8 +977,7 @@
          nr            , & ! receiver category
          nd            , & ! donor category
          k             , & ! ice layer index
-         it            , & ! tracer index
-         ilo,ihi,jlo,jhi   ! beginning and end of physical domain
+         it                ! tracer index
 
       real (kind=dbl_kind), dimension(icells,ntrcr,ncat) :: &
          atrcrn            ! aicen*trcrn
@@ -1618,6 +1617,7 @@
                               fresh,       fresh_hist, &
                               fsalt,       fsalt_hist, &
                               fhocn,       fhocn_hist, &
+                              fsoot,       tr_aero,    &
                               l_stop,                  &
                               istop,       jstop,      &
                               l_limit_aice_in)
@@ -1672,6 +1672,9 @@
       integer (kind=int_kind), dimension(ntrcr), intent(in) :: & 
          trcr_depend  ! tracer dependency information
 
+      logical (kind=log_kind), intent(in) :: &
+         tr_aero
+
       logical (kind=log_kind), intent(out) :: &
          l_stop    ! if true, abort on return
 
@@ -1687,6 +1690,10 @@
          fsalt_hist,& ! salt flux to ocean        (kg/m^2/s)
          fhocn    , & ! net heat flux to ocean     (W/m^2)
          fhocn_hist   ! net heat flux to ocean     (W/m^2)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero), &
+         intent(inout), optional :: &
+         fsoot        ! soot flux to ocean        (kg/m^2/s)
 
       logical (kind=log_kind), intent(in), optional ::   &
          l_limit_aice_in  ! if false, allow aice to be out of bounds
@@ -1706,6 +1713,9 @@
          dfresh   , & ! zapped fresh water flux (kg/m^2/s)
          dfsalt   , & ! zapped salt flux   (kg/m^2/s)
          dfhocn       ! zapped energy flux ( W/m^2)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero) :: &
+         dfsoot    ! zapped soot flux   (kg/m^2/s)
 
       logical (kind=log_kind) ::   &
          l_limit_aice  ! if true, check for aice out of bounds
@@ -1729,7 +1739,7 @@
       !-----------------------------------------------------------------
 
       call aggregate_area (nx_block, ny_block, &
-                           aicen, &
+                           aicen(:,:,:), &
                            aice,     aice0)
 
 
@@ -1784,9 +1794,9 @@
       call rebin (nx_block,   ny_block, &
                   icells,   indxi,    indxj, &
                   trcr_depend, &
-                  aicen,      trcrn, &
-                  vicen,      vsnon, &
-                  eicen,      esnon, &
+                  aicen(:,:,:),      trcrn(:,:,:,:), &
+                  vicen(:,:,:),      vsnon(:,:,:)  , &
+                  eicen(:,:,:),      esnon(:,:,:)  , &
                   l_stop, &
                   istop,      jstop)
 
@@ -1799,13 +1809,13 @@
       if (l_limit_aice) then
          call zap_small_areas (nx_block, ny_block, &
                                ilo, ihi, jlo, jhi, &
-                               dt,              &
-                               aice,     aice0, &
-                               aicen,    trcrn, &
-                               vicen,    vsnon, &
-                               eicen,    esnon, &
+                               dt                             , &
+                               aice,            aice0         , &
+                               aicen(:,:,:),    trcrn(:,:,:,:), &
+                               vicen(:,:,:),    vsnon(:,:,:)  , &
+                               eicen(:,:,:),    esnon(:,:,:)  , &
                                dfresh,   dfsalt, &
-                               dfhocn,           &
+                               dfhocn,   dfsoot, tr_aero, &
                                l_stop,           &
                                istop,    jstop)
          if (l_stop) return
@@ -1827,6 +1837,8 @@
            fhocn     (:,:) = fhocn(:,:)      + dfhocn(:,:)
       if (present(fhocn_hist)) &
            fhocn_hist(:,:) = fhocn_hist(:,:) + dfhocn(:,:)
+      if (present(fsoot)) &
+           fsoot   (:,:,:) = fsoot(:,:,:)    + dfsoot(:,:,:)
 
       end subroutine cleanup_itd
 
@@ -1839,14 +1851,14 @@
 !
       subroutine zap_small_areas (nx_block, ny_block, &
                                   ilo, ihi, jlo, jhi, &
-                                  dt,              &
+                                  dt,                 &
                                   aice,     aice0,    &
                                   aicen,    trcrn,    &
                                   vicen,    vsnon,    &
                                   eicen,    esnon,    &
                                   dfresh,   dfsalt,   &
-                                  dfhocn,             &
-                                  l_stop,             &
+                                  dfhocn,   dfsoot,   &
+                                  tr_aero,  l_stop,   &
                                   istop,    jstop)
 !
 ! !DESCRIPTION:
@@ -1860,7 +1872,7 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_Tsfc
+      use ice_state, only: nt_Tsfc, nt_aero
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1900,6 +1912,12 @@
          dfsalt   , & ! zapped salt flux   (kg/m^2/s)
          dfhocn       ! zapped energy flux ( W/m^2)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero), &
+         intent(out) :: &
+         dfsoot    ! zapped soot flux   (kg/m^2/s)
+
+      logical (kind=log_kind), intent(in) :: &
+         tr_aero
       logical (kind=log_kind), intent(out) :: &
          l_stop   ! if true, abort on return
 
@@ -1929,6 +1947,7 @@
 
       dfresh(:,:) = c0
       dfsalt(:,:) = c0
+      dfsoot(:,:,:) = c0
       dfhocn(:,:) = c0
 
       !-----------------------------------------------------------------
@@ -2006,6 +2025,22 @@
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
+         if (tr_aero) then
+          do ij = 1, icells
+           i = indxi(ij)
+           j = indxj(ij)
+           do it=1,n_aero
+            xtmp & 
+              = (vsnon(i,j,n)*(trcrn(i,j,nt_aero  +4*(it-1),n)   &
+                              +trcrn(i,j,nt_aero+1+4*(it-1),n))  &
+              +  vicen(i,j,n)*(trcrn(i,j,nt_aero+2+4*(it-1),n)   &
+                              +trcrn(i,j,nt_aero+3+4*(it-1),n))) &
+              / dt 
+            dfsoot(i,j,it) = dfsoot(i,j,it) + xtmp
+           enddo                 ! n 
+          enddo                  ! ij
+         endif
+
          do ij = 1, icells
             i = indxi(ij)
             j = indxj(ij)
@@ -2029,7 +2064,7 @@
       !-----------------------------------------------------------------
          
          if (ntrcr >= 2) then
-            do it = 1, ntrcr
+            do it = 2, ntrcr
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
@@ -2111,6 +2146,25 @@
       !-----------------------------------------------------------------
       ! Zap ice and snow volume, add water and salt to ocean
       !-----------------------------------------------------------------
+
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+         if (tr_aero) then
+          do ij = 1, icells
+           i = indxi(ij)
+           j = indxj(ij)
+           do it=1,n_aero
+            xtmp & 
+              = (vsnon(i,j,n)*(trcrn(i,j,nt_aero  +4*(it-1),n)   &
+                              +trcrn(i,j,nt_aero+1+4*(it-1),n))  &
+              +  vicen(i,j,n)*(trcrn(i,j,nt_aero+2+4*(it-1),n)   &
+                              +trcrn(i,j,nt_aero+3+4*(it-1),n))) &
+              * (aice(i,j)-c1)/aice(i,j) / dt 
+            dfsoot(i,j,it) = dfsoot(i,j,it) + xtmp
+           enddo                 ! n 
+          enddo                  ! ij
+         endif
 
 !DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC 

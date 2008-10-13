@@ -14,7 +14,7 @@
 !       needed for coupling.
 !       
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_therm_itd.F90 112 2008-03-13 21:06:56Z eclare $
+!  SVN:$Id: ice_therm_itd.F90 48 2007-01-09 23:57:33Z eclare $
 !
 ! authors William H. Lipscomb, LANL
 !         C. M. Bitz, UW
@@ -57,7 +57,7 @@
 !
       subroutine linear_itd (nx_block,    ny_block,    & 
                              icells, indxi, indxj,     & 
-                             trcr_depend, & 
+                             trcr_depend,              & 
                              aicen_init,  vicen_init,  & 
                              aicen,       trcrn,       & 
                              vicen,       vsnon,       & 
@@ -200,8 +200,9 @@
          fieldid           ! field identifier
 
       logical (kind=log_kind), parameter :: &
-         l_conservation_check = .false.   ! if true, check conservation
-                                          ! (useful for debugging)
+         l_conservation_check = .true.   ! if true, check conservation
+!         l_conservation_check = .false.   ! if true, check conservation
+                                         ! (useful for debugging)
 
        integer (kind=int_kind) :: &
          iflag         , & ! number of grid cells with remap_flag = .true.
@@ -850,8 +851,9 @@
 !
       use ice_itd, only: hin_max, ilyr1, column_sum, &
                          column_conservation_check
-      use ice_state, only: nt_Tsfc, nt_iage
+      use ice_state, only: nt_Tsfc, nt_iage, nt_aero 
       use ice_age, only: tr_iage
+      use ice_aerosol, only: tr_aero
 
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -912,7 +914,8 @@
       integer (kind=int_kind) :: &
          i, j         , & ! horizontal indices
          n            , & ! ice category index
-         k                ! ice layer index
+         k            , & ! ice layer index
+         it               ! aerosol tracer index
 
       real (kind=dbl_kind), dimension (icells) :: &
          ai0new       , & ! area of new ice added to cat 1
@@ -930,12 +933,12 @@
          qi0(nilyr)   , & ! frazil ice enthalpy
          qi0av        , & ! mean value of qi0 for new ice (J kg-1)
          vsurp        , & ! volume of new ice added to each cat
-         vtmp         , & ! total volume of new and old ice
          area1        , & ! starting fractional area of existing ice
          vice1        , & ! starting volume of existing ice
          rnilyr       , & ! real(nilyr)
          dfresh       , & ! change in fresh
-         dfsalt           ! change in fsalt
+         dfsalt       , & ! change in fsalt
+         vtmp
 
       integer (kind=int_kind) :: &
          jcells, kcells     , & ! grid cell counters
@@ -1101,12 +1104,27 @@
 
             ! update ice age due to freezing (new ice age = dt)
             vtmp = vicen(i,j,n) + vsurp
-            if (tr_iage .and. vtmp > puny) &
-                trcrn(i,j,nt_iage,n)  &
-             = (trcrn(i,j,nt_iage,n)*vicen(i,j,n) + dt*vsurp) / vtmp
+            if (vtmp > puny) then
+
+            if (tr_iage) trcrn(i,j,nt_iage,n)  &
+                   = (trcrn(i,j,nt_iage,n)*vicen(i,j,n) + dt*vsurp) &
+                   / vtmp
+
+            if (tr_aero) then
+             do it=1,n_aero
+               trcrn(i,j,nt_aero+2+4*(it-1),n)  &
+                   = trcrn(i,j,nt_aero+2+4*(it-1),n)*vicen(i,j,n) &
+                   / vtmp
+               trcrn(i,j,nt_aero+3+4*(it-1),n)  &
+                   = trcrn(i,j,nt_aero+3+4*(it-1),n)*vicen(i,j,n) &
+                   / vtmp
+             enddo
+            endif
+
+            endif
 
             ! update category volumes
-            vicen(i,j,n) = vtmp
+            vicen(i,j,n) = vicen(i,j,n) + vsurp
             vlyr(m) = vsurp/rnilyr
 
          enddo                  ! ij
@@ -1145,14 +1163,25 @@
          aicen(i,j,1) = aicen(i,j,1) + ai0new(m)
          aice0(i,j)   = aice0(i,j)   - ai0new(m)
          vicen(i,j,1) = vicen(i,j,1) + vi0new(m)
-         trcrn(i,j,nt_Tsfc,1) = (Tf(i,j)*ai0new(m) &
-                              + trcrn(i,j,nt_Tsfc,1)*area1) &
-                                / aicen(i,j,1)
+         trcrn(i,j,nt_Tsfc,1) = (Tf(i,j)*ai0new(m) + trcrn(i,j,nt_Tsfc,1)*area1) &
+                      / aicen(i,j,1)
          trcrn(i,j,nt_Tsfc,1) = min (trcrn(i,j,nt_Tsfc,1), c0)
 
-         if (tr_iage .and. vicen(i,j,1) > puny) &
-             trcrn(i,j,nt_iage,1) = &
+         if (vicen(i,j,1) > puny) then
+
+         if (tr_iage) trcrn(i,j,nt_iage,1) = &
             (trcrn(i,j,nt_iage,1)*vice1 + dt*vi0new(m))/vicen(i,j,1)
+
+          if (tr_aero) then
+           do it=1,n_aero
+             trcrn(i,j,nt_aero+2+4*(it-1),1) = &
+               trcrn(i,j,nt_aero+2+4*(it-1),1)*vice1/vicen(i,j,1)
+             trcrn(i,j,nt_aero+3+4*(it-1),1) = &
+               trcrn(i,j,nt_aero+3+4*(it-1),1)*vice1/vicen(i,j,1)
+           enddo
+          endif
+
+         endif
 
          vlyr(m)    = vi0new(m) / rnilyr
       enddo                     ! ij
@@ -1208,14 +1237,17 @@
                                fresh,      fsalt,      &
                                fhocn,      fresh_hist, &
                                fsalt_hist, fhocn_hist, &
+                               fsoot,                  &
                                rside,      meltl,      &
                                aicen,      vicen,      &
                                vsnon,      eicen,      &
-                               esnon)
+                               esnon,      trcrn)
 !
 ! !USES:
 !
       use ice_itd, only: ilyr1, slyr1
+      use ice_aerosol, only: tr_aero
+      use ice_state, only: nt_aero 
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1240,6 +1272,10 @@
          intent(inout) :: &
          esnon     ! energy of melting for each snow layer (J/m^2)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+         intent(in) :: &
+         trcrn     ! energy of melting for each snow layer (J/m^2)
+
       real (kind=dbl_kind), dimension(nx_block,ny_block), intent(in) :: &
          rside     ! fraction of ice that melts laterally
 
@@ -1252,6 +1288,9 @@
          fsalt_hist, & ! salt flux to ocean (kg/m^2/s)
          fhocn_hist, & ! net heat flux to ocean (W/m^2)
          meltl         ! lateral ice melt         (m/step-->cm/day)
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+         intent(inout) :: &
+         fsoot      ! 
 !
 !EOP
 !
@@ -1260,7 +1299,8 @@
          n           , & ! thickness category index
          k           , & ! layer index
          ij          , & ! horizontal index, combines i and j loops
-         icells          ! number of cells with aice > puny
+         icells      , & ! number of cells with aice > puny
+         it              ! tracer index for aerosols
 
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! compressed indices for cells with aice > puny
@@ -1290,6 +1330,23 @@
       !-----------------------------------------------------------------
       ! Melt the ice and increment fluxes.
       !-----------------------------------------------------------------
+
+         if (tr_aero) then
+          do k=1,n_aero
+           do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+             fsoot(i,j,k)      = fsoot(i,j,k) &
+               + (vsnon(i,j,n) &
+               *(trcrn(i,j,nt_aero  +4*(k-1),n)   &
+                +trcrn(i,j,nt_aero+1+4*(k-1),n))  &
+               +  vicen(i,j,n) &
+               *(trcrn(i,j,nt_aero+2+4*(k-1),n)   &
+                +trcrn(i,j,nt_aero+3+4*(k-1),n))) &
+               * rside(i,j) / dt
+            enddo
+          enddo
+         endif
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC

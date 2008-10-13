@@ -79,34 +79,36 @@
 
       integer (kind=int_kind), parameter :: &
          ncat_hist = ncat       , & ! number of ice categories written <= ncat
-         avgsiz = 77 + 3*ncat_hist  ! number of fields that can be written
+         avgsiz = 77                ! base number of fields that can be written
+
+      integer (kind=int_kind) :: &
+         navgsiz                  ! actual number of fields that can be written
 
       real (kind=real_kind) :: time_beg, time_end ! bounds for averaging
 
-      real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,avgsiz,max_blocks) :: &
-         aa                ! field accumulations and averages
+      real (kind=dbl_kind), allocatable :: &
+         aa(:,:,:,:)   , & ! field accumulations and averages
+         cona(:)       , & ! multiplicative conversion factor
+         conb(:)           ! additive conversion factor
 
       real (kind=dbl_kind) :: &
-         avgct         , & ! average sample counter
-         cona(avgsiz)  , & ! multiplicative conversion factor
-         conb(avgsiz)      ! additive conversion factor
+         avgct             ! average sample counter
 
-      logical (kind=log_kind) :: &
-         iout(avgsiz)      ! true if field is written to output file
+      logical (kind=log_kind), allocatable :: &
+         iout(:)           ! true if field is written to output file
 
-      character (len=16) :: &
-         vname(avgsiz) , & ! variable names
-         vunit(avgsiz) , & ! variable units
-         vcoord(avgsiz)    ! variable coordinates
+      character (len=16), allocatable :: &
+         vname(:)      , & ! variable names
+         vunit(:)      , & ! variable units
+         vcoord(:)         ! variable coordinates
 
       character (len=16), parameter :: &
          tstr = 'TLON TLAT time', & ! vcoord for T cell quantities
          ustr = 'ULON ULAT time'    ! vcoord for U cell quantities
 
-      character (len=55) :: & 
-         vdesc(avgsiz) , & ! variable descriptions
-         vcomment(avgsiz)  ! variable comments
+      character (len=55), allocatable :: & 
+         vdesc(:)      , & ! variable descriptions
+         vcomment(:)       ! variable comments
 
       !---------------------------------------------------------------
       ! logical flags: write to output file if true
@@ -119,6 +121,7 @@
            f_fswdn     = .true., f_flwdn      = .true., &
            f_snow      = .true., f_snow_ai    = .true., &
            f_rain      = .true., f_rain_ai    = .true., &
+           f_faero     = .false., &
            f_sst       = .true., f_sss        = .true., &
            f_uocn      = .true., f_vocn       = .true., &
            f_frzmlt    = .true., &
@@ -151,6 +154,7 @@
            f_mlt_onset = .true., f_frz_onset  = .true., &
            f_dardg1dt  = .true., f_dardg2dt   = .true., &
            f_dvirdgdt  = .true., f_iage       = .false.,&
+           f_aeron     = .false., f_aero      = .false.,&   !MH
            f_hisnap    = .true., f_aisnap     = .true., &
            f_aicen     = .true., f_vicen      = .true., &
            f_apondn     = .false.,                      &
@@ -167,6 +171,7 @@
            f_fswdn,     f_flwdn    , &
            f_snow,      f_snow_ai  , &     
            f_rain,      f_rain_ai  , &
+           f_faero,  &
            f_sst,       f_sss      , &
            f_uocn,      f_vocn     , &
            f_frzmlt                , &
@@ -202,6 +207,7 @@
            f_hisnap,    f_aisnap   , &
            f_aicen,     f_vicen    , &
            f_apondn,    f_iage     , &
+           f_aeron,     f_aero     , &       !MH
            f_trsig,     f_icepresent
 
       !---------------------------------------------------------------
@@ -285,10 +291,21 @@
            n_Tair       = 74, &
            n_trsig      = 75, &
            n_icepresent = 76, &
-           n_iage       = 77, &
-           n_aicen      = 78, & ! n_aicen, n_vicen, n_volpn must be 
-           n_vicen      = 79 + ncat_hist - 1, & ! last in this list
-           n_apondn     = 79 + 2*ncat_hist - 1
+           n_iage       = 77
+
+      integer(kind=int_kind) :: &
+           n_faero  , &
+           n_aerosn1, &
+           n_aerosn2, &
+           n_aeroic1, &
+           n_aeroic2, &
+           n_aerosn1n, &
+           n_aerosn2n, &
+           n_aeroic1n, &
+           n_aeroic2n, &
+           n_aicen, &
+           n_vicen, & 
+           n_apondn
 
 !=======================================================================
 
@@ -327,6 +344,8 @@
       use ice_restart, only: restart
 #endif
       use ice_age, only: tr_iage
+      use ice_aerosol, only: tr_aero
+      use ice_meltpond, only: tr_pond
       use ice_exit
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -341,6 +360,169 @@
 
       character (len=3) :: nchar
       character (len=30) :: tmp
+
+      !-----------------------------------------------------------------
+      ! read namelist
+      !-----------------------------------------------------------------
+
+      call get_fileunit(nu_nml)
+      if (my_task == master_task) then
+         open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
+         if (nml_error /= 0) then
+            nml_error = -1
+         else
+            nml_error =  1
+         endif
+         do while (nml_error > 0)
+            read(nu_nml, nml=icefields_nml,iostat=nml_error)
+            if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
+         end do
+         if (nml_error == 0) close(nu_nml)
+      endif
+      call release_fileunit(nu_nml)
+
+      call broadcast_scalar(nml_error, master_task)
+      if (nml_error /= 0) then
+         close (nu_nml)
+         call abort_ice('ice: error reading icefields_nml')
+      endif
+
+      if (.not. tr_iage) f_iage   = .false.
+      if (.not. tr_pond) f_apondn = .false.
+      if (.not. tr_aero) f_faero = .false.    !MH
+      if (.not. tr_aero) f_aero = .false.    !MH
+      if (.not. tr_aero) f_aeron = .false.    !MH
+
+      call broadcast_scalar (f_hi, master_task)
+      call broadcast_scalar (f_hs, master_task)
+      call broadcast_scalar (f_Tsfc, master_task)
+      call broadcast_scalar (f_aice, master_task)
+      call broadcast_scalar (f_uvel, master_task)
+      call broadcast_scalar (f_vvel, master_task)
+      call broadcast_scalar (f_fswdn, master_task)
+      call broadcast_scalar (f_flwdn, master_task)
+      call broadcast_scalar (f_snow, master_task)
+      call broadcast_scalar (f_snow_ai, master_task)
+      call broadcast_scalar (f_rain, master_task)
+      call broadcast_scalar (f_rain_ai, master_task)
+      call broadcast_scalar (f_faero, master_task)
+      call broadcast_scalar (f_sst, master_task)
+      call broadcast_scalar (f_sss, master_task)
+      call broadcast_scalar (f_uocn, master_task)
+      call broadcast_scalar (f_vocn, master_task)
+      call broadcast_scalar (f_frzmlt, master_task)
+      call broadcast_scalar (f_fswabs, master_task)
+      call broadcast_scalar (f_fswabs_ai, master_task)
+      call broadcast_scalar (f_albsni, master_task)
+      call broadcast_scalar (f_alvdr, master_task)
+      call broadcast_scalar (f_alidr, master_task)
+      call broadcast_scalar (f_flat, master_task)
+      call broadcast_scalar (f_flat_ai, master_task)
+      call broadcast_scalar (f_fsens, master_task)
+      call broadcast_scalar (f_fsens_ai, master_task)
+      call broadcast_scalar (f_flwup, master_task)
+      call broadcast_scalar (f_flwup_ai, master_task)
+      call broadcast_scalar (f_evap, master_task)
+      call broadcast_scalar (f_evap_ai, master_task)
+      call broadcast_scalar (f_Tair, master_task)
+      call broadcast_scalar (f_Tref, master_task)
+      call broadcast_scalar (f_Qref, master_task)
+      call broadcast_scalar (f_congel, master_task)
+      call broadcast_scalar (f_frazil, master_task)
+      call broadcast_scalar (f_snoice, master_task)
+      call broadcast_scalar (f_meltt, master_task)
+      call broadcast_scalar (f_meltb, master_task)
+      call broadcast_scalar (f_meltl, master_task)
+      call broadcast_scalar (f_fresh, master_task)
+      call broadcast_scalar (f_fresh_ai, master_task)
+      call broadcast_scalar (f_fsalt, master_task)
+      call broadcast_scalar (f_fsalt_ai, master_task)
+      call broadcast_scalar (f_fhocn, master_task)
+      call broadcast_scalar (f_fhocn_ai, master_task)
+      call broadcast_scalar (f_fswthru, master_task)
+      call broadcast_scalar (f_fswthru_ai, master_task)
+      call broadcast_scalar (f_strairx, master_task)
+      call broadcast_scalar (f_strairy, master_task)
+      call broadcast_scalar (f_strtltx, master_task)
+      call broadcast_scalar (f_strtlty, master_task)
+      call broadcast_scalar (f_strcorx, master_task)
+      call broadcast_scalar (f_strcory, master_task)
+      call broadcast_scalar (f_strocnx, master_task)
+      call broadcast_scalar (f_strocny, master_task)
+      call broadcast_scalar (f_strintx, master_task)
+      call broadcast_scalar (f_strinty, master_task)
+      call broadcast_scalar (f_strength, master_task)
+      call broadcast_scalar (f_opening, master_task)
+      call broadcast_scalar (f_divu, master_task)
+      call broadcast_scalar (f_shear, master_task)
+      call broadcast_scalar (f_sig1, master_task)
+      call broadcast_scalar (f_sig2, master_task)
+      call broadcast_scalar (f_dvidtt, master_task)
+      call broadcast_scalar (f_dvidtd, master_task)
+      call broadcast_scalar (f_daidtt, master_task)
+      call broadcast_scalar (f_daidtd, master_task)
+      call broadcast_scalar (f_mlt_onset, master_task)
+      call broadcast_scalar (f_frz_onset, master_task)
+      call broadcast_scalar (f_dardg1dt, master_task)
+      call broadcast_scalar (f_dardg2dt, master_task)
+      call broadcast_scalar (f_dvirdgdt, master_task)
+      call broadcast_scalar (f_aisnap, master_task)
+      call broadcast_scalar (f_hisnap, master_task)
+      call broadcast_scalar (f_aicen, master_task)
+      call broadcast_scalar (f_vicen, master_task)
+      call broadcast_scalar (f_apondn, master_task)
+      call broadcast_scalar (f_trsig, master_task)
+      call broadcast_scalar (f_icepresent, master_task)
+      call broadcast_scalar (f_iage, master_task)
+      call broadcast_scalar (f_aero, master_task)       !MH
+      call broadcast_scalar (f_aeron, master_task)       !MH
+
+      !---------------------------------------------------------------
+      ! determine navgsiz and allocate arrays
+      !---------------------------------------------------------------
+
+      navgsiz  = avgsiz
+      n_aicen  = avgsiz
+      n_vicen  = avgsiz
+      n_apondn = avgsiz
+
+      navgsiz = navgsiz + ncat_hist
+      n_aicen = avgsiz + 1
+
+      navgsiz = navgsiz + ncat_hist
+      n_vicen = n_aicen + ncat_hist
+
+      navgsiz  = navgsiz + ncat_hist
+      n_apondn = n_vicen + ncat_hist
+
+      if (f_faero) then
+         navgsiz   = navgsiz + n_aero
+         n_faero   = n_apondn + ncat_hist
+      else
+         n_faero   = navgsiz
+      endif
+      if (f_aero) then
+         navgsiz = navgsiz + 4*n_aero
+         n_aerosn1 = n_faero   + n_aero
+         n_aerosn2 = n_aerosn1 + n_aero
+         n_aeroic1 = n_aerosn2 + n_aero
+         n_aeroic2 = n_aeroic1 + n_aero
+      else
+         n_aerosn1   = navgsiz
+         n_aerosn2   = navgsiz
+         n_aeroic1   = navgsiz
+         n_aeroic2   = navgsiz
+      endif
+
+      allocate(aa(nx_block,ny_block,navgsiz,max_blocks))
+      allocate(cona(navgsiz))
+      allocate(conb(navgsiz))
+      allocate(iout(navgsiz))
+      allocate(vname(navgsiz))
+      allocate(vunit(navgsiz))
+      allocate(vcoord(navgsiz))
+      allocate(vdesc(navgsiz))
+      allocate(vcomment(navgsiz))
 
       !---------------------------------------------------------------
       ! field names
@@ -423,6 +605,26 @@
       vname(n_trsig     ) = 'trsig'
       vname(n_icepresent) = 'ice_present'
       vname(n_iage      ) = 'iage'
+      if (f_faero) then
+         do n=1,n_aero
+            write(nchar,'(i3.3)') n
+            write(vname(n_faero+n-1),'(a,a)') 'faero', trim(nchar) ! faero
+            vname(n_faero + n-1) = trim(vname(n_faero+n-1))
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            write(nchar,'(i3.3)') n
+            write(vname(n_aerosn1+n-1),'(a,a)') 'aerosnossl', trim(nchar) ! faeron
+            vname(n_aerosn1+n-1) = trim(vname(n_aerosn1+n-1))
+            write(vname(n_aerosn2+n-1),'(a,a)') 'aerosnoint', trim(nchar) ! faeron
+            vname(n_aerosn2+n-1) = trim(vname(n_aerosn2+n-1))
+            write(vname(n_aeroic1+n-1),'(a,a)') 'aeroicessl', trim(nchar) ! faeron
+            vname(n_aeroic1+n-1) = trim(vname(n_aeroic1+n-1))
+            write(vname(n_aeroic2+n-1),'(a,a)') 'aeroiceint', trim(nchar) ! faeron
+            vname(n_aeroic2+n-1) = trim(vname(n_aeroic2+n-1))
+         enddo
+      endif
       do n = 1, ncat_hist
         write(nchar,'(i3.3)') n
         write(vname(n_aicen+n-1),'(a,a)') 'aice', trim(nchar) ! aicen
@@ -515,8 +717,37 @@
       vdesc(n_icepresent) = &
         'fraction of time-avg interval that any ice is present'
       vdesc(n_iage      ) = 'sea ice age'
+      if (f_faero) then
+         do n=1,n_aero
+            vdesc(n_faero  +n-1) = 'faero rate (cpl)'         
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            vdesc(n_aerosn1+n-1) = 'snow ssl aerosol mass'
+            vdesc(n_aerosn2+n-1) = 'snow int aerosol mass'
+            vdesc(n_aeroic1+n-1) = 'ice ssl aerosol mass'
+            vdesc(n_aeroic2+n-1) = 'ice int aerosol mass'
+         enddo
+      endif
       do n = 1, ncat_hist
         write(nchar,'(i3)') n
+
+!       tmp = 'snow ssl aerosol mass, category '   ! aerosol MH
+!       write(vdesc(n_aerosn1n+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+!       vdesc(n_aerosn1n+n-1) = trim(vdesc(n_aerosn1n+n-1))
+
+!       tmp = 'snow int aerosol mass, category '   ! aerosol MH
+!       write(vdesc(n_aerosn2n+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+!       vdesc(n_aerosn2n+n-1) = trim(vdesc(n_aerosn2n+n-1))
+
+!       tmp = 'ice ssl aerosol mass, category '   ! aerosol MH
+!       write(vdesc(n_aeroic1n+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+!       vdesc(n_aeroic1n+n-1) = trim(vdesc(n_aeroic1n+n-1))
+
+!       tmp = 'ice int aerosol mass, category '   ! aerosol MH
+!       write(vdesc(n_aeroic2n+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+!       vdesc(n_aeroic2n+n-1) = trim(vdesc(n_aeroic2n+n-1))
 
         tmp = 'ice area, category '   ! aicen
         write(vdesc(n_aicen+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
@@ -612,6 +843,19 @@
       vunit(n_trsig     ) = 'N/m^2'
       vunit(n_icepresent) = '1'
       vunit(n_iage      ) = 'years'
+      if (f_faero) then
+         do n=1,n_aero
+            vunit(n_faero  +n-1) = 'kg/m^2 s'
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            vunit(n_aerosn1+n-1) = 'kg/kg'         !MH
+            vunit(n_aerosn2+n-1) = 'kg/kg'         !MH
+            vunit(n_aeroic1+n-1) = 'kg/kg'         !MH
+            vunit(n_aeroic2+n-1) = 'kg/kg'         !MH
+         enddo
+      endif
       do n = 1, ncat_hist
         vunit(n_aicen+n-1) = ' ' ! aicen
         vunit(n_vicen+n-1) = 'm' ! vicen
@@ -713,120 +957,24 @@
       vcomment(n_trsig     ) = 'ice strength approximation' 
       vcomment(n_icepresent) = 'ice extent flag'
       vcomment(n_iage      ) = 'none' 
+      if (f_faero) then
+         do n=1,n_aero
+            vcomment(n_faero  +n-1)  = 'none'         
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            vcomment(n_aerosn1+n-1 ) = 'none'   !MH
+            vcomment(n_aerosn2+n-1 ) = 'none'   !MH
+            vcomment(n_aeroic1+n-1 ) = 'none'   !MH
+            vcomment(n_aeroic2+n-1 ) = 'none'   !MH
+         enddo
+      endif
       do n = 1, ncat_hist
         vcomment(n_aicen+n-1) = 'Ice range:' ! aicen
         vcomment(n_vicen+n-1) = 'none' ! vicen
         vcomment(n_apondn+n-1) = 'none' ! apondn
       enddo
-
-      !-----------------------------------------------------------------
-      ! read namelist
-      !-----------------------------------------------------------------
-
-      call get_fileunit(nu_nml)
-      if (my_task == master_task) then
-         open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
-         if (nml_error /= 0) then
-            nml_error = -1
-         else
-            nml_error =  1
-         endif
-         do while (nml_error > 0)
-            read(nu_nml, nml=icefields_nml,iostat=nml_error)
-            if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
-         end do
-         if (nml_error == 0) close(nu_nml)
-      endif
-      call release_fileunit(nu_nml)
-
-      call broadcast_scalar(nml_error, master_task)
-      if (nml_error /= 0) then
-         close (nu_nml)
-         call abort_ice('ice: error reading icefields_nml')
-      endif
-
-      if (.not. tr_iage) f_iage = .false.
-
-      call broadcast_scalar (f_hi, master_task)
-      call broadcast_scalar (f_hs, master_task)
-      call broadcast_scalar (f_Tsfc, master_task)
-      call broadcast_scalar (f_aice, master_task)
-      call broadcast_scalar (f_uvel, master_task)
-      call broadcast_scalar (f_vvel, master_task)
-      call broadcast_scalar (f_fswdn, master_task)
-      call broadcast_scalar (f_flwdn, master_task)
-      call broadcast_scalar (f_snow, master_task)
-      call broadcast_scalar (f_snow_ai, master_task)
-      call broadcast_scalar (f_rain, master_task)
-      call broadcast_scalar (f_rain_ai, master_task)
-      call broadcast_scalar (f_sst, master_task)
-      call broadcast_scalar (f_sss, master_task)
-      call broadcast_scalar (f_uocn, master_task)
-      call broadcast_scalar (f_vocn, master_task)
-      call broadcast_scalar (f_frzmlt, master_task)
-      call broadcast_scalar (f_fswabs, master_task)
-      call broadcast_scalar (f_fswabs_ai, master_task)
-      call broadcast_scalar (f_albsni, master_task)
-      call broadcast_scalar (f_alvdr, master_task)
-      call broadcast_scalar (f_alidr, master_task)
-      call broadcast_scalar (f_flat, master_task)
-      call broadcast_scalar (f_flat_ai, master_task)
-      call broadcast_scalar (f_fsens, master_task)
-      call broadcast_scalar (f_fsens_ai, master_task)
-      call broadcast_scalar (f_flwup, master_task)
-      call broadcast_scalar (f_flwup_ai, master_task)
-      call broadcast_scalar (f_evap, master_task)
-      call broadcast_scalar (f_evap_ai, master_task)
-      call broadcast_scalar (f_Tair, master_task)
-      call broadcast_scalar (f_Tref, master_task)
-      call broadcast_scalar (f_Qref, master_task)
-      call broadcast_scalar (f_congel, master_task)
-      call broadcast_scalar (f_frazil, master_task)
-      call broadcast_scalar (f_snoice, master_task)
-      call broadcast_scalar (f_meltt, master_task)
-      call broadcast_scalar (f_meltb, master_task)
-      call broadcast_scalar (f_meltl, master_task)
-      call broadcast_scalar (f_fresh, master_task)
-      call broadcast_scalar (f_fresh_ai, master_task)
-      call broadcast_scalar (f_fsalt, master_task)
-      call broadcast_scalar (f_fsalt_ai, master_task)
-      call broadcast_scalar (f_fhocn, master_task)
-      call broadcast_scalar (f_fhocn_ai, master_task)
-      call broadcast_scalar (f_fswthru, master_task)
-      call broadcast_scalar (f_fswthru_ai, master_task)
-      call broadcast_scalar (f_strairx, master_task)
-      call broadcast_scalar (f_strairy, master_task)
-      call broadcast_scalar (f_strtltx, master_task)
-      call broadcast_scalar (f_strtlty, master_task)
-      call broadcast_scalar (f_strcorx, master_task)
-      call broadcast_scalar (f_strcory, master_task)
-      call broadcast_scalar (f_strocnx, master_task)
-      call broadcast_scalar (f_strocny, master_task)
-      call broadcast_scalar (f_strintx, master_task)
-      call broadcast_scalar (f_strinty, master_task)
-      call broadcast_scalar (f_strength, master_task)
-      call broadcast_scalar (f_opening, master_task)
-      call broadcast_scalar (f_divu, master_task)
-      call broadcast_scalar (f_shear, master_task)
-      call broadcast_scalar (f_sig1, master_task)
-      call broadcast_scalar (f_sig2, master_task)
-      call broadcast_scalar (f_dvidtt, master_task)
-      call broadcast_scalar (f_dvidtd, master_task)
-      call broadcast_scalar (f_daidtt, master_task)
-      call broadcast_scalar (f_daidtd, master_task)
-      call broadcast_scalar (f_mlt_onset, master_task)
-      call broadcast_scalar (f_frz_onset, master_task)
-      call broadcast_scalar (f_dardg1dt, master_task)
-      call broadcast_scalar (f_dardg2dt, master_task)
-      call broadcast_scalar (f_dvirdgdt, master_task)
-      call broadcast_scalar (f_aisnap, master_task)
-      call broadcast_scalar (f_hisnap, master_task)
-      call broadcast_scalar (f_aicen, master_task)
-      call broadcast_scalar (f_vicen, master_task)
-      call broadcast_scalar (f_apondn, master_task)
-      call broadcast_scalar (f_trsig, master_task)
-      call broadcast_scalar (f_icepresent, master_task)
-      call broadcast_scalar (f_iage, master_task)
 
       !-----------------------------------------------------------------
       ! fill iout array with namelist values
@@ -911,6 +1059,19 @@
       iout(n_trsig     ) = f_trsig
       iout(n_icepresent) = f_icepresent
       iout(n_iage      ) = f_iage
+      if (f_faero) then
+         do n=1,n_aero
+            iout(n_faero  +n-1) = f_faero  
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            iout(n_aerosn1+n-1) = f_aero
+            iout(n_aerosn2+n-1) = f_aero
+            iout(n_aeroic1+n-1) = f_aero
+            iout(n_aeroic2+n-1) = f_aero
+         enddo
+      endif
       do n = 1, ncat_hist
         iout(n_aicen+n-1) = f_aicen
         iout(n_vicen+n-1) = f_vicen
@@ -923,12 +1084,12 @@
                          'written to the history tape: '
         write(nu_diag,*) ' description                           units', &
              '     netcdf variable'
-         do n=1,avgsiz
+         do n=1,navgsiz
             if (iout(n)) write(nu_diag,100) vdesc(n), vunit(n), vname(n)
          enddo
          write(nu_diag,*) ' '
       endif
-  100 format (1x,a40,2x,a10,2x,a10)
+  100 format (1x,a40,2x,a16,2x,a16)
 
       !-----------------------------------------------------------------
       ! initialize the history arrays
@@ -936,7 +1097,7 @@
       aa(:,:,:,:) = c0
       avgct = c0
 
-      do k=1,avgsiz
+      do k=1,navgsiz
          cona(k) = c1   ! multiply by 1.
          conb(k) = c0   ! add 0.
       enddo
@@ -993,6 +1154,7 @@
       cona(n_dvirdgdt) = mps_to_cmpdy   ! dvirdgdt m/s to cm/day
 
       cona(n_iage)   = c1/(secday*days_per_year) ! seconds to years
+!      cona(n_aero)   = c1               ! MH
 
 #ifdef CCSMCOUPLED
       ! CCSM conventions
@@ -1014,7 +1176,7 @@
 !-------------------------------------------------------------------
 
       if (my_task == master_task) then
-        do k=1,avgsiz
+        do k=1,navgsiz
           vcoord(k) = tstr 
           if (TRIM(vname(k)) == 'uvel') vcoord(k) = ustr
           if (TRIM(vname(k)) == 'vvel') vcoord(k) = ustr
@@ -1087,7 +1249,7 @@
 
       ! ice vol. tendency for history, due to dynamics
 
-      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1120,7 +1282,7 @@
       ! increment field
       !---------------------------------------------------------------
 
-      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,ai)
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,ai)
       do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)         
        ilo = this_block%ilo
@@ -1252,6 +1414,25 @@
                                                  + dvirdgdt(i,j,iblk)
         if (aice(i,j,iblk).gt.puny)  &
         aa(i,j,n_icepresent,iblk) = aa(i,j,n_icepresent,iblk) + c1
+
+        if (f_faero) then
+           do n=1,n_aero
+              aa(i,j,n_faero+n-1,  iblk)= aa(i,j,n_faero+n-1,iblk) &
+                                        + faero(i,j,n,iblk) 
+           enddo
+        endif
+        if (f_aero) then
+           do n=1,n_aero
+              aa(i,j,n_aerosn1+n-1,iblk) = aa(i,j,n_aerosn1+n-1,iblk)  &
+                                         + trcr(i,j,nt_aero  +4*(n-1),iblk)/rhos
+              aa(i,j,n_aerosn2+n-1,iblk) = aa(i,j,n_aerosn2+n-1,iblk)  &
+                                         + trcr(i,j,nt_aero+1+4*(n-1),iblk)/rhos
+              aa(i,j,n_aeroic1+n-1,iblk) = aa(i,j,n_aeroic1+n-1,iblk)  &
+                                         + trcr(i,j,nt_aero+2+4*(n-1),iblk)/rhoi
+              aa(i,j,n_aeroic2+n-1,iblk) = aa(i,j,n_aeroic2+n-1,iblk)  &
+                                         + trcr(i,j,nt_aero+3+4*(n-1),iblk)/rhoi
+           enddo
+        endif
        endif                    ! tmask
        enddo                    ! i
        enddo                    ! j
@@ -1262,6 +1443,18 @@
           do i=ilo,ihi
              if (tmask(i,j,iblk)) then
                 ! assume consecutive indices
+!               aa(i,j,n_aerosn1n+n-1,iblk) = &
+!                                aa(i,j,n_aerosn1n+n-1,iblk)  &
+!                              + trcrn(i,j,nt_aero,n,iblk)*vsnon(i,j,n,iblk)
+!               aa(i,j,n_aerosn2n+n-1,iblk) = &
+!                                aa(i,j,n_aerosn2n+n-1,iblk)  &
+!                              + trcrn(i,j,nt_aero+1,n,iblk)*vsnon(i,j,n,iblk)
+!               aa(i,j,n_aeroic1n+n-1,iblk) = &
+!                                aa(i,j,n_aeroic1n+n-1,iblk)  &
+!                              + trcrn(i,j,nt_aero+2,n,iblk)*vicen(i,j,n,iblk)
+!               aa(i,j,n_aeroic2n+n-1,iblk) = &
+!                                aa(i,j,n_aeroic2n+n-1,iblk)  &
+!                              + trcrn(i,j,nt_aero+3,n,iblk)*vicen(i,j,n,iblk)
                 aa(i,j,n_aicen+n-1,iblk) = aa(i,j,n_aicen+n-1,iblk)  &
                                                 + aicen(i,j,n,iblk)
                 aa(i,j,n_vicen+n-1,iblk) = aa(i,j,n_vicen+n-1,iblk)  &
@@ -1287,7 +1480,7 @@
       !---------------------------------------------------------------
 
         ravgct = c1/avgct
-        !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
+	!$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j,k)
         do iblk = 1, nblocks
            this_block = get_block(blocks_ice(iblk),iblk)         
            ilo = this_block%ilo
@@ -1295,7 +1488,7 @@
            jlo = this_block%jlo
            jhi = this_block%jhi
 
-           do k = 1, avgsiz
+           do k = 1, navgsiz
               do j = jlo, jhi
               do i = ilo, ihi
                  if (.not. tmask(i,j,iblk)) then ! mask out land points
@@ -1335,6 +1528,7 @@
                  aa(i,j,n_aisnap,iblk)    = spval
                  aa(i,j,n_trsig,iblk )    = spval
                  aa(i,j,n_iage,iblk )     = spval
+!                 aa(i,j,n_aero,iblk )     = spval        !MH
               else
                  aa(i,j,n_divu,iblk)  = divu (i,j,iblk)*cona(n_divu)
                  aa(i,j,n_shear,iblk) = shear(i,j,iblk)*cona(n_shear)
@@ -1354,7 +1548,7 @@
            enddo                ! j
 
         enddo                   ! iblk
-        !$OMP END PARALLEL DO
+       !$OMP END PARALLEL DO
 
         time_end = time/int(secday)
 
@@ -1412,8 +1606,6 @@
 
          endif                  ! yday
       enddo                     ! iblk
-      !$OMP END PARALLEL DO
-      
 
       end subroutine ice_write_hist
 
@@ -1708,7 +1900,7 @@
                'Error defining coordinates for'//var(i)%req%short_name)
         enddo
 
-        do n=1,avgsiz
+        do n=1,navgsiz
           if (iout(n)) then
             status  = nf90_def_var(ncid, vname(n), nf90_float, &
                                dimid, varid)
@@ -1971,7 +2163,7 @@
       ! write variable data
       !-----------------------------------------------------------------
 
-      do n=1,avgsiz
+      do n=1,navgsiz
         if (iout(n)) then
           call gather_global(work_g1, aa(:,:,n,:), &
                              master_task, distrb_info)
@@ -2104,7 +2296,7 @@
       endif  ! my_task = master_task
       call ice_write(nu_history, nrec, tarea, 'rda4', dbug)
 
-      do n=1,avgsiz
+      do n=1,navgsiz
         if (iout(n)) then
           nrec = nrec + 1
           if (my_task == master_task) then
