@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20081015
+Originator: dbailey
+Date: Wed Oct 15 10:04:38 MDT 2008
+Version: 4.0
+One-line Summary: New aerosol radiative properties.
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+These are updated radiative properties for aerosols
+from M. Flanner.
+
+M      src/source/ice_shortwave.F90
+===============================================================
 cice4_0_20081013
 Originator: dbailey
 Date: Mon Oct 13 13:22:51 MDT 2008
