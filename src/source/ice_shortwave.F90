@@ -58,7 +58,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, &
-                             pointer_file, runtype
+                             pointer_file, runtype, inic_file
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -198,6 +198,9 @@
       type (block) :: &
          this_block      ! block information for current block
 
+      character(len=char_len_long) :: &
+         string1
+
       ! Need to compute albedos before init_cpl in CCSM
 
       alvdr   (:,:,:) = c0
@@ -216,34 +219,18 @@
 
       restart_dEdd = .false.
 
-      if (trim(runtype) == 'continue' .and. trim(shortwave) == 'dEdd') &
+      if (trim(runtype) /= 'initial' .and. trim(shortwave) == 'dEdd') &
          restart_dEdd = .true.
 
       if (restart_dEdd) then
 
-         call read_restart_dEdd
-
-         do iblk = 1, nblocks
-
-            ! identify ice-ocean cells
-            icells = 0
-            do j = 1, ny_block
-            do i = 1, nx_block
-               if (tmask(i,j,iblk)) then
-                  icells = icells + 1
-                  indxi(icells) = i
-                  indxj(icells) = j
-               endif
-            enddo               ! i
-            enddo               ! j
-
-            call compute_coszen (nx_block,         ny_block,       &
-                                 icells,                           &
-                                 indxi,            indxj,          &
-                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt)
-
-         enddo
+         if (trim(runtype) == 'continue') then
+            call read_restart_dEdd
+         else
+            n = index(inic_file,'cice.r') + 5
+            string1 = trim(inic_file(1:n))
+            call read_restart_dEdd(string1)
+         endif
 
       else
 
@@ -3697,6 +3684,7 @@
 
       !-----------------------------------------------------------------
 
+      call ice_write(nu_dump_dEdd,0,coszen,'ruf8',diag)
       call ice_write(nu_dump_dEdd,0,alvdr,'ruf8',diag)
       call ice_write(nu_dump_dEdd,0,alvdf,'ruf8',diag)
       call ice_write(nu_dump_dEdd,0,alidr,'ruf8',diag)
@@ -3766,14 +3754,25 @@
          close(nu_rst_pointer)
 
          ! reconstruct path/file
-         n = index(filename0,trim(restart_file))
-         if (n == 0) call abort_ice('dEdd restart: filename discrepancy')
-         string1 = trim(filename0(1:n-1))
-         string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
-         write(filename,'(a,a,a,a)') &
-            string1(1:lenstr(string1)), &
-            restart_file(1:lenstr(restart_file)),'.dEdd', &
-            string2(1:lenstr(string2))
+         if (present(filename_spec)) then
+            n = index(filename0,trim(filename_spec))
+            if (n == 0) call abort_ice('dEdd restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(filename_spec):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               filename_spec(1:lenstr(filename_spec)),'.dEdd', &
+               string2(1:lenstr(string2))
+         else
+            n = index(filename0,trim(restart_file))
+            if (n == 0) call abort_ice('dEdd restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               restart_file(1:lenstr(restart_file)),'.dEdd', &
+               string2(1:lenstr(string2))
+         endif
       endif ! master_task
 
       call ice_open(nu_restart_dEdd,filename,0)
@@ -3787,6 +3786,7 @@
 
       !-----------------------------------------------------------------
 
+      call ice_read(nu_restart_dEdd,0,coszen,'ruf8',diag)
       call ice_read(nu_restart_dEdd,0,alvdr,'ruf8',diag)
       call ice_read(nu_restart_dEdd,0,alvdf,'ruf8',diag)
       call ice_read(nu_restart_dEdd,0,alidr,'ruf8',diag)

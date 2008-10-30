@@ -1,4 +1,32 @@
 ===============================================================
+cice4_0_20081030
+Originator: dbailey
+Date: Thu Oct 30 12:36:49 MDT 2008
+Version: 4.0
+One-line Summary: Fix problems with aerosols and branch runs.
+CCSM Version compatible with: ccsm4_0_alpha37+
+Changes made:
+
+I have also added the hooks for the shortwave calendar day. This code is
+not restarting exactly as of yet and will be ready for the next tag. This
+code does now pass the ERS_D and ERB tests on bluefire and jaguar.
+
+M      src/source/ice_calendar.F90
+M      src/source/ice_itd.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_age.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_mechred.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_therm_itd.F90
+M      src/source/ice_orbital.F90
+M      src/source/ice_domain_size.F90
+M      src/drivers/ccsm_sequential/CICE_InitMod.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20081015
 Originator: dbailey
 Date: Wed Oct 15 10:04:38 MDT 2008

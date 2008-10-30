@@ -122,7 +122,7 @@
          fsnow       ! snowfall rate (kg/m^2 s)
 
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,n_aero,max_blocks) :: &
+         dimension (nx_block,ny_block,n_aeromx,max_blocks) :: &
          faero    ! aerosol deposition rate (kg/m^2 s)  MH
 
        ! in from ocean
@@ -162,7 +162,7 @@
          fswthru     ! shortwave penetrating to ocean (W/m^2)
 
       real (kind=dbl_kind), &
-        dimension (nx_block,ny_block,n_aero,max_blocks) :: &
+        dimension (nx_block,ny_block,n_aeromx,max_blocks) :: &
          fsoot        
 
       !-----------------------------------------------------------------
@@ -338,6 +338,8 @@
       fsw     (:,:,:) = c0            ! shortwave radiation (W/m^2)
       wind    (:,:,:) = sqrt(uatm(:,:,:)**2 &
                            + vatm(:,:,:)**2)  ! wind speed, (m/s)
+
+      coszen  (:,:,:) = c0
 
       end subroutine init_coupler_flux
 
@@ -753,7 +755,7 @@
           alvdf   , & ! visible, diffuse  (fraction)
           alidf       ! near-ir, diffuse  (fraction)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
           intent(inout):: &
           fsoot       ! 
 !

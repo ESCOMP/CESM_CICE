@@ -39,7 +39,8 @@
         ntilyr    = ncat*nilyr, & ! number of ice layers in all categories
         nslyr     =   1       , & ! number of snow layers per category
         ntslyr    = ncat*nslyr, & ! number of snow layers in all categories
-        n_aero    =   1       , & ! number of aerosols
+        n_aero    =   0       , & ! number of aerosols in use
+        n_aeromx  =   5       , & ! number of aerosols maximum
         ntrcr     =   2          ! number of tracers (defined in ice_state)
                                   ! 1 = surface temperature
                                   ! ice age, pond volume

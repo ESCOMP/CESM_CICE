@@ -1288,7 +1288,7 @@
          fsalt_hist, & ! salt flux to ocean (kg/m^2/s)
          fhocn_hist, & ! net heat flux to ocean (W/m^2)
          meltl         ! lateral ice melt         (m/step-->cm/day)
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
          intent(inout) :: &
          fsoot      ! 
 !

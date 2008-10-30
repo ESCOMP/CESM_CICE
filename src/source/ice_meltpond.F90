@@ -23,7 +23,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, &
-                             pointer_file, runtype
+                             pointer_file, runtype, inic_file
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -76,13 +76,24 @@
 
       integer (kind=int_kind) :: i, j, ij, n, iblk
       
+      character(len=char_len_long) :: &
+         string1
+
       ! Need to compute albedos before init_cpl in CCSM
 
       restart_pond = .false.
-      if (trim(runtype) == 'continue') restart_pond = .true.
+      if (trim(runtype) /= 'initial') restart_pond = .true.
 
       if (restart_pond) then
-         call read_restart_pond
+         if (trim(runtype) == 'continue') then
+            call read_restart_pond
+         else
+            n = index(inic_file,'cice.r') + 5
+            write(nu_diag,*) n
+            write(nu_diag,'(a)') inic_file(1:n)
+            string1 = trim(inic_file(1:n))
+            call read_restart_pond(string1)
+         endif
       else
          trcrn(:,:,nt_volpn,:,:) = c0
          apondn(:,:,:,:) = c0
@@ -349,6 +360,7 @@
       logical (kind=log_kind) :: &
          diag
 
+
       if (my_task == master_task) then
          open(nu_rst_pointer,file=pointer_file)
          read(nu_rst_pointer,'(a)') filename0
@@ -356,14 +368,25 @@
          close(nu_rst_pointer)
 
          ! reconstruct path/file
-         n = index(filename0,trim(restart_file))
-         if (n == 0) call abort_ice('volpn restart: filename discrepancy')
-         string1 = trim(filename0(1:n-1))
-         string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
-         write(filename,'(a,a,a,a)') &
-            string1(1:lenstr(string1)), &
-            restart_file(1:lenstr(restart_file)),'.volpn', &
-            string2(1:lenstr(string2))
+         if (present(filename_spec)) then
+            n = index(filename0,trim(filename_spec))
+            if (n == 0) call abort_ice('volpn restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(filename_spec):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               filename_spec(1:lenstr(filename_spec)),'.volpn', &
+               string2(1:lenstr(string2))
+         else
+            n = index(filename0,trim(restart_file))
+            if (n == 0) call abort_ice('volpn restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               restart_file(1:lenstr(restart_file)),'.volpn', &
+               string2(1:lenstr(string2))
+         endif
       endif ! master_task
 
       call ice_open(nu_restart_pond,filename,0)

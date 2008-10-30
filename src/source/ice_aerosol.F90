@@ -53,17 +53,30 @@
 ! !USES:
 !
       use ice_state, only: nt_aero, trcrn 
-      use ice_restart, only: runtype
+      use ice_restart, only: runtype, inic_file
       use ice_domain_size, only: n_aero
+
+      integer (kind = int_kind) :: n
+
+      character(len=char_len_long) :: &
+         string1
+
 !
 !EOP
 !
-      if (tr_aero .and. trim(runtype) == 'continue') restart_aero = .true.
+      if (tr_aero .and. trim(runtype) /= 'initial') restart_aero = .true.
 
       if (restart_aero) then
-         call read_restart_aero
+         if (trim(runtype) == 'continue') then
+            call read_restart_aero
+         else
+            n = index(inic_file,'cice.r') + 5
+            string1 = trim(inic_file(1:n))
+            call read_restart_aero(string1)
+         endif
       else
-         trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
+         if (tr_aero) &
+            trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
       endif
 
       end subroutine init_aerosol
@@ -97,7 +110,7 @@
 !
 ! !USES:
 !
-      use ice_domain_size, only: ntrcr, nilyr, nslyr, n_aero
+      use ice_domain_size, only: ntrcr, nilyr, nslyr, n_aero, n_aeromx
       use ice_state, only: nt_aero 
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -128,11 +141,11 @@
          vice_old, &
          vsno_old 
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
          intent(in) :: &
          faero
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
          intent(inout) :: &
          fsoot
 
@@ -156,7 +169,7 @@
         dhs_evap, dhi_evap,  &
         dhs_melts, dhs_snoice, dhi_meltt, dhi_snoice, &
         dhi_congel, dhi_meltb 
-      real (kind=dbl_kind), dimension(icells,n_aero) :: &
+      real (kind=dbl_kind), dimension(icells,n_aeromx) :: &
         aerotot, aerotot0   ! for diagnostics 
 
       real (kind=dbl_kind) :: &
@@ -166,17 +179,17 @@
          dzinti_new, &
          dznew
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero,2) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx,2) :: &
          aerosno, aeroice, &
          aerosno0, aeroice0  ! for diagnostic prints
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aero) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx) :: &
          fsoot_old
 
       real (kind=dbl_kind) :: &
          hs_old, hi_old, hslyr_old, hilyr_old, dhs, dhi, hs, hi, &
          hslyr, hilyr, sloss1, sloss2 
-      real (kind=dbl_kind), dimension(n_aero) :: &
+      real (kind=dbl_kind), dimension(n_aeromx) :: &
          kscav, kscavsi
 
 !MH These need to be the same as in the DE code. Put in a common place?
@@ -718,14 +731,25 @@
          close(nu_rst_pointer)
 
          ! reconstruct path/file
-         n = index(filename0,trim(restart_file))
-         if (n == 0) call abort_ice('soot restart: filename discrepancy')
-         string1 = trim(filename0(1:n-1))
-         string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
-         write(filename,'(a,a,a,a)') &
-            string1(1:lenstr(string1)), &
-            restart_file(1:lenstr(restart_file)),'.aero', &
-            string2(1:lenstr(string2))
+         if (present(filename_spec)) then
+            n = index(filename0,trim(filename_spec))
+            if (n == 0) call abort_ice('soot restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(filename_spec):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               filename_spec(1:lenstr(filename_spec)),'.aero', &
+               string2(1:lenstr(string2))
+         else
+            n = index(filename0,trim(restart_file))
+            if (n == 0) call abort_ice('soot restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               restart_file(1:lenstr(restart_file)),'.aero', &
+               string2(1:lenstr(string2))
+         endif
       endif ! master_task
 
       call ice_open(nu_restart_aero,filename,0)

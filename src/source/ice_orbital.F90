@@ -108,7 +108,8 @@
 !
 ! !USES:
 !
-      use ice_calendar, only: yday, sec, secday, days_per_year, calendar_type
+      use ice_calendar, only: yday, sec, secday, days_per_year, &
+                              calendar_type, nextsw_cday
 ! 
 ! !INPUT/OUTPUT PARAMETERS: 
 ! 
@@ -141,12 +142,23 @@
  
 ! Solar declination for next time step
  
+#ifdef CCSMCOUPLED
+!     if (calendar_type == "GREGORIAN") then
+!        ydayp1 = min(nextsw_cday, real(days_per_year,kind=dbl_kind))
+!     else
+!        ydayp1 = nextsw_cday
+!     endif
       if (calendar_type == "GREGORIAN") then
-         ydayp1 = min(yday, real(days_per_year,kind=dbl_kind)) + sec/secday
+         ydayp1 = min(yday + sec/secday, real(days_per_year,kind=dbl_kind))
       else
          ydayp1 = yday + sec/secday
       endif
+#else
+      ydayp1 = yday + sec/secday
+#endif
  
+      if (ydayp1 > -0.5_dbl_kind) then
+
       call shr_orb_decl(ydayp1, eccen, mvelpp, lambm0, &
                         obliqr, delta, eccf)
 
@@ -168,6 +180,8 @@
 
       enddo
  
+      endif
+
       end subroutine compute_coszen
  
 !=======================================================================

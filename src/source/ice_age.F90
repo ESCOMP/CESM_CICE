@@ -23,7 +23,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, pointer_file, &
-                             runtype
+                             runtype, inic_file
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -57,13 +57,25 @@
 ! !USES:
 !
       use ice_state, only: nt_iage, trcrn
+
+      integer (kind = int_kind) :: n
+
+      character(len=char_len_long) :: &
+         string1
+
 !
 !EOP
 !
-      if (tr_iage .and. trim(runtype) == 'continue') restart_age = .true.
+      if (tr_iage .and. trim(runtype) /= 'initial') restart_age = .true.
 
       if (restart_age) then
-         call read_restart_age
+         if (trim(runtype) == 'continue') then
+            call read_restart_age
+         else
+            n = index(inic_file,'cice.r') + 5
+            string1 = trim(inic_file(1:n))
+            call read_restart_age(string1)
+         endif
       else
          trcrn(:,:,nt_iage,:,:) = c0
       endif
@@ -244,14 +256,25 @@
          close(nu_rst_pointer)
 
          ! reconstruct path/file
-         n = index(filename0,trim(restart_file))
-         if (n == 0) call abort_ice('iage restart: filename discrepancy')
-         string1 = trim(filename0(1:n-1))
-         string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
-         write(filename,'(a,a,a,a)') &
-            string1(1:lenstr(string1)), &
-            restart_file(1:lenstr(restart_file)),'.age', &
-            string2(1:lenstr(string2))
+         if (present(filename_spec)) then
+            n = index(filename0,trim(filename_spec))
+            if (n == 0) call abort_ice('iage restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(filename_spec):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               filename_spec(1:lenstr(filename_spec)),'.age', &
+               string2(1:lenstr(string2))
+         else
+            n = index(filename0,trim(restart_file))
+            if (n == 0) call abort_ice('iage restart: filename discrepancy')
+            string1 = trim(filename0(1:n-1))
+            string2 = trim(filename0(n+lenstr(restart_file):lenstr(filename0)))
+            write(filename,'(a,a,a,a)') &
+               string1(1:lenstr(string1)), &
+               restart_file(1:lenstr(restart_file)),'.age', &
+               string2(1:lenstr(string2))
+         endif
       endif ! master_task
 
       call ice_open(nu_restart_age,filename,0)

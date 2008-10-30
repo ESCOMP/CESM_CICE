@@ -1691,7 +1691,7 @@
          fhocn    , & ! net heat flux to ocean     (W/m^2)
          fhocn_hist   ! net heat flux to ocean     (W/m^2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aeromx), &
          intent(inout), optional :: &
          fsoot        ! soot flux to ocean        (kg/m^2/s)
 
@@ -1714,7 +1714,7 @@
          dfsalt   , & ! zapped salt flux   (kg/m^2/s)
          dfhocn       ! zapped energy flux ( W/m^2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero) :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aeromx) :: &
          dfsoot    ! zapped soot flux   (kg/m^2/s)
 
       logical (kind=log_kind) ::   &
@@ -1912,7 +1912,7 @@
          dfsalt   , & ! zapped salt flux   (kg/m^2/s)
          dfhocn       ! zapped energy flux ( W/m^2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aero), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,n_aeromx), &
          intent(out) :: &
          dfsoot    ! zapped soot flux   (kg/m^2/s)
 

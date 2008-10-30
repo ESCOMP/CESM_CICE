@@ -47,7 +47,7 @@ module ice_comp_mct
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dyn_dt, xndyn_dt, calendar,      &
-                              calendar_type
+                              calendar_type, nextsw_cday
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
 !  use ice_init
@@ -249,6 +249,9 @@ contains
              + start_tod
        call shr_sys_flush(nu_diag)
     end if
+
+    ! Get next zenith angle day from driver
+    call seq_infodata_GetData( infodata, nextsw_cday=nextsw_cday)
 
     call calendar(time)     ! update calendar info
  

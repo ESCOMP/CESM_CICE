@@ -83,6 +83,7 @@
          time           , & ! total elapsed time (s)
          time_forc      , & ! time of last forcing update (s)
          yday           , & ! day of the year
+         nextsw_cday    , & ! next day for sw calculation
          tday           , & ! absolute day number
          xndyn_dt       , & ! reduced timestep for dynamics: xndyn_dt=dt/dyn_dt
          dayyr              ! number of days per year

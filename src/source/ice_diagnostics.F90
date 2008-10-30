@@ -82,7 +82,7 @@
          totmis           , & ! total ice water mass (sh)
          toten            , & ! total ice/snow energy (J)
          totes                ! total ice/snow energy (J)
-      real (kind=dbl_kind), dimension(n_aero) :: &
+      real (kind=dbl_kind), dimension(n_aeromx) :: &
          totaeron         , & ! total aerosol mass
          totaeros             ! total aerosol mass
 
