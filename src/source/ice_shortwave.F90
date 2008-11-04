@@ -242,32 +242,6 @@
             jlo = this_block%jlo
             jhi = this_block%jhi
 
-            if (trim(shortwave) == 'dEdd') then
-   
-               ! identify ice-ocean cells
-               icells = 0
-               do j = 1, ny_block
-               do i = 1, nx_block
-                  if (tmask(i,j,iblk)) then
-                     icells = icells + 1
-                     indxi(icells) = i
-                     indxj(icells) = j
-                  endif
-               enddo               ! i
-               enddo               ! j
-
-               call compute_coszen (nx_block,         ny_block,       &
-                                    icells,                           &
-                                    indxi,            indxj,          &
-                                    tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                    coszen(:,:,iblk), dt)
-
-            else
-
-               coszen(:,:,iblk) = p5 ! sun above the horizon
-
-            endif
-
             do n=1,ncat
 
                icells = 0

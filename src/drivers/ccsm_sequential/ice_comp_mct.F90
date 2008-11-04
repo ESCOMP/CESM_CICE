@@ -134,9 +134,9 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Set cdata pointers
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call seq_cdata_setptrs(cdata_i, ID=ICEID, mpicom=mpicom_ice, &
          gsMap=gsMap_ice, dom=dom_i, infodata=infodata)
@@ -250,9 +250,6 @@ contains
        call shr_sys_flush(nu_diag)
     end if
 
-    ! Get next zenith angle day from driver
-    call seq_infodata_GetData( infodata, nextsw_cday=nextsw_cday)
-
     call calendar(time)     ! update calendar info
  
     !---------------------------------------------------------------------------
@@ -344,6 +341,8 @@ contains
     integer :: ymd_sync      ! Current year of sync clock
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
+    type(mct_gGrid)             , pointer :: dom_i
+    type(seq_infodata_type)     , pointer :: infodata   ! Input init object
     character(len=char_len_long) :: fname
     character(len=*), parameter  :: SubName = "ice_run_mct"
 !
@@ -361,14 +360,19 @@ contains
 !       call memmon_print_usage()
     endif
 #endif
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Reset shr logging to my log file
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (nu_diag)
    
+    ! Determine time of next atmospheric shortwave calculation
+
+    call seq_cdata_setptrs(cdata_i, infodata=infodata, dom=dom_i)
+    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+
     !-------------------------------------------------------------------
     ! get import state
     !-------------------------------------------------------------------
@@ -794,7 +798,7 @@ contains
 
   end subroutine ice_export_mct
 
-!====================================================================================
+!==============================================================================
 
   subroutine ice_import_mct( x2i_i )
 

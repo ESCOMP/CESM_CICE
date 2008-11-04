@@ -143,15 +143,10 @@
 ! Solar declination for next time step
  
 #ifdef CCSMCOUPLED
-!     if (calendar_type == "GREGORIAN") then
-!        ydayp1 = min(nextsw_cday, real(days_per_year,kind=dbl_kind))
-!     else
-!        ydayp1 = nextsw_cday
-!     endif
       if (calendar_type == "GREGORIAN") then
-         ydayp1 = min(yday + sec/secday, real(days_per_year,kind=dbl_kind))
+         ydayp1 = min(nextsw_cday, real(days_per_year,kind=dbl_kind))
       else
-         ydayp1 = yday + sec/secday
+         ydayp1 = nextsw_cday
       endif
 #else
       ydayp1 = yday + sec/secday
