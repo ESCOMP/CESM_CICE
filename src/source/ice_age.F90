@@ -23,7 +23,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, pointer_file, &
-                             runtype, inic_file
+                             runtype, ice_ic
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -72,8 +72,8 @@
          if (trim(runtype) == 'continue') then
             call read_restart_age
          else
-            n = index(inic_file,'cice.r') + 5
-            string1 = trim(inic_file(1:n))
+            n = index(ice_ic,'cice.r') + 5
+            string1 = trim(ice_ic(1:n))
             call read_restart_age(string1)
          endif
       else

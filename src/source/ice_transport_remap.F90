@@ -290,7 +290,6 @@
                           xav, yav, xxav, xyav, yyav,    &
                           xxxav, xxyav, xyyav, yyyav
       use ice_exit
-      use ice_timers
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1667,7 +1666,7 @@
          write (nu_diag,*) ' '
          write (nu_diag,*)   &
                     'Warning: Departure points out of bounds in remap'
-         write (nu_diag,*) 'i, j =', i, j
+         write (nu_diag,*) 'my_task, i, j =', my_task, i, j
          write (nu_diag,*) 'dpx, dpy =', dpx(i,j), dpy(i,j)
          write (nu_diag,*) 'HTN(i,j), HTN(i+1,j) =', HTN(i,j), HTN(i+1,j)
          write (nu_diag,*) 'HTE(i,j), HTE(i,j+1) =', HTE(i,j), HTE(i,j+1)

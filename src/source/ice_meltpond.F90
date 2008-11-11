@@ -23,7 +23,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, &
-                             pointer_file, runtype, inic_file
+                             pointer_file, runtype, ice_ic
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -88,10 +88,10 @@
          if (trim(runtype) == 'continue') then
             call read_restart_pond
          else
-            n = index(inic_file,'cice.r') + 5
+            n = index(ice_ic,'cice.r') + 5
             write(nu_diag,*) n
-            write(nu_diag,'(a)') inic_file(1:n)
-            string1 = trim(inic_file(1:n))
+            write(nu_diag,'(a)') ice_ic(1:n)
+            string1 = trim(ice_ic(1:n))
             call read_restart_pond(string1)
          endif
       else

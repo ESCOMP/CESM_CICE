@@ -52,7 +52,7 @@
 !
       use ice_fileunits
       use ice_communicate
-#ifdef CCSMCOUPLED
+#ifdef CCSM
       use shr_sys_mod
 #endif
 !
@@ -63,7 +63,7 @@
 !
 !EOP
 !
-#ifdef CCSMCOUPLED
+#ifdef CCSM
       call shr_sys_abort(error_message)
 #else
       write (nu_diag,*) error_message

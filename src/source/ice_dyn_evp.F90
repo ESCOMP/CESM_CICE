@@ -76,7 +76,7 @@
          cosw = c1   , & ! cos(ocean turning angle)  ! turning angle = 0
          sinw = c0   , & ! sin(ocean turning angle)  ! turning angle = 0
          a_min = p001, & ! minimum ice area
-         m_min = p01     ! minimum ice mass
+         m_min = p01     ! minimum ice mass (kg/m^2)
 
       real (kind=dbl_kind) :: &
          ecci     , & ! 1/e^2
@@ -105,6 +105,13 @@
 ! !DESCRIPTION:
 !
 ! Elastic-viscous-plastic dynamics driver
+!
+#ifdef CICE_IN_NEMO
+! Wind stress is set during this routine from the values supplied
+! via NEMO.  These values are supplied rotated on u grid and
+! multiplied by aice.  strairxT = 0 in this case so operations in
+! evp_prep1 are pointless but carried out to minimise code changes.
+#endif
 !
 ! !REVISION HISTORY:
 !
@@ -145,7 +152,7 @@
          indxuj       ! compressed index in j-direction
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
-         tmass    , & ! total mass of ice and snow
+         tmass    , & ! total mass of ice and snow (kg/m^2)
          waterx   , & ! for ocean stress calculation, x (m/s)
          watery   , & ! for ocean stress calculation, y (m/s)
          forcex   , & ! work array: combined atm stress and ocn tilt, x
@@ -231,10 +238,21 @@
       ! convert fields from T to U grid
       !-----------------------------------------------------------------
 
-      call t2ugrid_vector(strairx)
-      call t2ugrid_vector(strairy)
       call to_ugrid(tmass,umass)
       call to_ugrid(aice, aiu)
+
+#ifdef CICE_IN_NEMO
+      !----------------------------------------------------------------
+      ! Set wind stress to values supplied via NEMO
+      ! This wind stress is rotated on u grid and multiplied by aice
+      !----------------------------------------------------------------
+
+      strairx(:,:,:) = strax(:,:,:)
+      strairy(:,:,:) = stray(:,:,:)
+#else
+      call t2ugrid_vector(strairx)
+      call t2ugrid_vector(strairy)
+#endif
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -379,6 +397,7 @@
                indxui    (:,iblk), indxuj    (:,iblk), & 
                uvel    (:,:,iblk), vvel    (:,:,iblk), & 
                uocn    (:,:,iblk), vocn    (:,:,iblk), & 
+               aiu     (:,:,iblk),                     &
                strocnx (:,:,iblk), strocny (:,:,iblk), & 
                strocnxT(:,:,iblk), strocnyT(:,:,iblk))
 
@@ -589,7 +608,7 @@
          intent(out) :: &
          strairx , & ! stress on ice by air, x-direction
          strairy , & ! stress on ice by air, y-direction
-         tmass       ! total mass of ice and snow
+         tmass       ! total mass of ice and snow (kg/m^2)
 
       integer (kind=int_kind), dimension (nx_block,ny_block), & 
          intent(out) :: &
@@ -626,9 +645,10 @@
       !-----------------------------------------------------------------
       ! prep to convert to U grid
       !-----------------------------------------------------------------
-         ! Factor of aice needed for correct treatment of free drift
-         strairx(i,j) = strairxT(i,j)*aice(i,j)
-         strairy(i,j) = strairyT(i,j)*aice(i,j)
+         ! these quantities include the factor of aice needed for
+         ! correct treatment of free drift
+         strairx(i,j) = strairxT(i,j)
+         strairy(i,j) = strairyT(i,j)
 
       !-----------------------------------------------------------------
       ! augmented mask (land + open ocean)
@@ -1363,10 +1383,10 @@
 
       !-----------------------------------------------------------------
       ! ocean-ice stress for coupling
-      ! scale to full grid cell
+      ! here, strocn includes the factor of aice
       !-----------------------------------------------------------------
-         strocnx(i,j) = taux / aiu(i,j)
-         strocny(i,j) = tauy / aiu(i,j)
+         strocnx(i,j) = taux
+         strocny(i,j) = tauy
 
       enddo                     ! ij
 
@@ -1384,6 +1404,7 @@
                              indxui,   indxuj,   &
                              uvel,     vvel,     &
                              uocn,     vocn,     &
+                             aiu,                &
                              strocnx,  strocny,  &
                              strocnxT, strocnyT) 
 !
@@ -1413,7 +1434,8 @@
          uvel    , & ! x-component of velocity (m/s)
          vvel    , & ! y-component of velocity (m/s)
          uocn    , & ! ocean current, x-direction (m/s)
-         vocn        ! ocean current, y-direction (m/s)
+         vocn    , &  ! ocean current, y-direction (m/s)
+         aiu         ! ice fraction on u-grid
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
@@ -1429,6 +1451,13 @@
 
       real (kind=dbl_kind) :: vrel
 
+      do j = 1, ny_block
+      do i = 1, nx_block
+         strocnxT(i,j) = c0
+         strocnyT(i,j) = c0
+      enddo
+      enddo
+
       ! ocean-ice stress for coupling
       do ij =1, icellu
          i = indxui(ij)
@@ -1437,19 +1466,13 @@
          vrel = dragw*sqrt((uocn(i,j) - uvel(i,j))**2 + &
                            (vocn(i,j) - vvel(i,j))**2)  ! m/s
          strocnx(i,j) = strocnx(i,j) &
-                      - vrel*(uvel(i,j)*cosw - vvel(i,j)*sinw)
+                      - vrel*(uvel(i,j)*cosw - vvel(i,j)*sinw) * aiu(i,j)
          strocny(i,j) = strocny(i,j) &
-                      - vrel*(vvel(i,j)*cosw + uvel(i,j)*sinw)
-      enddo
-
-      !-----------------------------------------------------------------
-      ! Prepare to convert to T grid
-      !-----------------------------------------------------------------
-      do j = 1, ny_block
-      do i = 1, nx_block
-         strocnxT(i,j) = strocnx(i,j)
-         strocnyT(i,j) = strocny(i,j)
-      enddo
+                      - vrel*(vvel(i,j)*cosw + uvel(i,j)*sinw) * aiu(i,j)
+         ! Prepare to convert to T grid
+         ! divide by aice for coupling
+         strocnxT(i,j) = strocnx(i,j) / aiu(i,j)
+         strocnyT(i,j) = strocny(i,j) / aiu(i,j)
       enddo
 
       end subroutine evp_finish

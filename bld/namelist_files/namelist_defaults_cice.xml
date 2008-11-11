@@ -3,20 +3,22 @@
 <namelist_defaults>
 
 <!--------------------------->
-<!-- ice_nml settings ------->
+<!-- setup_nml settings ----->
 <!--------------------------->
 
-<inic_file                 >'default'                     </inic_file>
-<inic_file cice_grid='gx3v5'>$inic_file</inic_file>  
-<inic_file cice_grid='gx1v4'>$inic_file</inic_file>  
-<inic_file cice_grid='gx1v5'>$inic_file</inic_file>  
+<ice_ic                 >'default'                     </ice_ic>
+<ice_ic cice_grid='gx3v5'>$ice_ic</ice_ic>  
+<ice_ic cice_grid='gx1v4'>$ice_ic</ice_ic>  
+<ice_ic cice_grid='gx1v5'>$ice_ic</ice_ic>  
 
 <dt> 3600 </dt> 
 
-<ndte> 120 </ndte> 
-
 <xndyn_dt                    > 1.0 </xndyn_dt>
 <xndyn_dt cice_grid="tx0.1v2"> 2.0 </xndyn_dt>
+
+<!--------------------------->
+<!-- grid_nml settings ------>
+<!--------------------------->
 
 <grid_type cice_grid="128x256"   >'latlon'       </grid_type> 
 <grid_type cice_grid="64x128"    >'latlon'       </grid_type> 
@@ -82,6 +84,14 @@
 <kmt_file cice_grid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'                     </kmt_file> 
 <kmt_file cice_grid="tx0.1v2"   >'ice/cice/kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da'</kmt_file> 
 
+<kcatbound> 0 </kcatbound>
+
+<!--------------------------->
+<!-- ice_nml settings ------->
+<!--------------------------->
+
+<ndte> 120 </ndte> 
+
 <!--- ice albedos --->
 
 <albicev  cice_grid="gx3v5" >0.68</albicev> 
@@ -108,8 +118,6 @@
 <kstrength  cice_mode='prescribed'  > 0 </kstrength> 
 <kstrength  cice_mode='thermo_only' > 0 </kstrength> 
 <kstrength                          > 1 </kstrength> 
-
-<kcatbound> 0 </kcatbound>
 
 <krdg_partic>1</krdg_partic>
 <krdg_redist>1</krdg_redist>

@@ -13,7 +13,7 @@
 !        horizontal dimensions (nx_block, ny_block).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_gather_scatter.F90 115 2008-03-17 22:35:48Z dbailey $
+!  SVN:$Id: ice_gather_scatter.F90 131 2008-05-30 16:53:40Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP version by William H. Lipscomb, LANL
@@ -168,7 +168,7 @@
          end do
          end do
 
-       !*** fill land blocks with 0.
+       !*** fill land blocks with zeroes
 
        else if (src_dist%blockLocation(n) == 0) then
 
@@ -177,7 +177,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
            ARRAY_G(this_block%i_glob(i), &
-                   this_block%j_glob(j)) = 0._dbl_kind
+                   this_block%j_glob(j)) = c0
          end do
          end do
        endif
@@ -331,7 +331,7 @@
          end do
          end do
 
-       !*** fill land blocks with spval
+       !*** fill land blocks with special values
 
        else if (src_dist%blockLocation(n) == 0) then
 

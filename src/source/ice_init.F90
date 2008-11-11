@@ -8,7 +8,7 @@
 ! parameter and variable initializations
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_init.F90 53 2007-02-08 00:02:16Z dbailey $
+!  SVN:$Id: ice_init.F90 143 2008-08-08 23:08:22Z eclare $
 !
 ! authors Elizabeth C. Hunke and William H. Lipscomb, LANL
 !         C. M. Bitz, UW
@@ -33,14 +33,6 @@
 !
       implicit none
       save
-
-#ifndef CCSMCOUPLED
-      character(len=char_len) :: & 
-         ice_ic      ! method of ice cover initialization
-                     ! 'default'  => latitude and sst dependent
-                     ! 'none'     => no ice 
-                     ! note:  restart = .true. overwrites
-#endif
 
 !=======================================================================
 
@@ -71,23 +63,17 @@
       use ice_fileunits
       use ice_calendar, only: year_init, istep0, histfreq, histfreq_n, &
                               dumpfreq, dumpfreq_n, diagfreq, &
-                              npt, dt, xndyn_dt, days_per_year
-#ifndef CCSMCOUPLED
+                              npt, dt, xndyn_dt, days_per_year, write_ic
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
-          runid, runtype 
-#else
-      use ice_restart, only:  &
-           inic_file, restart_dir, restart_file, pointer_file, &
-           runid, runtype 
-      use shr_file_mod, only: shr_file_setio
-#endif
+          runid, runtype, ice_ic
       use ice_history, only: hist_avg, &
                              history_format, history_dir, history_file, &
                              incond_dir, incond_file
       use ice_exit
       use ice_itd, only: kitd, kcatbound
       use ice_ocean, only: oceanmixed_ice
+      use ice_flux, only: Tfrzpt, update_ocn_f
       use ice_forcing, only: &
           ycycle,          fyear_init,    dbug, &
           atm_data_type,   atm_data_dir,  precip_units, &
@@ -106,6 +92,8 @@
       use ice_meltpond, only: tr_pond, restart_pond
       use ice_aerosol, only: tr_aero, restart_aero     !MH for soot
       use ice_state, only: nt_Tsfc, nt_iage, nt_volpn, nt_aero
+      use ice_therm_vertical, only: calc_Tsfc, heat_capacity
+      use ice_restoring
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -116,49 +104,48 @@
         ntr           ! counter for number of tracers turned on
 
       character (len=6) :: chartmp
+
 #ifdef CCSMCOUPLED
-      logical :: exists                    ! true if file exists
+      logical :: exists
 #endif
 
       !-----------------------------------------------------------------
       ! Namelist variables.
-      ! NOTE: Not all of these are used by both models.
       !-----------------------------------------------------------------
 
-#ifndef CCSMCOUPLED
-      namelist /ice_nml/ &
-           restart, ice_ic, runid, runtype
-#else
-      namelist /ice_nml/ &
-           inic_file
-#endif
+      namelist /setup_nml/ &
+        days_per_year,  year_init,      istep0,          dt,            &
+        npt,            xndyn_dt,                                       &
+        runtype,        runid,                                          &
+        ice_ic,         restart,        restart_dir,     restart_file,  &
+        pointer_file,   dumpfreq,       dumpfreq_n,                     &
+        diagfreq,       diag_type,      diag_file,                      &
+        print_global,   print_points,   latpnt,          lonpnt,        &
+        dbug,           histfreq,       histfreq_n,      hist_avg,      &
+        history_dir,    history_file,   history_format,                 &
+        write_ic,       incond_dir,     incond_file
+
+      namelist /grid_nml/ &
+        grid_format,    grid_type,       grid_file,     kmt_file,       &
+        kcatbound
 
       namelist /ice_nml/ &
-        year_init,      istep0,          dt,            npt, &
-        diagfreq,       days_per_year,   &       
-        print_points,   print_global,    diag_type,     diag_file, &
-        history_format, &
-        histfreq,       hist_avg,        history_dir,   history_file, &
-        histfreq_n,     dumpfreq,        dumpfreq_n,    restart_file, &
-        restart_dir,    pointer_file,  &
-        grid_format,    grid_type,       grid_file,     kmt_file,      &
-        kitd,           kcatbound, &
-        kdyn,           xndyn_dt,        ndte,          evp_damping, &
-        yield_curve,    advection, &
-        kstrength,      krdg_partic,     krdg_redist,   shortwave, &
-        R_ice,          R_pnd,           R_snw, &
-        albicev,        albicei,         albsnowv,      albsnowi, &
-        albedo_type,    atmbndy,         fyear_init,    ycycle , &
-        atm_data_format, &
-        atm_data_type,  atm_data_dir,    calc_strair,   precip_units, &
-        oceanmixed_ice, sss_data_type,   sst_data_type, ocn_data_format, &
-        ocn_data_dir,   oceanmixed_file, restore_sst,   trestore, &
-        latpnt,         lonpnt,          dbug,             &
-        incond_dir,     incond_file
+        kitd,           kdyn,            ndte,                          &
+        evp_damping,    yield_curve,                                    &
+        kstrength,      krdg_partic,     krdg_redist,   advection,      &
+        heat_capacity,  shortwave,       albedo_type,                   &
+        albicev,        albicei,         albsnowv,      albsnowi,       &
+        R_ice,          R_pnd,           R_snw,                         &
+        atmbndy,        fyear_init,      ycycle,        atm_data_format,&
+        atm_data_type,  atm_data_dir,    calc_strair,   calc_Tsfc,      &
+        precip_units,   Tfrzpt,          update_ocn_f,                  &
+        oceanmixed_ice, ocn_data_format, sss_data_type, sst_data_type,  &
+        ocn_data_dir,   oceanmixed_file, restore_sst,   trestore,       &
+        restore_ice    
 
-      namelist /tracer_nml/   &
-        tr_iage, restart_age, &
-        tr_pond, restart_pond,&       !MH for soot
+      namelist /tracer_nml/    &
+        tr_iage, restart_age,  &
+        tr_pond, restart_pond, &
         tr_aero, restart_aero         !MH for soot
 
       !-----------------------------------------------------------------
@@ -181,31 +168,21 @@
       histfreq='m'           ! output frequency option
       histfreq_n = 1         ! output frequency
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
-      history_dir  = ' '     ! Write to executable dir for default
+      history_dir  = ' '     ! write to executable dir for default
       history_file = 'iceh'  ! history file name prefix
-#ifdef CCSMCOUPLED
-      history_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
-#else
       history_format = 'bin' ! file format ('bin'=binary or 'nc'=netcdf)
-#endif
-      incond_dir = ' '       ! Write to executable dir for default
-      incond_file = 'iceh'   ! same as history file prefix
+      write_ic = .false.     ! write out initial condition
+      incond_dir = history_dir ! write to history dir for default
+      incond_file = 'iceh_ic'! file prefix
       dumpfreq='y'           ! restart frequency option
       dumpfreq_n = 1         ! restart frequency
-
-#ifndef CCSMCOUPLED
       restart = .false.      ! if true, read restart files for initialization
-      ice_ic  = 'default'    ! latitude and sst-dependent
-      runid   = 'unknown'    ! namelist run ID
-      runtype = 'unknown'    ! namelist run type
-#else
-      inic_file = 'default'  ! 'default', 'none' or restart file 
-#endif
-      restart_dir  = ' '                  ! Write to executable dir for default
-      restart_file = 'iced'               ! restart file name prefix
-      pointer_file = 'ice.restart_file'   ! ice restart pointer file
-      grid_format  = 'bin'                ! file format ('bin'=binary or 'nc'=netcdf)
-      grid_type    = 'rectangular'        ! define rectangular grid internally
+      restart_dir  = ' '     ! write to executable dir for default
+      restart_file = 'iced'  ! restart file name prefix
+      pointer_file = 'ice.restart_file'
+      ice_ic       = 'default'      ! latitude and sst-dependent
+      grid_format  = 'bin'          ! file format ('bin'=binary or 'nc'=netcdf)
+      grid_type    = 'rectangular'  ! define rectangular grid internally
       grid_file    = 'unknown_grid_file'
       kmt_file     = 'unknown_kmt_file'
 
@@ -222,6 +199,10 @@
       advection  = 'remap'   ! incremental remapping transport scheme
       shortwave = 'default'  ! or 'dEdd' (delta-Eddington)
       albedo_type = 'default'! or 'constant'
+      heat_capacity = .true. ! nonzero heat capacity (F => 0-layer thermo)
+      calc_Tsfc = .true.     ! calculate surface temperature
+      Tfrzpt    = 'linear_S' ! ocean freezing temperature, 'constant'=-1.8C
+      update_ocn_f = .false. ! include fresh water and salt fluxes for frazil
       R_ice     = 0.00_dbl_kind   ! tuning parameter for sea ice
       R_pnd     = 0.00_dbl_kind   ! tuning parameter for ponded sea ice
       R_snw     = 0.00_dbl_kind   ! tuning parameter for snow over sea ice
@@ -247,6 +228,7 @@
       oceanmixed_file = 'unknown_oceanmixed_file' ! ocean forcing data
       restore_sst     = .false.   ! restore sst if true
       trestore        = 90        ! restoring timescale, days (0 instantaneous)
+      restore_ice     = .false.   ! restore ice state on grid edges if true
       dbug      = .false.         ! true writes diagnostics for input forcing
 
       latpnt(1) =  90._dbl_kind   ! latitude of diagnostic point 1 (deg)
@@ -254,12 +236,17 @@
       latpnt(2) = -65._dbl_kind   ! latitude of diagnostic point 2 (deg)
       lonpnt(2) = -45._dbl_kind   ! longitude of point 2 (deg)
 
+#ifndef CCSMCOUPLED
+      runid   = 'unknown'   ! run ID, only used in CCSM
+      runtype = 'initial'   ! run type: 'initial', 'continue'
+#endif
+
       ! extra tracers
       tr_iage      = .false. ! ice age
       restart_age  = .false. ! ice age restart
       tr_pond      = .false. ! explicit melt ponds
       restart_pond = .false. ! melt ponds restart
-      tr_aero      = .false. ! aerosols          MH 
+      tr_aero      = .false. ! aerosols          MH
       restart_aero = .false. ! aerosol restart   MH
 
       !-----------------------------------------------------------------
@@ -268,7 +255,6 @@
 
       call get_fileunit(nu_nml)
 
-      ! primary namelist
       if (my_task == master_task) then
          open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
          if (nml_error /= 0) then
@@ -276,28 +262,14 @@
          else
             nml_error =  1
          endif
-         write(6,*)'reading in ice_nml'
          do while (nml_error > 0)
+            print*,'Reading setup_nml'
+            read(nu_nml, nml=setup_nml,iostat=nml_error)
+            print*,'Reading grid_nml'
+            read(nu_nml, nml=grid_nml,iostat=nml_error)
+            print*,'Reading ice_nml'
             read(nu_nml, nml=ice_nml,iostat=nml_error)
-            if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
-         end do
-         write(6,*)'finished reading in ice_nml'
-         if (nml_error == 0) close(nu_nml)
-      endif
-      call broadcast_scalar(nml_error, master_task)
-      if (nml_error /= 0) then
-         call abort_ice('ice: error reading ice_nml')
-      endif
-
-      ! tracer namelist
-      if (my_task == master_task) then
-         open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
-         if (nml_error /= 0) then
-            nml_error = -1
-         else
-            nml_error =  1
-         endif
-         do while (nml_error > 0)
+            print*,'Reading tracer_nml'
             read(nu_nml, nml=tracer_nml,iostat=nml_error)
             if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
          end do
@@ -305,7 +277,7 @@
       endif
       call broadcast_scalar(nml_error, master_task)
       if (nml_error /= 0) then
-         call abort_ice('ice: error reading tracer_nml')
+         call abort_ice('ice: error reading namelist')
       endif
 
       call release_fileunit(nu_nml)
@@ -322,20 +294,58 @@
             nu_diag = shr_file_getUnit()
             call shr_file_setIO('ice_modelio.nml',nu_diag)
          end if
+
+      ! Note in CCSMCOUPLED mode the runid and runtype flag are obtained from
+      ! the sequential driver - not from the cice namelist
+         history_file  = trim(runid) // ".cice.h"
+         restart_file  = trim(runid) // ".cice.r"
+         incond_file   = trim(runid) // ".cice.i."
       end if
+
+      if (trim(ice_ic) /= 'default' .and. trim(ice_ic) /= 'none') &
+          restart = .true.
 #else
       if (trim(diag_type) == 'file') call get_fileunit(nu_diag)
 #endif
 
-#ifdef CCSMCOUPLED
-      ! Note in CCSMCOUPLED mode the runid and runtype flag are obtained from the
-      ! sequential driver - not from the cice namelist 
       if (my_task == master_task) then
-         history_file  = trim(runid) // ".cice.h"
-         restart_file  = trim(runid) // ".cice.r"
-         incond_file   = trim(runid) // ".cice.i."
+         if (trim(diag_type) == 'file') then
+            write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
+            open (nu_diag, file=diag_file, status='unknown')
+         endif
+         write(nu_diag,*) '--------------------------------'
+         write(nu_diag,*) '  CICE model diagnostic output  '
+         write(nu_diag,*) '--------------------------------'
+         write(nu_diag,*) ' '
       endif
-#endif
+
+      if (runtype == 'continue') restart = .true.
+      if (runtype /= 'continue' .and. (restart)) then
+         if (ice_ic == 'none' .or. ice_ic == 'default') then
+            if (my_task == master_task) then
+            write(nu_diag,*) &
+            'WARNING: runtype, restart, ice_ic are inconsistent:'
+            write(nu_diag,*) runtype, restart, ice_ic
+            write(nu_diag,*) &
+            'WARNING: Need ice_ic = <filename>.'
+            write(nu_diag,*) &
+            'WARNING: Initializing using ice_ic conditions'
+            endif
+            restart = .false.
+         endif
+      endif
+      if (runtype == 'initial' .and. .not.(restart)) then
+         if (ice_ic /= 'none' .and. ice_ic /= 'default') then
+            if (my_task == master_task) then
+            write(nu_diag,*) &
+            'WARNING: runtype, restart, ice_ic are inconsistent:'
+            write(nu_diag,*) runtype, restart, ice_ic
+            write(nu_diag,*) &
+            'WARNING: Initializing with NO ICE: '
+            endif
+            ice_ic = 'none'
+         endif
+      endif
 
 #ifndef ncdf
       ! netcdf is unavailable
@@ -345,15 +355,30 @@
       ocn_data_format = 'bin'
 #endif
 
-      if (histfreq == '1') hist_avg = .false. ! potential conflict
+      if (histfreq == '1') hist_avg = .false.         ! potential conflict
       if (days_per_year /= 365) shortwave = 'default' ! definite conflict
 
       chartmp = advection(1:6)
-      if (chartmp /= 'upwind' .and. chartmp /= 'remap ' &
-           .and. chartmp /= 'none') advection = 'remap'		
+      if (chartmp /= 'upwind' .and. chartmp /= 'remap ') advection = 'remap'
+
+      if (ncat == 1 .and. kitd == 1) then
+         write (nu_diag,*) 'Remapping the ITD is not allowed for ncat=1'
+         write (nu_diag,*) 'Using the delta function ITD option instead'
+         kitd = 0
+      endif
 
       if (trim(atm_data_type) == 'monthly' .and. calc_strair) &
          calc_strair = .false.
+
+      if (trim(atm_data_type) == 'hadgem' .and. & 
+             trim(precip_units) /= 'mks') then
+         if (my_task == master_task) &
+         write (nu_diag,*) &
+         'WARNING: HadGEM atmospheric data chosen with wrong precip_units'
+         write (nu_diag,*) &
+         'WARNING: Changing precip_units to mks (i.e. kg/m2 s).'
+         precip_units='mks'
+      endif
 
       call broadcast_scalar(days_per_year,      master_task)
       call broadcast_scalar(year_init,          master_task)
@@ -371,19 +396,16 @@
       call broadcast_scalar(hist_avg,           master_task)
       call broadcast_scalar(history_dir,        master_task)
       call broadcast_scalar(history_file,       master_task)
+      call broadcast_scalar(write_ic,           master_task)
       call broadcast_scalar(incond_dir,         master_task)
       call broadcast_scalar(incond_file,        master_task)
       call broadcast_scalar(dumpfreq,           master_task)
       call broadcast_scalar(dumpfreq_n,         master_task)
       call broadcast_scalar(restart_file,       master_task)
+      call broadcast_scalar(restart,            master_task)
       call broadcast_scalar(restart_dir,        master_task)
       call broadcast_scalar(pointer_file,       master_task)
-#ifndef CCSMCOUPLED
-      call broadcast_scalar(restart,            master_task)
       call broadcast_scalar(ice_ic,             master_task)
-#else
-      call broadcast_scalar(inic_file,          master_task)
-#endif
       call broadcast_scalar(grid_format,        master_task)
       call broadcast_scalar(grid_type,          master_task)
       call broadcast_scalar(grid_file,          master_task)
@@ -401,6 +423,7 @@
       call broadcast_scalar(advection,          master_task)
       call broadcast_scalar(shortwave,          master_task)
       call broadcast_scalar(albedo_type,        master_task)
+      call broadcast_scalar(heat_capacity,      master_task)
       call broadcast_scalar(R_ice,              master_task)
       call broadcast_scalar(R_pnd,              master_task)
       call broadcast_scalar(R_snw,              master_task)
@@ -415,6 +438,9 @@
       call broadcast_scalar(atm_data_type,      master_task)
       call broadcast_scalar(atm_data_dir,       master_task)
       call broadcast_scalar(calc_strair,        master_task)
+      call broadcast_scalar(calc_Tsfc,          master_task)
+      call broadcast_scalar(Tfrzpt,             master_task)
+      call broadcast_scalar(update_ocn_f,       master_task)
       call broadcast_scalar(precip_units,       master_task)
       call broadcast_scalar(oceanmixed_ice,     master_task)
       call broadcast_scalar(ocn_data_format,    master_task)
@@ -424,6 +450,7 @@
       call broadcast_scalar(oceanmixed_file,    master_task)
       call broadcast_scalar(restore_sst,        master_task)
       call broadcast_scalar(trestore,           master_task)
+      call broadcast_scalar(restore_ice,        master_task)
       call broadcast_scalar(dbug,               master_task)
       call broadcast_array (latpnt(1:2),        master_task)
       call broadcast_array (lonpnt(1:2),        master_task)
@@ -445,28 +472,14 @@
 
       if (my_task == master_task) then
 
-#ifndef CCSMCOUPLED
-         if (trim(diag_type) == 'file') then
-            write(ice_stdout,*) 'Diagnostic output will be in file ',diag_file
-            open (nu_diag, file=diag_file, status='unknown')
-         endif
-#endif
-
-         write(nu_diag,*) '--------------------------------'
-         write(nu_diag,*) '  CICE model diagnostic output  '
-         write(nu_diag,*) '--------------------------------'
-         write(nu_diag,*) ' '
          write(nu_diag,*) ' Document ice_in namelist parameters:'
          write(nu_diag,*) ' ==================================== '
          write(nu_diag,*) ' '
-#ifndef CCSMCOUPLED
          if (trim(runid) /= 'unknown') &
-          write(nu_diag,*)    ' runid                     = ', &
+         write(nu_diag,*)    ' runid                     = ', &
                                trim(runid)
-         if (trim(runtype) /= 'unknown') &
-          write(nu_diag,1030) ' runtype                   = ', &
+         write(nu_diag,1030) ' runtype                   = ', &
                                trim(runtype)
-#endif
          write(nu_diag,1020) ' days_per_year             = ', days_per_year
          write(nu_diag,1020) ' year_init                 = ', year_init
          write(nu_diag,1020) ' istep0                    = ', istep0
@@ -491,22 +504,22 @@
                                trim(history_dir)
          write(nu_diag,*)    ' history_file              = ', &
                                trim(history_file)
+         if (write_ic) then
+            write (nu_diag,*) 'Initial condition will be written in ', &
+                               trim(incond_dir)
+         endif
          write(nu_diag,1030) ' dumpfreq                  = ', &
                                trim(dumpfreq)
          write(nu_diag,1020) ' dumpfreq_n                = ', dumpfreq_n
+         write(nu_diag,1010) ' restart                   = ', restart
          write(nu_diag,*)    ' restart_dir               = ', &
                                trim(restart_dir)
          write(nu_diag,*)    ' restart_file              = ', &
                                trim(restart_file)
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
-#ifndef CCSMCOUPLED
-         write(nu_diag,1010) ' restart                   = ', restart
-         write(nu_diag,1030) ' ice_ic                    = ', ice_ic
-#else 
-         write(nu_diag,*)    ' inic_file                 = ', &
-                               trim(inic_file)
-#endif
+         write(nu_diag,*   ) ' ice_ic                    = ', &
+                               trim(ice_ic)
          write(nu_diag,*)    ' grid_type                 = ', &
                                trim(grid_type)
          if (trim(grid_type) /= 'rectangular' .or. &
@@ -545,6 +558,8 @@
          write(nu_diag,1000) ' albicei                   = ', albicei
          write(nu_diag,1000) ' albsnowv                  = ', albsnowv
          write(nu_diag,1000) ' albsnowi                  = ', albsnowi
+         write(nu_diag,1010) ' heat_capacity             = ', & 
+                               heat_capacity
          write(nu_diag,1030) ' atmbndy                   = ', &
                                trim(atmbndy)
 
@@ -554,6 +569,9 @@
          write(nu_diag,*)    ' atm_data_type             = ', &
                                trim(atm_data_type)
          write(nu_diag,1010) ' calc_strair               = ', calc_strair
+         write(nu_diag,1010) ' calc_Tsfc                 = ', calc_Tsfc
+         write(nu_diag,*)    ' Tfrzpt                    = ', trim(Tfrzpt)
+         write(nu_diag,1010) ' update_ocn_f              = ', update_ocn_f
          if (trim(atm_data_type) /= 'default') then
             write(nu_diag,*) ' atm_data_dir              = ', &
                                trim(atm_data_dir)
@@ -604,6 +622,7 @@
          write(nu_diag,1010) ' restart_aero              = ', restart_aero !MH
 
          ntr = 1 ! count tracers, starting with Tsfc = 1
+
          if (tr_iage) then
             ntr = ntr + 1
             nt_iage = nt_Tsfc + 1
@@ -626,6 +645,7 @@
          else
             nt_aero = nt_volpn
          endif
+
          if (ntr /= ntrcr) &
             write(nu_diag,*) 'WARNING: ntrcr > number of tracers requested'
          if (ntr > ntrcr) then
@@ -686,6 +706,7 @@
       use ice_age, only: tr_iage
       use ice_meltpond, only: tr_pond
       use ice_aerosol, only: tr_aero  ! MH for soot
+      use ice_therm_vertical, only: heat_capacity
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -693,33 +714,54 @@
 !
       integer (kind=int_kind) :: &
          i, j        , & ! horizontal indices
-         it          , & ! tracer index
+         it, n       , & ! tracer index
          iblk            ! block index
-      integer (kind=int_kind) :: &
-         n
 
       !-----------------------------------------------------------------
       ! Check number of layers in ice and snow.
       !-----------------------------------------------------------------
 
-      if (nilyr < 1) then
-         write (nu_diag,*) 'nilyr =', nilyr
-         write (nu_diag,*) 'Must have at least one ice layer'
-         call abort_ice('ice_init: Not enough ice layers')
-      endif
+      if (my_task == master_task) then
+ 
+         if (nilyr < 1) then
+            write (nu_diag,*) 'nilyr =', nilyr
+            write (nu_diag,*) 'Must have at least one ice layer'
+            call abort_ice ('ice_init: Not enough ice layers')
+         endif
 
-      if (nslyr < 1) then
-         write (nu_diag,*) 'nslyr =', nslyr
-         write (nu_diag,*) 'Must have at least one snow layer'
-         call abort_ice('ice_init: Not enough snow layers')
-      endif
+         if (nslyr < 1) then
+            write (nu_diag,*) 'nslyr =', nslyr
+            write (nu_diag,*) 'Must have at least one snow layer'
+            call abort_ice('ice_init: Not enough snow layers')
+         endif
+
+         if (.not.heat_capacity) then
+
+            write (nu_diag,*) 'WARNING - Zero-layer thermodynamics'
+
+            if (nilyr > 1) then
+               write (nu_diag,*) 'nilyr =', nilyr
+               write (nu_diag,*)        &
+                    'Must have nilyr = 1 if heat_capacity = F'
+               call abort_ice('ice_init: Too many ice layers')
+            endif
+
+            if (nslyr > 1) then
+               write (nu_diag,*) 'nslyr =', nslyr
+               write (nu_diag,*)        &
+                    'Must have nslyr = 1 if heat_capacity = F'
+               call abort_ice('ice_init: Too many snow layers')
+            endif
+
+         endif   ! heat_capacity = F
+
+      endif      ! my_task
 
       !-----------------------------------------------------------------
       ! Set tracer types
       !-----------------------------------------------------------------
 
       trcr_depend(nt_Tsfc)  = 0   ! ice/snow surface temperature
-
       if (tr_iage) trcr_depend(nt_iage)  = 1   ! volume-weighted ice age
       if (tr_pond) trcr_depend(nt_volpn) = 0   ! melt pond volume
       if (tr_aero) then
@@ -737,7 +779,8 @@
       !-----------------------------------------------------------------
 
          call set_state_var (nx_block,            ny_block,            &
-                             tmask(:,:,    iblk), ULAT (:,:,    iblk), &
+                             tmask(:,:,    iblk),                      &
+                             ULON (:,:,    iblk), ULAT (:,:,    iblk), &
                              Tair (:,:,    iblk), sst  (:,:,    iblk), &
                              Tf   (:,:,    iblk), trcr_depend,         &
                              aicen(:,:,  :,iblk), trcrn(:,:,:,:,iblk), &
@@ -797,7 +840,7 @@
 ! !INTERFACE:
 !
       subroutine set_state_var (nx_block, ny_block, &
-                                tmask,    ULAT, &
+                                tmask,    ULON,  ULAT, &
                                 Tair,     sst,  &
                                 Tf,       trcr_depend, &
                                 aicen,    trcrn, &
@@ -815,12 +858,11 @@
 !
 ! !USES:
 !
-      use ice_therm_vertical, only: Tmlt
-      use ice_itd, only: ilyr1, slyr1, hin_max
       use ice_state, only: nt_Tsfc
-#ifdef CCSMCOUPLED
-      use ice_restart, only: inic_file
-#endif	
+      use ice_therm_vertical, only: heat_capacity, calc_Tsfc, Tmlt
+      use ice_itd, only: ilyr1, slyr1, hin_max
+      use ice_grid, only: grid_type
+      use ice_restart, only: ice_ic
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -833,6 +875,7 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(in) :: &
+         ULON   , & ! latitude of velocity pts (radians)
          ULAT       ! latitude of velocity pts (radians)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(in) :: &
@@ -840,7 +883,7 @@
          Tf      , & ! freezing temperature (C) 
          sst         ! sea surface temperature (C) 
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (ntrcr), intent(inout) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
@@ -910,11 +953,7 @@
       eicen(:,:,:) = c0
       esnon(:,:,:) = c0
 
-#ifndef CCSMCOUPLED
       if (trim(ice_ic) == 'default') then
-#else
-      if (trim(inic_file) == 'default') then
-#endif
 
       !-----------------------------------------------------------------
       ! Place ice where ocean surface is cold.
@@ -943,6 +982,24 @@
             ainit(n) = ainit(n) / (sum + puny/ncat) ! normalize
          enddo
 
+         if (trim(grid_type) == 'rectangular') then
+
+         ! place ice on left side of domain
+         icells = 0
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (tmask(i,j)) then
+               if (ULON(i,j) < -50./rad_to_deg) then
+                  icells = icells + 1
+                  indxi(icells) = i
+                  indxj(icells) = j
+               endif            ! ULON
+            endif               ! tmask
+         enddo                  ! i
+         enddo                  ! j
+
+         else
+
          ! place ice at high latitudes where ocean sfc is cold
          icells = 0
          do j = 1, ny_block
@@ -960,10 +1017,11 @@
          enddo                  ! i
          enddo                  ! j
 
-
-         ! ice volume, snow volume, surface temperature, other tracers
+         endif                  ! rectgrid
 
          do n = 1, ncat
+
+            ! ice volume, snow volume
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
@@ -974,48 +1032,86 @@
                aicen(i,j,n) = ainit(n)
                vicen(i,j,n) = hinit(n) * ainit(n) ! m
                vsnon(i,j,n) =min(aicen(i,j,n)*hsno_init,p2*vicen(i,j,n))
-
-               ! surface temperature
-               trcrn(i,j,nt_Tsfc,n) = min(Tsmelt, Tair(i,j) - Tffresh) ! deg C
             enddo               ! ij
 
-            ! ice energy
-
-            do k = 1, nilyr
+            ! surface temperature
+            if (calc_Tsfc) then
+        
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
+                  trcrn(i,j,nt_Tsfc,n) = min(Tsmelt, Tair(i,j) - Tffresh) !deg C
+               enddo
 
-                  ! assume linear temp profile and compute enthalpy
-                  slope = Tf(i,j) - trcrn(i,j,nt_Tsfc,n)
-                  Ti = trcrn(i,j,nt_Tsfc,n) + slope*(real(k,kind=dbl_kind)-p5) &
-                                              /real(nilyr,kind=dbl_kind)
+            else    ! Tsfc is not calculated by the ice model
 
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  trcrn(i,j,nt_Tsfc,n) = Tf(i,j)   ! not used
+               enddo
+
+            endif       ! calc_Tsfc
+
+            ! other tracers (none at present)
+
+            if (heat_capacity) then
+
+               ! ice energy
+               do k = 1, nilyr
+                  do ij = 1, icells
+                     i = indxi(ij)
+                     j = indxj(ij)
+
+                     ! assume linear temp profile and compute enthalpy
+                     slope = Tf(i,j) - trcrn(i,j,nt_Tsfc,n)
+                     Ti = trcrn(i,j,nt_Tsfc,n) &
+                        + slope*(real(k,kind=dbl_kind)-p5) &
+                                /real(nilyr,kind=dbl_kind)
+
+                     eicen(i,j,ilyr1(n)+k-1) = &
+                          -(rhoi * (cp_ice*(Tmlt(k)-Ti) &
+                          + Lfresh*(c1-Tmlt(k)/Ti) - cp_ocn*Tmlt(k))) &
+                          * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
+                  enddo            ! ij
+               enddo               ! nilyr
+
+               ! snow energy
+               do k = 1, nslyr
+                  do ij = 1, icells
+                     i = indxi(ij)
+                     j = indxj(ij)
+
+                     Ti = min(c0, trcrn(i,j,nt_Tsfc,n))
+                     esnon(i,j,slyr1(n)+k-1) = -rhos*(Lfresh - cp_ice*Ti) &
+                                               *vsnon(i,j,n) &
+                                               /real(nslyr,kind=dbl_kind)
+                  enddo            ! ij
+               enddo               ! nslyr
+
+            else  ! one layer with zero heat capacity
+
+               ! ice energy
+               k = 1
+
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
                   eicen(i,j,ilyr1(n)+k-1) = &
-                       -(rhoi * (cp_ice*(Tmlt(k)-Ti) &
-                       + Lfresh*(c1-Tmlt(k)/Ti) - cp_ocn*Tmlt(k))) &
-                       * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
-
+                          - rhoi * Lfresh * vicen(i,j,n)
                enddo            ! ij
-            enddo               ! nilyr
 
-            ! snow energy
-
-            do k = 1, nslyr
+               ! snow energy
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
-
-                  Ti = min(c0, trcrn(i,j,nt_Tsfc,n))
-                  esnon(i,j,slyr1(n)+k-1) = -rhos*(Lfresh - cp_ice*Ti) &
-                                            *vsnon(i,j,n) &
-                                            /real(nslyr,kind=dbl_kind)
+                  esnon(i,j,slyr1(n)+k-1) = & 
+                          - rhos * Lfresh * vsnon(i,j,n)
                enddo            ! ij
-            enddo               ! nslyr
-            
-         enddo                  ! ncat
 
-      endif                     ! inic_file or ice_ic
+            endif               ! heat_capacity
+         enddo                  ! ncat
+      endif                     ! ice_ic
 
       end subroutine set_state_var
 

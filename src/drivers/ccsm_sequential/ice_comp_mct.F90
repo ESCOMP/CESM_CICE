@@ -30,12 +30,12 @@ module ice_comp_mct
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-			      alvdr, alidr, alvdf, alidf, tref, qref, flat,     &
-			      fsens, flwout, evap, fswabs, fhocn, fswthru,      &
-		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,   &
-		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,     &
-		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt, &
-		              sss, tf, wind, fsw, init_flux_atm
+			      alvdr, alidr, alvdf, alidf, tref, qref, flat,    &
+			      fsens, flwout, evap, fswabs, fhocn, fswthru,     &
+		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
+		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
+		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
+		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn
   use ice_state,       only : vice, aice, trcr
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
   use ice_domain,      only : nblocks, blocks_ice, halo_info
@@ -57,6 +57,8 @@ module ice_comp_mct
   use ice_dyn_evp,     only:  kdyn
   use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
   use ice_prescaero_mod
+  use ice_step_mod
+  use CICE_RunMod
 
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -141,6 +143,9 @@ contains
     call seq_cdata_setptrs(cdata_i, ID=ICEID, mpicom=mpicom_ice, &
          gsMap=gsMap_ice, dom=dom_i, infodata=infodata)
 
+    ! Determine time of next atmospheric shortwave calculation
+    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+
 #if (defined _MEMTRACE)
     call MPI_comm_rank(mpicom_ice,iam,ierr)
     if(iam == 0 ) then
@@ -149,9 +154,9 @@ contains
     endif
 #endif
 
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! use infodata to determine type of run
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     ! Preset single column values
 
@@ -190,17 +195,17 @@ contains
     call cice_init( mpicom_ice )
     call t_stopf ('cice_init')
 
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Reset shr logging to my log file
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (nu_diag)
    
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! use EClock to reset calendar information on initial start
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     ! - the following logic duplicates the logic for the concurrent system - 
     ! cice_init is called then init_cpl is called where the start date is received
@@ -275,18 +280,24 @@ contains
     call mct_aVect_init(i2x_i, rList=seq_flds_i2x_fields, lsize=lsize) 
     call mct_aVect_zero(i2x_i)
 
-    !----------------------------------------------------------------------------
-    ! send intial state to driver
-    !----------------------------------------------------------------------------
+    !-----------------------------------------------------------------
+    ! get ready for coupling
+    !-----------------------------------------------------------------
+
+    call coupling_prep
+
+    !---------------------------------------------------------------------------
+    ! send initial state to driver
+    !---------------------------------------------------------------------------
 
     call ice_export_mct (i2x_i)  !Send initial state to driver
     call seq_infodata_PutData( infodata, ice_prognostic=.true., &
       ice_nx = nx_global, ice_ny = ny_global )
     call t_stopf ('cice_mct_init')
 
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Reset shr logging to original values
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
@@ -313,14 +324,14 @@ contains
 ! Run thermodynamic CICE
 !
 ! !USES:
-    use ice_step_mod
     use ice_aerosol, only: tr_aero, write_restart_aero
     use ice_age, only: tr_iage, write_restart_age
-    use ice_meltpond, only: tr_pond, write_restart_pond
     use ice_history
     use ice_restart
-    use ice_shortwave, only: shortwave, write_restart_dEdd
     use ice_diagnostics
+    use ice_meltpond, only: tr_pond, write_restart_pond
+    use ice_restoring, only: restore_ice, ice_HaloRestore
+    use ice_shortwave, only: init_shortwave
 
 ! !ARGUMENTS:
     type(ESMF_Clock),intent(in)    :: EClock
@@ -389,7 +400,16 @@ contains
     istep1 = istep1 + 1
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
-    
+
+    if (runtype == 'initial' .and. istep == 1) &
+       call init_shortwave    ! initialize radiative transfer using current swdn
+
+    !-----------------------------------------------------------------
+    ! restoring on grid boundaries
+    !-----------------------------------------------------------------
+
+    if (restore_ice) call ice_HaloRestore
+
     call t_startf ('cice_initmd')
     call init_mass_diags   ! diagnostics per timestep
     call t_stopf ('cice_initmd')
@@ -404,15 +424,16 @@ contains
        call ice_prescaero_run(idate, sec)
     endif
 
-    call init_flux_atm
+    call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
+    call init_flux_ocn        ! initialize ocean fluxes sent to coupler
 
     !-----------------------------------------------------------------
-    ! radiation1
+    ! Scale radiation fields
     !-----------------------------------------------------------------
 
-    call t_startf ('cice_rad1')
-    call step_rad1(dt)
-    call t_stopf ('cice_rad1')
+    call t_startf ('cice_prep_radiation')
+    call prep_radiation(dt)
+    call t_stopf ('cice_prep_radiation')
     
     !-----------------------------------------------------------------
     ! thermodynamics1
@@ -453,13 +474,19 @@ contains
     endif ! not prescribed_ice
     
     !-----------------------------------------------------------------
-    ! radiation2
+    ! radiation
     !-----------------------------------------------------------------
 
-    call t_startf ('cice_rad2')
-    call step_rad2(dt)
-    call t_stopf ('cice_rad2')
+    call t_startf ('cice_radiation')
+    call step_radiation(dt)
+    call t_stopf ('cice_radiation')
     
+    !-----------------------------------------------------------------
+    ! get ready for coupling
+    !-----------------------------------------------------------------
+
+    call coupling_prep
+
     !-----------------------------------------------------------------
     ! write data
     !-----------------------------------------------------------------
@@ -493,7 +520,6 @@ contains
        if (tr_aero) call write_restart_aero
        if (tr_iage) call write_restart_age
        if (tr_pond) call write_restart_pond
-       if (trim(shortwave) == 'dEdd') call write_restart_dEdd
 #endif
     end if
 
@@ -573,7 +599,7 @@ contains
 
   end subroutine ice_final_mct
 
-!=================================================================================
+!===============================================================================
 
   subroutine ice_SetGSMap_mct( mpicom_ice, ICEID, gsMap_ice )
 
@@ -652,7 +678,7 @@ contains
   end subroutine ice_SetGSMap_mct
 
 
-!====================================================================================
+!===============================================================================
 
   subroutine ice_export_mct( i2x_i )   
 

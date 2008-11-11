@@ -11,7 +11,7 @@
 ! Code originally based on constants.F in POP
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_constants.F90 37 2006-11-29 18:06:44Z eclare $
+!  SVN:$Id: ice_constants.F90 143 2008-08-08 23:08:22Z eclare $
 !
 ! author Elizabeth C. Hunke, LANL
 !
@@ -21,9 +21,6 @@
 !
 ! !USES:
 !
-#ifdef CCSMCOUPLED
-      use shr_const_mod
-#endif
       use ice_kinds_mod
 !
 !EOP
@@ -35,41 +32,6 @@
       ! physical constants
       !-----------------------------------------------------------------
 
-#ifdef CCSMCOUPLED
-      real (kind=dbl_kind), parameter :: &
-         pi        = SHR_CONST_PI    ,&! pi
-         gravit    = SHR_CONST_G     ,&! gravitational acceleration (m/s^2)
-         secday    = SHR_CONST_CDAY  ,&! seconds in calendar day
-         omega     = SHR_CONST_OMEGA ,&! angular velocity of earth (rad/sec)
-         radius    = SHR_CONST_REARTH,&! earth radius (m)
-         rhos      = 330.0_dbl_kind  ,&! density of snow (kg/m^3)
-         rhoi      = SHR_CONST_RHOICE,&! density of ice (kg/m^3)
-         rhow      = SHR_CONST_RHOSW ,&! density of seawater (kg/m^3)
-         rhofresh  = SHR_CONST_RHOFW ,&! density of fresh water (kg/m^3)
-         zvir      = SHR_CONST_ZVIR  ,&! rh2o/rair - 1.0
-         vonkar    = SHR_CONST_KARMAN,&! von Karman constant
-         cp_air    = SHR_CONST_CPDAIR,&! specific heat of air (J/kg/K)
-         cp_wv     = SHR_CONST_CPWV  ,&! specific heat of water vapor (J/kg/K)
-         ! (Briegleb JGR 97 11475-11485  July 1992)
-         emissivity = 0.95_dbl_kind  ,&! emissivity of snow and ice
-         stefan_boltzmann = SHR_CONST_STEBOL,&!  W/m^2/K^4
-         Tffresh   = SHR_CONST_TKFRZ ,&! freezing temp of fresh ice (K)
-         cp_ice    = SHR_CONST_CPICE ,&! specific heat of fresh ice (J/kg/K)
-         cp_ocn    = SHR_CONST_CPSW  ,&! specific heat of ocn    (J/kg/K)
-         depressT  = 0.054_dbl_kind  ,&! Tf:brine salinity ratio (C/ppt)
-         Lsub      = SHR_CONST_LATSUB,&! latent heat, sublimation freshwater (J/kg)
-         Lvap      = SHR_CONST_LATVAP,&! latent heat, vaporization freshwater (J/kg)
-         Lfresh    = SHR_CONST_LATICE,&! latent heat of melting of fresh ice (J/kg)
-         Timelt    = SHR_CONST_TKFRZ-SHR_CONST_TKFRZ,&! melting temp. ice top surface  (C)
-         Tsmelt    = SHR_CONST_TKFRZ-SHR_CONST_TKFRZ,&! melting temp. snow top surface (C)
-         ice_ref_salinity = SHR_CONST_ICE_REF_SAL ,&! (psu)
-!        ocn_ref_salinity = SHR_CONST_OCN_REF_SAL ,&! (psu)
-         albocn = 0.06_dbl_kind                   ,&! ocean albedo
-         dragio = 0.00536_dbl_kind                ,&! ice-ocn drag coefficient
-!        rho_air   = SHR_CONST_RHODAIR,&! ambient air density (kg/m^3)
-         spval_dbl = SHR_CONST_SPVAL  ,&! special value
-         snowpatch = 0.005_dbl_kind     ! parameter for fractional snow area (m)
-#else
 #ifdef AOMIP
       real (kind=dbl_kind), parameter :: &
          rhos      = 300.0_dbl_kind   ,&! density of snow (kg/m^3)
@@ -93,16 +55,22 @@
          emissivity= 0.95_dbl_kind    ,&! emissivity of snow and ice
          cp_ice    = 2106._dbl_kind   ,&! specific heat of fresh ice (J/kg/K)
          cp_ocn    = 4218._dbl_kind   ,&! specific heat of ocn    (J/kg/K)
+                                        ! freshwater value needed for enthalpy
          depressT  = 0.054_dbl_kind   ,&! Tf:brine salinity ratio (C/ppt)
          dragio    = 0.00536_dbl_kind ,&! ice-ocn drag coefficient
          albocn    = 0.06_dbl_kind      ! ocean albedo
 #endif
+
+      real (kind=dbl_kind), parameter :: &
+         gravit    = 9.80616_dbl_kind    ,&! gravitational acceleration (m/s^2)
+         omega     = 7.292e-5_dbl_kind   ,&! angular velocity of earth (rad/sec)
+         radius    = 6.37e6_dbl_kind       ! earth radius (m)
+
       real (kind=dbl_kind), parameter :: &
          pi = 3.14159265358979323846_dbl_kind,&! pi
-         gravit    = 9.80616_dbl_kind ,&! gravitational acceleration (m/s^2)
          secday    = 86400.0_dbl_kind ,&! seconds in calendar day
-         omega     = 7.292e-5_dbl_kind,&! angular velocity of earth (rad/sec)
-         radius    = 6.37e6_dbl_kind  ,&! earth radius (m)
+         Tocnfrz   = -1.8_dbl_kind    ,&! freezing temp of seawater (C),
+                                        ! used as Tsfcn for open water
          rhofresh  = 1000.0_dbl_kind  ,&! density of fresh water (kg/m^3)
          zvir      = 0.606_dbl_kind   ,&! rh2o/rair - 1.0
          vonkar    = 0.4_dbl_kind     ,&! von Karman constant
@@ -117,10 +85,7 @@
          ice_ref_salinity = 4._dbl_kind ,&! (psu)
 !        ocn_ref_salinity = 34.7_dbl_kind,&! (psu)
 !        rho_air   = 1.2_dbl_kind     ,&! ambient air density (kg/m^3)
-         spval_dbl = 1.0e30_dbl_kind  ,&! special value (double precision)
-         snowpatch = 0.02_dbl_kind    ,&! parameter for fractional snow area (m)
-         rfrac     = 0.9_dbl_kind       ! water runoff fraction for melt ponds
-#endif
+         spval_dbl = 1.0e30_dbl_kind    ! special value (double precision)
 
       real (kind=real_kind), parameter :: &
          spval     = 1.0e30_real_kind   ! special value for netCDF output
@@ -133,10 +98,11 @@
          kappan = 17.6_dbl_kind,&! vis extnctn coef in ice, wvlngth<700nm (1/m)
 
          kice   = 2.03_dbl_kind  ,&! thermal conductivity of fresh ice(W/m/deg)
+         kseaice= 2.00_dbl_kind  ,&! thermal conductivity of sea ice (W/m/deg)
+                                   ! (used in zero layer thermodynamics option)
          ksno   = 0.30_dbl_kind  ,&! thermal conductivity of snow  (W/m/deg)
          zref   = 10._dbl_kind   ,&! reference height for stability (m)
-         Tocnfrz= -34.0_dbl_kind*depressT  ! freezing temp of seawater (C),
-                                           ! used as Tsfcn for open water
+         snowpatch = 0.02_dbl_kind ! parameter for fractional snow area (m)
 
       ! weights for albedos (match those for isccp shortwave forcing)
 ! 4 Jan 2007 BPB  Following are appropriate for complete cloud
@@ -172,7 +138,6 @@
         c4   = 4.0_dbl_kind, &
         c5   = 5.0_dbl_kind, &
         c6   = 6.0_dbl_kind, &
-        c7   = 7.0_dbl_kind, &
         c8   = 8.0_dbl_kind, &
         c9   = 9.0_dbl_kind, &
         c10  = 10.0_dbl_kind, &
@@ -181,7 +146,6 @@
         c16  = 16.0_dbl_kind, &
         c20  = 20.0_dbl_kind, &
         c25  = 25.0_dbl_kind, &
-        c90  = 90.0_dbl_kind, &
         c100 = 100.0_dbl_kind, &
         c180 = 180.0_dbl_kind, &
         c360 = 360.0_dbl_kind, &
@@ -206,11 +170,8 @@
         p055 = p111*p5, &
         p027 = p055*p5, &
         p222 = c2/c9, &
-        eps04  = 1.0e-4_dbl_kind, &
         eps11  = 1.0e-11_dbl_kind, &
-        eps12  = 1.0e-12_dbl_kind, &
         eps13  = 1.0e-13_dbl_kind, &
-        eps15  = 1.0e-15_dbl_kind, &
         eps16  = 1.0e-16_dbl_kind, &
         puny   = eps11, &
         bignum = 1.0e+30_dbl_kind, &
@@ -254,16 +215,6 @@
         kg_to_g       = 1000._dbl_kind  ,&! kilograms to grams
         mps_to_cmpdy  = 8.64e6_dbl_kind ,&! m per s to cm per day
         rad_to_deg    = 180._dbl_kind/pi  ! degree-radian conversion
-
-#ifndef USE_ESMF
-      integer (kind=int_kind), parameter :: &
-         ESMF_SUCCESS = 0   ! otherwise ESMF defines this parameter
-#endif
-
-      ! useful for debugging
-      integer (kind=int_kind), parameter :: &
-         mtest = -999, itest = 1, jtest = 1, ntest = 1, btest = 1
-!         mtest = 2, itest = 50, jtest = 53, ntest = 1, btest = 1
 
 !=======================================================================
 

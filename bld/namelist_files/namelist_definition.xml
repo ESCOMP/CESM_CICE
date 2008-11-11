@@ -8,15 +8,15 @@
 <!---General namelist input---->
 <!----------------------------->
 
-<entry id="inic_file" type="char*256" category="cice" group="ice_nml" valid_values="" >
+<entry id="ice_ic" type="char*256" category="cice" group="setup_nml" valid_values="" >
 Method of ice cover initialization.
 'default'=>latitude and sst dependent, 'none'=>no ice, restart filename (must be a full path)
 Default: 'default'
 </entry>
 
-<!---Time stpes---->
+<!---Time steps---->
 
-<entry id="dt" type="real"  category="cice" group="ice_nml" valid_values="">
+<entry id="dt" type="real"  category="cice" group="setup_nml" valid_values="">
 time step, s
 Default: 3600
 </entry>
@@ -26,7 +26,7 @@ subcycles per dynamics timestep
 Default: 120
 </entry>
 
-<entry id="xndyn_dt" type="real"  category="cice" group="ice_nml" valid_values="">
+<entry id="xndyn_dt" type="real"  category="cice" group="setup_nml" valid_values="">
 number of dynamic time steps per thermodynamic time step
 Default: 1.0
 </entry>
@@ -43,7 +43,7 @@ if true, use damping procedure in evp dynamics
 Default: false
 </entry>
 
-<entry id="kcatbound" type="integer"  category="cice" group="ice_nml" valid_values="">
+<entry id="kcatbound" type="integer"  category="cice" group="grid_nml" valid_values="">
 category boundary formula (0 = old, 1 = new)
 Default: 0
 </entry>
@@ -75,36 +75,36 @@ Default: 1
 
 <!---History output     ---->
 
-<entry id="histfreq" type="char*1"  category="cice" group="ice_nml" valid_values="">
+<entry id="histfreq" type="char*1"  category="cice" group="setup_nml" valid_values="">
 frequency of history output (once per 1,h,d,m,y)
 Default: m
 </entry>
 
-<entry id="histfreq_n" type="integer"  category="cice" group="ice_nml" valid_values="">
+<entry id="histfreq_n" type="integer"  category="cice" group="setup_nml" valid_values="">
 frequency of history output (10 = once per 10 h,d,m,y)
 Default: 1
 </entry>
 
-<entry id="hist_avg" type="logical"  category="cice" group="ice_nml" valid_values="">
+<entry id="hist_avg" type="logical"  category="cice" group="setup_nml" valid_values="">
 if true, write time-averages (not snapshots)
 Default: true
 </entry>
 
-<entry id="history_format" type="char*80"  category="cice" group="ice_nml" valid_values="">
+<entry id="history_format" type="char*80"  category="cice" group="setup_nml" valid_values="">
 file format ('bin'=binary or 'nc'=netcdf)
 Default: 'nc' if CPP nc is defined, and 'bin' otherwise
 </entry>
 
 <!---Diagnostic output     ---->
 
-<entry id="diagfreq" type="integer"  category="cice" group="ice_nml" valid_values="">
+<entry id="diagfreq" type="integer"  category="cice" group="setup_nml" valid_values="">
 diagnostic output frequency (10 = once per 10 dt)
 Default: 24
 </entry>
 
 <!---Restart output     ---->
 
-<entry id="pointer_file" type="char*80"  category="cice" group="ice_nml" valid_values="">
+<entry id="pointer_file" type="char*80"  category="cice" group="setup_nml" valid_values="">
 ice restart pointer file
 Default: rpointer.ice
 </entry>
@@ -112,22 +112,22 @@ Default: rpointer.ice
 <!---Grid information    ---->
 
 <entry id="grid_type" type="char*256"  category="cice" 
-       group="ice_nml" valid_values="displaced_pole,tripole,panarctic,latlon,rectangular">
+       group="grid_nml" valid_values="displaced_pole,tripole,panarctic,latlon,rectangular">
 type of grid
 Default: 'rectangular'
 </entry>
 
-<entry id="grid_format" type="char*256"  category="cice" group="ice_nml" valid_values="bin,nc">
+<entry id="grid_format" type="char*256"  category="cice" group="grid_nml" valid_values="bin,nc">
 file format ('bin'=binary or 'nc'=netcdf)
 Default: 'bin'
 </entry>
 
-<entry id="grid_file" type="char*256"  category="cice" group="ice_nml" valid_values=""
+<entry id="grid_file" type="char*256"  category="cice" group="grid_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
 </entry>
 
-<entry id="kmt_file" type="char*256"  category="cice" group="ice_nml" valid_values=""
+<entry id="kmt_file" type="char*256"  category="cice" group="grid_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
 </entry>

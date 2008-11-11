@@ -53,6 +53,7 @@
                                       indxi,    indxj,    & 
                                       Tsf,      potT,     &
                                       uatm,     vatm,     &  
+                                      uvel,     vvel,     &  
                                       wind,     zlvl,     &  
                                       Qa,       rhoa,     &
                                       strx,     stry,     &   
@@ -95,6 +96,8 @@
          potT     , & ! air potential temperature  (K)
          uatm     , & ! x-direction wind speed (m/s)
          vatm     , & ! y-direction wind speed (m/s)
+         uvel     , & ! x-direction ice speed (m/s)
+         vvel     , & ! y-direction ice speed (m/s)
          wind     , & ! wind speed (m/s)
          zlvl     , & ! atm level height (m)
          Qa       , & ! specific humidity (kg/kg)
@@ -169,7 +172,7 @@
       !------------------------------------------------------------
 
       psimhu(xd)  = log((c1+xd*(c2+xd))*(c1+xd*xd)/c8) &
-                  - c2*atan(xd) + pi*p5 
+                  - c2*atan(xd) + pih
 !ech                  - c2*atan(xd) + 1.571_dbl_kind
 
       psixhu(xd)  =  c2 * log((c1 + xd*xd)/c2)
@@ -328,8 +331,8 @@
       !------------------------------------------------------------
 
          tau = rhoa(i,j) * ustar(ij) * rd(ij) ! not the stress at zlvl(i,j)
-         strx(i,j) = tau * uatm(i,j)
-         stry(i,j) = tau * vatm(i,j)
+         strx(i,j) = tau * (uatm(i,j)-uvel(i,j))
+         stry(i,j) = tau * (vatm(i,j)-vvel(i,j))
 
       enddo                     ! ij
 

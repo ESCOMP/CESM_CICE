@@ -33,7 +33,6 @@
 
    public :: init_ice_timers,     &
              get_ice_timer,       &
-             release_ice_timer,   &
              ice_timer_clear,     &
              ice_timer_start,     &
              ice_timer_stop,      &
@@ -46,8 +45,6 @@
 
 !-----------------------------------------------------------------------
 ! public timers
-!lipscombmod - Timers are defined here instead of in individual modules
-!              as in POP.  Add timers as desired.
 !-----------------------------------------------------------------------
 
    integer (int_kind), public ::      &
@@ -62,6 +59,8 @@
       timer_catconv,          &! category conversions
       timer_couple,           &! coupling
       timer_readwrite,        &! read/write
+      timer_diags,            &! diagnostics/history
+      timer_hist,             &! diagnostics/history
       timer_bound              ! boundary updates
 !      timer_tmp                ! for temporary timings
 
@@ -205,6 +204,8 @@
    call get_ice_timer(timer_catconv,  'Cat Conv', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_couple,   'Coupling', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_readwrite,'ReadWrite',nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_diags,    'Diags    ',nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_hist,     'History  ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bound,    'Bound',    nblocks,distrb_info%nprocs)
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
 
@@ -296,66 +297,6 @@
 !EOC
 
  end subroutine get_ice_timer
-
-!***********************************************************************
-!BOP
-! !IROUTINE: release_ice_timer
-! !INTERFACE:
-
- subroutine release_ice_timer(timer_id)
-
-! !DESCRIPTION:
-!  This routine frees up a timer which is no longer used.
-!  NOTE: This routine must be called from outside a threaded
-!  region.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
-
-   integer (int_kind), intent(in) :: &
-      timer_id                ! timer number
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  if the timer has been defined, mark as not in use and re-initialize
-!  values. otherwise exit with an error
-!
-!-----------------------------------------------------------------------
-
-   if (all_timers(timer_id)%in_use) then
-     
-      all_timers(timer_id)%name = 'unknown_timer_name'
-
-      all_timers(timer_id)%in_use       = .false.
-      all_timers(timer_id)%node_started = .false.
-
-      all_timers(timer_id)%num_blocks   = 0
-      all_timers(timer_id)%num_nodes    = 0
-      all_timers(timer_id)%num_starts   = 0
-      all_timers(timer_id)%num_stops    = 0
-      all_timers(timer_id)%node_cycles1 = c0
-      all_timers(timer_id)%node_cycles2 = c0
-
-      all_timers(timer_id)%node_accum_time = c0
-
-      nullify(all_timers(timer_id)%block_started)
-      nullify(all_timers(timer_id)%block_cycles1)
-      nullify(all_timers(timer_id)%block_cycles2)
-      nullify(all_timers(timer_id)%block_accum_time)
-
-   else
-      call abort_ice &
-                 ('release_ice_timer: attempt to reset undefined timer')
-   endif
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine release_ice_timer
 
 !***********************************************************************
 !BOP

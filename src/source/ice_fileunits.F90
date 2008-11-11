@@ -52,14 +52,12 @@
          nu_forcing    , &  ! forcing data file
          nu_dump       , &  ! dump file for restarting
          nu_restart    , &  ! restart input file
-         nu_dump_pond , &
-         nu_restart_pond, &
-         nu_dump_dEdd , &
-         nu_restart_dEdd, &
+         nu_dump_aero  , &  ! dump file for restarting ice aerosol tracer MH
+         nu_restart_aero,&  ! restart input file for ice aerosol tracer MH
          nu_dump_age   , &  ! dump file for restarting ice age tracer
          nu_restart_age, &  ! restart input file for ice age tracer
-         nu_dump_aero  , &  ! dump file for restarting ice aerosol tracer MH
-         nu_restart_aero, &  ! restart input file for ice aerosol tracer MH
+         nu_dump_pond  , &  ! dump file for restarting melt pond tracer
+         nu_restart_pond,&  ! restart input file for melt pond tracer
          nu_rst_pointer, &  ! pointer to latest restart file
          nu_history    , &  ! binary history output file
          nu_hdr        , &  ! header file for binary history output
@@ -115,14 +113,12 @@ contains
          nu_forcing     = shr_file_getUnit()
          nu_dump        = shr_file_getUnit()
          nu_restart     = shr_file_getUnit()
-         nu_dump_pond  = shr_file_getUnit()
-         nu_restart_pond = shr_file_getUnit()
-         nu_dump_dEdd   = shr_file_getUnit()
-         nu_restart_dEdd = shr_file_getUnit()
-         nu_dump_age   = shr_file_getUnit()
-         nu_restart_age = shr_file_getUnit()
          nu_dump_aero  = shr_file_getUnit()    !MH
          nu_restart_aero= shr_file_getUnit()   !MH
+         nu_dump_age   = shr_file_getUnit()
+         nu_restart_age = shr_file_getUnit()
+         nu_dump_pond  = shr_file_getUnit()
+         nu_restart_pond = shr_file_getUnit()
          nu_rst_pointer = shr_file_getUnit()
          nu_history     = shr_file_getUnit()
          nu_hdr         = shr_file_getUnit()
@@ -132,14 +128,12 @@ contains
          call get_fileunit(nu_forcing)
          call get_fileunit(nu_dump)
          call get_fileunit(nu_restart)
-         call get_fileunit(nu_dump_pond)
-         call get_fileunit(nu_restart_pond)
-         call get_fileunit(nu_dump_dEdd)
-         call get_fileunit(nu_restart_dEdd)
-         call get_fileunit(nu_dump_age)
-         call get_fileunit(nu_restart_age)
          call get_fileunit(nu_dump_aero)     !MH
          call get_fileunit(nu_restart_aero)  !MH
+         call get_fileunit(nu_dump_age)
+         call get_fileunit(nu_restart_age)
+         call get_fileunit(nu_dump_pond)
+         call get_fileunit(nu_restart_pond)
          call get_fileunit(nu_rst_pointer)
          call get_fileunit(nu_history)
          call get_fileunit(nu_hdr)
@@ -212,31 +206,21 @@ contains
 ! !DESCRIPTION:
 !  This routine releases unit numbers at the end of a run. 
 
-#ifdef CCSMCOUPLED
- 	 call shr_file_freeUnit(nu_grid) 
- 	 call shr_file_freeUnit(nu_kmt) 
- 	 call shr_file_freeUnit(nu_forcing) 
- 	 call shr_file_freeUnit(nu_dump) 
- 	 call shr_file_freeUnit(nu_restart) 
- 	 call shr_file_freeUnit(nu_rst_pointer) 
- 	 call shr_file_freeUnit(nu_history) 
- 	 call shr_file_freeUnit(nu_hdr) 
-         if (nu_diag /= ice_stdout) call shr_file_freeUnit(nu_diag)
-#else
-         call release_fileunit(nu_grid)
-         call release_fileunit(nu_kmt)
-         call release_fileunit(nu_forcing)
-         call release_fileunit(nu_dump)
-         call release_fileunit(nu_restart)
-         call release_fileunit(nu_dump_age)
-         call release_fileunit(nu_restart_age)
-         call release_fileunit(nu_dump_aero)     !MH
-         call release_fileunit(nu_restart_aero)  !MH
-         call release_fileunit(nu_rst_pointer)
-         call release_fileunit(nu_history)
-         call release_fileunit(nu_hdr)
-         if (nu_diag /= ice_stdout) call release_fileunit(nu_diag)
-#endif
+      call release_fileunit(nu_grid)
+      call release_fileunit(nu_kmt)
+      call release_fileunit(nu_forcing)
+      call release_fileunit(nu_dump)
+      call release_fileunit(nu_restart)
+      call release_fileunit(nu_dump_aero)     !MH
+      call release_fileunit(nu_restart_aero)  !MH
+      call release_fileunit(nu_dump_age)
+      call release_fileunit(nu_restart_age)
+      call release_fileunit(nu_dump_pond)
+      call release_fileunit(nu_restart_pond)
+      call release_fileunit(nu_rst_pointer)
+      call release_fileunit(nu_history)
+      call release_fileunit(nu_hdr)
+      if (nu_diag /= ice_stdout) call release_fileunit(nu_diag)
 
  end subroutine release_all_fileunits
 
@@ -263,6 +247,9 @@ contains
 !EOP
 !BOC
 
+#ifdef CCSMCOUPLED
+   call shr_file_freeUnit(iunit)
+#else
 !  check for proper unit number
    if (iunit < 1 .or. iunit > ice_IOUnitsMaxUnits) then
       stop 'release_fileunit: bad unit'
@@ -270,6 +257,7 @@ contains
 
 !  mark the unit as not in use
    ice_IOUnitsInUse(iunit) = .false.  !  that was easy...
+#endif
 
 !EOC
  end subroutine release_fileunit

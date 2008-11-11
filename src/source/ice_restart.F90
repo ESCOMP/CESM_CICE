@@ -38,13 +38,11 @@
       implicit none
       save
 
-
-      character(len=char_len_long) :: & 
-        inic_file          ! method of ice cover initialization
-                           ! 'default'  => latitude and sst dependent
-                           ! 'none'     => no ice 
-                           ! restart filename (can be a full path)
-                           ! only used if CCSMCOUPLED is defined
+      character(len=char_len_long) :: &
+         ice_ic      ! method of ice cover initialization
+                     ! 'default'  => latitude and sst dependent
+                     ! 'none'     => no ice
+                     ! note:  restart = .true. overwrites
 
       logical (kind=log_kind) :: &
          restart ! ONLY USED if CCSMCOUPLED is  not defined
@@ -176,11 +174,14 @@
       call ice_write(nu_dump,0,vvel,'ruf8',diag)
 
       !-----------------------------------------------------------------
-      ! fresh water, salt, and heat flux
+      ! radiation fields
       !-----------------------------------------------------------------
-      call ice_write(nu_dump,0,fresh,'ruf8',diag)
-      call ice_write(nu_dump,0,fsalt,'ruf8',diag)
-      call ice_write(nu_dump,0,fhocn,'ruf8',diag)
+      call ice_write(nu_dump,0,coszen,'ruf8',diag)
+      call ice_write(nu_dump,0,scale_factor,'ruf8',diag)
+      call ice_write(nu_dump,0,swvdr,'ruf8',diag)
+      call ice_write(nu_dump,0,swvdf,'ruf8',diag)
+      call ice_write(nu_dump,0,swidr,'ruf8',diag)
+      call ice_write(nu_dump,0,swidf,'ruf8',diag)
 
       !-----------------------------------------------------------------
       ! ocean stress (for bottom heat flux in thermo)
@@ -239,7 +240,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine restartfile(inic_file)
+      subroutine restartfile(ice_ic)
 !
 ! !DESCRIPTION:
 !
@@ -255,7 +256,7 @@
       use ice_boundary
       use ice_domain_size
       use ice_domain
-      use ice_calendar, only: istep0, istep1, time, time_forc
+      use ice_calendar, only: istep0, istep1, time, time_forc, calendar
       use ice_flux
       use ice_state
       use ice_grid, only: tmask
@@ -266,7 +267,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
-      character(len=*), optional :: inic_file
+      character(len=*), optional :: ice_ic
 !EOP
 !
       integer (kind=int_kind) :: &
@@ -278,24 +279,26 @@
       logical (kind=log_kind) :: &
          diag, hit_eof
 
-      if (present(inic_file)) then 
-         filename = inic_file
+      if (present(ice_ic)) then 
+         filename = ice_ic
       else
          if (my_task == master_task) then
             open(nu_rst_pointer,file=pointer_file)
             read(nu_rst_pointer,'(a)') filename0
             filename = trim(filename0)
             close(nu_rst_pointer)
-            write(nu_diag,*) 'read ',pointer_file(1:lenstr(pointer_file))
+            write(nu_diag,*) 'Read ',pointer_file(1:lenstr(pointer_file))
          endif
       endif
 
       call ice_open(nu_restart,filename,0)
 
       if (my_task == master_task) then
+         write(nu_diag,*) 'Using restart dump=', trim(filename)
          read (nu_restart) istep0,time,time_forc
-         write(nu_diag,*) 'restart read at istep=',istep0,time,time_forc
+         write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
       endif
+      call calendar(time)
 
       call broadcast_scalar(istep0,master_task)
 
@@ -350,14 +353,36 @@
          field_type=field_type_vector,field_loc=field_loc_NEcorner)
 
       !-----------------------------------------------------------------
-      ! fresh water, salt, and heat flux
+      ! radiation fields
       !-----------------------------------------------------------------
+      if (trim(runtype) /= 'initial') then
+
+      if (my_task == master_task) &
+         write(nu_diag,*) 'radiation fields'
+
+      call ice_read(nu_restart,0,coszen,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,scale_factor,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,swvdr,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,swvdf,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,swidr,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read(nu_restart,0,swidf,'ruf8',diag, &
+                    field_loc_center, field_type_scalar)
+
+      else
+
       if (my_task == master_task) &
          write(nu_diag,*) 'min/max fresh water and heat flux components'
 
       call ice_read(nu_restart,0,fresh,'ruf8',diag)
       call ice_read(nu_restart,0,fsalt,'ruf8',diag)
       call ice_read(nu_restart,0,fhocn,'ruf8',diag)
+
+      endif
 
       !-----------------------------------------------------------------
       ! ocean stress

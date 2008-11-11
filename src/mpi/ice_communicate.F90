@@ -9,7 +9,7 @@
 !  communicating between processors.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_communicate.F90 112 2008-03-13 21:06:56Z eclare $
+!  SVN:$Id: ice_communicate.F90 127 2008-04-28 21:59:36Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP version by William H. Lipscomb, LANL
@@ -17,9 +17,17 @@
 ! !USES:
 
    use ice_kinds_mod
-#ifdef CCSMCOUPLED
+#if (defined CCSM) || (defined SEQ_MCT)
    use cpl_interface_mod, only : cpl_interface_init
    use cpl_fields_mod, only : cpl_fields_icename
+#endif
+
+#if defined key_oasis3
+   use cpl_oasis3
+#endif
+
+#if defined key_oasis4
+   use cpl_oasis4
 #endif
 
    implicit none
@@ -79,6 +87,8 @@
 
    integer (int_kind) :: ierr  ! MPI error flag
 
+   integer (int_kind) :: ice_comm
+
 !-----------------------------------------------------------------------
 !
 !  initiate mpi environment and create communicator for internal
@@ -86,21 +96,25 @@
 !
 !-----------------------------------------------------------------------
 
-#ifdef CCSMCOUPLED
+#if (defined key_oasis3 || defined key_oasis4)
+    ice_comm = localComm       ! communicator from NEMO/OASISn 
+#else
+    ice_comm = MPI_COMM_WORLD  ! Global communicator 
+#endif 
 
+#if (defined CCSM) || (defined SEQ_MCT)
    ! CCSM standard coupled mode
    call cpl_interface_init(cpl_fields_icename, MPI_COMM_ICE)
-
 #else
 
-#ifdef popcice
-   ! LANL directly coupled POP and CICE:  POP calls MPI_INIT
+#if (defined popcice || defined CICE_IN_NEMO)
+   ! MPI_INIT is called elsewhere in coupled configuration
 #else
    call MPI_INIT(ierr)
-   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 #endif
 
-   call MPI_COMM_DUP(MPI_COMM_WORLD, MPI_COMM_ICE, ierr)
+   call MPI_BARRIER (ice_comm, ierr)
+   call MPI_COMM_DUP(ice_comm, MPI_COMM_ICE, ierr)
 
 #endif
 

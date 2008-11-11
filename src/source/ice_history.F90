@@ -78,8 +78,10 @@
       !---------------------------------------------------------------
 
       integer (kind=int_kind), parameter :: &
+         nvar = 11              , & ! number of grid fields that can be written
+                                    !   excluding grid vertices
          ncat_hist = ncat       , & ! number of ice categories written <= ncat
-         avgsiz = 77                ! base number of fields that can be written
+         avgsiz = 81                ! base number of fields that can be written
 
       integer (kind=int_kind) :: &
          navgsiz                  ! actual number of fields that can be written
@@ -97,14 +99,20 @@
       logical (kind=log_kind), allocatable :: &
          iout(:)           ! true if field is written to output file
 
+      logical (kind=log_kind) :: &
+         igrd(nvar)        ! true if grid field is written to output file
+
       character (len=16), allocatable :: &
          vname(:)      , & ! variable names
          vunit(:)      , & ! variable units
-         vcoord(:)         ! variable coordinates
+         vcoord(:)     , & ! variable coordinates
+         vcellmeas(:)      ! variables cell measures
 
       character (len=16), parameter :: &
-         tstr = 'TLON TLAT time', & ! vcoord for T cell quantities
-         ustr = 'ULON ULAT time'    ! vcoord for U cell quantities
+         tstr  = 'TLON TLAT time', & ! vcoord for T cell quantities
+         ustr  = 'ULON ULAT time', & ! vcoord for U cell quantities
+         tcstr = 'area: tarea'   , & ! vcellmeas for T cell quantities
+         ucstr = 'area: uarea'       ! vcellmeas for U cell quantities
 
       character (len=55), allocatable :: & 
          vdesc(:)      , & ! variable descriptions
@@ -113,6 +121,15 @@
       !---------------------------------------------------------------
       ! logical flags: write to output file if true
       !---------------------------------------------------------------
+
+       logical (kind=log_kind) :: &
+           f_tmask     = .true., &
+           f_tarea     = .true., f_uarea      = .true., &
+           f_dxt       = .true., f_dyt        = .true., &
+           f_dxu       = .true., f_dyu        = .true., &
+           f_HTN       = .true., f_HTE        = .true., &
+           f_ANGLE     = .true., f_ANGLET     = .true., &
+           f_bounds    = .true.
 
       logical (kind=log_kind) :: &
            f_hi        = .true., f_hs         = .true., &
@@ -125,6 +142,7 @@
            f_sst       = .true., f_sss        = .true., &
            f_uocn      = .true., f_vocn       = .true., &
            f_frzmlt    = .true., &
+           f_fswfac    = .true., &
            f_fswabs    = .true., f_fswabs_ai  = .true., &
            f_albsni    = .true., &
            f_alvdr     = .true., f_alidr      = .true., &
@@ -158,13 +176,24 @@
            f_hisnap    = .true., f_aisnap     = .true., &
            f_aicen     = .true., f_vicen      = .true., &
            f_apondn     = .false.,                      &
-           f_trsig     = .true., f_icepresent = .true.
+           f_trsig     = .true., f_icepresent = .true., &
+           f_fsurf_ai  = .true., f_fcondtop_ai= .true., &
+           f_fmeltt_ai = .true.,                        &
+           f_fsurfn_ai = .true.,f_fcondtopn_ai= .true., &
+           f_fmelttn_ai= .true., f_flatn_ai   = .true.
 
       !---------------------------------------------------------------
       ! namelist variables (same as logical flags)
       !---------------------------------------------------------------
 
       namelist / icefields_nml /     &
+           f_tmask    , &
+           f_tarea    , f_uarea    , &
+           f_dxt      , f_dyt      , &
+           f_dxu      , f_dyu      , &
+           f_HTN      , f_HTE      , &
+           f_ANGLE    , f_ANGLET   , &
+           f_bounds   , &
            f_hi,        f_hs       , &
            f_Tsfc,      f_aice     , &
            f_uvel,      f_vvel     , &
@@ -175,6 +204,7 @@
            f_sst,       f_sss      , &
            f_uocn,      f_vocn     , &
            f_frzmlt                , &
+           f_fswfac                , &
            f_fswabs,    f_fswabs_ai, &
            f_albsni                , &
            f_alvdr,     f_alidr    , &
@@ -206,15 +236,37 @@
            f_dvirdgdt              , &
            f_hisnap,    f_aisnap   , &
            f_aicen,     f_vicen    , &
-           f_apondn,    f_iage     , &
            f_aeron,     f_aero     , &       !MH
-           f_trsig,     f_icepresent
+           f_iage,      f_apondn   , &
+           f_trsig,     f_icepresent,&
+           f_fsurf_ai,  f_fcondtop_ai,&
+           f_fmeltt_ai,              &
+           f_fsurfn_ai,f_fcondtopn_ai,&
+           f_fmelttn_ai,f_flatn_ai
+
 
       !---------------------------------------------------------------
       ! field indices
       !---------------------------------------------------------------
 
-      integer (kind=int_kind), parameter :: &
+       integer (kind=int_kind), parameter :: &
+           n_tmask      = 1,  &
+           n_tarea      = 2,  &
+           n_uarea      = 3,  &
+           n_dxt        = 4,  &
+           n_dyt        = 5,  &
+           n_dxu        = 6,  &
+           n_dyu        = 7,  &
+           n_HTN        = 8,  &
+           n_HTE        = 9,  &
+           n_ANGLE      = 10, &
+           n_ANGLET     = 11, &
+
+           n_lont_bnds  = 1, &
+           n_latt_bnds  = 2, &
+           n_lonu_bnds  = 3, &
+           n_latu_bnds  = 4, &
+
            n_hi         = 1,  &
            n_hs         = 2,  &
            n_Tsfc       = 3,  &
@@ -291,7 +343,11 @@
            n_Tair       = 74, &
            n_trsig      = 75, &
            n_icepresent = 76, &
-           n_iage       = 77
+           n_iage       = 77, &
+           n_fsurf_ai   = 78, &
+           n_fcondtop_ai= 79, &
+           n_fmeltt_ai  = 80, &
+           n_fswfac     = 81
 
       integer(kind=int_kind) :: &
            n_faero  , &
@@ -305,7 +361,11 @@
            n_aeroic2n, &
            n_aicen, &
            n_vicen, & 
-           n_apondn
+           n_apondn, &
+           n_fsurfn_ai, &
+           n_fcondtopn_ai, &
+           n_fmelttn_ai, &
+           n_flatn_ai
 
 !=======================================================================
 
@@ -338,11 +398,7 @@
       use ice_constants
       use ice_calendar, only: yday, days_per_year
       use ice_flux, only: mlt_onset, frz_onset
-#ifdef CCSMCOUPLED
-      use ice_restart, only: inic_file
-#else
       use ice_restart, only: restart
-#endif
       use ice_age, only: tr_iage
       use ice_aerosol, only: tr_aero
       use ice_meltpond, only: tr_pond
@@ -359,7 +415,7 @@
       integer (kind=int_kind) :: nml_error ! namelist i/o error flag
 
       character (len=3) :: nchar
-      character (len=30) :: tmp
+      character (len=40) :: tmp
 
       !-----------------------------------------------------------------
       ! read namelist
@@ -393,6 +449,23 @@
       if (.not. tr_aero) f_aero = .false.    !MH
       if (.not. tr_aero) f_aeron = .false.    !MH
 
+#ifndef ncdf
+      f_bounds = .false.
+#endif
+
+      call broadcast_scalar (f_tmask, master_task)
+      call broadcast_scalar (f_tarea, master_task)
+      call broadcast_scalar (f_uarea, master_task)
+      call broadcast_scalar (f_dxt, master_task)
+      call broadcast_scalar (f_dyt, master_task)
+      call broadcast_scalar (f_dxu, master_task)
+      call broadcast_scalar (f_dyu, master_task)
+      call broadcast_scalar (f_HTN, master_task)
+      call broadcast_scalar (f_HTE, master_task)
+      call broadcast_scalar (f_ANGLE, master_task)
+      call broadcast_scalar (f_ANGLET, master_task)
+      call broadcast_scalar (f_bounds, master_task)
+
       call broadcast_scalar (f_hi, master_task)
       call broadcast_scalar (f_hs, master_task)
       call broadcast_scalar (f_Tsfc, master_task)
@@ -411,6 +484,7 @@
       call broadcast_scalar (f_uocn, master_task)
       call broadcast_scalar (f_vocn, master_task)
       call broadcast_scalar (f_frzmlt, master_task)
+      call broadcast_scalar (f_fswfac, master_task)
       call broadcast_scalar (f_fswabs, master_task)
       call broadcast_scalar (f_fswabs_ai, master_task)
       call broadcast_scalar (f_albsni, master_task)
@@ -470,12 +544,20 @@
       call broadcast_scalar (f_hisnap, master_task)
       call broadcast_scalar (f_aicen, master_task)
       call broadcast_scalar (f_vicen, master_task)
-      call broadcast_scalar (f_apondn, master_task)
       call broadcast_scalar (f_trsig, master_task)
       call broadcast_scalar (f_icepresent, master_task)
-      call broadcast_scalar (f_iage, master_task)
+      call broadcast_scalar (f_fsurf_ai, master_task)
+      call broadcast_scalar (f_fcondtop_ai, master_task)
+      call broadcast_scalar (f_fmeltt_ai, master_task)
+      call broadcast_scalar (f_fsurfn_ai, master_task)
+      call broadcast_scalar (f_fcondtopn_ai, master_task)
+      call broadcast_scalar (f_fmelttn_ai, master_task)
+      call broadcast_scalar (f_flatn_ai, master_task)
+
       call broadcast_scalar (f_aero, master_task)       !MH
       call broadcast_scalar (f_aeron, master_task)       !MH
+      call broadcast_scalar (f_iage, master_task)
+      call broadcast_scalar (f_apondn, master_task)
 
       !---------------------------------------------------------------
       ! determine navgsiz and allocate arrays
@@ -494,6 +576,18 @@
 
       navgsiz  = navgsiz + ncat_hist
       n_apondn = n_vicen + ncat_hist
+
+      navgsiz     = navgsiz  + ncat_hist
+      n_fsurfn_ai = n_apondn + ncat_hist
+
+      navgsiz        = navgsiz     + ncat_hist
+      n_fcondtopn_ai = n_fsurfn_ai + ncat_hist
+
+      navgsiz      = navgsiz        + ncat_hist
+      n_fmelttn_ai = n_fcondtopn_ai + ncat_hist
+
+      navgsiz    = navgsiz      + ncat_hist
+      n_flatn_ai = n_fmelttn_ai + ncat_hist
 
       if (f_faero) then
          navgsiz   = navgsiz + n_aero
@@ -523,6 +617,7 @@
       allocate(vcoord(navgsiz))
       allocate(vdesc(navgsiz))
       allocate(vcomment(navgsiz))
+      allocate(vcellmeas(navgsiz))
 
       !---------------------------------------------------------------
       ! field names
@@ -545,6 +640,7 @@
       vname(n_uocn      ) = 'uocn'
       vname(n_vocn      ) = 'vocn'
       vname(n_frzmlt    ) = 'frzmlt'
+      vname(n_fswfac    ) = 'fswfac'
       vname(n_fswabs    ) = 'fswabs'
       vname(n_fswabs_ai ) = 'fswabs_ai'
       vname(n_albsni    ) = 'albsni'  
@@ -605,6 +701,32 @@
       vname(n_trsig     ) = 'trsig'
       vname(n_icepresent) = 'ice_present'
       vname(n_iage      ) = 'iage'
+      vname(n_fsurf_ai  ) = 'fsurf_ai'
+      vname(n_fcondtop_ai)= 'fcondtop_ai'
+      vname(n_fmeltt_ai ) = 'fmeltt_ai'
+
+      do n = 1, ncat_hist
+        write(nchar,'(i3.3)') n
+        write(vname(n_aicen+n-1),'(a,a)') 'aice', trim(nchar) ! aicen
+        write(vname(n_vicen+n-1),'(a,a)') 'vice', trim(nchar) ! vicen
+        write(vname(n_apondn+n-1),'(a,a)') 'apond', trim(nchar) ! apondn
+        write(vname(n_fsurfn_ai+n-1),'(a,a)')    &
+                      'fsurfn_ai', trim(nchar) ! fsurfn
+        write(vname(n_fcondtopn_ai+n-1),'(a,a)') &
+                      'fcondtopn_ai', trim(nchar)  ! fcondtopn
+        write(vname(n_fmelttn_ai+n-1),'(a,a)')   &
+                      'fmelttn_ai', trim(nchar) ! fmeltn
+        write(vname(n_flatn_ai+n-1),'(a,a)')     &
+                      'flatn_ai', trim(nchar)   ! flatn
+        vname(n_aicen+n-1)        = trim(vname(n_aicen+n-1))
+        vname(n_vicen+n-1)        = trim(vname(n_vicen+n-1))
+        vname(n_apondn+n-1)       = trim(vname(n_apondn+n-1))
+        vname(n_fsurfn_ai+n-1)    = trim(vname(n_fsurfn_ai+n-1))
+        vname(n_fcondtopn_ai+n-1) = trim(vname(n_fcondtopn_ai+n-1))
+        vname(n_fmelttn_ai+n-1)   = trim(vname(n_fmelttn_ai+n-1))
+        vname(n_flatn_ai+n-1)     = trim(vname(n_flatn_ai+n-1))
+      enddo
+
       if (f_faero) then
          do n=1,n_aero
             write(nchar,'(i3.3)') n
@@ -625,15 +747,6 @@
             vname(n_aeroic2+n-1) = trim(vname(n_aeroic2+n-1))
          enddo
       endif
-      do n = 1, ncat_hist
-        write(nchar,'(i3.3)') n
-        write(vname(n_aicen+n-1),'(a,a)') 'aice', trim(nchar) ! aicen
-        write(vname(n_vicen+n-1),'(a,a)') 'vice', trim(nchar) ! vicen
-        write(vname(n_apondn+n-1),'(a,a)') 'apond', trim(nchar) ! apondn
-        vname(n_aicen+n-1) = trim(vname(n_aicen+n-1))
-        vname(n_vicen+n-1) = trim(vname(n_vicen+n-1))
-        vname(n_apondn+n-1) = trim(vname(n_apondn+n-1))
-      enddo
 
       !---------------------------------------------------------------
       ! field descriptions
@@ -656,6 +769,7 @@
       vdesc(n_uocn      ) = 'ocean current (x)'           
       vdesc(n_vocn      ) = 'ocean current (y)'         
       vdesc(n_frzmlt    ) = 'freeze/melt potential'    
+      vdesc(n_fswfac    ) = 'shortwave scaling factor'
       vdesc(n_fswabs    ) = 'snow/ice/ocn absorbed solar flux (cpl)'   
       vdesc(n_fswabs_ai ) = 'snow/ice/ocn absorbed solar flux'      
       vdesc(n_albsni    ) = 'snw/ice broad band albedo'
@@ -717,19 +831,10 @@
       vdesc(n_icepresent) = &
         'fraction of time-avg interval that any ice is present'
       vdesc(n_iage      ) = 'sea ice age'
-      if (f_faero) then
-         do n=1,n_aero
-            vdesc(n_faero  +n-1) = 'faero rate (cpl)'         
-         enddo
-      endif
-      if (f_aero) then
-         do n=1,n_aero
-            vdesc(n_aerosn1+n-1) = 'snow ssl aerosol mass'
-            vdesc(n_aerosn2+n-1) = 'snow int aerosol mass'
-            vdesc(n_aeroic1+n-1) = 'ice ssl aerosol mass'
-            vdesc(n_aeroic2+n-1) = 'ice int aerosol mass'
-         enddo
-      endif
+      vdesc(n_fsurf_ai  ) = 'net surface heat flux'
+      vdesc(n_fcondtop_ai)= 'top surface conductive heat flux'
+      vdesc(n_fmeltt_ai ) = 'net surface heat flux causing melt'
+
       do n = 1, ncat_hist
         write(nchar,'(i3)') n
 
@@ -757,10 +862,40 @@
         write(vdesc(n_vicen+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
         vdesc(n_vicen+n-1) = trim(vdesc(n_vicen+n-1))
 
-        tmp = 'meltpond area, category ' ! apondn
+        tmp = 'meltpond concentration, category ' ! apondn
         write(vdesc(n_apondn+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
         vdesc(n_apondn+n-1) = trim(vdesc(n_apondn+n-1))
+
+        tmp = 'net surface heat flux, category ' ! fsurfn
+        write(vdesc(n_fsurfn_ai+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+        vdesc(n_fsurfn_ai+n-1) = trim(vdesc(n_fsurfn_ai+n-1))
+
+        tmp = 'top sfc conductive heat flux , cat ' ! fcondtopn
+        write(vdesc(n_fcondtopn_ai+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+        vdesc(n_fcondtopn_ai+n-1) = trim(vdesc(n_fcondtopn_ai+n-1))
+
+        tmp = 'net sfc heat flux causing melt, cat ' ! fmelttn
+        write(vdesc(n_fmelttn_ai+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+        vdesc(n_fmelttn_ai+n-1) = trim(vdesc(n_fmelttn_ai+n-1))
+
+        tmp = 'latent heat flux, category ' ! flatn
+        write(vdesc(n_flatn_ai+n-1),'(a,2x,a)') trim(tmp), trim(nchar)
+        vdesc(n_flatn_ai+n-1) = trim(vdesc(n_flatn_ai+n-1))
       enddo
+
+      if (f_faero) then
+         do n=1,n_aero
+            vdesc(n_faero  +n-1) = 'faero rate (cpl)'         
+         enddo
+      endif
+      if (f_aero) then
+         do n=1,n_aero
+            vdesc(n_aerosn1+n-1) = 'snow ssl aerosol mass'
+            vdesc(n_aerosn2+n-1) = 'snow int aerosol mass'
+            vdesc(n_aeroic1+n-1) = 'ice ssl aerosol mass'
+            vdesc(n_aeroic2+n-1) = 'ice int aerosol mass'
+         enddo
+      endif
 
       !---------------------------------------------------------------
       ! field units
@@ -783,6 +918,7 @@
       vunit(n_uocn      ) = 'm/s'
       vunit(n_vocn      ) = 'm/s'
       vunit(n_frzmlt    ) = 'W/m^2'
+      vunit(n_fswfac    ) = '1'
       vunit(n_fswabs    ) = 'W/m^2'
       vunit(n_fswabs_ai ) = 'W/m^2'
       vunit(n_albsni    ) = '%'
@@ -843,6 +979,20 @@
       vunit(n_trsig     ) = 'N/m^2'
       vunit(n_icepresent) = '1'
       vunit(n_iage      ) = 'years'
+      vunit(n_fsurf_ai  ) = 'W/m^2'
+      vunit(n_fcondtop_ai)= 'W/m^2'
+      vunit(n_fmeltt_ai ) = 'W/m^2'
+
+      do n = 1, ncat_hist
+        vunit(n_aicen+n-1)        = ' ' ! aicen
+        vunit(n_vicen+n-1)        = 'm' ! vicen
+        vunit(n_apondn+n-1)       = ' ' ! apondn
+        vunit(n_fsurfn_ai+n-1)    = 'W/m^2' ! fsurfn
+        vunit(n_fcondtopn_ai+n-1) = 'W/m^2' ! fcondtopn
+        vunit(n_fmelttn_ai+n-1)   = 'W/m^2' ! fmelttn
+        vunit(n_flatn_ai+n-1)     = 'W/m^2' ! flatn
+      enddo
+
       if (f_faero) then
          do n=1,n_aero
             vunit(n_faero  +n-1) = 'kg/m^2 s'
@@ -856,11 +1006,6 @@
             vunit(n_aeroic2+n-1) = 'kg/kg'         !MH
          enddo
       endif
-      do n = 1, ncat_hist
-        vunit(n_aicen+n-1) = ' ' ! aicen
-        vunit(n_vicen+n-1) = 'm' ! vicen
-        vunit(n_apondn+n-1) = ' ' ! apondn
-      enddo
 
 #ifdef CCSMCOUPLED
       ! redefine for CCSM conventions
@@ -897,6 +1042,7 @@
       vcomment(n_uocn      ) = 'positive is x direction on U grid'
       vcomment(n_vocn      ) = 'positive is y direction on U grid'
       vcomment(n_frzmlt    ) ='if >0, new ice forms; if <0, ice melts' 
+      vcomment(n_fswfac    ) = 'ratio of netsw new:old'
       vcomment(n_fswabs    ) = 'positive downward'   
       vcomment(n_fswabs_ai ) = 'weighted by ice area'      
       vcomment(n_albsni    ) = 'none'
@@ -957,6 +1103,21 @@
       vcomment(n_trsig     ) = 'ice strength approximation' 
       vcomment(n_icepresent) = 'ice extent flag'
       vcomment(n_iage      ) = 'none' 
+      vcomment(n_fsurf_ai  ) = &
+        'positive downwards, excludes conductive flux, weighted by ice area'
+      vcomment(n_fcondtop_ai)= 'positive downwards, weighted by ice area'
+      vcomment(n_fmeltt_ai ) = 'always >= 0, weighted by ice area'
+
+      do n = 1, ncat_hist
+        vcomment(n_aicen+n-1)        = 'Ice range:'           ! aicen
+        vcomment(n_vicen+n-1)        = 'none'                 ! vicen
+        vcomment(n_apondn+n-1)       = 'none'                 ! apondn
+        vcomment(n_fsurfn_ai+n-1)    = 'weighted by ice area' ! fsurfn
+        vcomment(n_fcondtopn_ai+n-1) = 'weighted by ice area' ! fcontopn
+        vcomment(n_fmelttn_ai+n-1)   = 'weighted by ice area' ! fmelttn
+        vcomment(n_flatn_ai+n-1)     = 'weighted by ice area' ! flatn
+      enddo
+
       if (f_faero) then
          do n=1,n_aero
             vcomment(n_faero  +n-1)  = 'none'         
@@ -970,17 +1131,26 @@
             vcomment(n_aeroic2+n-1 ) = 'none'   !MH
          enddo
       endif
-      do n = 1, ncat_hist
-        vcomment(n_aicen+n-1) = 'Ice range:' ! aicen
-        vcomment(n_vicen+n-1) = 'none' ! vicen
-        vcomment(n_apondn+n-1) = 'none' ! apondn
-      enddo
 
       !-----------------------------------------------------------------
       ! fill iout array with namelist values
       !-----------------------------------------------------------------
 
       iout=.true.  ! all fields are written by default
+      igrd=.true.
+
+      igrd(n_tmask     ) = f_tmask
+      igrd(n_tarea     ) = f_tarea
+      igrd(n_uarea     ) = f_uarea
+      igrd(n_dxt       ) = f_dxt
+      igrd(n_dyt       ) = f_dyt
+      igrd(n_dxu       ) = f_dxu
+      igrd(n_dyu       ) = f_dyu
+      igrd(n_HTN       ) = f_HTN
+      igrd(n_HTE       ) = f_HTE
+      igrd(n_ANGLE     ) = f_ANGLE
+      igrd(n_ANGLET    ) = f_ANGLET
+
 
       iout(n_hi        ) = f_hi
       iout(n_hs        ) = f_hs
@@ -999,6 +1169,7 @@
       iout(n_uocn      ) = f_uocn  
       iout(n_vocn      ) = f_vocn  
       iout(n_frzmlt    ) = f_frzmlt  
+      iout(n_fswfac    ) = f_fswfac  
       iout(n_fswabs    ) = f_fswabs  
       iout(n_fswabs_ai ) = f_fswabs_ai  
       iout(n_albsni    ) = f_albsni  
@@ -1059,6 +1230,20 @@
       iout(n_trsig     ) = f_trsig
       iout(n_icepresent) = f_icepresent
       iout(n_iage      ) = f_iage
+      iout(n_fsurf_ai  ) = f_fsurf_ai
+      iout(n_fcondtop_ai)= f_fcondtop_ai
+      iout(n_fmeltt_ai ) = f_fmeltt_ai
+
+      do n = 1, ncat_hist
+        iout(n_aicen+n-1)        = f_aicen
+        iout(n_vicen+n-1)        = f_vicen
+        iout(n_apondn+n-1)       = f_apondn
+        iout(n_fsurfn_ai+n-1)    = f_fsurfn_ai
+        iout(n_fcondtopn_ai+n-1) = f_fcondtopn_ai
+        iout(n_fmelttn_ai+n-1)   = f_fmelttn_ai
+        iout(n_flatn_ai+n-1)     = f_flatn_ai
+      enddo
+
       if (f_faero) then
          do n=1,n_aero
             iout(n_faero  +n-1) = f_faero  
@@ -1072,11 +1257,6 @@
             iout(n_aeroic2+n-1) = f_aero
          enddo
       endif
-      do n = 1, ncat_hist
-        iout(n_aicen+n-1) = f_aicen
-        iout(n_vicen+n-1) = f_vicen
-        iout(n_apondn+n-1) = f_apondn
-      enddo
 
       if (my_task == master_task) then
         write(nu_diag,*) ' '
@@ -1084,10 +1264,10 @@
                          'written to the history tape: '
         write(nu_diag,*) ' description                           units', &
              '     netcdf variable'
-         do n=1,navgsiz
-            if (iout(n)) write(nu_diag,100) vdesc(n), vunit(n), vname(n)
-         enddo
-         write(nu_diag,*) ' '
+        do n=1,navgsiz
+           if (iout(n)) write(nu_diag,100) vdesc(n), vunit(n), vname(n)
+        enddo
+        write(nu_diag,*) ' '
       endif
   100 format (1x,a40,2x,a16,2x,a16)
 
@@ -1102,11 +1282,7 @@
          conb(k) = c0   ! add 0.
       enddo
 
-#ifdef CCSMCOUPLED
-      if (trim(inic_file) /= 'default' .and. trim(inic_file) /= 'none' .and. yday >= c2) then
-#else
       if (restart .and. yday >= c2) then
-#endif
 ! restarting midyear gives erroneous onset dates
          mlt_onset = 999._dbl_kind 
          frz_onset = 999._dbl_kind 
@@ -1172,7 +1348,7 @@
 #endif
 
 !-------------------------------------------------------------------
-! Change coordinates of variables printed out on u grid
+! Change coordinates and cell measures of variables printed out on u grid
 !-------------------------------------------------------------------
 
       if (my_task == master_task) then
@@ -1194,6 +1370,24 @@
           if (TRIM(vname(k)) == 'strinty') vcoord(k) = ustr
           if (TRIM(vname(k)) == 'sig1') vcoord(k) = ustr
           if (TRIM(vname(k)) == 'sig2') vcoord(k) = ustr
+
+          vcellmeas(k) = tcstr
+          if (TRIM(vname(k)) == 'uvel') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'vvel') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'uocn') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'vocn') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strairx') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strairy') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strtltx') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strtlty') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strcorx') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strcory') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strocnx') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strocny') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strintx') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'strinty') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'sig1') vcellmeas(k) = ucstr
+          if (TRIM(vname(k)) == 'sig2') vcellmeas(k) = ucstr
         enddo
       endif
 
@@ -1228,6 +1422,7 @@
       use ice_constants
       use ice_flux
       use ice_dyn_evp
+      use ice_timers
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1242,29 +1437,13 @@
 
       real (kind=dbl_kind) :: &
            ravgct           , & ! 1/avgct
-           ai                   ! aice_init
+           ai               , & ! aice_init
+           ain                  ! aicen_init
 
       type (block) :: &
          this_block           ! block information for current block
 
-      ! ice vol. tendency for history, due to dynamics
-
-     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
-      do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
-         do j = jlo,jhi
-         do i = ilo,ihi
-            dvidtd(i,j,iblk) = (vice(i,j,iblk) - dvidtd(i,j,iblk)) /dt
-            daidtd(i,j,iblk) = (aice(i,j,iblk) - daidtd(i,j,iblk)) /dt
-         enddo
-         enddo
-      enddo
-      !$OMP END PARALLEL DO
+      real (kind=dbl_kind) :: worka(nx_block,ny_block)
 
       !---------------------------------------------------------------
       ! increment step counter
@@ -1315,6 +1494,7 @@
         aa(i,j,n_vocn,  iblk)= aa(i,j,n_vocn,  iblk) + vocn (i,j,iblk) 
         aa(i,j,n_frzmlt,iblk)= aa(i,j,n_frzmlt,iblk) +frzmlt(i,j,iblk) 
 
+        aa(i,j,n_fswfac,iblk)= aa(i,j,n_fswfac,iblk) +fswfac(i,j,iblk) 
         aa(i,j,n_fswabs,iblk)= aa(i,j,n_fswabs,iblk) +fswabs(i,j,iblk)
         aa(i,j,n_fswabs_ai,iblk)=aa(i,j,n_fswabs_ai,iblk) &
                                                   +ai*fswabs(i,j,iblk)
@@ -1347,22 +1527,15 @@
         aa(i,j,n_meltt, iblk)= aa(i,j,n_meltt, iblk) + meltt(i,j,iblk)
         aa(i,j,n_meltb, iblk)= aa(i,j,n_meltb, iblk) + meltb(i,j,iblk) 
         aa(i,j,n_meltl, iblk)= aa(i,j,n_meltl, iblk) + meltl(i,j,iblk)
-        aa(i,j,n_fresh, iblk)= aa(i,j,n_fresh, iblk)  &
-                                                + fresh_hist(i,j,iblk)
-        aa(i,j,n_fresh_ai,iblk) = aa(i,j,n_fresh_ai,iblk) &
-                                             + ai*fresh_hist(i,j,iblk)
-        aa(i,j,n_fsalt, iblk)   = aa(i,j,n_fsalt, iblk)   &
-                                                + fsalt_hist(i,j,iblk)
-        aa(i,j,n_fsalt_ai,iblk) = aa(i,j,n_fsalt_ai,iblk) &
-                                             + ai*fsalt_hist(i,j,iblk)
-        aa(i,j,n_fhocn, iblk)   = aa(i,j,n_fhocn, iblk)   &
-                                                + fhocn_hist(i,j,iblk)
-        aa(i,j,n_fhocn_ai,iblk) = aa(i,j,n_fhocn_ai,iblk) &
-                                             + ai*fhocn_hist(i,j,iblk)
-        aa(i,j,n_fswthru,iblk)  = aa(i,j,n_fswthru,iblk)  &
-                                              + fswthru_hist(i,j,iblk)
-        aa(i,j,n_fswthru_ai,iblk)=aa(i,j,n_fswthru_ai,iblk) &
-                                           + ai*fswthru_hist(i,j,iblk)
+
+        aa(i,j,n_fresh, iblk)   = aa(i,j,n_fresh, iblk)   + fresh(i,j,iblk)
+        aa(i,j,n_fresh_ai,iblk) = aa(i,j,n_fresh_ai,iblk) + fresh_gbm(i,j,iblk)
+        aa(i,j,n_fsalt, iblk)   = aa(i,j,n_fsalt, iblk)   + fsalt(i,j,iblk)
+        aa(i,j,n_fsalt_ai,iblk) = aa(i,j,n_fsalt_ai,iblk) + fsalt_gbm(i,j,iblk)
+        aa(i,j,n_fhocn, iblk)   = aa(i,j,n_fhocn, iblk)   + fhocn(i,j,iblk)
+        aa(i,j,n_fhocn_ai,iblk) = aa(i,j,n_fhocn_ai,iblk) + fhocn_gbm(i,j,iblk)
+        aa(i,j,n_fswthru,iblk)  = aa(i,j,n_fswthru,iblk)  + fswthru(i,j,iblk)
+        aa(i,j,n_fswthru_ai,iblk)=aa(i,j,n_fswthru_ai,iblk)+fswthru_gbm(i,j,iblk)
                
         aa(i,j,n_strairx,iblk) = aa(i,j,n_strairx,iblk)  &
                                                    + strairx(i,j,iblk)
@@ -1413,7 +1586,12 @@
         aa(i,j,n_dvirdgdt,iblk)= aa(i,j,n_dvirdgdt,iblk) &
                                                  + dvirdgdt(i,j,iblk)
         if (aice(i,j,iblk).gt.puny)  &
-        aa(i,j,n_icepresent,iblk) = aa(i,j,n_icepresent,iblk) + c1
+           aa(i,j,n_icepresent,iblk) = aa(i,j,n_icepresent,iblk) + c1
+
+        aa(i,j,n_fsurf_ai,iblk)   = aa(i,j,n_fsurf_ai,iblk) &
+                                             + fsurf(i,j,iblk)*ai
+        aa(i,j,n_fcondtop_ai,iblk)= aa(i,j,n_fcondtop_ai,iblk) &
+                                             + fcondtop(i,j,iblk)*ai
 
         if (f_faero) then
            do n=1,n_aero
@@ -1442,7 +1620,30 @@
           do j=jlo,jhi
           do i=ilo,ihi
              if (tmask(i,j,iblk)) then
+                ain = aicen_init(i,j,n,iblk)
                 ! assume consecutive indices
+                aa(i,j,n_aicen+n-1,iblk) = aa(i,j,n_aicen+n-1,iblk)  &
+                                                + aicen(i,j,n,iblk)
+                aa(i,j,n_vicen+n-1,iblk) = aa(i,j,n_vicen+n-1,iblk)  &
+                                                + vicen(i,j,n,iblk)
+                if (f_apondn) aa(i,j,n_apondn+n-1,iblk) &
+                                         = aa(i,j,n_apondn+n-1,iblk)  &
+                                                + apondn(i,j,n,iblk)
+                aa(i,j,n_fsurfn_ai+n-1,iblk)    = &
+                                        aa(i,j,n_fsurfn_ai+n-1,iblk)  &
+                                           + fsurfn(i,j,n,iblk)*ain
+                aa(i,j,n_fcondtopn_ai+n-1,iblk) = &
+                                        aa(i,j,n_fcondtopn_ai+n-1,iblk)  &
+                                           + fcondtopn(i,j,n,iblk)*ain
+                ! Calculate surface heat flux that causes melt as this
+                ! is what is calculated by the atmos in HadGEM3 so
+                ! needed for checking purposes
+                aa(i,j,n_fmelttn_ai+n-1,iblk)   = &
+                                        aa(i,j,n_fmelttn_ai+n-1,iblk) &
+                + max(fsurfn(i,j,n,iblk) - fcondtopn(i,j,n,iblk),c0)*ain
+                aa(i,j,n_flatn_ai+n-1,iblk)     = &
+                                        aa(i,j,n_flatn_ai+n-1,iblk)  &
+                                           + flatn(i,j,n,iblk)*ain
 !               aa(i,j,n_aerosn1n+n-1,iblk) = &
 !                                aa(i,j,n_aerosn1n+n-1,iblk)  &
 !                              + trcrn(i,j,nt_aero,n,iblk)*vsnon(i,j,n,iblk)
@@ -1455,16 +1656,23 @@
 !               aa(i,j,n_aeroic2n+n-1,iblk) = &
 !                                aa(i,j,n_aeroic2n+n-1,iblk)  &
 !                              + trcrn(i,j,nt_aero+3,n,iblk)*vicen(i,j,n,iblk)
-                aa(i,j,n_aicen+n-1,iblk) = aa(i,j,n_aicen+n-1,iblk)  &
-                                                + aicen(i,j,n,iblk)
-                aa(i,j,n_vicen+n-1,iblk) = aa(i,j,n_vicen+n-1,iblk)  &
-                                                + vicen(i,j,n,iblk)
-                aa(i,j,n_apondn+n-1,iblk) = aa(i,j,n_apondn+n-1,iblk)  &
-                                                + apondn(i,j,n,iblk)
              endif              ! tmask
           enddo                 ! i
           enddo                 ! j
        enddo                    ! n
+
+       ! Calculate aggregate surface melt flux by summing category values
+       worka(:,:) = c0
+       do j = jlo, jhi
+       do i = ilo, ihi
+        if (tmask(i,j,iblk)) then
+          do n=1,nct
+             worka(i,j)  = worka(i,j) + aa(i,j,n_fmelttn_ai+n-1,iblk)
+          enddo            ! n
+        endif              ! tmask
+      enddo                ! i
+      enddo                ! j
+      aa(:,:,n_fmeltt_ai,iblk)  = worka(:,:)
 
       enddo                     ! iblk
       !$OMP END PARALLEL DO
@@ -1542,13 +1750,14 @@
                                           + stressp_2(i,j,iblk) &
                                           + stressp_3(i,j,iblk) &
                                           + stressp_4(i,j,iblk))
-                 aa(i,j,n_iage,iblk)  = trcr(i,j,nt_iage,iblk)*cona(n_iage)
+                 if (f_iage) aa(i,j,n_iage,iblk)  = &
+                       trcr(i,j,nt_iage,iblk)*cona(n_iage)
             endif
            enddo                ! i
            enddo                ! j
 
         enddo                   ! iblk
-       !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
         time_end = time/int(secday)
 
@@ -1556,11 +1765,15 @@
       ! write file
       !---------------------------------------------------------------
 
+      call ice_timer_start(timer_readwrite)  ! reading/writing
+
       if (history_format == 'nc') then
         call icecdf         ! netcdf output
       else
         call icebin         ! binary output
       endif
+
+      call ice_timer_stop(timer_readwrite)  ! reading/writing
 
       !---------------------------------------------------------------
       ! reset to zero
@@ -1607,6 +1820,8 @@
          endif                  ! yday
       enddo                     ! iblk
 
+      write_ic = .false.        ! write initial condition once at most
+
       end subroutine ice_write_hist
 
 !=======================================================================
@@ -1639,8 +1854,8 @@
       use ice_calendar, only: time, sec, idate, idate0, nyr, month, &
                               mday, write_ic, histfreq, histfreq_n, &
                               year_init, new_year, new_month, new_day, &
-                              dayyr, daymo
-      use ice_work, only: work_g1, work_gr, work_gr3
+                              dayyr, daymo, days_per_year
+      use ice_work, only: work_g1, work_gr, work_gr3, work1
       use ice_restart, only: lenstr, runid
       use ice_domain, only: distrb_info
       use ice_itd, only: c_hi_range
@@ -1653,8 +1868,9 @@
 !
       integer (kind=int_kind) :: i,j,n, &
          ncid,status,imtid,jmtid,timid,varid, &
-         length
+         length,nvertexid,ivertex
       integer (kind=int_kind), dimension(3) :: dimid
+      integer (kind=int_kind), dimension(3) :: dimid_nverts
       real (kind=real_kind) :: ltime
       character (char_len) :: title
       character (char_len_long) :: ncfile
@@ -1667,13 +1883,18 @@
       character (len=8) :: cdate
 
 ! Info for lat, lon and time invariant variables
-#ifdef CCSMCOUPLED
-      INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 10
-#else
-      INTEGER (kind=int_kind), PARAMETER :: ncoord = 4, nvar = 4
-#endif
+      ! 4 coordinate variables: TLON, TLAT, ULON, ULAT
+      INTEGER (kind=int_kind), PARAMETER :: ncoord = 4
+
+      ! 4 vertices in each grid cell
+      INTEGER (kind=int_kind), PARAMETER :: nverts = 4
+
+      ! 4 variables describe T, U grid boundaries:
+      ! lont_bounds, latt_bounds, lonu_bounds, latu_bounds
+      INTEGER (kind=int_kind), PARAMETER :: nvar_verts = 4
+
       TYPE coord_attributes         ! netcdf coordinate attributes
-        character (len=10)   :: short_name
+        character (len=11)   :: short_name
         character (len=45)   :: long_name
         character (len=20)   :: units
       END TYPE coord_attributes
@@ -1685,6 +1906,8 @@
 
       TYPE(req_attributes), dimension(nvar) :: var
       TYPE(coord_attributes), dimension(ncoord) :: coord_var
+      TYPE(coord_attributes), dimension(nvar_verts) :: var_nverts
+      CHARACTER (char_len), dimension(ncoord) :: coord_bounds
 
       if (my_task == master_task) then
 
@@ -1730,6 +1953,10 @@
         if (status /= nf90_noerr) call abort_ice( &
                       'ice: Error defining dim time')
 
+        status = nf90_def_dim(ncid,'nvertices',nverts,nvertexid)
+        if (status /= nf90_noerr) call abort_ice( &
+                      'ice: Error defining dim nverts')
+
       !-----------------------------------------------------------------
       ! define coordinate variables
       !-----------------------------------------------------------------
@@ -1749,9 +1976,15 @@
         if (status /= nf90_noerr) call abort_ice( &
                       'ice Error: time units')
 
-        status = nf90_put_att(ncid,varid,'calendar','noleap')
-        if (status /= nf90_noerr) call abort_ice( &
-                      'ice Error: time calendar')
+        if (days_per_year == 360) then
+           status = nf90_put_att(ncid,varid,'calendar','360_day')
+           if (status /= nf90_noerr) call abort_ice( &
+                         'ice Error: time calendar')
+        else
+           status = nf90_put_att(ncid,varid,'calendar','noleap')
+           if (status /= nf90_noerr) call abort_ice( &
+                         'ice Error: time calendar')
+        endif
 
         if (hist_avg) then
           status = nf90_put_att(ncid,varid,'bounds','time_bounds')
@@ -1782,69 +2015,74 @@
         endif
 
       !-----------------------------------------------------------------
-      ! define information for the creation of time-invariant variables
+      ! define information for required time-invariant variables
       !-----------------------------------------------------------------
 
       ind = 0
       ind = ind + 1
       coord_var(ind) = coord_attributes('TLON', &
                        'T grid center longitude', 'degrees_east')
+      coord_bounds(ind) = 'lont_bounds'
       ind = ind + 1
       coord_var(ind) = coord_attributes('TLAT', &
                        'T grid center latitude',  'degrees_north')
+      coord_bounds(ind) = 'latt_bounds'
       ind = ind + 1
       coord_var(ind) = coord_attributes('ULON', &
                        'U grid center longitude', 'degrees_east')
+      coord_bounds(ind) = 'lonu_bounds'
       ind = ind + 1
       coord_var(ind) = coord_attributes('ULAT', &
                        'U grid center latitude',  'degrees_north')
+      coord_bounds(ind) = 'latu_bounds'
 
-      ind = 0
-      ind = ind + 1
-      var(ind)%req = coord_attributes('tarea', 'area of T grid cells', &
-                                'm^2')
-      var(ind)%coordinates = 'TLON TLAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('uarea', 'area of U grid cells', &
-                                'm^2')
-      var(ind)%coordinates = 'ULON ULAT'
-#ifdef CCSMCOUPLED
-      ind = ind + 1
-      var(ind)%req = coord_attributes('dxt', &
-                     'T cell width through middle', 'm')
-      var(ind)%coordinates = 'TLON TLAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('dyt', &
-                     'T cell height through middle', 'm')
-      var(ind)%coordinates = 'TLON TLAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('dxu', &
-                     'U cell width through middle', 'm')
-      var(ind)%coordinates = 'ULON ULAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('dyu', &
-                     'U cell height through middle', 'm')
-      var(ind)%coordinates = 'ULON ULAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('HTN', &
-                     'T cell width on North side','m')
-      var(ind)%coordinates = 'TLON TLAT'
+      !-----------------------------------------------------------------
+      ! define information for optional time-invariant variables
+      !-----------------------------------------------------------------
 
-      ind = ind + 1
-      var(ind)%req = coord_attributes('HTE', &
-                     'T cell width on East side', 'm')
-      var(ind)%coordinates = 'TLON TLAT'
-#endif
-      ind = ind + 1
-      var(ind)%req = coord_attributes('ANGLET', &
-                     'angle grid makes with latitude line on T grid', &
-                     'radians')
-      var(ind)%coordinates = 'TLON TLAT'
-      ind = ind + 1
-      var(ind)%req = coord_attributes('ANGLE', &
-                     'angle grid makes with latitude line on U grid', &
-                     'radians')
-      var(ind)%coordinates = 'ULON ULAT'
+      var(n_tarea)%req = coord_attributes('tarea', &
+                  'area of T grid cells', 'm^2')
+      var(n_tarea)%coordinates = 'TLON TLAT'
+      var(n_uarea)%req = coord_attributes('uarea', &
+                  'area of U grid cells', 'm^2')
+      var(n_uarea)%coordinates = 'ULON ULAT'
+      var(n_dxt)%req = coord_attributes('dxt', &
+                  'T cell width through middle', 'm')
+      var(n_dxt)%coordinates = 'TLON TLAT'
+      var(n_dyt)%req = coord_attributes('dyt', &
+                  'T cell height through middle', 'm')
+      var(n_dyt)%coordinates = 'TLON TLAT'
+      var(n_dxu)%req = coord_attributes('dxu', &
+                  'U cell width through middle', 'm')
+      var(n_dxu)%coordinates = 'ULON ULAT'
+      var(n_dyu)%req = coord_attributes('dyu', &
+                  'U cell height through middle', 'm')
+      var(n_dyu)%coordinates = 'ULON ULAT'
+      var(n_HTN)%req = coord_attributes('HTN', &
+                  'T cell width on North side','m')
+      var(n_HTN)%coordinates = 'TLON TLAT'
+      var(n_HTE)%req = coord_attributes('HTE', &
+                  'T cell width on East side', 'm')
+      var(n_HTE)%coordinates = 'TLON TLAT'
+      var(n_ANGLE)%req = coord_attributes('ANGLE', &
+                  'angle grid makes with latitude line on U grid', &
+                  'radians')
+      var(n_ANGLE)%coordinates = 'ULON ULAT'
+      var(n_ANGLET)%req = coord_attributes('ANGLET', &
+                  'angle grid makes with latitude line on T grid', &
+                  'radians')
+      var(n_ANGLET)%coordinates = 'TLON TLAT'
+
+      ! These fields are required for CF compliance
+      ! dimensions (nx,ny,nverts)
+      var_nverts(n_lont_bnds) = coord_attributes('lont_bounds', &
+                  'longitude boundaries of T cells', 'degrees_east')
+      var_nverts(n_latt_bnds) = coord_attributes('latt_bounds', &
+                  'latitude boundaries of T cells', 'degrees_north')
+      var_nverts(n_lonu_bnds) = coord_attributes('lonu_bounds', &
+                  'longitude boundaries of U cells', 'degrees_east')
+      var_nverts(n_latu_bnds) = coord_attributes('latu_bounds', &
+                  'latitude boundaries of U cells', 'degrees_north')
 
       !-----------------------------------------------------------------
       ! define attributes for time-invariant variables
@@ -1858,46 +2096,76 @@
           status = nf90_def_var(ncid, coord_var(i)%short_name, nf90_float, &
                                 dimid(1:2), varid)
           if (status /= nf90_noerr) call abort_ice( &
-               'Error defining short_name for'//coord_var(i)%short_name)
+               'Error defining short_name for '//coord_var(i)%short_name)
           status = nf90_put_att(ncid,varid,'long_name',coord_var(i)%long_name)
           if (status /= nf90_noerr) call abort_ice( &
-               'Error defining long_name for'//coord_var(i)%short_name)
+               'Error defining long_name for '//coord_var(i)%short_name)
           status = nf90_put_att(ncid, varid, 'units', coord_var(i)%units)
           if (status /= nf90_noerr) call abort_ice( &
-                  'Error defining units for'//coord_var(i)%short_name)
+                  'Error defining units for '//coord_var(i)%short_name)
           if (coord_var(i)%short_name == 'ULAT') then
-            status = nf90_put_att(ncid,varid,'comment', &
+             status = nf90_put_att(ncid,varid,'comment', &
                   'Latitude of NE corner of T grid cell')
-            if (status /= nf90_noerr) call abort_ice( &
-                  'Error defining comment for'//coord_var(i)%short_name)
+             if (status /= nf90_noerr) call abort_ice( &
+                   'Error defining comment for '//coord_var(i)%short_name)
+          endif
+          if (f_bounds) then
+             status = nf90_put_att(ncid, varid, 'bounds', coord_bounds(i))
+             if (status /= nf90_noerr) call abort_ice( &
+                 'Error defining bounds for '//coord_var(i)%short_name)
           endif
         enddo
 
         ! Attributes for tmask defined separately, since it has no units
-        status = nf90_def_var(ncid, 'tmask', nf90_float, dimid(1:2), varid)
-        if (status /= nf90_noerr) call abort_ice( &
-                      'ice: Error defining var tmask')
-        status = nf90_put_att(ncid,varid, 'long_name', 'ocean grid mask') 
-        if (status /= nf90_noerr) call abort_ice('ice Error: tmask long_name') 
-        status = nf90_put_att(ncid, varid, 'coordinates', 'TLON TLAT')
-        if (status /= nf90_noerr) call abort_ice('ice Error: tmask units') 
-        status = nf90_put_att(ncid,varid,'comment', '0 = land, 1 = ocean')
-        if (status /= nf90_noerr) call abort_ice('ice Error: tmask comment') 
+        if (igrd(n_tmask)) then
+           status = nf90_def_var(ncid, 'tmask', nf90_float, dimid(1:2), varid)
+           if (status /= nf90_noerr) call abort_ice( &
+                         'ice: Error defining var tmask')
+           status = nf90_put_att(ncid,varid, 'long_name', 'ocean grid mask')
+           if (status /= nf90_noerr) call abort_ice('ice Error: tmask long_name')
+           status = nf90_put_att(ncid, varid, 'coordinates', 'TLON TLAT')
+           if (status /= nf90_noerr) call abort_ice('ice Error: tmask units')
+           status = nf90_put_att(ncid,varid,'comment', '0 = land, 1 = ocean')
+           if (status /= nf90_noerr) call abort_ice('ice Error: tmask comment')
+        endif
 
-        do i = 1, nvar
-          status = nf90_def_var(ncid, var(i)%req%short_name, &
-                                nf90_float, dimid(1:2), varid)
-          if (status /= nf90_noerr) call abort_ice( &
-               'Error defining variable'//var(i)%req%short_name)
-          status = nf90_put_att(ncid,varid, 'long_name', var(i)%req%long_name)
-          if (status /= nf90_noerr) call abort_ice( &
-               'Error defining long_name for'//var(i)%req%short_name)
-          status = nf90_put_att(ncid, varid, 'units', var(i)%req%units)
-          if (status /= nf90_noerr) call abort_ice( &
-               'Error defining units for'//var(i)%req%short_name)
-          status = nf90_put_att(ncid, varid, 'coordinates', var(i)%coordinates)
-          if (status /= nf90_noerr) call abort_ice( &
-               'Error defining coordinates for'//var(i)%req%short_name)
+        do i = 2, nvar       ! note: n_tmask=1
+          if (igrd(i)) then
+             status = nf90_def_var(ncid, var(i)%req%short_name, &
+                                   nf90_float, dimid(1:2), varid)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining variable '//var(i)%req%short_name)
+             status = nf90_put_att(ncid,varid, 'long_name', var(i)%req%long_name)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining long_name for '//var(i)%req%short_name)
+             status = nf90_put_att(ncid, varid, 'units', var(i)%req%units)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining units for '//var(i)%req%short_name)
+             status = nf90_put_att(ncid, varid, 'coordinates', var(i)%coordinates)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining coordinates for '//var(i)%req%short_name)
+          endif
+        enddo
+
+        ! Fields with dimensions (nverts,nx,ny)
+        dimid_nverts(1) = nvertexid
+        dimid_nverts(2) = imtid
+        dimid_nverts(3) = jmtid
+        do i = 1, nvar_verts
+          if (f_bounds) then
+             status = nf90_def_var(ncid, var_nverts(i)%short_name, &
+                                   nf90_float,dimid_nverts, varid)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining variable '//var_nverts(i)%short_name)
+             status = &
+             nf90_put_att(ncid,varid, 'long_name', var_nverts(i)%long_name)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining long_name for '//var_nverts(i)%short_name)
+             status = &
+             nf90_put_att(ncid, varid, 'units', var_nverts(i)%units)
+             if (status /= nf90_noerr) call abort_ice( &
+                  'Error defining units for '//var_nverts(i)%short_name)
+          endif
         enddo
 
         do n=1,navgsiz
@@ -1905,23 +2173,27 @@
             status  = nf90_def_var(ncid, vname(n), nf90_float, &
                                dimid, varid)
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining variable'//vname(n))
+                 'Error defining variable '//vname(n))
             status = nf90_put_att(ncid,varid, 'units',vunit(n))
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining units for'//vname(n))
+                 'Error defining units for '//vname(n))
             status = nf90_put_att(ncid,varid, 'long_name',vdesc(n))
                    
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining long_name for'//vname(n))
+                 'Error defining long_name for '//vname(n))
             status = nf90_put_att(ncid,varid,'coordinates', vcoord(n))
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining coordinates for'//vname(n))
+                 'Error defining coordinates for '//vname(n))
+            status = nf90_put_att(ncid,varid,'cell_measures', vcellmeas(n))
+            if (status /= nf90_noerr) call abort_ice( &
+                 'Error defining cell measures for '//vname(n))
             status = nf90_put_att(ncid,varid,'missing_value',spval)
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining mising_value for'//vname(n))
+                 'Error defining mising_value for '//vname(n))
             status = nf90_put_att(ncid,varid,'_FillValue',spval)
             if (status /= nf90_noerr) call abort_ice( &
-                 'Error defining _FillValue for'//vname(n))
+                 'Error defining _FillValue for '//vname(n))
+
       !-----------------------------------------------------------------
       ! Append ice thickness range to aicen comments
       !-----------------------------------------------------------------
@@ -1937,7 +2209,7 @@
             endif
             status = nf90_put_att(ncid,varid,'comment',vcomment(n))
             if (status /= nf90_noerr) call abort_ice( &
-                           'Error defining comment for'//vname(n))
+                           'Error defining comment for '//vname(n))
       !-----------------------------------------------------------------
       ! Add cell_methods attribute to variables if averaged
       !-----------------------------------------------------------------
@@ -1945,7 +2217,7 @@
               if (TRIM(vname(n))/='sig1'.or.TRIM(vname(n))/='sig2') then
                 status = nf90_put_att(ncid,varid,'cell_methods','time: mean')
                 if (status /= nf90_noerr) call abort_ice( &
-                              'Error defining cell methods for'//vname(n))
+                              'Error defining cell methods for '//vname(n))
               endif
             endif
 
@@ -2093,7 +2365,7 @@
           if (my_task == master_task) then
              status = nf90_inq_varid(ncid, coord_var(i)%short_name, varid)
              if (status /= nf90_noerr) call abort_ice( &
-                  'ice: Error getting varid for'//coord_var(i)%short_name)
+                  'ice: Error getting varid for '//coord_var(i)%short_name)
              status = nf90_put_var(ncid,varid,work_gr)
              if (status /= nf90_noerr) call abort_ice( &
                            'ice: Error writing'//coord_var(i)%short_name)
@@ -2104,6 +2376,7 @@
       ! write grid mask, area and rotation angle
       !-----------------------------------------------------------------
 
+      if (igrd(n_tmask)) then
       call gather_global(work_g1, hm, master_task, distrb_info)
       if (my_task == master_task) then
         work_gr=work_g1
@@ -2114,8 +2387,10 @@
         if (status /= nf90_noerr) call abort_ice( &
                       'ice: Error writing variable tmask')
       endif
+      endif
 
-      do i = 1,nvar
+      do i = 2,nvar
+        if (igrd(i)) then
         call broadcast_scalar(var(i)%req%short_name,master_task)
         SELECT CASE (var(i)%req%short_name)
           CASE ('tarea')
@@ -2144,24 +2419,81 @@
           work_gr=work_g1
           status = nf90_inq_varid(ncid, var(i)%req%short_name, varid)
           if (status /= nf90_noerr) call abort_ice( &
-                        'ice: Error getting varid for'//var(i)%req%short_name)
+                        'ice: Error getting varid for '//var(i)%req%short_name)
           status = nf90_put_var(ncid,varid,work_gr)
           if (status /= nf90_noerr) call abort_ice( &
-                        'ice: Error writing variable'//var(i)%req%short_name)
+                        'ice: Error writing variable '//var(i)%req%short_name)
+        endif
         endif
       enddo
 
       deallocate(work_gr)
+      !----------------------------------------------------------------
+      ! Write coordinates of grid box vertices
+      !----------------------------------------------------------------
+
+      if (f_bounds) then
+      if (my_task==master_task) then
+         allocate(work_gr3(nverts,nx_global,ny_global))
+      else
+         allocate(work_gr3(1,1,1))   ! to save memory
+      endif
+
+      work_gr3(:,:,:) = c0
+      work1   (:,:,:) = c0
+
+      do i = 1, nvar_verts
+        call broadcast_scalar(var_nverts(i)%short_name,master_task)
+        SELECT CASE (var_nverts(i)%short_name)
+        CASE ('lont_bounds')
+        do ivertex = 1, nverts
+           work1(:,:,:) = lont_bounds(ivertex,:,:,:)
+           call gather_global(work_g1, work1, master_task, distrb_info)
+           if (my_task == master_task) work_gr3(ivertex,:,:) = work_g1(:,:)
+        enddo
+        CASE ('latt_bounds')
+        do ivertex = 1, nverts
+           work1(:,:,:) = latt_bounds(ivertex,:,:,:)
+           call gather_global(work_g1, work1, master_task, distrb_info)
+           if (my_task == master_task) work_gr3(ivertex,:,:) = work_g1(:,:)
+        enddo
+        CASE ('lonu_bounds')
+        do ivertex = 1, nverts
+           work1(:,:,:) = lonu_bounds(ivertex,:,:,:)
+           call gather_global(work_g1, work1, master_task, distrb_info)
+           if (my_task == master_task) work_gr3(ivertex,:,:) = work_g1(:,:)
+        enddo
+        CASE ('latu_bounds')
+        do ivertex = 1, nverts
+           work1(:,:,:) = latu_bounds(ivertex,:,:,:)
+           call gather_global(work_g1, work1, master_task, distrb_info)
+           if (my_task == master_task) work_gr3(ivertex,:,:) = work_g1(:,:)
+        enddo
+        END SELECT
+
+        if (my_task == master_task) then
+          status = nf90_inq_varid(ncid, var_nverts(i)%short_name, varid)
+          if (status /= nf90_noerr) call abort_ice( &
+             'ice: Error getting varid for '//var_nverts(i)%short_name)
+          status = nf90_put_var(ncid,varid,work_gr3)
+          if (status /= nf90_noerr) call abort_ice( &
+             'ice: Error writing variable '//var_nverts(i)%short_name)
+        endif
+      enddo
+      deallocate(work_gr3)
+      endif
+
+      deallocate(work_gr)
+
+      !-----------------------------------------------------------------
+      ! write variable data
+      !-----------------------------------------------------------------
 
       if (my_task==master_task) then
          allocate(work_gr3(nx_global,ny_global,1))
       else
          allocate(work_gr3(1,1,1))   ! to save memory
       endif
-
-      !-----------------------------------------------------------------
-      ! write variable data
-      !-----------------------------------------------------------------
 
       do n=1,navgsiz
         if (iout(n)) then
@@ -2171,11 +2503,11 @@
             work_gr3(:,:,1) = work_g1(:,:)
             status  = nf90_inq_varid(ncid,vname(n),varid)
             if (status /= nf90_noerr) call abort_ice( &
-                          'ice: Error getting varid for'//vname(n))
+                          'ice: Error getting varid for '//vname(n))
             status  = nf90_put_var(ncid,varid,work_gr3, &
                                    count=(/nx_global,ny_global,1/))
             if (status /= nf90_noerr) call abort_ice( &
-                          'ice: Error writing variable'//vname(n))
+                          'ice: Error writing variable '//vname(n))
           endif
         endif
       enddo
@@ -2355,23 +2687,24 @@
       use ice_calendar, only: time, sec, idate, nyr, month, daymo,  &
                               mday, write_ic, histfreq, histfreq_n, &
                               year_init, new_year, new_month, new_day, &
-                              dayyr
+                              dayyr, dt
       use ice_restart, only: lenstr
 
       character (char_len_long), intent(inout) :: ncfile
       character (len=2), intent(in) :: suffix
 
-      integer (kind=int_kind) :: iyear, imonth, iday
+      integer (kind=int_kind) :: iyear, imonth, iday, isec
 
         iyear = nyr + year_init - 1 ! set year_init=1 in ice_in to get iyear=nyr
         imonth = month
         iday = mday
+        isec = sec - dt
 
         ! construct filename
         if (write_ic) then
            write(ncfile,'(a,i4.4,a,i2.2,a,i2.2,a,i5.5,a,a)')  &
               incond_file(1:lenstr(incond_file)),iyear,'-', &
-              imonth,'-',iday,'-',sec,'.',suffix
+              imonth,'-',iday,'-',isec,'.',suffix
         else
 
          if (hist_avg) then

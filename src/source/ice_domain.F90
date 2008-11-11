@@ -12,7 +12,7 @@
 !  routines in the block, distribution modules.
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: ice_domain.F90 118 2008-04-08 20:57:17Z eclare $
+!  SVN:$Id: ice_domain.F90 155 2008-10-02 17:09:18Z eclare $
 !
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL
@@ -58,6 +58,10 @@
    logical (log_kind), public :: &
       ltripole_grid      ! flag to signal use of tripole grid
 
+    character (char_len), public :: &
+       ew_boundary_type,    &! type of domain bndy in each logical
+       ns_boundary_type      !    direction (ew is i, ns is j)
+
 !EOP
 !BOC
 !-----------------------------------------------------------------------
@@ -72,11 +76,9 @@
        distribution_type,   &! method to use for distributing blocks
                              ! 'cartesian'
                              ! 'rake' 
-       distribution_wght,   &! method for weighting work per block 
+       distribution_wght     ! method for weighting work per block 
                              ! 'block' = POP default configuration
                              ! 'latitude' = no. ocean points * |lat|
-       ew_boundary_type,    &! type of domain bndy in each logical
-       ns_boundary_type      !    direction (ew is i, ns is j)
 
     integer (int_kind) :: &
        nprocs                ! num of processors
@@ -288,7 +290,6 @@
    integer (int_kind) :: &
       i,j,k,n            ,&! dummy loop indices
       ig,jg              ,&! global indices
-      count1, count2     ,&! dummy counters
       work_unit          ,&! size of quantized work unit
       nblocks_tmp        ,&! temporary value of nblocks
       nblocks_max          ! max blocks on proc
@@ -313,20 +314,32 @@
       nocn = 0
       do n=1,nblocks_tot
          this_block = get_block(n,n)
+         if (this_block%jblock == nblocks_y) then ! north edge
          do j = this_block%jhi-1, this_block%jhi
-         do i = 1, nx_block
-            ig = this_block%i_glob(i)
-            jg = this_block%j_glob(j)
-            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+            if (this_block%j_glob(j) > 0) then
+               do i = 1, nx_block
+                  if (this_block%i_glob(i) > 0) then
+                     ig = this_block%i_glob(i)
+                     jg = this_block%j_glob(j)
+                     if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+                  endif
+               enddo
+            endif
          enddo
-         enddo
+         endif
+         if (this_block%jblock == 1) then ! south edge
          do j = this_block%jlo, this_block%jlo+1
-         do i = 1, nx_block
-            ig = this_block%i_glob(i)
-            jg = this_block%j_glob(j)
-            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+            if (this_block%j_glob(j) > 0) then
+               do i = 1, nx_block
+                  if (this_block%i_glob(i) > 0) then
+                     ig = this_block%i_glob(i)
+                     jg = this_block%j_glob(j)
+                     if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+                  endif
+               enddo
+            endif
          enddo
-         enddo
+         endif
          if (nocn(n) > 0) then
             print*, 'ice: Not enough land cells along ns edge'
             call abort_ice('ice: Not enough land cells along ns edge')
@@ -339,20 +352,32 @@
       nocn = 0
       do n=1,nblocks_tot
          this_block = get_block(n,n)
+         if (this_block%iblock == nblocks_x) then ! east edge
          do j = 1, ny_block
-         do i = this_block%ihi-1, this_block%ihi
-            ig = this_block%i_glob(i)
-            jg = this_block%j_glob(j)
-            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+            if (this_block%j_glob(j) > 0) then
+               do i = this_block%ihi-1, this_block%ihi
+                  if (this_block%i_glob(i) > 0) then
+                     ig = this_block%i_glob(i)
+                     jg = this_block%j_glob(j)
+                     if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+                  endif
+               enddo
+            endif
          enddo
-         enddo
+         endif
+         if (this_block%iblock == 1) then ! west edge
          do j = 1, ny_block
-         do i = this_block%ilo, this_block%ilo+1
-            ig = this_block%i_glob(i)
-            jg = this_block%j_glob(j)
-            if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+            if (this_block%j_glob(j) > 0) then
+               do i = this_block%ilo, this_block%ilo+1
+                  if (this_block%i_glob(i) > 0) then
+                     ig = this_block%i_glob(i)
+                     jg = this_block%j_glob(j)
+                     if (KMTG(ig,jg) > puny) nocn(n) = nocn(n) + 1
+                  endif
+               enddo
+            endif
          enddo
-         enddo
+         endif
          if (nocn(n) > 0) then
             print*, 'ice: Not enough land cells along ew edge'
             call abort_ice('ice: Not enough land cells along ew edge')
@@ -457,7 +482,12 @@
    else if (nblocks_max < max_blocks) then
      write(outstring,*) &
          'ice: no. blocks too large: decrease max to', nblocks_max
-     if (my_task == master_task) write(nu_diag,*) trim(outstring)
+     if (my_task == master_task) then
+        write(nu_diag,*) ' ********WARNING***********'
+        write(nu_diag,*) trim(outstring)
+        write(nu_diag,*) ' **************************'
+        write(nu_diag,*) ' '
+     endif
    endif
 
 !----------------------------------------------------------------------

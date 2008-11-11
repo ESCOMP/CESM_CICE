@@ -53,7 +53,7 @@
 ! !USES:
 !
       use ice_state, only: nt_aero, trcrn 
-      use ice_restart, only: runtype, inic_file
+      use ice_restart, only: runtype, ice_ic
       use ice_domain_size, only: n_aero
 
       integer (kind = int_kind) :: n
@@ -70,8 +70,8 @@
          if (trim(runtype) == 'continue') then
             call read_restart_aero
          else
-            n = index(inic_file,'cice.r') + 5
-            string1 = trim(inic_file(1:n))
+            n = index(ice_ic,'cice.r') + 5
+            string1 = trim(ice_ic(1:n))
             call read_restart_aero(string1)
          endif
       else

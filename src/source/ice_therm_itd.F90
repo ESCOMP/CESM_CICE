@@ -507,7 +507,7 @@
       !-----------------------------------------------------------------
 
       do n = 1, ncat
-         do ij = 1, iflag   ! remap_flag = .true.
+         do ij = 1, icells
             donor(ij,n) = 0
             daice(ij,n) = c0
             dvice(ij,n) = c0
@@ -844,6 +844,7 @@
                               aice0,     aice,     &
                               frzmlt,    frazil,   &
                               frz_onset, yday,     &
+                              fresh,     fsalt,    &
                               Tf,        l_stop,   &
                               istop,     jstop)
 !
@@ -854,6 +855,7 @@
       use ice_state, only: nt_Tsfc, nt_iage, nt_aero 
       use ice_age, only: tr_iage
       use ice_aerosol, only: tr_aero
+      use ice_flux, only: update_ocn_f
 
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -893,8 +895,10 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
-         aice0 , & ! concentration of open water
-         frazil    ! frazil ice growth        (m/step-->cm/day)
+         aice0     , & ! concentration of open water
+         frazil    , & ! frazil ice growth        (m/step-->cm/day)
+         fresh     , & ! fresh water flux to ocean (kg/m^2/s)
+         fsalt         ! salt flux to ocean (kg/m^2/s)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout), optional :: &
@@ -1020,14 +1024,12 @@
       !       is NOT included in fluxes fresh and fsalt.
       !-----------------------------------------------------------------
 
-!!!         dfresh = -rhoi*vi0new(ij)/dt  ! if POP had not already adjusted
-                                           ! itself based on frzmlt
-!!!         dfsalt = ice_ref_salinity*p001*dfresh
-
-!!!         fresh(i,j)      = fresh(i,j)      + dfresh
-!!!         fresh_hist(i,j) = fresh_hist(i,j) + dfresh
-!!!         fsalt(i,j)      = fsalt(i,j)      + dfsalt
-!!!         fsalt_hist(i,j) = fsalt_hist(i,j) + dfsalt
+         if (update_ocn_f) then
+            dfresh = -rhoi*vi0new(ij)/dt
+            dfsalt = ice_ref_salinity*p001*dfresh
+            fresh(i,j)      = fresh(i,j)      + dfresh
+            fsalt(i,j)      = fsalt(i,j)      + dfsalt
+         endif
 
       !-----------------------------------------------------------------
       ! Decide how to distribute the new ice.
@@ -1235,9 +1237,7 @@
                                ilo, ihi,   jlo, jhi,   &
                                dt,                     &
                                fresh,      fsalt,      &
-                               fhocn,      fresh_hist, &
-                               fsalt_hist, fhocn_hist, &
-                               fsoot,                  &
+                               fhocn,      fsoot,      &
                                rside,      meltl,      &
                                aicen,      vicen,      &
                                vsnon,      eicen,      &
@@ -1284,10 +1284,8 @@
          fresh     , & ! fresh water flux to ocean (kg/m^2/s)
          fsalt     , & ! salt flux to ocean (kg/m^2/s)
          fhocn     , & ! net heat flux to ocean (W/m^2)
-         fresh_hist, & ! fresh water flux to ocean (kg/m^2/s)
-         fsalt_hist, & ! salt flux to ocean (kg/m^2/s)
-         fhocn_hist, & ! net heat flux to ocean (W/m^2)
          meltl         ! lateral ice melt         (m/step-->cm/day)
+
       real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
          intent(inout) :: &
          fsoot      ! 
@@ -1364,10 +1362,7 @@
                    * rside(i,j) / dt
 
             fresh(i,j)      = fresh(i,j)      + dfresh
-            fresh_hist(i,j) = fresh_hist(i,j) + dfresh
-
             fsalt(i,j)      = fsalt(i,j)      + dfsalt
-            fsalt_hist(i,j) = fsalt_hist(i,j) + dfsalt
 
             ! history diagnostics
             meltl(i,j) = meltl(i,j) + vicen(i,j,n)*rside(i,j)
@@ -1391,7 +1386,6 @@
 
                dfhocn = eicen(i,j,ilyr1(n)+k-1)*rside(i,j) / dt
                fhocn(i,j)      = fhocn(i,j)      + dfhocn
-               fhocn_hist(i,j) = fhocn_hist(i,j) + dfhocn
 
                ! ice energy
                eicen(i,j,ilyr1(n)+k-1) = eicen(i,j,ilyr1(n)+k-1) &
@@ -1411,7 +1405,6 @@
 
                dfhocn = esnon(i,j,slyr1(n)+k-1)*rside(i,j) / dt
                fhocn(i,j)      = fhocn(i,j)      + dfhocn
-               fhocn_hist(i,j) = fhocn_hist(i,j) + dfhocn
 
                ! snow energy
                esnon(i,j,slyr1(n)+k-1) = esnon(i,j,slyr1(n)+k-1) &

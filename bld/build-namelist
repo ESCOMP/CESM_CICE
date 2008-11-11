@@ -306,21 +306,32 @@ if (defined $opts{'infile'}) {
 # all subcomponents.
 
 ##################################
-# namelist group: ice_nml        #
+# namelist group: setup_nml      #
 ##################################
 
-add_default($nl, 'inic_file');
-add_default($nl, 'ndte');
+add_default($nl, 'ice_ic');
 add_default($nl, 'xndyn_dt');
-add_default($nl, 'grid_type');
-add_default($nl, 'grid_format');
-add_default($nl, 'grid_file');
-add_default($nl, 'kmt_file');
 add_default($nl, 'histfreq');
 add_default($nl, 'histfreq_n');
 add_default($nl, 'hist_avg');
 add_default($nl, 'diagfreq');
 add_default($nl, 'pointer_file');
+
+##################################
+# namelist group: grid_nml       #
+##################################
+
+add_default($nl, 'grid_type');
+add_default($nl, 'grid_format');
+add_default($nl, 'grid_file');
+add_default($nl, 'kmt_file');
+add_default($nl, 'kcatbound');
+
+##################################
+# namelist group: ice_nml        #
+##################################
+
+add_default($nl, 'ndte');
 add_default($nl, 'albicev');
 add_default($nl, 'albicei');
 add_default($nl, 'albsnowv');
@@ -331,7 +342,6 @@ add_default($nl, 'R_snw');
 add_default($nl, 'kitd');
 add_default($nl, 'kdyn');
 add_default($nl, 'kstrength');
-add_default($nl, 'kcatbound');
 add_default($nl, 'krdg_partic');
 add_default($nl, 'krdg_redist');
 add_default($nl, 'evp_damping');
@@ -438,7 +448,7 @@ add_default($nl, 'f_apondn');
 # Write output files
 
 # Sea ice component 
-my @groups = qw(ice_nml tracer_nml domain_nml ice_prescribed_nml ice_prescaero_nml icefields_nml);
+my @groups = qw(setup_nml grid_nml ice_nml tracer_nml domain_nml ice_prescribed_nml ice_prescaero_nml icefields_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }
