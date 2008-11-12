@@ -361,7 +361,7 @@
                                   potT,          Qa,       &
                                   shcoef,        lhcoef,   &
                                   fswsfc,        fswint,   &
-                                  fswthrun,      Sswabs,   &
+                                  fswthrun,      Sswabs(:,:,:),&
                                   Iswabs,                  &
                                   hilyr,         hslyr,    &
                                   qin,           Tin,      &
@@ -1669,7 +1669,7 @@
                                    Tsf,      Tbot,             &
                                    fsurfn,   dfsurf_dT,        &
                                    Tin_init, Tsn_init,         &
-                                   kh,       Sswabs,           &
+                                   kh,       Sswabs(:,:,:),    &
                                    Iswabs,                     &
                                    etai,     etas,             &
                                    sbdiag,   diag,             &
@@ -1682,7 +1682,7 @@
                                    indxii,   indxjj,   indxij, &
                                    l_snow,   Tbot,             &
                                    Tin_init, Tsn_init,         &
-                                   kh,       Sswabs,           &
+                                   kh,       Sswabs(:,:,:),    &
                                    Iswabs,                     &
                                    etai,     etas,             &
                                    sbdiag,   diag,             &

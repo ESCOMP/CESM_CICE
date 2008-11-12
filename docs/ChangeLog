@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20081112
+Originator: dbailey
+Date: Wed Nov 12 13:15:18 MST 2008
+Version: 4.0
+One-line Summary: Fixes for out of bounds issues with Lahey.
+CCSM Version compatible with: ccsm4_0_alpha38+
+Changes made:
+
+M      src/source/ice_history.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_therm_vertical.F90
+
+===============================================================
 cice4_0_20081110
 Originator: dbailey
 Date: Mon Nov 10 13:08:32 MST 2008
