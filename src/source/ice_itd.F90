@@ -952,10 +952,6 @@
          dvice         , & ! ice volume transferred across boundary
          hicen             ! ice thickness for each cat        (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         worka, &
-         workb
-
       logical (kind=log_kind), intent(out) :: &
          l_stop    ! if true, abort on return
 
@@ -996,6 +992,10 @@
         dvice_negative     , & ! true if dvice < -puny
         daice_greater_aicen, & ! true if daice > aicen
         dvice_greater_vicen    ! true if dvice > vicen
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb
 
       !-----------------------------------------------------------------
       ! Initialize
@@ -2239,7 +2239,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: worka, workb
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -2285,6 +2284,10 @@
       logical (kind=log_kind) :: &
          ice_energy_correct  , & ! zero layer ice energy check
          snow_energy_correct     ! zero layer snow energy check
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka, &
+         workb
 
       !-----------------------------------------------------------------
       ! Initialize

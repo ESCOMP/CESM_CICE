@@ -1,4 +1,28 @@
 ===============================================================
+cice4_0_20081118
+Originator: dbailey
+Date: Tue Nov 18 15:43:22 MST 2008
+Version: 4.0
+One-line Summary: Fix sw bugs and some general cleanup.
+CCSM Version compatible with: ccsm4_0_alpha38+
+Changes made:
+
+Fix sw bugs in delta-Eddington and remove work arrays from the
+ice_work module making them subroutine or module level.
+
+M      bld/cice.cpl7.template
+M      src/source/ice_init.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_itd.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_therm_vertical.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_restart.F90
+M      src/source/ice_grid.F90
+M      src/source/ice_history.F90
+
+===============================================================
 cice4_0_20081112
 Originator: dbailey
 Date: Wed Nov 12 13:15:18 MST 2008

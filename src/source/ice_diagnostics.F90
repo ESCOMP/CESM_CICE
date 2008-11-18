@@ -129,7 +129,6 @@
       use ice_flux
       use ice_state
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
-      use ice_work, only: work1, work2
       use ice_therm_vertical, only: calc_Tsfc
 
 #ifdef CCSMCOUPLED
@@ -179,6 +178,9 @@
          pTsfc, pevap, pfswabs, pflwout, pflat, pfsens, &
          pfsurf, pfcondtop, psst,  pTf, hiavg, hsavg, pfhocn, &
          pmeltt, pmeltb, pmeltl, psnoice, pfrazil, pcongel
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+         work1, work2
 
       !-----------------------------------------------------------------
       ! state of the ice
@@ -991,7 +993,6 @@
       use ice_grid
       use ice_state
       use ice_broadcast
-      use ice_work, only: work1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1002,6 +1003,10 @@
 
       real (kind=dbl_kind) :: &
          shmaxn, snwmxn,  shmaxs, snwmxs
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+         work1, work2
+
 
       ! total ice volume
       shmaxn = global_sum(vice, distrb_info, field_loc_center, tarean)

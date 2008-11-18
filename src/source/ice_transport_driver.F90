@@ -192,7 +192,6 @@
       use ice_state
       use ice_grid, only: tarea, HTE, HTN
       use ice_exit
-      use ice_work, only: work1
       use ice_calendar, only: istep1
       use ice_timers
       use ice_transport_remap, only: horizontal_remap, make_masks
@@ -270,6 +269,9 @@
          tmax           ! local max tracer
 
       integer (kind=int_kind) :: alloc_error
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+         work1
 
       call ice_timer_start(timer_advect)  ! advection 
 

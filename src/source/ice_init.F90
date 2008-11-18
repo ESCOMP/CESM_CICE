@@ -170,7 +170,7 @@
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
       history_dir  = ' '     ! write to executable dir for default
       history_file = 'iceh'  ! history file name prefix
-      history_format = 'bin' ! file format ('bin'=binary or 'nc'=netcdf)
+      history_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
       write_ic = .false.     ! write out initial condition
       incond_dir = history_dir ! write to history dir for default
       incond_file = 'iceh_ic'! file prefix

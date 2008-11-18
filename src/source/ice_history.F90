@@ -1855,7 +1855,7 @@
                               mday, write_ic, histfreq, histfreq_n, &
                               year_init, new_year, new_month, new_day, &
                               dayyr, daymo, days_per_year
-      use ice_work, only: work_g1, work_gr, work_gr3, work1
+      use ice_work, only: work_g1, work_gr, work_gr3
       use ice_restart, only: lenstr, runid
       use ice_domain, only: distrb_info
       use ice_itd, only: c_hi_range
@@ -1908,6 +1908,9 @@
       TYPE(coord_attributes), dimension(ncoord) :: coord_var
       TYPE(coord_attributes), dimension(nvar_verts) :: var_nverts
       CHARACTER (char_len), dimension(ncoord) :: coord_bounds
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+         work1
 
       if (my_task == master_task) then
 

@@ -64,6 +64,10 @@
       character (len=char_len_long) :: &
          pointer_file      ! input pointer file for restarts
 
+      real (kind=dbl_kind), private, &
+         dimension(nx_block,ny_block,max_blocks) :: &
+         work1
+
 !=======================================================================
 
       contains
@@ -99,7 +103,6 @@
                               time, time_forc, idate, year_init
       use ice_state
       use ice_dyn_evp
-      use ice_work, only: work1
       use ice_ocean, only: oceanmixed_ice
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -262,7 +265,7 @@
       use ice_grid, only: tmask
       use ice_itd
       use ice_ocean, only: oceanmixed_ice
-      use ice_work, only: work1, work_g1, work_g2
+      use ice_work, only: work_g1, work_g2
       use ice_gather_scatter, only: scatter_global_stress
 !
 ! !INPUT/OUTPUT PARAMETERS:

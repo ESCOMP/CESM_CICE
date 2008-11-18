@@ -1054,14 +1054,6 @@
                                 Sswabsn(:,:,sl1:sl2,iblk),              &
                                 Iswabsn(:,:,il1:il2,iblk))
 
-! Special case of night to day
-
-            do ij=1,icells
-               i = indxi(ij)
-               j = indxj(ij)
-               fswsfcn(i,j,n,iblk) = max(p01, fswsfcn(i,j,n,iblk))
-            enddo
-
          else
 
             Sswabsn(:,:,sl1:sl2,iblk) = c0

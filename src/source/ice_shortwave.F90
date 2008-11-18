@@ -107,7 +107,6 @@
 
       ! for delta Eddington
       real (kind=dbl_kind) :: &
-         dx_exp           , & ! change in argument between table values
          exp_min              ! minimum exponential value
 
 !=======================================================================
@@ -1057,31 +1056,39 @@
       type (block) :: &
          this_block      ! block information for current block
 
-      ! storage for approximate exponential for Delta-Eddington;
-      ! approximate exp(-x) to better than c10/nmbexp relative
-      ! error for computational efficieny by evaluating table; 
-      ! numerical error is acceptible scientifically
-      integer (kind=int_kind), parameter :: & 
-         nmbexp = 1000000  ! number of exponential values in lookup table
+      exp_min = exp(-c10)
 
-      real (kind=dbl_kind), parameter :: & 
-         argmax = c10      ! maximum argument of exponential
+      do iblk=1,nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
 
-      dx_exp = argmax / real(nmbexp,kind=dbl_kind)
-      exp_min = exp(-argmax)
+         ! identify ice-ocean cells
+         icells = 0
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (tmask(i,j,iblk)) then
+               icells = icells + 1
+               indxi(icells) = i
+               indxj(icells) = j
+            endif
+         enddo               ! i
+         enddo               ! j
 
-         do iblk=1,nblocks
-            this_block = get_block(blocks_ice(iblk),iblk)         
-            ilo = this_block%ilo
-            ihi = this_block%ihi
-            jlo = this_block%jlo
-            jhi = this_block%jhi
+         call compute_coszen (nx_block,         ny_block,       &
+                              icells,                           &
+                              indxi,            indxj,          &
+                              tlat  (:,:,iblk), tlon(:,:,iblk), &
+                              coszen(:,:,iblk), dt)
 
-            ! identify ice-ocean cells
+         do n = 1, ncat
+
             icells = 0
-            do j = 1, ny_block
-            do i = 1, nx_block
-               if (tmask(i,j,iblk)) then
+            do j = jlo, jhi
+            do i = ilo, ihi
+               if (aicen(i,j,n,iblk) > puny) then
                   icells = icells + 1
                   indxi(icells) = i
                   indxj(icells) = j
@@ -1089,45 +1096,26 @@
             enddo               ! i
             enddo               ! j
 
-            call compute_coszen (nx_block,         ny_block,       &
-                                 icells,                           &
-                                 indxi,            indxj,          &
-                                 tlat  (:,:,iblk), tlon(:,:,iblk), &
-                                 coszen(:,:,iblk), dt)
-
-            do n = 1, ncat
-
-               icells = 0
-               do j = jlo, jhi
-               do i = ilo, ihi
-                  if (aicen(i,j,n,iblk) > puny) then
-                     icells = icells + 1
-                     indxi(icells) = i
-                     indxj(icells) = j
-                  endif
-               enddo               ! i
-               enddo               ! j
-
-               il1 = ilyr1(n)
-               il2 = ilyrn(n)
-               sl1 = slyr1(n)
-               sl2 = slyrn(n)
+            il1 = ilyr1(n)
+            il2 = ilyrn(n)
+            sl1 = slyr1(n)
+            sl2 = slyrn(n)
 
       ! note that rhoswn, rsnw, fp, hp and Sswabs ARE NOT dimensioned with ncat
       ! BPB 19 Dec 2006
 
-               ! set snow properties
-               call shortwave_dEdd_set_snow(nx_block, ny_block,           &
-                                 icells,                                  &
-                                 indxi,               indxj,              &
-                                 aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
-                                 trcrn(:,:,1,n,iblk), fsn,                &
-                                 rhosnwn,             rsnwn)
+            ! set snow properties
+            call shortwave_dEdd_set_snow(nx_block, ny_block,           &
+                              icells,                                  &
+                              indxi,               indxj,              &
+                              aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
+                              trcrn(:,:,1,n,iblk), fsn,                &
+                              rhosnwn,             rsnwn)
 
 
-               if (.not. tr_pond) then
+            if (.not. tr_pond) then
 
-               ! set pond properties
+            ! set pond properties
                call shortwave_dEdd_set_pond(nx_block, ny_block,            &
                                  icells,                                   &
                                  indxi,               indxj,               &
@@ -1135,40 +1123,33 @@
                                  fsn,                 fpn,                 &
                                  hpn)
 
-               else
+            else
 
                fpn(:,:) = apondn(:,:,n,iblk)
                hpn(:,:) = hpondn(:,:,n,iblk)
 
-               endif
+            endif
 
-               call shortwave_dEdd(nx_block,        ny_block,            &
-                                 icells,                                 &
-                                 indxi,             indxj,               &
-                                 coszen(:,:, iblk),                      &
-                                 aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
-                                 vsnon(:,:,n,iblk), fsn,                 &
-                                 rhosnwn,           rsnwn,               &
-                                 fpn,               hpn,                 &
-                                 trcrn(:,:,:,n,iblk),tarea(:,:,iblk),    &
-                                 swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
-                                 swidr(:,:,  iblk), swidf(:,:,  iblk),   &
-                                 alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
-                                 alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
-                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
-                                 fswthrun(:,:,n,iblk), &
-                                 Sswabsn(:,:,sl1:sl2,iblk), &
-                                 Iswabsn(:,:,il1:il2,iblk))
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                              icells,                                 &
+                              indxi,             indxj,               &
+                              coszen(:,:, iblk),                      &
+                              aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                              vsnon(:,:,n,iblk), fsn,                 &
+                              rhosnwn,           rsnwn,               &
+                              fpn,               hpn,                 &
+                              trcrn(:,:,:,n,iblk),tarea(:,:,iblk),    &
+                              swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                              swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                              alvdrn(:,:,n,iblk),alvdfn(:,:,n,iblk),  &
+                              alidrn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
+                              fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
+                              fswthrun(:,:,n,iblk), &
+                              Sswabsn(:,:,sl1:sl2,iblk), &
+                              Iswabsn(:,:,il1:il2,iblk))
 
-               ! Special case of night to day
-               do ij = 1, icells
-                  i = indxi(ij)
-                  j = indxj(ij)
-                  fswsfcn(i,j,n,iblk) = max(p01, fswsfcn(i,j,n,iblk))
-               enddo
-
-            enddo  ! ncat
-         enddo     ! nblocks
+         enddo  ! ncat
+      enddo     ! nblocks
  
       end subroutine init_dEdd
  
@@ -3195,7 +3176,7 @@
 
            if( srftyp(i,j) < 2 .and. k < kfrsnl ) mu0n = mu0
  
-           extins = max(exp_min, exp(-lm*ts/dx_exp))
+           extins = max(exp_min, exp(-lm*ts))
            ne = n(ue,extins)
  
            ! first calculation of rdif, tdif using Delta-Eddington formulas
@@ -3204,7 +3185,7 @@
            tdif_a(k,ij) = c4*ue/ne
  
            ! evaluate rdir,tdir for direct beam
-           trnlay(k,ij) = max(exp_min, exp(-ts/(mu0n*dx_exp)))
+           trnlay(k,ij) = max(exp_min, exp(-ts/mu0n))
            alp = alpha(ws,mu0n,gs,lm)
            gam = gamma(ws,mu0n,gs,lm)
            apg = alp + gam
@@ -3225,7 +3206,7 @@
              mu  = gauspt(ng)
              gwt = gauswt(ng)
              swt = swt + mu*gwt
-             trn = max(exp_min, exp(-ts/(mu*dx_exp)))
+             trn = max(exp_min, exp(-ts/mu))
              alp = alpha(ws,mu,gs,lm)
              gam = gamma(ws,mu,gs,lm)
              apg = alp + gam

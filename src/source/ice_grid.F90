@@ -130,6 +130,10 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), save :: &
          rndex_global       ! global index for local subdomain (dbl)
 
+      real (kind=dbl_kind), private, &
+         dimension(nx_block,ny_block,max_blocks) :: &
+         work1
+
 !=======================================================================
 
       contains
@@ -515,7 +519,7 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1, work_g1
+      use ice_work, only: work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -644,7 +648,7 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1, work_g1
+      use ice_work, only: work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -777,7 +781,7 @@
 ! !USES:
 !
       use ice_domain_size
-      use ice_work, only: work1, work_g1
+      use ice_work, only: work_g1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1750,7 +1754,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1856,7 +1859,6 @@
 !
 ! !USES:
 !
-      use ice_work, only: work1
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -2164,7 +2166,7 @@
 !            E. Hunke, LANL
 !
 ! !USES:
-      use ice_work, only: work1, work_g2
+      use ice_work, only: work_g2
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -2351,7 +2353,7 @@
 !            E. Hunke, LANL
 !
 ! !USES:
-      use ice_work, only: work_g2, work1
+      use ice_work, only: work_g2
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

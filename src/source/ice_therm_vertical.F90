@@ -1490,6 +1490,12 @@
             fswint(i,j)   = fswint(i,j) - (Iswabs(i,j,k) - Iswabs_tmp)
             Iswabs(i,j,k) = Iswabs_tmp
 
+            else
+
+            fswsfc(i,j)   = fswsfc(i,j) + Iswabs(i,j,k)
+            fswint(i,j)   = fswint(i,j) - Iswabs(i,j,k)
+            Iswabs(i,j,k) = c0
+
             endif
          enddo
       enddo
@@ -1508,6 +1514,12 @@
                fswsfc(i,j)   = fswsfc(i,j) + (Sswabs(i,j,k) - Sswabs_tmp)
                fswint(i,j)   = fswint(i,j) - (Sswabs(i,j,k) - Sswabs_tmp)
                Sswabs(i,j,k) = Sswabs_tmp
+
+               else
+
+               fswsfc(i,j)   = fswsfc(i,j) + Sswabs(i,j,k)
+               fswint(i,j)   = fswint(i,j) - Sswabs(i,j,k)
+               Sswabs(i,j,k) = c0
 
                endif
             endif
