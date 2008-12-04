@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20081204
+Originator: dbailey
+Date: Thu Dec  4 10:52:04 MST 2008
+Version: 4.0
+One-line Summary: Fix to prescribed mode and remove unsafe
+                  threading.
+CCSM Version compatible with: ccsm4_0_beta03+
+Changes made:
+
+   M /cice/trunk/bld/build-namelist
+   M /cice/trunk/src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+   M /cice/trunk/src/source/ice_therm_vertical.F90
+   M /cice/trunk/src/source/ice_transport_driver.F90
+
+===============================================================
 cice4_0_20081118
 Originator: dbailey
 Date: Tue Nov 18 15:43:22 MST 2008
