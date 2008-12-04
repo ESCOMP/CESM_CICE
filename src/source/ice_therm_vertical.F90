@@ -36,6 +36,7 @@
       use ice_constants
       use ice_fileunits, only: nu_diag
       use ice_age, only: tr_iage
+      use ice_prescribed_mod, only: prescribed_ice
 !
 !EOP
 !
@@ -455,6 +456,19 @@
                                       istop,    jstop)
 
       if (l_stop) return
+
+      !-----------------------------------------------------------------
+      ! If prescribed ice, set hi back to old values
+      !-----------------------------------------------------------------
+
+      if (prescribed_ice) then
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            hin(ij) = worki(ij)
+            fhocnn(i,j) = c0             ! for diagnostics
+         enddo                  ! ij
+      endif
 
       !-----------------------------------------------------------------
       ! Compute fluxes of water and salt from ice to ocean.

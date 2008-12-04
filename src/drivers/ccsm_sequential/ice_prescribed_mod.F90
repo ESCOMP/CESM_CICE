@@ -568,6 +568,10 @@ subroutine ice_prescribed_run(mDateIn, secIn)
                enddo
                enddo
             enddo
+            deallocate(dataSrcLB)
+            deallocate(dataSrcUB)
+            deallocate(dataDstLB)
+            deallocate(dataDstUB)
          else       ! no regrid
             if (single_column) then 
                call ice_open_nc (fileLB, ncid)
@@ -587,6 +591,8 @@ subroutine ice_prescribed_run(mDateIn, secIn)
          mDateLB_old = mDateLB
          secLB_old = secLB
 
+         deallocate(dataInUB)
+         deallocate(dataInLB)
       end if       ! mDate
     
       call shr_tInterp_getFactors(mDateLB, secLB, mDateUB, secUB, &
@@ -810,6 +816,7 @@ subroutine ice_prescribed_phys
    real(kind=dbl_kind) :: qin_save(nilyr) 
    real(kind=dbl_kind) :: qsn_save(nslyr)
    real(kind=dbl_kind) :: hi        ! ice prescribed (hemispheric) ice thickness
+   real(kind=dbl_kind) :: hs        ! snow thickness
    real(kind=dbl_kind) :: zn        ! normalized ice thickness
    real(kind=dbl_kind) :: salin(nilyr)  ! salinity (ppt) 
 
@@ -871,9 +878,18 @@ subroutine ice_prescribed_phys
             ! All ice in appropriate thickness category
             !----------------------------------------------------------
             do nc = 1,ncat
+
               if(hin_max(nc-1) < hi .and. hi < hin_max(nc)) then
+
+                  if (aicen(i,j,nc,iblk) > c0) then
+                     hs = vsnon(i,j,nc,iblk) / aicen(i,j,nc,iblk)
+                  else
+                     hs = c0
+                  endif
+
                   qin_save(:) = c0
                   qsn_save(:) = c0
+
                   if (vicen(i,j,nc,iblk) > c0) then
                      do k=1,nilyr
                         qin_save(k) = eicen(i,j,ilyr1(nc)+k-1,iblk)         &
@@ -892,6 +908,7 @@ subroutine ice_prescribed_phys
 
                   aicen(i,j,nc,iblk) = ice_cov(i,j,iblk)
                   vicen(i,j,nc,iblk) = hi*aicen(i,j,nc,iblk) 
+                  vsnon(i,j,nc,iblk) = hs*aicen(i,j,nc,iblk) 
 
                   ! remember enthalpy profile to compute energy
                   do k=1,nilyr

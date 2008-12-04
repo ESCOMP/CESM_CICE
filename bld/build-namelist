@@ -331,13 +331,18 @@ add_default($nl, 'kcatbound');
 # namelist group: ice_nml        #
 ##################################
 
+my $cice_mode = $cfg->get('cice_mode');
 add_default($nl, 'ndte');
 add_default($nl, 'albicev');
 add_default($nl, 'albicei');
 add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'albedo_type');
-add_default($nl, 'shortwave');
+if ($cice_mode eq 'prescribed') {
+add_default($nl, 'shortwave','val'=>'default');
+} else {
+add_default($nl, 'shortwave','val'=>'dEdd');
+}
 add_default($nl, 'R_snw');
 add_default($nl, 'kitd');
 add_default($nl, 'kdyn');
@@ -371,7 +376,6 @@ add_default($nl, 'ns_boundary_type');
 ######################################
 
 add_default($nl, 'prescribed_ice');
-my $cice_mode = $cfg->get('cice_mode');
 if ($cice_mode eq 'prescribed') {
 add_default($nl, 'prescribed_ice_fill');
 add_default($nl, 'model_year_align');

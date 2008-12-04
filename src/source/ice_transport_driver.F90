@@ -629,8 +629,6 @@
     !-------------------------------------------------------------------
 
       if (l_monotonicity_check) then
-         !$OMP PARALLEL DO PRIVATE(iblk,l_stop,istop,jstop,n,istep1,&
-         !$OMP                     ilo,ihi,jlo,jhi)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -657,7 +655,6 @@
             enddo               ! n
 
          enddo                  ! iblk
-         !$OMP END PARALLEL DO
 
          deallocate(tmin, tmax, STAT=alloc_error)
          if (alloc_error /= 0) call abort_ice ('deallocation error')
