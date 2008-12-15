@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20081215
+Originator: dbailey
+Date: Mon Dec 15 10:54:12 MST 2008
+Version: 4.0
+One-line Summary: Bug fix with initialization of scale_factor.
+CCSM Version compatible with: ccsm4_0_beta03+
+Changes made:
+
+Also fix a dynamic allocation "bug" in prescribed ice.
+
+M      src/source/ice_flux.F90
+M      src/drivers/ccsm_sequential/CICE_RunMod.F90
+M      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20081204
 Originator: dbailey
 Date: Thu Dec  4 10:52:04 MST 2008

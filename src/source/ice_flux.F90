@@ -424,7 +424,7 @@
       !-----------------------------------------------------------------
 
       fsw     (:,:,:) = c0            ! shortwave radiation (W/m^2)
-      scale_factor(:,:,:) = c1        ! shortwave scaling factor
+      scale_factor(:,:,:) = c0        ! shortwave scaling factor
       wind    (:,:,:) = sqrt(uatm(:,:,:)**2 &
                            + vatm(:,:,:)**2)  ! wind speed, (m/s)
 

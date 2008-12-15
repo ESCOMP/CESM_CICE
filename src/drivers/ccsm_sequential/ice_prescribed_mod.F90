@@ -611,6 +611,8 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       if (my_task ==  master_task) then
          allocate(ice_cov_global(nx_global,ny_global))   ! Assumes 1 field
          ice_cov_global(:,:) = dataOutLB(:,:,1) 
+      else
+         allocate(ice_cov_global(1,1))
       end if
       call scatter_global(ice_cov_lb,   ice_cov_global, &
            &              master_task,  distrb_info, & 
@@ -623,9 +625,7 @@ subroutine ice_prescribed_run(mDateIn, secIn)
            &              master_task,  distrb_info, & 
            &              field_loc_center, field_type_scalar)
 
-      if (my_task ==  master_task) then
-         deallocate(ice_cov_global)
-      endif
+      deallocate(ice_cov_global)
    end if
 
    !-----------------------------------------------------------------
