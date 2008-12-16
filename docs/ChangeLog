@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20081216
+Originator: dbailey
+Date: Tue Dec 16 13:37:08 MST 2008
+Version: 4.0
+One-line Summary: Reset default shortwave back to 'dEdd'.
+CCSM Version compatible with: ccsm4_0_beta03+
+Changes made:
+
+Also, fixed some "SEQ_MCT" ifdefs that crept back in after the
+incorporating the latest LANL trunk. This should fix some issues
+when the code aborts and some printing of timers.
+
+M      bld/build-namelist
+M      src/mpi/ice_timers.F90
+M      src/mpi/ice_communicate.F90
+M      src/mpi/ice_exit.F90
+
+===============================================================
 cice4_0_20081215
 Originator: dbailey
 Date: Mon Dec 15 10:54:12 MST 2008
