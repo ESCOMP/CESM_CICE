@@ -338,11 +338,7 @@ add_default($nl, 'albicei');
 add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'albedo_type');
-if ($cice_mode eq 'prescribed') {
-add_default($nl, 'shortwave','val'=>'default');
-} else {
-add_default($nl, 'shortwave','val'=>'dEdd');
-}
+add_default($nl, 'shortwave');
 add_default($nl, 'R_snw');
 add_default($nl, 'kitd');
 add_default($nl, 'kdyn');

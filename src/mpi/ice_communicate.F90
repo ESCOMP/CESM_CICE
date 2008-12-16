@@ -17,10 +17,6 @@
 ! !USES:
 
    use ice_kinds_mod
-#if (defined CCSM) || (defined SEQ_MCT)
-   use cpl_interface_mod, only : cpl_interface_init
-   use cpl_fields_mod, only : cpl_fields_icename
-#endif
 
 #if defined key_oasis3
    use cpl_oasis3
@@ -102,11 +98,6 @@
     ice_comm = MPI_COMM_WORLD  ! Global communicator 
 #endif 
 
-#if (defined CCSM) || (defined SEQ_MCT)
-   ! CCSM standard coupled mode
-   call cpl_interface_init(cpl_fields_icename, MPI_COMM_ICE)
-#else
-
 #if (defined popcice || defined CICE_IN_NEMO)
    ! MPI_INIT is called elsewhere in coupled configuration
 #else
@@ -115,8 +106,6 @@
 
    call MPI_BARRIER (ice_comm, ierr)
    call MPI_COMM_DUP(ice_comm, MPI_COMM_ICE, ierr)
-
-#endif
 
    master_task = 0
    call MPI_COMM_RANK  (MPI_COMM_ICE, my_task, ierr)
