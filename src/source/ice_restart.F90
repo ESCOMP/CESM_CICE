@@ -282,6 +282,12 @@
       logical (kind=log_kind) :: &
          diag, hit_eof
 
+      integer (kind=int_kind) :: &
+         nrec
+
+      character (len=char_len) :: &       	 
+         resttype           ! type of restart format ('new' or 'old')
+
       if (present(ice_ic)) then 
          filename = ice_ic
       else
@@ -293,6 +299,12 @@
             write(nu_diag,*) 'Read ',pointer_file(1:lenstr(pointer_file))
          endif
       endif
+
+      ! determine format of restart file
+
+      resttype = restformat(nu_restart,filename) 
+
+      ! read restart file
 
       call ice_open(nu_restart,filename,0)
 
@@ -311,6 +323,7 @@
       call broadcast_scalar(time_forc,master_task)
 
       diag = .true.     ! write min/max diagnostics for field
+	
 
       !-----------------------------------------------------------------
       ! state variables
@@ -358,33 +371,31 @@
       !-----------------------------------------------------------------
       ! radiation fields
       !-----------------------------------------------------------------
-      if (trim(runtype) /= 'initial') then
+      if (trim(resttype) == 'new') then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'radiation fields'
 
-      if (my_task == master_task) &
-         write(nu_diag,*) 'radiation fields'
+         call ice_read(nu_restart,0,coszen,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,scale_factor,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,swvdr,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,swvdf,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,swidr,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+         call ice_read(nu_restart,0,swidf,'ruf8',diag, &
+                       field_loc_center, field_type_scalar)
+      end if
 
-      call ice_read(nu_restart,0,coszen,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,scale_factor,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,swvdr,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,swvdf,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,swidr,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
-      call ice_read(nu_restart,0,swidf,'ruf8',diag, &
-                    field_loc_center, field_type_scalar)
+      if (trim(resttype) == 'old') then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max fresh water and heat flux components'
 
-      else
-
-      if (my_task == master_task) &
-         write(nu_diag,*) 'min/max fresh water and heat flux components'
-
-      call ice_read(nu_restart,0,fresh,'ruf8',diag)
-      call ice_read(nu_restart,0,fsalt,'ruf8',diag)
-      call ice_read(nu_restart,0,fhocn,'ruf8',diag)
-
+         call ice_read(nu_restart,0,fresh,'ruf8',diag)
+         call ice_read(nu_restart,0,fsalt,'ruf8',diag)
+         call ice_read(nu_restart,0,fhocn,'ruf8',diag)
       endif
 
       !-----------------------------------------------------------------
@@ -602,6 +613,67 @@
       lenstr = n
 
       end function lenstr
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: character function restformat - determine format of restart file
+!
+! !INTERFACE:
+!
+      character(len=char_len) function restformat(nu, filename)
+!
+! !DESCRIPTION:
+!
+! Determine number of records in restart file
+!
+! !REVISION HISTORY:
+!
+! author: Mariana Vertenstein 12/2008
+!
+! !USES:
+!
+      use ice_exit, only: abort_ice	
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      integer, intent(in) :: nu
+      character(len=char_len), intent(in) :: filename
+!
+!EOP
+!
+      logical :: readdata
+      integer :: nrec
+      integer :: idummy, ios
+
+      if (my_task == master_task) then
+         call ice_open(nu_restart,filename,0)
+
+         readdata = .true.
+         nrec = 0
+         do while (readdata)
+            read(nu, iostat=ios) idummy 
+            if (ios < 0) then
+               readdata = .false.
+            else
+               nrec = nrec + 1
+            end if
+         end do
+
+         if (nrec == 66) then
+            restformat = 'old'
+         else if (nrec == 69) then
+            restformat = 'new'
+	 else
+            call abort_ice ( & 
+                 'restformat: number of records on restart file not supported')
+         end if
+         write(nu_diag,*)'Number of records restart file = ',nrec,' restart format is = ',trim(restformat)
+         close(nu)
+      end if
+      call broadcast_scalar(restformat,master_task)
+
+    end function restformat
 
 !=======================================================================
 

@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20081222
+Originator: mvertens
+Date: Mon Dec 22 16:51:46 MST 2008
+Version: 4.0
+One-line Summary: put in compatibility to read restarts of different formats
+CCSM Version compatible with: ccsm4_0_beta03+
+Changes made:
+
+The file ice_restart.F90 now has a new function, restformat, that determines 
+the number of records in the ice restart dataset and adjusts the reads
+accordingly. This provides compatibility to read in new restart files and
+backwards compatibility with the old files.	
+	
+M      ice_restart.F90
+
+===============================================================
 cice4_0_20081216
 Originator: dbailey
 Date: Tue Dec 16 13:37:08 MST 2008
