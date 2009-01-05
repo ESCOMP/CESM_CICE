@@ -2025,6 +2025,10 @@
                write(nu_diag,*) 'fswsfc, fswthrun', &
                                  fswsfc(i,j), fswthrun(i,j)
                write(nu_diag,*) 'Flux conservation error =', ferr
+               write(nu_diag,*) 'Internal snow absorption:'
+               write(nu_diag,*) (Sswabs(i,j,k),k=1,nslyr)
+               write(nu_diag,*) 'Internal ice absorption:'
+               write(nu_diag,*) (Iswabs(i,j,k),k=1,nilyr)
                write(nu_diag,*) 'Initial snow temperatures:'
                write(nu_diag,*) (Tsn_init(ij,k),k=1,nslyr)
                write(nu_diag,*) 'Initial ice temperatures:'

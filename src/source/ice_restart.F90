@@ -64,6 +64,9 @@
       character (len=char_len_long) :: &
          pointer_file      ! input pointer file for restarts
 
+      character (len=char_len) :: &       	 
+         resttype           ! type of restart format ('new' or 'old')
+
       real (kind=dbl_kind), private, &
          dimension(nx_block,ny_block,max_blocks) :: &
          work1
@@ -284,9 +287,6 @@
 
       integer (kind=int_kind) :: &
          nrec
-
-      character (len=char_len) :: &       	 
-         resttype           ! type of restart format ('new' or 'old')
 
       if (present(ice_ic)) then 
          filename = ice_ic
@@ -646,6 +646,9 @@
       integer :: nrec
       integer :: idummy, ios
 
+      integer, parameter :: nrecold = ncat*4+ntilyr+ntslyr+21
+      integer, parameter :: nrecnew = ncat*4+ntilyr+ntslyr+24
+
       if (my_task == master_task) then
          call ice_open(nu_restart,filename,0)
 
@@ -660,9 +663,9 @@
             end if
          end do
 
-         if (nrec == 66) then
+         if (nrec == nrecold) then
             restformat = 'old'
-         else if (nrec == 69) then
+         else if (nrec == nrecnew) then
             restformat = 'new'
 	 else
             call abort_ice ( & 

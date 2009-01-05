@@ -583,7 +583,7 @@
       !-----------------------------------------------------------------
       ! Save net shortwave for scaling factor in scale_factor
       !-----------------------------------------------------------------
-            if (trim(runtype) /= 'initial' .or. istep > 0) then
+            if (istep > 0) then
 
             scale_factor(i,j,iblk) = &
                        swvdr(i,j,iblk)*(c1 - alvdr_gbm(i,j,iblk)) &

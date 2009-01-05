@@ -401,7 +401,7 @@ contains
     time = time + dt       ! determine the time and date
     call calendar(time)    ! at the end of the timestep
 
-    if (runtype == 'initial' .and. istep == 1) &
+    if (resttype == 'old' .and. istep == 1) &
        call init_shortwave    ! initialize radiative transfer using current swdn
 
     !-----------------------------------------------------------------
