@@ -1,4 +1,14 @@
 ===============================================================
+cice4_0_20090108
+Originator: dbailey
+Date: Wed Jan  7 15:05:56 MST 2009
+Version: 4.0
+One-line Summary: Fix restarts for branch runs.
+CCSM Version compatible with: ccsm4_0_beta05+
+Changes made:
+
+M      bld/cice.cpl7.template
+===============================================================
 cice4_0_20090107
 Originator: dbailey
 Date: Wed Jan  7 13:34:02 MST 2009
