@@ -66,7 +66,7 @@
                               npt, dt, xndyn_dt, days_per_year, write_ic
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
-          runid, runtype, ice_ic
+          runid, runtype, ice_ic, resttype
       use ice_history, only: hist_avg, &
                              history_format, history_dir, history_file, &
                              incond_dir, incond_file
@@ -248,6 +248,8 @@
       restart_pond = .false. ! melt ponds restart
       tr_aero      = .false. ! aerosols          MH
       restart_aero = .false. ! aerosol restart   MH
+
+      resttype = 'old'
 
       !-----------------------------------------------------------------
       ! read from input file

@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20090107
+Originator: dbailey
+Date: Wed Jan  7 13:34:02 MST 2009
+Version: 4.0
+One-line Summary: Fix restarts for branch runs.
+CCSM Version compatible with: ccsm4_0_beta05+
+Changes made:
+
+The flag 'resttype' needs to be initialized to 'old' by default
+to account for cases in which a restart file is not read.
+
+M      src/source/ice_init.F90
+===============================================================
 cice4_0_20090105
 Originator: dbailey
 Date: Mon Jan  5 08:02:41 MST 2009
