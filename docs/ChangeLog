@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20090109
+Originator: dbailey
+Date: Thu Jan  8 11:53:09 MST 2009
+Version: 4.0
+One-line Summary: Fix tracer restarts for branch runs standalone
+                  CAM.
+CCSM Version compatible with: ccsm4_0_beta05+
+Changes made:
+
+M      src/source/ice_meltpond.F90
+M      src/source/ice_age.F90
+M      src/source/ice_aerosol.F90
+
+===============================================================
 cice4_0_20090108
 Originator: dbailey
 Date: Wed Jan  7 15:05:56 MST 2009

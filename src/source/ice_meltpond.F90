@@ -76,23 +76,18 @@
 
       integer (kind=int_kind) :: i, j, ij, n, iblk
       
-      character(len=char_len_long) :: &
-         string1
-
       ! Need to compute albedos before init_cpl in CCSM
 
       restart_pond = .false.
       if (trim(runtype) /= 'initial') restart_pond = .true.
+      if (trim(ice_ic) == 'none' .or. trim(ice_ic) == 'default' .and. &
+          trim(runtype) /= 'continue') restart_pond = .false.
 
       if (restart_pond) then
          if (trim(runtype) == 'continue') then
             call read_restart_pond
          else
-            n = index(ice_ic,'cice.r') + 5
-            write(nu_diag,*) n
-            write(nu_diag,'(a)') ice_ic(1:n)
-            string1 = trim(ice_ic(1:n))
-            call read_restart_pond(string1)
+            call read_restart_pond(ice_ic)
          endif
       else
          trcrn(:,:,nt_volpn,:,:) = c0
@@ -369,13 +364,12 @@
 
          ! reconstruct path/file
          if (present(filename_spec)) then
-            n = index(filename0,trim(filename_spec))
+            n = index(filename_spec,'cice.r') + 6
             if (n == 0) call abort_ice('volpn restart: filename discrepancy')
-            string1 = trim(filename0(1:n-1))
-            string2 = trim(filename0(n+lenstr(filename_spec):lenstr(filename0)))
+            string1 = trim(filename_spec(1:n-1))
+            string2 = trim(filename_spec(n:lenstr(filename_spec)))
             write(filename,'(a,a,a,a)') &
-               string1(1:lenstr(string1)), &
-               filename_spec(1:lenstr(filename_spec)),'.volpn', &
+               string1(1:lenstr(string1)),'.volpn', &
                string2(1:lenstr(string2))
          else
             n = index(filename0,trim(restart_file))
