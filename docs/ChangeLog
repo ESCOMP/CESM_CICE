@@ -1,4 +1,26 @@
 ===============================================================
+cice4_0_20090113
+Originator: dbailey
+Date: Tue Jan 13 15:37:09 MST 2009
+Version: 4.0
+One-line Summary: New method for restarting tracers.
+CCSM Version compatible with: ccsm4_0_beta07+
+Changes made:
+
+This restart method for the tracers relies on the filenames
+of the tracer restart files being written to the core
+restart file. Otherwise, the filename for the tracer is set
+to 'none' and the tracer will be set to zero.
+
+M      src/source/ice_init.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_age.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_state.F90
+M      src/source/ice_restart.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090109
 Originator: dbailey
 Date: Thu Jan  8 11:53:09 MST 2009

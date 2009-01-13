@@ -23,7 +23,7 @@
       use ice_fileunits
       use ice_read_write
       use ice_restart, only: lenstr, restart_dir, restart_file, pointer_file, &
-                             runtype, ice_ic
+                             runtype
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -56,22 +56,21 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_iage, trcrn
+      use ice_state, only: nt_iage, trcrn, filename_iage
 
       integer (kind = int_kind) :: n
 
 !
 !EOP
 !
-      if (trim(runtype) /= 'initial') restart_age = .true.
-      if (trim(ice_ic) == 'none' .or. trim(ice_ic) == 'default' .and. &
-          trim(runtype) /= 'continue') restart_age = .false.
+
+      if (trim(filename_iage) /= 'none') restart_age = .true.
 
       if (restart_age) then
          if (trim(runtype) == 'continue') then
             call read_restart_age
          else
-            call read_restart_age(ice_ic)
+            call read_restart_age(filename_iage)
          endif
       else
          trcrn(:,:,nt_iage,:,:) = c0
@@ -247,21 +246,15 @@
          diag
 
       if (my_task == master_task) then
-         open(nu_rst_pointer,file=pointer_file)
-         read(nu_rst_pointer,'(a)') filename0
-         filename = trim(filename0)
-         close(nu_rst_pointer)
-
          ! reconstruct path/file
          if (present(filename_spec)) then
-            n = index(filename_spec,'cice.r') + 6
-            if (n == 0) call abort_ice('iage restart: filename discrepancy')
-            string1 = trim(filename_spec(1:n-1))
-            string2 = trim(filename_spec(n:lenstr(filename_spec)))
-            write(filename,'(a,a,a,a)') &
-               string1(1:lenstr(string1)),'.age', &
-               string2(1:lenstr(string2))
+            filename = filename_spec
          else
+            open(nu_rst_pointer,file=pointer_file)
+            read(nu_rst_pointer,'(a)') filename0
+            filename = trim(filename0)
+            close(nu_rst_pointer)
+
             n = index(filename0,trim(restart_file))
             if (n == 0) call abort_ice('iage restart: filename discrepancy')
             string1 = trim(filename0(1:n-1))

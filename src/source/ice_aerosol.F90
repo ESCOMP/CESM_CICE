@@ -20,6 +20,8 @@
       use ice_kinds_mod
       use ice_constants
       use ice_fileunits
+      use ice_restart, only: lenstr, restart_dir, restart_file, &
+                             pointer_file, runtype
       use ice_communicate, only: my_task, master_task
       use ice_exit, only: abort_ice
 !
@@ -52,8 +54,7 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_aero, trcrn 
-      use ice_restart, only: runtype, ice_ic
+      use ice_state, only: nt_aero, trcrn, filename_aero 
       use ice_domain_size, only: n_aero
 
       integer (kind = int_kind) :: n
@@ -61,15 +62,13 @@
 !
 !EOP
 !
-      if (trim(runtype) /= 'initial') restart_aero = .true.
-      if (trim(ice_ic) == 'none' .or. trim(ice_ic) == 'default' .and. &
-          trim(runtype) /= 'continue') restart_aero = .false.
+      if (trim(filename_aero) /= 'none') restart_aero = .true.
 
       if (restart_aero) then
          if (trim(runtype) == 'continue') then
             call read_restart_aero
          else
-            call read_restart_aero(ice_ic)
+            call read_restart_aero(filename_aero)
          endif
       else
          if (tr_aero) &
@@ -722,11 +721,6 @@
          diag
 
       if (my_task == master_task) then
-         open(nu_rst_pointer,file=pointer_file)
-         read(nu_rst_pointer,'(a)') filename0
-         filename = trim(filename0)
-         close(nu_rst_pointer)
-
          ! reconstruct path/file
          if (present(filename_spec)) then
             n = index(filename_spec,'cice.r') + 6
@@ -737,6 +731,11 @@
                string1(1:lenstr(string1)),'.aero', &
                string2(1:lenstr(string2))
          else
+            open(nu_rst_pointer,file=pointer_file)
+            read(nu_rst_pointer,'(a)') filename0
+            filename = trim(filename0)
+            close(nu_rst_pointer)
+
             n = index(filename0,trim(restart_file))
             if (n == 0) call abort_ice('soot restart: filename discrepancy')
             string1 = trim(filename0(1:n-1))

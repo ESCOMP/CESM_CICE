@@ -126,6 +126,11 @@
          nt_volpn     , & ! melt pond volume - not used, for now
          nt_aero          ! starting index for aerosol within ice MH
 
+      character(len=char_len_long) :: &
+         filename_iage,  & ! filenames of tracer restarts
+         filename_volpn, &
+         filename_aero
+
       !-----------------------------------------------------------------
       ! dynamic variables closely related to the state of the ice
       !-----------------------------------------------------------------

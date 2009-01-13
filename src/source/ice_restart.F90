@@ -235,6 +235,10 @@
          call ice_write(nu_dump,0,frzmlt,'ruf8',diag)
       endif
 
+      write(nu_dump) filename_volpn
+      write(nu_dump) filename_aero
+      write(nu_dump) filename_iage
+
       if (my_task == master_task) close(nu_dump)
 
       end subroutine dumpfile
@@ -496,7 +500,26 @@
          call ice_read(nu_restart,0,frzmlt,'ruf8',diag)
       endif
 
+      if (my_task == master_task) then
+
+         read(nu_restart, end=99) filename_volpn
+         read(nu_restart, end=99) filename_aero
+         read(nu_restart, end=99) filename_iage
+
+   99    continue
+      endif
+
+      if (my_task == master_task) then
+         write(nu_diag,'(a,a)') 'filename_volpn: ',filename_volpn
+         write(nu_diag,'(a,a)') 'filename_aero : ',filename_aero
+         write(nu_diag,'(a,a)') 'filename_iage : ',filename_iage
+      endif
+       
       if (my_task == master_task) close(nu_restart)
+
+      call broadcast_scalar(filename_volpn, master_task)
+      call broadcast_scalar(filename_aero,  master_task)
+      call broadcast_scalar(filename_iage,  master_task)
 
       !-----------------------------------------------------------------
       ! Ensure unused stress values in west and south ghost cells are 0
@@ -647,7 +670,7 @@
       integer :: idummy, ios
 
       integer, parameter :: nrecold = ncat*4+ntilyr+ntslyr+21
-      integer, parameter :: nrecnew = ncat*4+ntilyr+ntslyr+24
+      integer, parameter :: nrecnew = ncat*4+ntilyr+ntslyr+27
 
       if (my_task == master_task) then
          call ice_open(nu_restart,filename,0)

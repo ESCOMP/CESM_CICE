@@ -244,10 +244,13 @@
       ! extra tracers
       tr_iage      = .false. ! ice age
       restart_age  = .false. ! ice age restart
+      filename_iage = 'none'
       tr_pond      = .false. ! explicit melt ponds
       restart_pond = .false. ! melt ponds restart
+      filename_volpn = 'none'
       tr_aero      = .false. ! aerosols          MH
       restart_aero = .false. ! aerosol restart   MH
+      filename_aero = 'none'
 
       resttype = 'old'
 

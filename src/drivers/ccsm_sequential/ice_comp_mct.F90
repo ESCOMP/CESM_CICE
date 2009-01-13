@@ -36,7 +36,8 @@ module ice_comp_mct
 		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
 		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
 		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn
-  use ice_state,       only : vice, aice, trcr
+  use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
+                              filename_volpn
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
   use ice_domain,      only : nblocks, blocks_ice, halo_info
   use ice_blocks,      only : block, get_block, nx_block, ny_block
@@ -352,9 +353,11 @@ contains
     integer :: ymd_sync      ! Current year of sync clock
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
+    integer :: n
     type(mct_gGrid)             , pointer :: dom_i
     type(seq_infodata_type)     , pointer :: infodata   ! Input init object
     character(len=char_len_long) :: fname
+    character(len=char_len_long) :: string1, string2
     character(len=*), parameter  :: SubName = "ice_run_mct"
 !
 ! !REVISION HISTORY:
@@ -512,14 +515,38 @@ contains
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
        write(nu_diag,*)'ice_comp_mct: calling dumpfile for restart filename= ',&
             fname
+       if (tr_pond) then
+            n = index(fname,'cice.r') + 6
+            string1 = trim(fname(1:n-1))
+            string2 = trim(fname(n:lenstr(fname)))
+            write(filename_volpn,'(a,a,a,a)') &
+               string1(1:lenstr(string1)),'.volpn', &
+               string2(1:lenstr(string2))
+       endif
+       if (tr_aero) then
+            n = index(fname,'cice.r') + 6
+            string1 = trim(fname(1:n-1))
+            string2 = trim(fname(n:lenstr(fname)))
+            write(filename_aero,'(a,a,a,a)') &
+               string1(1:lenstr(string1)),'.aero', &
+               string2(1:lenstr(string2))
+       endif
+       if (tr_iage) then
+            n = index(fname,'cice.r') + 6
+            string1 = trim(fname(1:n-1))
+            string2 = trim(fname(n:lenstr(fname)))
+            write(filename_iage,'(a,a,a,a)') &
+               string1(1:lenstr(string1)),'.age', &
+               string2(1:lenstr(string2))
+       endif
 #if (defined _NOIO)
 !  Not enought memory on BGL to call dumpfile  file yet! 
 !       call dumpfile(fname)
 #else
        call dumpfile(fname)
-       if (tr_aero) call write_restart_aero
-       if (tr_iage) call write_restart_age
-       if (tr_pond) call write_restart_pond
+       if (tr_aero) call write_restart_aero(filename_aero)
+       if (tr_iage) call write_restart_age(filename_iage)
+       if (tr_pond) call write_restart_pond(filename_volpn)
 #endif
     end if
 
