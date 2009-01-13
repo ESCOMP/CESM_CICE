@@ -2093,7 +2093,9 @@
 
       ! ice data
       data hi_ssl / 0.050_dbl_kind / ! sea ice surface scattering layer thickness (m)
-      data kalg   / 0.60_dbl_kind /  ! for 0.5 m path of 75 mg Chl a / m2
+!     data kalg   / 0.60_dbl_kind /  ! for 0.5 m path of 75 mg Chl a / m2
+!     turn off algae absorption for now - DAB
+      data kalg   / 0.00_dbl_kind /  ! for 0.5 m path of 75 mg Chl a / m2
 
       ! ice and pond scat coeff fractional change for +- one-sigma in albedo
       data fp_ice / 0.15_dbl_kind /

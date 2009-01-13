@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090114
+Originator: dbailey
+Date: Tue Jan 13 15:43:34 MST 2009
+Version: 4.0
+One-line Summary: Turn off algae absorption.
+CCSM Version compatible with: ccsm4_0_beta07+
+Changes made:
+
+M      src/source/ice_shortwave.F90
+
+===============================================================
 cice4_0_20090113
 Originator: dbailey
 Date: Tue Jan 13 15:37:09 MST 2009
