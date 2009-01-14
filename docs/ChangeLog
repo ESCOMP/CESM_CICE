@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20090115
+Originator: dbailey
+Date: Wed Jan 14 11:21:01 MST 2009
+Version: 4.0
+One-line Summary: Fixes for restarts at half hour boundary and
+                  spurious fort files.
+CCSM Version compatible with: ccsm4_0_beta07+
+Changes made:
+
+The tracer restart filenames were being written on all tasks
+and created spurious fort files. Also, the nextsw_cday variable
+is now set explicitly to -1 on continue and branch runs.
+
+M      src/source/ice_restart.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090114
 Originator: dbailey
 Date: Tue Jan 13 15:43:34 MST 2009

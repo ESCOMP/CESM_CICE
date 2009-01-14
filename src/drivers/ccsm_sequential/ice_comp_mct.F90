@@ -180,6 +180,10 @@ contains
        call shr_sys_abort()
     end if
 
+    ! Set nextsw_cday to -1 for continue and branch runs.
+
+    if (trim(runtype) /= 'initial') nextsw_cday = -1
+
     !=============================================================
     ! Set ice dtime to ice coupling frequency
     !=============================================================

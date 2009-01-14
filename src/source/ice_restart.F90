@@ -235,11 +235,16 @@
          call ice_write(nu_dump,0,frzmlt,'ruf8',diag)
       endif
 
-      write(nu_dump) filename_volpn
-      write(nu_dump) filename_aero
-      write(nu_dump) filename_iage
+      if (my_task == master_task) then
 
-      if (my_task == master_task) close(nu_dump)
+         write(nu_dump) filename_volpn
+         write(nu_dump) filename_aero
+         write(nu_dump) filename_iage
+
+         close(nu_dump)
+
+      endif
+
 
       end subroutine dumpfile
 
