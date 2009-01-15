@@ -123,7 +123,7 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block), intent(in) :: &
          tlat, tlon          ! latitude and longitude (radians)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block), intent(out) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block), intent(inout) :: &
          coszen              ! cosine solar zenith angle 
                              ! negative for sun below horizon
  

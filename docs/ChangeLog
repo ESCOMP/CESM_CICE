@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090116
+Originator: dbailey
+Date: Thu Jan 15 09:15:52 MST 2009
+Version: 4.0
+One-line Summary: Fix bug with coszen.
+CCSM Version compatible with: ccsm4_0_beta07+
+Changes made:
+
+M      src/source/ice_orbital.F90
+
+===============================================================
 cice4_0_20090115
 Originator: dbailey
 Date: Wed Jan 14 11:21:01 MST 2009
