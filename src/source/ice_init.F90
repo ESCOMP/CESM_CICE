@@ -143,10 +143,12 @@
         ocn_data_dir,   oceanmixed_file, restore_sst,   trestore,       &
         restore_ice    
 
+#ifndef CCSMCOUPLED
       namelist /tracer_nml/    &
         tr_iage, restart_age,  &
         tr_pond, restart_pond, &
         tr_aero, restart_aero         !MH for soot
+#endif
 
       !-----------------------------------------------------------------
       ! default values
@@ -241,7 +243,10 @@
       runtype = 'initial'   ! run type: 'initial', 'continue'
 #endif
 
-      ! extra tracers
+      !-----------------------------------------------------------------
+      ! extra tracers (no longer namelist variables set in ice_domain_size)  
+      !-----------------------------------------------------------------
+
       tr_iage      = .false. ! ice age
       restart_age  = .false. ! ice age restart
       filename_iage = 'none'
@@ -253,6 +258,12 @@
       filename_aero = 'none'
 
       resttype = 'old'
+
+#ifdef CCSMCOUPLED
+      if (ntr_iage > 0) tr_iage  = .true. 
+      if (ntr_pond > 0) tr_pond  = .true. 
+      if (ntr_aero > 0) tr_aero  = .true. 
+#endif
 
       !-----------------------------------------------------------------
       ! read from input file
@@ -274,8 +285,10 @@
             read(nu_nml, nml=grid_nml,iostat=nml_error)
             print*,'Reading ice_nml'
             read(nu_nml, nml=ice_nml,iostat=nml_error)
+#ifndef CCSMCOUPLED
             print*,'Reading tracer_nml'
             read(nu_nml, nml=tracer_nml,iostat=nml_error)
+#endif
             if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
          end do
          if (nml_error == 0) close(nu_nml)
@@ -623,7 +636,7 @@
          write(nu_diag,1010) ' restart_age               = ', restart_age
          write(nu_diag,1010) ' tr_pond                   = ', tr_pond
          write(nu_diag,1010) ' restart_pond              = ', restart_pond
-         write(nu_diag,1010) ' tr_aero                   = ', tr_aero !MH
+         write(nu_diag,1010) ' tr_aero                   = ', tr_aero      !MH
          write(nu_diag,1010) ' restart_aero              = ', restart_aero !MH
 
          ntr = 1 ! count tracers, starting with Tsfc = 1

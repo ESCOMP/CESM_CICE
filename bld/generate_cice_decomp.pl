@@ -34,18 +34,45 @@ my $utilroot = $ENV{'UTILROOT'};
 if ($ProgDir) { $cfgdir = $ProgDir; }
 else { $cfgdir = $cwd; }
 
+# Horizontal grid and spectral resolution parameters.
+my $horiz_grid_file = 'config_grid.xml';
+if (-f "Tools/$horiz_grid_file") {
+    $horiz_grid_file = "Tools/$horiz_grid_file";
+} elsif (-f "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file") {
+    $horiz_grid_file = "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file";
+} else {
+    die <<"EOF";
+** (generate_cice_decomp): Cannot find horizonal grid parameters file \"$horiz_grid_file\" 
+EOF
+}
+
+# The XML::Lite module is required to parse the XML configuration files.
+my $xmldir;
+if (-f "Tools/XML/Lite.pm") {
+    $xmldir = "Tools";
+} elsif (-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm") {
+    $xmldir = "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib";
+} else {
+    die <<"EOF";
+** (generate_cice_decomp): Cannot find perl module \"XML/Lite.pm\" 
+EOF
+}
+	  
 #-----------------------------------------------------------------------------------------------
-# Add $cfgdir to the list of paths that Perl searches for modules
+# Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
 my @dirs = ( $cfgdir, "$cfgdir/perl5lib", "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib", "$utilroot/Tools/perl5lib" );
 unshift @INC, @dirs;
+require XML::Lite;
+
 my $result = eval "require Decomp::Config";
 if ( ! defined($result) ) {
    die <<"EOF";
-** Cannot find perl module \"Decomp::Config\" from directories: @dirs **
+** (generate_cice_decomp): Cannot find perl module \"Decomp::Config\" from directories: @INC
 EOF
 }
 require Decomp::Config;
 
+#-----------------------------------------------------------------------------------------------
 my $model    = "cice";
 my $platform = "XT";
 my $res      = "gx1v5";
@@ -117,30 +144,30 @@ EOF
      }
   }
 
-  $opts{'ProgName'} = $ProgName;
-  $opts{'ProgDir'}  = $cfgdir;
-  $opts{'cmdline'}  = $cmdline;
+$opts{'ProgName'} = $ProgName;
+$opts{'ProgDir'}  = $cfgdir;
+$opts{'cmdline'}  = $cmdline;
 
-# redefine nproc to be total procs, nproc*thrds
-  $opts{'nproc'} = $opts{'nproc'} * $opts{'thrds'};
+# Redefine nproc to be total procs, nproc*thrds
+$opts{'nproc'} = $opts{'nproc'} * $opts{'thrds'};
 
-# try to read from the xml file
-  my $dcmp = Decomp::Config->new( \%opts );
-  my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"",
-                 nlats=>0, nlons=>0 );
-  my $matches = $dcmp->ReadXML( $opts{'file'}, \%decomp );
+# Set_horiz_grid sets the parameters for specific hgrid combinations.
+if (defined $opts{'res'}) {$res = $opts{'res'};}
+my %latlon = ( nlat=>0, nlon=>0);
+set_horiz_grid("$horiz_grid_file", $res, \%latlon);
+my $nlat = $latlon{'nlat'}; 
+my $nlon = $latlon{'nlon'}; 
 
-if ($decomp{'nlats'} == 0 ) {
-   die <<"EOF";
-** resolution $res is currently not supported in cice_decomp.xml file***
-EOF
-}    
+# Try to read from the xml file
+my $dcmp = Decomp::Config->new( \%opts );
+my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"" );
+my $matches = $dcmp->ReadXML( $opts{'file'}, \%decomp );
 
-# if no xml entry, try to generate something
-  if ( $decomp{'maxblocks'} == 0) {
-     %decomp = CalcDecompInfo( $decomp{'nlats'}, $decomp{'nlons'}, \%opts);
-  }
- 
+# If no xml entry, try to generate something
+if ( $decomp{'maxblocks'} == 0) {
+    %decomp = CalcDecompInfo( $nlat, $nlon, \%opts);
+}
+
 # adjust maxblocks to take into account threading
   if ($decomp{'decomptype'} ne "spacecurve")  {
      $decomp{'maxblocks'} = $decomp{'maxblocks'} * $opts{'thrds'};
@@ -150,7 +177,7 @@ EOF
      printf "%d %s",-1, "ERROR:($ProgName) No Decomp Created \n";
   } else {
      if (      $opts{'output'} eq "all"       ) {
-       printf "%d %d %d %d %d %s", $decomp{'nlons'}, $decomp{'nlats'}, 
+       printf "%d %d %d %d %d %s", $nlon, $nlat,
           $decomp{'bsize_x'}, $decomp{'bsize_y'}, $decomp{'maxblocks'}, $decomp{'decomptype'};
       } elsif ( $opts{'output'} eq "maxblocks" ) {
         print $decomp{'maxblocks'};
@@ -167,7 +194,7 @@ EOF
       print "\n";
   }
 
-
+#-----------------------------------------------------------------------------------------------
 sub CalcDecompInfo {
 #
 # Calculate decomposition information
@@ -465,3 +492,45 @@ sub CalcDecompInfo {
 
   return(%decomp);
 }
+
+#-------------------------------------------------------------------------------
+
+sub set_horiz_grid
+{
+    # Set the parameters for the specified horizontal grid.  The
+    # parameters are read from an input file, and if no grid matches are
+    # found then issue error message.
+    # This routine uses the configuration defined at the package level ($cfg_ref).
+
+    my ($hgrid_file, $hgrid, $latlon) = @_;
+    my $xml = XML::Lite->new( $hgrid_file );
+    my $root = $xml->root_element();
+
+    # Check for valid root node
+    my $name = $root->get_name();
+    $name eq "config_horiz_grid" or die
+	"(generate_cice_decomp): file $hgrid_file is not a horizontal grid parameters file\n";
+
+    # Read the grid parameters from $hgrid_file.
+    my @e = $xml->elements_by_name( "horiz_grid" );
+    my %a = ();
+
+    # Search for matching grid.
+    my $found = 0;
+  HGRID:
+    while ( my $e = shift @e ) {
+	%a = $e->get_attributes();
+	if ( $hgrid eq $a{'GLOB_GRID'} ) {
+	    $found = 1;
+	    last HGRID;
+	}
+    }
+
+    # Die unless search was successful.
+    unless ($found) { die "(generate_cice_decomp): set_horiz_grid: no match for hgrid $hgrid\n"; }
+
+    # Set nlat and nlon values
+    $latlon{'nlat'} = $a{'ny'};
+    $latlon{'nlon'} = $a{'nx'};
+}
+

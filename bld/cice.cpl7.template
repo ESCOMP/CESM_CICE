@@ -4,119 +4,71 @@ if !(-d $CASEBUILD) mkdir $CASEBUILD
 if !(-d $CASEBUILD/ciceconf) mkdir $CASEBUILD/ciceconf
 
 #--------------------------------------------------------------------
-# Create cice.buildnml.csh
+# Invoke cice configure
 #--------------------------------------------------------------------
 
-if     ($CICE_MODE == 'prognostic') then
-   set mode = prognostic
-   set ncat = 5
-else if ($CICE_MODE == 'thermo_only') then
-   set mode = thermo_only
-   set ncat = 1
-else if ($CICE_MODE == 'data_clim_1870') then
-   set mode = prescribed
-   set pres_mode = clim_1870
-   set ncat = 1
-else if ($CICE_MODE == 'data_clim_2000') then
-   set mode = prescribed
-   set pres_mode = clim_2000
-   set ncat = 1
-endif
+
+set hgrid = "-hgrid $ICE_GRID"
+if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
+
+set mode = "-cice_mode $CICE_MODE"
+
+cd $CASEBUILD/ciceconf || exit -1
+$CODEROOT/ice/cice/bld/configure $hgrid $mode -nodecomp $CICE_CONFIG_OPTS || exit -1
+
+#----------------------------
+# Create ccsm_namelist file
+#----------------------------
 
 set ice_ic = 'default'
 if ($RUN_TYPE == startup) then
-  if ($ICE_GRID =~ *gx* && $mode != prescribed) then
-     set ice_ic = iced.0001-01-01.${ICE_GRID}_20080212
+  if ($ICE_GRID =~ *gx* && $CICE_MODE != prescribed) then
+     set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.0001-01-01.${ICE_GRID}_20080212
   endif 
 else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-  set datedash  = $RUN_REFDATE-00000
-  set ice_ic = $RUN_REFCASE.cice.r.$datedash
+  set ice_ic = ${RUN_REFCASE}.cice.r.${RUN_REFDATE}-00000
 endif
 
-cat >! $CASEBUILD/cice.buildnml.csh << EOF1
-#! /bin/csh -f 
-
-set exedir = \$RUNDIR; cd \$exedir
-
-set ice_ic = $ice_ic
-EOF1
-
-if ($RUN_TYPE == startup) then
-cat >> $CASEBUILD/cice.buildnml.csh << EOF1
-if (\$CONTINUE_RUN != 'TRUE' && \$ice_ic != default && \$ice_ic != none) then
-    set ice_ic = \$DIN_LOC_ROOT/ice/cice/\$ice_ic
-endif
-EOF1
-endif
-
-if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-cat >> $CASEBUILD/cice.buildnml.csh << EOF1
-EOF1
-endif
-
-cat >> $CASEBUILD/ciceconf/ccsm_namelist << EOF1
+cat >! $CASEBUILD/ciceconf/ccsm_namelist << EOF1
+ &ice_nml
+ ice_ic = '$ice_ic'
+ /
  &domain_nml
  distribution_type = 'DECOMPTYPE'
  / 
 EOF1
 
-# Determine ice grid spec needed for build-namelist
+#----------------------------
+# Invoke build-namelist
+#----------------------------
 
-if ($ICE_GRID =~ *T*) then
-   set NLON = $ICE_NX
-   set NLAT = $ICE_NY
-   set ice_hrgrid = ${NLON}x${NLAT}
-else
-   set ice_hrgrid = $ICE_GRID
-endif
+set cice_prestype = " "
+if ($CICE_MODE == 'prescribed') set cice_prestype = "-prestype $CICE_PRESTYPE "
 
-if ($mode == "prescribed") then  # generate config_cache.xml for prescribed mode
-cat >> $CASEBUILD/ciceconf/config_cache.xml << EOF1
-<?xml version="1.0"?>
-<config_definition>
-<entry id="cice_mode"     value="$mode"      ></entry>
-<entry id="cice_grid"     value="$ice_hrgrid"></entry>
-<entry id="cice_prestype" value="$pres_mode" ></entry>
-</config_definition>
-EOF1
-else     # generate config_cache.xml for non-prescribed mode               
-cat >> $CASEBUILD/ciceconf/config_cache.xml << EOF1
-<?xml version="1.0"?>
-<config_definition>
-<entry id="cice_mode" value="$mode"    ></entry>
-<entry id="cice_grid"  value="$ICE_GRID"></entry>
-</config_definition>
-EOF1
-endif
-
-cd $CASEBUILD/ciceconf || exit -1
-
-if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-                                        -namelist "&setup_nml ice_ic='${ice_ic}' /" \
-                                        -inputdata $CASEBUILD/cice.input_data_list || exit -1
-else
-  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-			    	        -inputdata $CASEBUILD/cice.input_data_list || exit -1
-endif
-
-if ($RUN_TYPE == startup && ${ice_ic} != 'default') then
-cat >> $CASEBUILD/cice.input_data_list << EOF1
-ice_ic = \$DIN_LOC_ROOT/ice/cice/${ice_ic}
-EOF1
-endif
-if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-if (${ice_ic} != 'default') then
-cat >> $CASEBUILD/cice.input_data_list << EOF1
-ice_ic = ${ice_ic}
-EOF1
-endif
-endif
+$CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+                                      -inputdata $CASEBUILD/cice.input_data_list || exit -1
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in
 
-cat >> $CASEBUILD/cice.buildnml.csh << EOF1
+#----------------------------
+# Append ice_ic to cice.input_data_list
+#----------------------------
+
+if ($RUN_TYPE != 'branch' && $RUN_TYPE != 'hybrid' && ${ice_ic} != 'default') then
+cat >> $CASEBUILD/cice.input_data_list << EOF1
+ice_ic = ${ice_ic}
+EOF1
+endif
+
+#----------------------------
+# Create cice.build_nml_prestage.csh
+#----------------------------
+
+cat >! $CASEBUILD/cice.buildnml.csh << EOF1
+#! /bin/csh -f 
+
+set exedir = \$RUNDIR; cd \$exedir
 
 cat >! ice_in << EOF
 EOF1
@@ -126,62 +78,41 @@ EOF
 EOF1
 
 #--------------------------------------------------------------------
-# write out executable generating directives to resolved file
+# Create cice.buildexe.csh
 #--------------------------------------------------------------------
 
 cat >! $CASEBUILD/cice.buildexe.csh << EOF2
 #! /bin/csh -f 
 
-set objdir = \$OBJROOT/ice/obj
-cd \$objdir
+set objdir = \$OBJROOT/ice/obj; cd \$objdir
 
-# Filepath: List of source code directories (in order of importance).
-#-----------------------------------------------------------------------
-\cat >! Filepath << EOF
-\$CASEROOT/SourceMods/src.cice
-\$CODEROOT/ice/cice/src/drivers/ccsm_sequential
-\$CODEROOT/ice/cice/src/mpi
-\$CODEROOT/ice/cice/src/source
+\cat >! .tmp << EOF; cmp -s .tmp Filepath || mv -f .tmp Filepath 
+EOF2
+
+cat $CASEBUILD/ciceconf/Filepath >> $CASEBUILD/cice.buildexe.csh
+
+cat >> $CASEBUILD/cice.buildexe.csh << EOF2
 EOF
-EOF2
 
-#-----------------------------------------------------------------------
-
-# Use simple function for ice/atm on same grid
-#----------------------------------------------------------------------
-cat >> $CASEBUILD/cice.buildexe.csh << EOF2
-
-set NLON = \$ICE_NX
-set NLAT = \$ICE_NY
-
-setenv BLCKX      \$CICE_BLCKX
-setenv BLCKY      \$CICE_BLCKY
-setenv MXBLCKS    \$CICE_MXBLCKS
-setenv DECOMPTYPE \$CICE_DECOMPTYPE
-
-EOF2
-
-cat >> $CASEBUILD/cice.buildexe.csh << EOF2
-
-# Check for recompile if RES, ncat, BLCKX, BLCKY or MXBLCKS changes
-#----------------------------------------------------------------------
+# Check for recompile if BLCKX, BLCKY or MXBLCKS changes
+#-------------------------------------------------------
 set recompile = FALSE
-echo \${NLON} \${NLAT} ${ncat} \${BLCKX} \${BLCKY} \${MXBLCKS} > \$objdir/iceres.new
+echo \${CICE_BLCKX} \${CICE_BLCKY} \${CICE_MXBLCKS} > \$objdir/iceres.new
 cmp -s \$objdir/iceres.new \$objdir/iceres.old || set recompile = TRUE
 if (\$recompile == 'TRUE') then
   cat \$objdir/iceres.old
   cat \$objdir/iceres.new
-  echo "NLON,NLAT,ncat,blckx,blcky,mxblcks has changed, removing objdir and cice, preparing for new compile"
+  echo "blckx,blcky,mxblcks has changed, removing objdir and cice, preparing for new compile"
   rm -f \$objdir/*.o
-  rm -f \$objdir/*.d
   rm -f \$objdir/*.f
   rm -f \$objdir/*.f90
-  rm -f \$objdir/../*lib*
 endif
 
 # Build the library
-#-----------------------------------------------------------------------
-gmake complib -j \$GMAKE_J MODEL=cice COMPLIB=\$LIBROOT/libice.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="-DCCSMCOUPLED -Dcoupled -Dncdf -DNXGLOB=\$NLON -DNYGLOB=\$NLAT -DNCAT=$ncat -DBLCKX=\$BLCKX -DBLCKY=\$BLCKY -DMXBLCKS=\$MXBLCKS -Dncdf" -f \$BLDROOT/Makefile || exit 2
+#-------------------------------------------------------
+set cicedefs = "`cat \$CASEBUILD/ciceconf/CICE_cppdefs`"
+set cicedefs = "\$cicedefs -DBLCKX=\$CICE_BLCKX -DBLCKY=\$CICE_BLCKY -DMXBLCKS=\$CICE_MXBLCKS"        
+gmake complib -j \$GMAKE_J MODEL=cice COMPLIB=\$LIBROOT/libice.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$cicedefs" -f \$BLDROOT/Makefile || exit 2
 
 mv \$objdir/iceres.new \$objdir/iceres.old
 

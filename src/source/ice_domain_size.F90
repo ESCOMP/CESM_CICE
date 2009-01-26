@@ -39,12 +39,22 @@
         ntilyr    = ncat*nilyr, & ! number of ice layers in all categories
         nslyr     =   1       , & ! number of snow layers per category
         ntslyr    = ncat*nslyr, & ! number of snow layers in all categories
-        n_aero    =   0       , & ! number of aerosols in use
         n_aeromx  =   5       , & ! number of aerosols maximum
-        ntrcr     =   2          ! number of tracers (defined in ice_state)
-                                  ! 1 = surface temperature
-                                  ! ice age, pond volume
-                                  ! plus 4 for each of the n_aero aerosols MH
+#ifdef CCSMCOUPLED
+        ntr_iage  = NTR_IAGE  , & ! 1 or 0
+        ntr_pond  = NTR_POND  , & ! 1 or 0
+        ntr_aero  = NTR_AERO  , & ! number of aerosols in use (<= N_AEROMX)
+	n_aero    = ntr_aero  , &
+        ntrcr     =  1 + ntr_iage + ntr_pond + ntr_aero*4  ! number of tracers 
+	                                                   ! (defined in ice_state)
+                                                           ! 1 = surface temperature
+#else
+        n_aero    =   0       , ! number of aerosols in use 
+        ntrcr     =   2         ! number of tracers (defined in ice_state)
+                                ! 1 = surface temperature
+                                ! ice age, pond volume
+                                ! plus 4 for each of the n_aero aerosols MH
+#endif
 
       integer (kind=int_kind), parameter :: &
         block_size_x = BLCKX  , & ! size of block in first horiz dimension
