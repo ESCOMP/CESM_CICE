@@ -1,3 +1,17 @@
+===============================================================
+cice4_0_20090127
+Originator: dbailey
+Date: Tue Jan 27 16:42:07 MST 2009
+Version: 4.0
+One-line Summary: Tripole support plus restart bug fix.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_grid.F90
+M      src/source/ice_domain_size.F90
+
+===============================================================
 cice4_0_20090126
 Originator: mvertens
 Date: Mon Jan 26 12:35:06 MST 2009
