@@ -49,11 +49,11 @@
 	                                                   ! (defined in ice_state)
                                                            ! 1 = surface temperature
 #else
-        n_aero    =   0       , ! number of aerosols in use 
-        ntrcr     =   2         ! number of tracers (defined in ice_state)
-                                ! 1 = surface temperature
-                                ! ice age, pond volume
-                                ! plus 4 for each of the n_aero aerosols MH
+        n_aero    =   0       , & ! number of aerosols in use 
+        ntrcr     =   2           ! number of tracers (defined in ice_state)
+                                  ! 1 = surface temperature
+                                  ! ice age, pond volume
+                                  ! plus 4 for each of the n_aero aerosols MH
 #endif
 
       integer (kind=int_kind), parameter :: &

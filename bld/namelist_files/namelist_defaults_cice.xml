@@ -30,6 +30,7 @@
 <grid_type hgrid="0.47x0.63" >'latlon'       </grid_type> 
 <grid_type hgrid="0.23x0.31" >'latlon'       </grid_type> 
 <grid_type hgrid="tx0.1v2"   >'tripole'      </grid_type> 
+<grid_type hgrid="tx1v1"     >'tripole'      </grid_type> 
 <grid_type                   >'displaced_pole'</grid_type> 
 
 <grid_format hgrid="128x256"   >'nc' </grid_format> 
@@ -45,6 +46,7 @@
 <grid_format hgrid="0.47x0.63" >'nc' </grid_format> 
 <grid_format hgrid="0.23x0.31" >'nc' </grid_format> 
 <grid_format hgrid="tx0.1v2"   >'bin'</grid_format> 
+<grid_format hgrid="tx1v1"     >'bin'</grid_format> 
 <grid_format                       >'bin'</grid_format> 
 
 <grid_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </grid_file> 
@@ -63,6 +65,8 @@
 <grid_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'                    </grid_file> 
 <grid_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20030806.grid'                    </grid_file> 
 <grid_file hgrid="tx0.1v2"   >'ice/cice/grid.3600x2400.fob.da'                         </grid_file> 
+<grid_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.grid'
+       </grid_file>
 
 <kmt_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
 <kmt_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </kmt_file> 
@@ -80,6 +84,8 @@
 <kmt_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'                     </kmt_file> 
 <kmt_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'                     </kmt_file> 
 <kmt_file hgrid="tx0.1v2"   >'ice/cice/kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da'</kmt_file> 
+<kmt_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.kmt'
+       </kmt_file>
 
 <kcatbound> 0 </kcatbound>
 
@@ -160,6 +166,7 @@
 <ew_boundary_type>'cyclic'</ew_boundary_type>
 
 <ns_boundary_type hgrid ='tx0.1v2' >'tripole'</ns_boundary_type>
+<ns_boundary_type hgrid ='tx1v1'   >'tripole'</ns_boundary_type>
 <ns_boundary_type                     >'open' </ns_boundary_type>
 
 <!--------------------------->
