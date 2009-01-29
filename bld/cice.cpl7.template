@@ -43,7 +43,7 @@ EOF1
 #----------------------------
 
 set cice_prestype = " "
-if ($CICE_MODE == 'prescribed') set cice_prestype = "-prestype $CICE_PRESTYPE "
+if ($CICE_MODE == 'prescribed') set cice_prestype = "-cice_prestype $CICE_PRESTYPE "
 
 $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
                                       -inputdata $CASEBUILD/cice.input_data_list || exit -1

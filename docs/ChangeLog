@@ -1,3 +1,13 @@
+cice4_0_20090129
+Originator: mvertens
+Date: Thu Jan 29 16:58:53 MST 2009
+Version: 4.0
+One-line Summary: bug fix for prescribed mode
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      bld/cice.cpl7.template	
+	
 ===============================================================
 cice4_0_20090127
 Originator: dbailey
