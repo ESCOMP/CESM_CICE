@@ -1,3 +1,16 @@
+===============================================================
+cice4_0_20090130
+Originator: dbailey
+Date: Fri Jan 30 09:40:59 MST 2009
+Version: 4.0
+One-line Summary: Fix dvidtt and dvidtd diagnostics.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      src/source/ice_step_mod.F90
+M      src/drivers/ccsm_sequential/CICE_InitMod.F90
+
+===============================================================
 cice4_0_20090129
 Originator: mvertens
 Date: Thu Jan 29 16:58:53 MST 2009

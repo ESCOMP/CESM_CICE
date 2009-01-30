@@ -804,6 +804,23 @@
                          aice0(:,:,  iblk), tmask(:,:,    iblk),  &
                          trcr_depend) 
 
+      !-----------------------------------------------------------------
+      ! Compute dynamic area and volume tendencies.
+      !-----------------------------------------------------------------
+
+         this_block = get_block(blocks_ice(iblk),iblk)
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+         do j = jlo,jhi
+         do i = ilo,ihi
+            dvidtd(i,j,iblk) = (vice(i,j,iblk) - dvidtd(i,j,iblk)) /dt
+            daidtd(i,j,iblk) = (aice(i,j,iblk) - daidtd(i,j,iblk)) /dt
+         enddo
+         enddo
+
       enddo              ! iblk
       !$OMP END PARALLEL DO
 
