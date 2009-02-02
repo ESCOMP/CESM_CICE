@@ -78,13 +78,14 @@
 
       real (kind=dbl_kind) :: &
          dt             , & ! thermodynamics timestep (s)
-         dyn_dt         , & ! dynamics/transport/ridging timestep (s)
+         dt_thm         , & ! thermodynamics timestep (s)
+         dt_dyn         , & ! dynamics/transport/ridging timestep (s)
          time           , & ! total elapsed time (s)
          time_forc      , & ! time of last forcing update (s)
          yday           , & ! day of the year
          nextsw_cday    , & ! next day for sw calculation
          tday           , & ! absolute day number
-         xndyn_dt       , & ! reduced timestep for dynamics: xndyn_dt=dt/dyn_dt
+         xndt_dyn       , & ! reduced timestep for dynamics: xndt_dyn=dt/dt_dyn
          dayyr              ! number of days per year
 
       logical (kind=log_kind) :: &
@@ -143,7 +144,8 @@
       istep1 = istep0   ! number of steps at current timestep
                         ! real (dumped) or imagined (use to set calendar)
       stop_now = 0      ! end program execution if stop_now=1
-      dyn_dt = dt/xndyn_dt ! dynamics et al timestep
+      dt_thm = dt       ! convenience copy of thermodynamic timestep
+      dt_dyn = dt/xndt_dyn ! dynamics et al timestep
 
       dayyr = real(days_per_year, kind=dbl_kind)
       if (days_per_year.eq.360) then

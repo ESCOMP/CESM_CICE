@@ -47,7 +47,7 @@ module ice_comp_mct
 		              field_loc_center, field_type_scalar, field_type_vector
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
-		              sec, dt, dyn_dt, xndyn_dt, calendar,      &
+		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
@@ -465,16 +465,16 @@ contains
    !-----------------------------------------------------------------
 
     if (.not.prescribed_ice .and. kdyn>0) then
-       if (xndyn_dt > c1) then
+       if (xndt_dyn > c1) then
           call t_startf ('cice_dyn')
-          do k = 1, nint(xndyn_dt)
-             call step_dynamics ! dynamics, transport, ridging
+          do k = 1, nint(xndt_dyn)
+             call step_dynamics(dt_dyn,dt) ! dynamics, transport, ridging
           enddo
           call t_stopf ('cice_dyn')
        else
-          if (mod(time, dyn_dt) == c0) then
+          if (mod(time, dt_dyn) == c0) then
              call t_startf ('cice_dyn')
-             call step_dynamics ! dynamics, transport, ridging
+             call step_dynamics(dt_dyn,dt) ! dynamics, transport, ridging
              call t_stopf ('cice_dyn')
           endif
        endif

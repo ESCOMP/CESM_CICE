@@ -616,12 +616,15 @@
 !
 ! !INTERFACE:
 
-      subroutine step_dynamics
+      subroutine step_dynamics(dt_dyn,dt_thm)
 !
 ! !USES:
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
+      real (kind=dbl_kind), intent(in) :: &
+         dt_dyn  , & ! dynamic time step
+         dt_thm      ! thermodynamic time step for diagnostics
 !
 !EOP
 !
@@ -651,16 +654,16 @@
       ! Elastic-viscous-plastic ice dynamics
       !-----------------------------------------------------------------
 
-      if (kdyn == 1) call evp (dyn_dt)
+      if (kdyn == 1) call evp (dt_dyn)
 
       !-----------------------------------------------------------------
       ! Horizontal ice transport
       !-----------------------------------------------------------------
 
       if (advection == 'upwind') then
-         call transport_upwind (dyn_dt)    ! upwind
+         call transport_upwind (dt_dyn)    ! upwind
       else
-         call transport_remap (dyn_dt)     ! incremental remapping
+         call transport_remap (dt_dyn)     ! incremental remapping
       endif
 
       !-----------------------------------------------------------------
@@ -702,7 +705,7 @@
          if (icells > 0) then
 
          call ridge_ice (nx_block,             ny_block,                 &
-                         dt,                   icells,                   &
+                         dt_dyn, dt_thm,       icells,                   &
                          indxi,                indxj,                    &
 !!                         Delt    (:,:,  iblk), divu      (:,:,  iblk), &
                          rdg_conv(:,:,  iblk), rdg_shear (:,:,  iblk),   &
@@ -751,7 +754,7 @@
 
          call cleanup_itd (nx_block,             ny_block,             &
                            ilo, ihi,             jlo, jhi,             &
-                           dt,                                         &
+                           dt_thm,                                     &
                            aicen   (:,:,:,iblk), trcrn (:,:,:,:,iblk), &
                            vicen   (:,:,:,iblk), vsnon (:,:,  :,iblk), &
                            eicen   (:,:,:,iblk), esnon (:,:,  :,iblk), &
@@ -816,8 +819,8 @@
 
          do j = jlo,jhi
          do i = ilo,ihi
-            dvidtd(i,j,iblk) = (vice(i,j,iblk) - dvidtd(i,j,iblk)) /dt
-            daidtd(i,j,iblk) = (aice(i,j,iblk) - daidtd(i,j,iblk)) /dt
+            dvidtd(i,j,iblk) = (vice(i,j,iblk) - dvidtd(i,j,iblk)) /dt_dyn
+            daidtd(i,j,iblk) = (aice(i,j,iblk) - daidtd(i,j,iblk)) /dt_dyn
          enddo
          enddo
 

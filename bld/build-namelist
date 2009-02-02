@@ -321,7 +321,7 @@ my $cice_prestype = "$opts{'cice_prestype'}";
 ##################################
 
 add_default($nl, 'ice_ic');
-add_default($nl, 'xndyn_dt');
+add_default($nl, 'xndt_dyn');
 add_default($nl, 'histfreq');
 add_default($nl, 'histfreq_n');
 add_default($nl, 'hist_avg');

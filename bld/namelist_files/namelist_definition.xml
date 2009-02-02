@@ -26,7 +26,7 @@ subcycles per dynamics timestep
 Default: 120
 </entry>
 
-<entry id="xndyn_dt" type="real"  category="cice" group="setup_nml" valid_values="">
+<entry id="xndt_dyn" type="real"  category="cice" group="setup_nml" valid_values="">
 number of dynamic time steps per thermodynamic time step
 Default: 1.0
 </entry>

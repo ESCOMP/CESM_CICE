@@ -10,8 +10,8 @@
 
 <dt> 3600 </dt> 
 
-<xndyn_dt                    > 1.0 </xndyn_dt>
-<xndyn_dt hgrid="tx0.1v2"> 2.0 </xndyn_dt>
+<xndt_dyn                    > 1.0 </xndt_dyn>
+<xndt_dyn hgrid="tx0.1v2"    > 2.0 </xndt_dyn>
 
 <!--------------------------->
 <!-- grid_nml settings ------>

@@ -117,7 +117,7 @@
 ! !INTERFACE:
 !
       subroutine ridge_ice (nx_block,    ny_block,   &
-                            dt,          icells,     &
+                            dt_dyn, dt_thm, icells,  &
                             indxi,       indxj,      &
                             rdg_conv,    rdg_shear,  &
                             aicen,       trcrn,      &
@@ -144,7 +144,8 @@
          indxi, indxj     ! compressed indices for cells with ice
 
       real (kind=dbl_kind), intent(in) :: &
-         dt      ! time step
+         dt_dyn  , & ! dynamic time step
+         dt_thm      ! thermodynamic time step for diagnostics
 
       real (kind=dbl_kind), dimension(nx_block,ny_block), intent(in) :: &
          rdg_conv, & ! normalized energy dissipation due to convergence (1/s)
@@ -203,7 +204,7 @@
          msnow_mlt  , & ! mass of snow added to ocean (kg m-2)
          esnow_mlt  , & ! energy needed to melt snow in ocean (J m-2)
          closing_net, & ! net rate at which area is removed    (1/s)
-                        ! (ridging ice area - area of new ridges) / dt
+                        ! (ridging ice area - area of new ridges) / dt_dyn
          divu_adv   , & ! divu as implied by transport scheme  (1/s)
          opning     , & ! rate of opening due to divergence/shear
                         ! opning is a local variable;
@@ -242,7 +243,7 @@
          ij               ! horizontal index, combines i and j loops
 
       real (kind=dbl_kind) :: &
-         dti              ! 1 / dt
+         dti              ! 1 / dt_dyn or 1 / dt_thm
 
       logical (kind=log_kind) :: &
          iterate_ridging, & ! if true, repeat the ridging
@@ -282,7 +283,7 @@
       !-----------------------------------------------------------------
       call ridge_prep (nx_block, ny_block,      &
                        icells,   indxi,  indxj, &
-                       dt,                      &
+                       dt_dyn,                  &
                        rdg_conv,  rdg_shear,    &
                        asum,      closing_net,  &
                        divu_adv,  opning)
@@ -336,7 +337,7 @@
 
          call ridge_shift (nx_block,  ny_block,        &
                            icells,    indxi,    indxj, &
-                           dt,                         &
+                           dt_dyn,                     &
                            aicen,     trcrn,           &
                            vicen,     vsnon,           &
                            eicen,     esnon,           &
@@ -367,7 +368,7 @@
 
          call ridge_check (nx_block,   ny_block,        &
                            icells,     indxi,    indxj, &
-                           dt,                          &
+                           dt_dyn,                      &
                            asum,       closing_net,     &
                            divu_adv,   opning,          &
                            iterate_ridging)
@@ -468,7 +469,7 @@
       ! Compute ridging diagnostics.
       !-----------------------------------------------------------------
 
-      dti = c1/dt
+      dti = c1/dt_dyn
 
       if (present(dardg1dt)) then
          do ij = 1, icells
@@ -502,6 +503,8 @@
       !-----------------------------------------------------------------
       ! Update fresh water and heat fluxes due to snow melt.
       !-----------------------------------------------------------------
+
+      dti = c1/dt_thm
 
       if (present(fsoot)) then
          do ij = 1, icells

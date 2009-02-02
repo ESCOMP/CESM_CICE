@@ -242,7 +242,7 @@
       enddo
       enddo
 
-      if (mod(time-dt,dyn_dt) == c0) then
+      if (mod(time-dt_thm,dt_dyn) == c0) then
          strairxT_accum(:,:,iblk) = c0
          strairyT_accum(:,:,iblk) = c0
       endif
@@ -466,11 +466,11 @@
 ! Accumulate stresses when super-cycling the dynamics. Otherwise just
 ! use the stresses as computed.
 
-      if (dt < dyn_dt) then
+      if (dt_thm < dt_dyn) then
          strairxT_accum(:,:,iblk) = strairxT_accum(:,:,iblk) &
-                                  + strairxT(:,:,iblk) * dt / dyn_dt
+                                  + strairxT(:,:,iblk) * dt_thm / dt_dyn
          strairyT_accum(:,:,iblk) = strairyT_accum(:,:,iblk) &
-                                  + strairyT(:,:,iblk) * dt / dyn_dt
+                                  + strairyT(:,:,iblk) * dt_thm / dt_dyn
       else
          strairxT_accum(:,:,iblk) = strairxT(:,:,iblk)
          strairyT_accum(:,:,iblk) = strairyT(:,:,iblk)

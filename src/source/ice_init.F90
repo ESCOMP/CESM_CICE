@@ -63,7 +63,7 @@
       use ice_fileunits
       use ice_calendar, only: year_init, istep0, histfreq, histfreq_n, &
                               dumpfreq, dumpfreq_n, diagfreq, &
-                              npt, dt, xndyn_dt, days_per_year, write_ic
+                              npt, dt, xndt_dyn, days_per_year, write_ic
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
           runid, runtype, ice_ic, resttype
@@ -115,7 +115,7 @@
 
       namelist /setup_nml/ &
         days_per_year,  year_init,      istep0,          dt,            &
-        npt,            xndyn_dt,                                       &
+        npt,            xndt_dyn,                                       &
         runtype,        runid,                                          &
         ice_ic,         restart,        restart_dir,     restart_file,  &
         pointer_file,   dumpfreq,       dumpfreq_n,                     &
@@ -191,8 +191,8 @@
       kitd = 1           ! type of itd conversions (0 = delta, 1 = linear)
       kcatbound = 1      ! category boundary formula (0 = old, 1 = new)
       kdyn = 1           ! type of dynamics (1 = evp)
-      xndyn_dt = c1      ! dynamic time steps per thermodynamic time step
-      ndte = 120         ! subcycles per dynamics timestep:  ndte=dyn_dt/dte
+      xndt_dyn = c1      ! dynamic time steps per thermodynamic time step
+      ndte = 120         ! subcycles per dynamics timestep:  ndte=dt_dyn/dte
       evp_damping = .false.  ! if true, use damping procedure in evp dynamics
       yield_curve = 'ellipse'
       kstrength = 1          ! 1 = Rothrock 75 strength, 0 = Hibler 79
@@ -431,7 +431,7 @@
       call broadcast_scalar(kitd,               master_task)
       call broadcast_scalar(kcatbound,          master_task)
       call broadcast_scalar(kdyn,               master_task)
-      call broadcast_scalar(xndyn_dt,           master_task)
+      call broadcast_scalar(xndt_dyn,           master_task)
       call broadcast_scalar(ndte,               master_task)
       call broadcast_scalar(evp_damping,        master_task)
       call broadcast_scalar(yield_curve,        master_task)
@@ -552,7 +552,7 @@
          write(nu_diag,1020) ' kcatbound                 = ', &
                                kcatbound
          write(nu_diag,1020) ' kdyn                      = ', kdyn
-         write(nu_diag,1000) ' xndyn_dt                  = ', xndyn_dt
+         write(nu_diag,1000) ' xndt_dyn                  = ', xndt_dyn
          write(nu_diag,1020) ' ndte                      = ', ndte
          write(nu_diag,1010) ' evp_damping               = ', &
                                evp_damping

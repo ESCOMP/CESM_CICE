@@ -1,4 +1,27 @@
 ===============================================================
+cice4_0_20090202
+Originator: dbailey
+Date: Mon Feb  2 13:11:48 MST 2009
+Version: 4.0
+One-line Summary: Fix subcycling diagnostics.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+Introduced new convienence timestep, dt_thm, and changed dyn_dt
+to dt_dyn. The ridging needs both timesteps during sub/super
+cycling cases for diagnostics.
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_calendar.F90
+M      src/source/ice_mechred.F90
+M      src/source/ice_step_mod.F90
+M      src/drivers/ccsm_sequential/CICE_RunMod.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090130
 Originator: dbailey
 Date: Fri Jan 30 09:40:59 MST 2009
