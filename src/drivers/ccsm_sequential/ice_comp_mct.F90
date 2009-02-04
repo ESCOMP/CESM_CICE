@@ -35,7 +35,8 @@ module ice_comp_mct
 		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
 		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
 		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
-		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn
+		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
+                              faero
   use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
                               filename_volpn
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
@@ -58,6 +59,7 @@ module ice_comp_mct
   use ice_dyn_evp,     only:  kdyn
   use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
   use ice_prescaero_mod
+  use ice_aerosol, only: tr_aero, write_restart_aero
   use ice_step_mod
   use CICE_RunMod
 
@@ -329,7 +331,6 @@ contains
 ! Run thermodynamic CICE
 !
 ! !USES:
-    use ice_aerosol, only: tr_aero, write_restart_aero
     use ice_age, only: tr_iage, write_restart_age
     use ice_history
     use ice_restart
@@ -951,6 +952,44 @@ contains
          enddo    !j
 
      enddo        !iblk
+
+     !-------------------------------------------------------
+     ! Accept aerosols from coupler when not prescribed.
+     !-------------------------------------------------------
+     
+      if (tr_aero .and. .not. prescribed_aero) then
+
+      n=0
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+
+         do j = jlo, jhi
+         do i = ilo, ihi
+
+            n = n+1
+            faero(i,j,1,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
+
+            faero(i,j,2,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphidry,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_bcphiwet,n)
+            faero(i,j,3,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet1,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry1,n)
+            faero(i,j,4,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet2,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry2,n)
+            faero(i,j,5,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet3,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry3,n)
+            faero(i,j,6,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet4,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry4,n)
+
+         enddo    !i
+         enddo    !j
+
+     enddo        !iblk
+
+     endif
 
      !-------------------------------------------------------
      ! Update ghost cells for imported quantities

@@ -39,7 +39,7 @@
         ntilyr    = ncat*nilyr, & ! number of ice layers in all categories
         nslyr     =   1       , & ! number of snow layers per category
         ntslyr    = ncat*nslyr, & ! number of snow layers in all categories
-        n_aeromx  =   5       , & ! number of aerosols maximum
+        n_aeromx  =   6       , & ! number of aerosols maximum
 #ifdef CCSMCOUPLED
         ntr_iage  = NTR_IAGE  , & ! 1 or 0
         ntr_pond  = NTR_POND  , & ! 1 or 0

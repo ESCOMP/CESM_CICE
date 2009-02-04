@@ -138,7 +138,7 @@
            f_fswdn     = .true., f_flwdn      = .true., &
            f_snow      = .true., f_snow_ai    = .true., &
            f_rain      = .true., f_rain_ai    = .true., &
-           f_faero     = .false., &
+           f_faero     = .false., f_fsoot     = .false.,&
            f_sst       = .true., f_sss        = .true., &
            f_uocn      = .true., f_vocn       = .true., &
            f_frzmlt    = .true., &
@@ -200,7 +200,7 @@
            f_fswdn,     f_flwdn    , &
            f_snow,      f_snow_ai  , &     
            f_rain,      f_rain_ai  , &
-           f_faero,  &
+           f_faero,     f_fsoot    , &
            f_sst,       f_sss      , &
            f_uocn,      f_vocn     , &
            f_frzmlt                , &
@@ -351,6 +351,7 @@
 
       integer(kind=int_kind) :: &
            n_faero  , &
+           n_fsoot  , &
            n_aerosn1, &
            n_aerosn2, &
            n_aeroic1, &
@@ -446,6 +447,7 @@
       if (.not. tr_iage) f_iage   = .false.
       if (.not. tr_pond) f_apondn = .false.
       if (.not. tr_aero) f_faero = .false.    !MH
+      if (.not. tr_aero) f_fsoot = .false.    !MH
       if (.not. tr_aero) f_aero = .false.    !MH
       if (.not. tr_aero) f_aeron = .false.    !MH
 
@@ -479,6 +481,7 @@
       call broadcast_scalar (f_rain, master_task)
       call broadcast_scalar (f_rain_ai, master_task)
       call broadcast_scalar (f_faero, master_task)
+      call broadcast_scalar (f_fsoot, master_task)
       call broadcast_scalar (f_sst, master_task)
       call broadcast_scalar (f_sss, master_task)
       call broadcast_scalar (f_uocn, master_task)
@@ -590,14 +593,30 @@
       n_flatn_ai = n_fmelttn_ai + ncat_hist
 
       if (f_faero) then
-         navgsiz   = navgsiz + n_aero
-         n_faero   = n_apondn + ncat_hist
+         navgsiz   = navgsiz    + n_aero
+         n_faero   = n_flatn_ai + ncat_hist
       else
          n_faero   = navgsiz
       endif
+      if (f_fsoot) then
+         navgsiz   = navgsiz + n_aero
+         if (f_faero) then
+            n_fsoot   = n_faero + n_aero
+         else
+            n_fsoot   = n_flatn_ai + ncat_hist
+         endif
+      else
+         n_fsoot   = navgsiz
+      endif
       if (f_aero) then
          navgsiz = navgsiz + 4*n_aero
-         n_aerosn1 = n_faero   + n_aero
+         if (f_fsoot) then
+            n_aerosn1 = n_fsoot   + n_aero
+         elseif (f_faero) then
+            n_aerosn1 = n_faero   + n_aero
+         else
+            n_aerosn1 = n_flatn_ai + ncat_hist
+         endif
          n_aerosn2 = n_aerosn1 + n_aero
          n_aeroic1 = n_aerosn2 + n_aero
          n_aeroic2 = n_aeroic1 + n_aero
@@ -734,16 +753,23 @@
             vname(n_faero + n-1) = trim(vname(n_faero+n-1))
          enddo
       endif
+      if (f_fsoot) then
+         do n=1,n_aero
+            write(nchar,'(i3.3)') n
+            write(vname(n_fsoot+n-1),'(a,a)') 'fsoot', trim(nchar) ! fsoot
+            vname(n_fsoot + n-1) = trim(vname(n_fsoot+n-1))
+         enddo
+      endif
       if (f_aero) then
          do n=1,n_aero
             write(nchar,'(i3.3)') n
-            write(vname(n_aerosn1+n-1),'(a,a)') 'aerosnossl', trim(nchar) ! faeron
+            write(vname(n_aerosn1+n-1),'(a,a)') 'aerosnossl', trim(nchar) 
             vname(n_aerosn1+n-1) = trim(vname(n_aerosn1+n-1))
-            write(vname(n_aerosn2+n-1),'(a,a)') 'aerosnoint', trim(nchar) ! faeron
+            write(vname(n_aerosn2+n-1),'(a,a)') 'aerosnoint', trim(nchar)
             vname(n_aerosn2+n-1) = trim(vname(n_aerosn2+n-1))
-            write(vname(n_aeroic1+n-1),'(a,a)') 'aeroicessl', trim(nchar) ! faeron
+            write(vname(n_aeroic1+n-1),'(a,a)') 'aeroicessl', trim(nchar)
             vname(n_aeroic1+n-1) = trim(vname(n_aeroic1+n-1))
-            write(vname(n_aeroic2+n-1),'(a,a)') 'aeroiceint', trim(nchar) ! faeron
+            write(vname(n_aeroic2+n-1),'(a,a)') 'aeroiceint', trim(nchar)
             vname(n_aeroic2+n-1) = trim(vname(n_aeroic2+n-1))
          enddo
       endif
@@ -885,7 +911,12 @@
 
       if (f_faero) then
          do n=1,n_aero
-            vdesc(n_faero  +n-1) = 'faero rate (cpl)'         
+            vdesc(n_faero  +n-1) = 'faero rate'         
+         enddo
+      endif
+      if (f_fsoot) then
+         do n=1,n_aero
+            vdesc(n_fsoot  +n-1) = 'fsoot rate'         
          enddo
       endif
       if (f_aero) then
@@ -996,6 +1027,11 @@
       if (f_faero) then
          do n=1,n_aero
             vunit(n_faero  +n-1) = 'kg/m^2 s'
+         enddo
+      endif
+      if (f_fsoot) then
+         do n=1,n_aero
+            vunit(n_fsoot  +n-1) = 'kg/m^2 s'
          enddo
       endif
       if (f_aero) then
@@ -1123,6 +1159,11 @@
             vcomment(n_faero  +n-1)  = 'none'         
          enddo
       endif
+      if (f_fsoot) then
+         do n=1,n_aero
+            vcomment(n_fsoot  +n-1)  = 'none'         
+         enddo
+      endif
       if (f_aero) then
          do n=1,n_aero
             vcomment(n_aerosn1+n-1 ) = 'none'   !MH
@@ -1247,6 +1288,11 @@
       if (f_faero) then
          do n=1,n_aero
             iout(n_faero  +n-1) = f_faero  
+         enddo
+      endif
+      if (f_fsoot) then
+         do n=1,n_aero
+            iout(n_fsoot  +n-1) = f_fsoot  
          enddo
       endif
       if (f_aero) then
@@ -1597,6 +1643,12 @@
            do n=1,n_aero
               aa(i,j,n_faero+n-1,  iblk)= aa(i,j,n_faero+n-1,iblk) &
                                         + faero(i,j,n,iblk) 
+           enddo
+        endif
+        if (f_fsoot) then
+           do n=1,n_aero
+              aa(i,j,n_fsoot+n-1,  iblk)= aa(i,j,n_fsoot+n-1,iblk) &
+                                        + fsoot(i,j,n,iblk) 
            enddo
         endif
         if (f_aero) then

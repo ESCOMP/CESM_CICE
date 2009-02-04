@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20090204
+Originator: dbailey
+Date: Wed Feb  4 10:50:44 MST 2009
+Version: 4.0
+One-line Summary: Add capability to receive aerosol deposition
+                  rates from the coupler.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+When the aerosol deposition rates are not read from a file, they
+must come from the coupler. Also, some additional history fields
+have been added to diagnose the fluxes to the ocean.
+
+M      src/source/ice_domain_size.F90
+M      src/source/ice_history.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090202
 Originator: dbailey
 Date: Mon Feb  2 13:11:48 MST 2009
