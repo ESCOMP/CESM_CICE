@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090209
+Originator: dbailey
+Date: Mon Feb  9 14:37:12 MST 2009
+Version: 4.0
+One-line Summary: Fix cice_bld flag in configure.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      bld/configure
+
+===============================================================
 cice4_0_20090204
 Originator: dbailey
 Date: Wed Feb  4 10:50:44 MST 2009

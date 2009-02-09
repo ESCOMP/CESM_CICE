@@ -227,11 +227,36 @@ EOF
 if ($print>=2) { print "Setting CICE root directory to $cice_root$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# CICE build directory.
+my $cice_bld;
+if (defined $opts{'cice_bld'}) {
+    $cice_bld = absolute_path($opts{'cice_bld'});
+}
+else { # use default value
+    $cice_bld = absolute_path($cfg_ref->get('cice_bld'));
+}
+
+if (-d $cice_bld or mkdirp($cice_bld)) {
+    # If the build directory exists or can be made then set the value...
+    $cfg_ref->set('cice_bld', $cice_bld);
+}
+else {
+    die <<"EOF";
+** Could not create the specified CICE build directory: $cice_bld
+EOF
+}
+
+if ($print>=2) { print "Setting CICE build directory to $cice_bld$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # configuration cache directory and file.
 my $config_cache_dir;
 my $config_cache_file;
 if (defined $opts{'cachedir'}) {
     $config_cache_dir = absolute_path($opts{'cachedir'});
+}
+else {
+    $config_cache_dir = $cfg_ref->get('cice_bld');
 }
 
 if (-d $config_cache_dir or mkdirp($config_cache_dir)) {
@@ -298,7 +323,7 @@ my $ntr_aero = $cfg_ref->get('ntr_aero');
 if (defined $opts{'ntr_aero'}) {$ntr_aero = $opts{'ntr_aero'}};
 if ($ntr_aero > 5){ 
     die <<"EOF";
-**  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 5 are supported"
+**  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 5 are supported
 EOF
 }
 
@@ -306,7 +331,7 @@ my $ntr_iage = $cfg_ref->get('ntr_iage');
 if (defined $opts{'ntr_iage'}) {$ntr_iage = $opts{'ntr_iage'}};
 if ($ntr_iage > 1){ 
     die <<"EOF";
-**  ERROR: ntr_iage value of $ntr_iage is invalid, only values of 0 and 1 are supported"
+**  ERROR: ntr_iage value of $ntr_iage is invalid, only values of 0 and 1 are supported
 EOF
 }
 
@@ -314,7 +339,7 @@ my $ntr_pond = $cfg_ref->get('ntr_pond');
 if (defined $opts{'ntr_pond'}) {$ntr_pond = $opts{'ntr_pond'}};
 if ($ntr_pond > 1){ 
     die <<"EOF";
-**  ERROR: ntr_pond value of $ntr_pond, is invalid, only values of 0 and 1 are supported"
+**  ERROR: ntr_pond value of $ntr_pond, is invalid, only values of 0 and 1 are supported
 EOF
 }
 
@@ -481,28 +506,6 @@ if ($print>=2) { print "CPP definitions set by configure: \'$cfg_cppdefs\'$eol";
 # Write configuration files ####################################################################
 #-----------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------------------------
-# CICE build directory.
-my $cice_bld;
-if (defined $opts{'cice_bld'}) {
-    $cice_bld = absolute_path($opts{'cice_bld'});
-}
-else { # use default value
-    $cice_bld = absolute_path($cfg_ref->get('cice_bld'));
-}
-
-if (-d $cice_bld or mkdirp($cice_bld)) {
-    # If the build directory exists or can be made then set the value...
-    $cfg_ref->set('cice_bld', $cice_bld);
-}
-else {
-    die <<"EOF";
-** Could not create the specified CICE build directory: $cice_bld
-EOF
-}
-
-if ($print>=2) { print "Setting CICE build directory to $cice_bld$eol"; }
-
 my $fp_filename      = 'Filepath';             # name of output filepath file
 my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
 
@@ -515,7 +518,7 @@ write_cppdefs("$cice_bld/$cpp_filename", $make_cppdefs);
 if ($print>=2) { print "creating $cice_bld/$cpp_filename\n"; }
 
 # Write the configuration file.
-$cfg_ref->write_file("$cice_bld/$config_cache_file", $commandline);
+$cfg_ref->write_file("$config_cache_file", $commandline);
 if ($print>=2) { print "creating $cice_bld/$config_cache_file\n"; }
 
 #-----------------------------------------------------------------------------------------------
