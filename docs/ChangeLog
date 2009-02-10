@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090210
+Originator: dbailey
+Date: Tue Feb 10 10:47:04 MST 2009
+Version: 4.0
+One-line Summary: Add check for spval in aerosols.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090209
 Originator: dbailey
 Date: Mon Feb  9 14:37:12 MST 2009

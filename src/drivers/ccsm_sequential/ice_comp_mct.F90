@@ -957,6 +957,11 @@ contains
      ! Accept aerosols from coupler when not prescribed.
      !-------------------------------------------------------
      
+     ! Check for special values in coupler input.
+
+      if (abs(x2i_i%rAttr(index_x2i_Faxa_bcphodry,1)-spval_dbl)/spval_dbl &
+          > 0.0001_dbl_kind) prescribed_aero = .false.
+
       if (tr_aero .and. .not. prescribed_aero) then
 
       n=0
