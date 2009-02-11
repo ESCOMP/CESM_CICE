@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090211
+Originator: dbailey
+Date: Wed Feb 11 13:20:39 MST 2009
+Version: 4.0
+One-line Summary: Fix data statements for aerosols.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      src/source/ice_aerosol.F90
+
+===============================================================
 cice4_0_20090210
 Originator: dbailey
 Date: Tue Feb 10 10:47:04 MST 2009
