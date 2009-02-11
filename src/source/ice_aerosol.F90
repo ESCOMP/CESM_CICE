@@ -196,9 +196,9 @@
       data hi_ssl  / .050_dbl_kind /
       data hsmin   / .00001_dbl_kind /
       data kscav   / .03_dbl_kind, .20_dbl_kind,&
-           .02_dbl_kind,.02_dbl_kind,.01_dbl_kind /
+           .02_dbl_kind,.02_dbl_kind,.01_dbl_kind,.01_dbl_kind /
       data kscavsi / .03_dbl_kind, .20_dbl_kind,&
-           .02_dbl_kind,.02_dbl_kind,.01_dbl_kind /
+           .02_dbl_kind,.02_dbl_kind,.01_dbl_kind,.01_dbl_kind /
 
       aerosno(:,:,:,:) = c0
       aeroice(:,:,:,:) = c0
