@@ -80,7 +80,7 @@ OPTIONS
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
      -ntr_pond <0,1>     Turns on pond tracer (valid values are 0,1, default is 1)
      -ntr_iage <0,1>     Turns on iage tracer (valid values are 0,1, default is 0)
-     -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5, default is 0)
+     -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5,6, default is 0)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CICE distribution.
@@ -321,7 +321,7 @@ if ($print>=2) { print "cice : nlat         is $nlat      $eol";}
 
 my $ntr_aero = $cfg_ref->get('ntr_aero');
 if (defined $opts{'ntr_aero'}) {$ntr_aero = $opts{'ntr_aero'}};
-if ($ntr_aero > 5){ 
+if ($ntr_aero > 6){ 
     die <<"EOF";
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 5 are supported
 EOF
