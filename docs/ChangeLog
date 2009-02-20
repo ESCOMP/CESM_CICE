@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20090220
+Originator: dbailey
+Date: Fri Feb 20 09:51:51 MST 2009
+Version: 4.0
+One-line Summary: additional tripole and gx1v6 support
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+Note that gx1v6 is not the default in this tag.
+
+   M /cice/trunk/bld/cice_decomp.xml
+   M /cice/trunk/bld/configure
+   M /cice/trunk/bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090211
 Originator: dbailey
 Date: Wed Feb 11 13:20:39 MST 2009
