@@ -723,13 +723,7 @@
       if (my_task == master_task) then
          ! reconstruct path/file
          if (present(filename_spec)) then
-            n = index(filename_spec,'cice.r') + 6
-            if (n == 0) call abort_ice('soot restart: filename discrepancy')
-            string1 = trim(filename_spec(1:n-1))
-            string2 = trim(filename_spec(n:lenstr(filename_spec)))
-            write(filename,'(a,a,a,a)') &
-               string1(1:lenstr(string1)),'.aero', &
-               string2(1:lenstr(string2))
+            filename = filename_spec
          else
             open(nu_rst_pointer,file=pointer_file)
             read(nu_rst_pointer,'(a)') filename0

@@ -1,4 +1,24 @@
 ===============================================================
+cice4_0_20090224
+Originator: dbailey
+Date: Tue Feb 24 15:35:25 MST 2009
+Version: 4.0
+One-line Summary: turn on aerosol deposition by default
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+Also needed to fix branch/hybrid restart issue with the
+aerosols. Note that this also needs a short-term archiver
+update to catch the aerosol restart file.
+
+M      bld/configure
+M      bld/config_files/definition.xml
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_aerosol.F90
+
+===============================================================
 cice4_0_20090220
 Originator: dbailey
 Date: Fri Feb 20 09:51:51 MST 2009

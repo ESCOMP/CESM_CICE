@@ -426,4 +426,13 @@
 <f_apondn                       >.true. </f_apondn>  
 <f_apondn cice_mode='prescribed'>.false.</f_apondn> 
 
+<f_faero                       >.true. </f_faero>  
+<f_faero cice_mode='prescribed'>.false.</f_faero> 
+
+<f_fsoot                       >.true. </f_fsoot>  
+<f_fsoot cice_mode='prescribed'>.false.</f_fsoot> 
+
+<f_aero                       >.true. </f_aero>  
+<f_aero cice_mode='prescribed'>.false.</f_aero> 
+
 </namelist_defaults>

@@ -436,5 +436,14 @@ Default: TRUE
 <entry id="f_apondn" type="logical"  category="cice"  group="icefields_nml" valid_values="">
 Default: TRUE
 </entry>
+<entry id="f_faero" type="logical"  category="cice"  group="icefields_nml" valid_values="">
+Default: TRUE
+</entry>
+<entry id="f_fsoot" type="logical"  category="cice"  group="icefields_nml" valid_values="">
+Default: TRUE
+</entry>
+<entry id="f_aero" type="logical"  category="cice"  group="icefields_nml" valid_values="">
+Default: TRUE
+</entry>
 
 </namelist_definition>

@@ -32,7 +32,7 @@ Number of unique longitude points in rectangular lat/lon grid.
 Number of unique latitude points in rectangular lat/lon grid.
 </entry>
 
-<entry id="ntr_aero" valid_values="0,1,2,3,4,5" value="0">
+<entry id="ntr_aero" valid_values="0,1,2,3,4,5,6" value="6">
 Number of aerosol tracers
 </entry>
 
