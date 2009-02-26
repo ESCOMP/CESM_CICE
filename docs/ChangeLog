@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20090226
+Originator: dbailey
+Date: Thu Feb 26 14:41:38 MST 2009
+Version: 4.0
+One-line Summary: SCAM bug fixes.
+CCSM Version compatible with: ccsm4_0_beta09+
+Changes made:
+
+M      src/source/ice_grid.F90
+M      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20090224
 Originator: dbailey
 Date: Tue Feb 24 15:35:25 MST 2009

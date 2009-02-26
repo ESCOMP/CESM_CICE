@@ -385,10 +385,10 @@ subroutine ice_prescribed_init
       ! Determine if need to regrid
       !------------------------------------------------------------------
       if (single_column) then 
-               call ice_open_nc (domain_info_fn, ncid)
-               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-               call ice_close_nc (ncid)
-               regrid=( dataYCoord(lonidx,latidx) /= work_g1(1,1) .or. dataXCoord(lonidx,latidx) /= work_g2(1,1))
+         call ice_open_nc (domain_info_fn, ncid)
+         call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+         call ice_close_nc (ncid)
+         regrid=( abs(dataYCoord(lonidx,latidx) - work_g1(1,1))>1.e-12 .or. abs(dataXCoord(lonidx,latidx)- work_g2(1,1))>1.0e-12)
       else
          call ice_prescribed_checkDomain(work_g2, work_g1, dataXCoord, dataYCoord, regrid)
 

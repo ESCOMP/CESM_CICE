@@ -1123,7 +1123,11 @@
             uarear(i,j,iblk)   = c1/uarea(i,j,iblk)
             tinyarea(i,j,iblk) = puny*tarea(i,j,iblk)
 
-            ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+            if (single_column) then
+               ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/nj)  
+            else
+               ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+            endif
             ULON  (i,j,iblk) = c0
             ANGLE (i,j,iblk) = c0                             
 
