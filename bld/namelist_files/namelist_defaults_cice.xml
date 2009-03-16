@@ -281,8 +281,19 @@
 <!-- Prescribed aerosol namelist --->
 <!---------------------------------->
 
-<prescribed_aero      >.false. </prescribed_aero>  
-<prescribed_aero_fill >.false. </prescribed_aero_fill>
+<prescribed_aero_fill >.true. </prescribed_aero_fill>
+
+<stream_domfilename_aero presaero_type='climatology'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_domfilename_aero>
+<stream_fldfilename_aero presaero_type='climatology'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_fldfilename_aero>
+<stream_fldvarname_aero  presaero_type='climatology'> 'BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD:DSTX04WD:DSTX04DD' </stream_fldvarname_aero>
+<stream_year_first_aero  > 1  </stream_year_first_aero>
+<stream_year_last_aero   > 1  </stream_year_last_aero>
+<model_year_align_aero   > 1  </model_year_align_aero>
+<stream_domtvarname_aero  > "time" </stream_domtvarname_aero>
+<stream_domxvarname_aero  > "lon"  </stream_domxvarname_aero>
+<stream_domyvarname_aero  > "lat"  </stream_domyvarname_aero>
+<stream_domareaname_aero  > "area" </stream_domareaname_aero>
+<stream_dommaskname_aero  > "mask" </stream_dommaskname_aero>
 
 <!--------------------------->
 <!-- Output history fields -->

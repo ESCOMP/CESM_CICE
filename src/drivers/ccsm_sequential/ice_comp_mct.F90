@@ -40,18 +40,18 @@ module ice_comp_mct
   use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
                               filename_volpn
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
-  use ice_domain,      only : nblocks, blocks_ice, halo_info
+  use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
  		              grid_type, t2ugrid_vector
   use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-		              field_loc_center, field_type_scalar, field_type_vector
+		              field_loc_center, field_type_scalar, field_type_vector, c100
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday
   use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
-  use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long 
+  use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
 !  use ice_init
   use ice_boundary,    only : ice_HaloUpdate 
   use ice_scam,        only : scmlat, scmlon, single_column
@@ -62,6 +62,8 @@ module ice_comp_mct
   use ice_aerosol, only: tr_aero, write_restart_aero
   use ice_step_mod
   use CICE_RunMod
+  use ice_global_reductions
+  use ice_broadcast
 
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -870,7 +872,14 @@ contains
     type(block) :: this_block      ! block information for current block
 
     real (kind=dbl_kind) :: &
-         gsum, workx, worky
+         gsum, workx, worky, maxwork
+    real (kind=dbl_kind), allocatable, dimension (:,:,:) :: &
+         work
+    logical (kind=log_kind) :: &
+         first_call = .true.
+    logical (kind=log_kind) :: &
+         prescribed_aero_tmp
+
     !-----------------------------------------------------
 
     ! Note that the precipitation fluxes received  from the coupler
@@ -959,8 +968,36 @@ contains
      
      ! Check for special values in coupler input.
 
-      if (abs(x2i_i%rAttr(index_x2i_Faxa_bcphodry,1)-spval_dbl)/spval_dbl &
-          > 0.0001_dbl_kind) prescribed_aero = .false.
+     if (first_call) then
+        allocate(work(nx_block,ny_block,max_blocks))
+        n=0
+        do iblk = 1, nblocks
+           this_block = get_block(blocks_ice(iblk),iblk)
+           ilo = this_block%ilo
+           ihi = this_block%ihi
+           jlo = this_block%jlo
+           jhi = this_block%jhi
+           do j = jlo, jhi
+              do i = ilo, ihi
+                 n = n+1
+                 work(i,j,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
+              end do
+           end do
+        end do
+        maxwork = global_maxval(work,distrb_info)
+        call broadcast_scalar(maxwork, master_task)
+        if (abs(maxwork) < c100) then
+           prescribed_aero = .false.
+        else
+           prescribed_aero_tmp = .true.
+           call ice_prescaero_init(prescribed_aero_tmp)
+        end if
+        if (my_task == master_task) then
+           write(nu_diag,*) 'prescribed_aero = ',prescribed_aero
+        endif
+        deallocate(work)
+        first_call = .false.
+     endif
 
       if (tr_aero .and. .not. prescribed_aero) then
 
@@ -992,7 +1029,7 @@ contains
          enddo    !i
          enddo    !j
 
-     enddo        !iblk
+      enddo        !iblk
 
      endif
 

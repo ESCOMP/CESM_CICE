@@ -30,7 +30,8 @@ module ice_prescaero_mod
    use ice_kinds_mod
    use ice_fileunits
    use ice_exit,       only : abort_ice
-   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, max_blocks
+   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, max_blocks, &
+                               n_aero
    use ice_constants
    use ice_blocks,     only : nx_block, ny_block
    use ice_domain,     only : nblocks, distrb_info
@@ -57,18 +58,18 @@ module ice_prescaero_mod
 ! !PUBLIC DATA MEMBERS:
 
    logical(kind=log_kind)      , public :: prescribed_aero      ! true if prescribed aerosols
-   integer(kind=int_kind)      , public :: stream_year_first   ! first year in stream to use
-   integer(kind=int_kind)      , public :: stream_year_last    ! last year in stream to use
-   integer(kind=int_kind)      , public :: model_year_align    ! align stream_year_first 
+   integer(kind=int_kind)      , public :: stream_year_first_aero   ! first year in stream to use
+   integer(kind=int_kind)      , public :: stream_year_last_aero    ! last year in stream to use
+   integer(kind=int_kind)      , public :: model_year_align_aero    ! align stream_year_first_aero 
                                                                ! with this model year
-   character(len=char_len_long), public :: stream_fldVarName
-   character(len=char_len_long), public :: stream_fldFileName
-   character(len=char_len_long), public :: stream_domTvarName
-   character(len=char_len_long), public :: stream_domXvarName
-   character(len=char_len_long), public :: stream_domYvarName
-   character(len=char_len_long), public :: stream_domAreaName
-   character(len=char_len_long), public :: stream_domMaskName
-   character(len=char_len_long), public :: stream_domFileName
+   character(len=char_len_long), public :: stream_fldVarName_aero
+   character(len=char_len_long), public :: stream_fldFileName_aero
+   character(len=char_len_long), public :: stream_domTvarName_aero
+   character(len=char_len_long), public :: stream_domXvarName_aero
+   character(len=char_len_long), public :: stream_domYvarName_aero
+   character(len=char_len_long), public :: stream_domAreaName_aero
+   character(len=char_len_long), public :: stream_domMaskName_aero
+   character(len=char_len_long), public :: stream_domFileName_aero
    logical(kind=log_kind)      , public :: prescribed_aero_fill ! true if data fill required
 
 !EOP
@@ -92,16 +93,10 @@ module ice_prescaero_mod
    real(kind=dbl_kind), allocatable :: dataOutLB(:,:,:) ! output for model use
    real(kind=dbl_kind), allocatable :: dataOutUB(:,:,:) ! output for model use
 
-   real(kind=dbl_kind), allocatable :: aero_global(:,:,:) ! aerosols for model
-   real(kind=dbl_kind)              :: bcdepwet(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: bcphidry(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: bcphodry(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx01depwet(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx01depdry(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx02depwet(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx02depdry(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx03depwet(nx_block,ny_block,max_blocks) ! scattered aerosols
-   real(kind=dbl_kind)              :: dstx03depdry(nx_block,ny_block,max_blocks) ! scattered aerosols
+   real(kind=dbl_kind), allocatable :: aero_lb(:,:,:,:) ! scattered aerosols
+   real(kind=dbl_kind), allocatable :: aero_ub(:,:,:,:) ! scattered aerosols
+   real(kind=dbl_kind), allocatable :: aero_loc(:,:,:,:) ! scattered aerosols
+   real(kind=dbl_kind)              :: worka(nx_block,ny_block,max_blocks)
 
    logical(kind=log_kind) :: regrid                      ! true if remapping required
 
@@ -113,6 +108,8 @@ module ice_prescaero_mod
 
    character(len=char_len_long) :: fldList      ! list of fields in data stream
    character(len=char_len)      :: fldName      ! name of field in stream
+
+   logical :: read_data     ! must read in new ice coverage data slice
 
 !=======================================================================
 contains
@@ -132,7 +129,7 @@ contains
 !
 ! !INTERFACE: -----------------------------------------------------------
 
-subroutine ice_prescaero_init
+subroutine ice_prescaero_init(prescribed_aero_in)
 
 ! !USES:
 
@@ -166,25 +163,26 @@ subroutine ice_prescaero_init
    character(*),parameter :: F01 = "('(ice_prescaero_init) ',a,2i6)"
    character(*),parameter :: F02 = "('(ice_prescaero_init) ',a,2g20.13)"
 
+   logical(kind=log_kind), optional, intent(in) :: prescribed_aero_in
+
 ! ech moved from ice_init.F
    namelist /ice_prescaero_nml/  prescribed_aero, prescribed_aero_fill, &
-	stream_year_first , stream_year_last  , model_year_align, &
-        stream_fldVarName , stream_fldFileName,  &
-        stream_domTvarName, stream_domXvarName, stream_domYvarName, &
-        stream_domAreaName, stream_domMaskName, stream_domFileName
-        
+      stream_year_first_aero ,stream_year_last_aero  ,model_year_align_aero, &
+      stream_fldVarName_aero ,stream_fldFileName_aero, &
+      stream_domTvarName_aero,stream_domXvarName_aero,stream_domYvarName_aero, &
+      stream_domAreaName_aero,stream_domMaskName_aero,stream_domFileName_aero
 
    ! default values for namelist
    prescribed_aero        = .false.          ! if true, prescribe ice
-   stream_year_first      = 1                ! first year in  pice stream to use
-   stream_year_last       = 1                ! last  year in  pice stream to use
-   model_year_align       = 1                ! align stream_year_first with this model year
-   stream_fldVarName      = ' '
-   stream_fldFileName     = ' '
-   stream_domTvarName     = 'time'
-   stream_domXvarName     = 'xc'
-   stream_domYvarName     = 'yc'
-   stream_domFileName     =  ' '
+   stream_year_first_aero      = 1                ! first year in  pice stream to use
+   stream_year_last_aero       = 1                ! last  year in  pice stream to use
+   model_year_align_aero       = 1                ! align stream_year_first_aero with this model year
+   stream_fldVarName_aero      = ' '
+   stream_fldFileName_aero     = ' '
+   stream_domTvarName_aero     = 'time'
+   stream_domXvarName_aero     = 'xc'
+   stream_domYvarName_aero     = 'yc'
+   stream_domFileName_aero     =  ' '
    prescribed_aero_fill    = .false.           ! true if pice data fill required
 
    ! read from input file
@@ -211,26 +209,28 @@ subroutine ice_prescaero_init
    endif
 
    call broadcast_scalar(prescribed_aero,master_task)
-   call broadcast_scalar(stream_year_first,master_task)
-   call broadcast_scalar(stream_year_last,master_task)
-   call broadcast_scalar(model_year_align,master_task)
-   call broadcast_scalar(stream_fldVarName,master_task)
-   call broadcast_scalar(stream_fldFileName,master_task)
-   call broadcast_scalar(stream_domTvarName,master_task)
-   call broadcast_scalar(stream_domXvarName,master_task)
-   call broadcast_scalar(stream_domYvarName,master_task)
-   call broadcast_scalar(stream_domAreaName,master_task)
-   call broadcast_scalar(stream_domMaskName,master_task)
-   call broadcast_scalar(stream_domFileName,master_task)
+   call broadcast_scalar(stream_year_first_aero,master_task)
+   call broadcast_scalar(stream_year_last_aero,master_task)
+   call broadcast_scalar(model_year_align_aero,master_task)
+   call broadcast_scalar(stream_fldVarName_aero,master_task)
+   call broadcast_scalar(stream_fldFileName_aero,master_task)
+   call broadcast_scalar(stream_domTvarName_aero,master_task)
+   call broadcast_scalar(stream_domXvarName_aero,master_task)
+   call broadcast_scalar(stream_domYvarName_aero,master_task)
+   call broadcast_scalar(stream_domAreaName_aero,master_task)
+   call broadcast_scalar(stream_domMaskName_aero,master_task)
+   call broadcast_scalar(stream_domFileName_aero,master_task)
    call broadcast_scalar(prescribed_aero_fill,master_task)
+
+   if (present(prescribed_aero_in)) prescribed_aero = prescribed_aero_in
 
    if (.not.prescribed_aero) return
 
    if (my_task == master_task) then
       write(nu_diag,*) ' prescribed_aero            = ', prescribed_aero
-      write(nu_diag,*) ' stream_year_first         = ', stream_year_first
-      write(nu_diag,*) ' stream_year_last          = ', stream_year_last
-      write(nu_diag,*) ' model_year_align          = ', model_year_align
+      write(nu_diag,*) ' stream_year_first_aero         = ', stream_year_first_aero
+      write(nu_diag,*) ' stream_year_last_aero          = ', stream_year_last_aero
+      write(nu_diag,*) ' model_year_align_aero          = ', model_year_align_aero
       write(nu_diag,*) ' prescribed_aero_fill       = ', prescribed_aero_fill
       !TODO: add above variables
 
@@ -279,9 +279,9 @@ subroutine ice_prescaero_init
       aero_stream%file(:)%name     = 'not_set' 
       aero_stream%file(:)%nt       = 0
       aero_stream%file(:)%haveData = .false.
-      aero_stream%yearFirst        = stream_year_first
-      aero_stream%yearLast         = stream_year_last
-      aero_stream%yearAlign        = model_year_align
+      aero_stream%yearFirst        = stream_year_first_aero
+      aero_stream%yearLast         = stream_year_last_aero
+      aero_stream%yearAlign        = model_year_align_aero
       aero_stream%fldListFile      = ' '
       aero_stream%fldListModel     = ' '
       aero_stream%FilePath         = ' '
@@ -294,20 +294,18 @@ subroutine ice_prescaero_init
       aero_stream%found_gvd        = .false.
       
       aero_stream%dataSource   = 'cice ifrac/sst file'
-      aero_stream%fldListFile  =  stream_fldVarName
-!     aero_stream%fldListModel = 'BCPHODRY'
-      aero_stream%fldListModel = 'BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD'
+      aero_stream%fldListFile  =  stream_fldVarName_aero
 
       !build logic hear to determine how many names are on the input file
-      aero_stream%File(1)%name =  stream_fldFileName
+      aero_stream%File(1)%name =  stream_fldFileName_aero
       aero_stream%nFiles       =  1 
 
-      aero_stream%domTvarName  =  stream_domTvarName
-      aero_stream%domXvarName  =  stream_domXvarName
-      aero_stream%domYvarName  =  stream_domYvarName
-      aero_stream%domAreaName  =  stream_domAreaName
-      aero_stream%domMaskName  =  stream_domMaskName
-      aero_stream%domFileName  =  stream_domFileName
+      aero_stream%domTvarName  =  stream_domTvarName_aero
+      aero_stream%domXvarName  =  stream_domXvarName_aero
+      aero_stream%domYvarName  =  stream_domYvarName_aero
+      aero_stream%domAreaName  =  stream_domAreaName_aero
+      aero_stream%domMaskName  =  stream_domMaskName_aero
+      aero_stream%domFileName  =  stream_domFileName_aero
       aero_stream%init         =  .true.
 
       !---------------------------------------------------------------------
@@ -395,8 +393,13 @@ subroutine ice_prescaero_init
    ! Allocate input and output bundles
    !------------------------------------------------------------------
 
+   call broadcast_scalar(nflds, master_task)
+
    allocate(dataOutLB(nx_global,ny_global,nflds))  ! output for model use
    allocate(dataOutUB(nx_global,ny_global,nflds))
+   allocate(aero_lb(nx_block,ny_block,nflds,max_blocks))
+   allocate(aero_ub(nx_block,ny_block,nflds,max_blocks))
+   allocate(aero_loc(nx_block,ny_block,nflds,max_blocks))
 
    deallocate(work_g1,work_g2)
    deallocate(cice_mask_g)
@@ -457,7 +460,7 @@ subroutine ice_prescaero_run(mDateIn, secIn)
 
    integer(kind=int_kind) :: mDateLB_old = -999
    integer(kind=int_kind) :: secLB_old = -999
-   integer(kind=int_kind) :: i,j,n,icnt  ! loop indices and counter
+   integer(kind=int_kind) :: i,j,n,icnt,iblk  ! loop indices and counter
 
    !------------------------------------------------------------------------
    ! get two time slices of monthly ice coverage data
@@ -469,13 +472,15 @@ subroutine ice_prescaero_run(mDateIn, secIn)
       !------------------------------------------------------------------
       ! Allocate input and output bundles
       !------------------------------------------------------------------
-      allocate(aero_global(nx_global,ny_global,nflds))
 
       call shr_stream_findBounds(aero_stream, mDateIn,secIn,             &
       &                          mDateLB, dDateLB, secLB, n_lb, fileLB, &
       &                          mDateUB, dDateUB, secUB, n_ub, fileUB)
 
+      read_data = .false.
       if (mDateLB_old /= mDateLB .or. secLB_old /= secLB) then
+
+         read_data = .true.
 
          allocate(dataInLB(nlon,nlat,nflds))      ! netCDF input data size
          allocate(dataInUB(nlon,nlat,nflds))
@@ -485,8 +490,6 @@ subroutine ice_prescaero_run(mDateIn, secIn)
 
             call ice_prescaero_readField(fileLB, fldName, n_lb, dataInLB(:,:,n))
             call ice_prescaero_readField(fileUB, fldName, n_ub, dataInUB(:,:,n))
-            write (nu_diag,*) 'min/max dataInLB = ',n,minval(dataInLB(:,:,n)),maxval(dataInLB(:,:,n))
-            write (nu_diag,*) 'min/max dataInUB = ',n,minval(dataInUB(:,:,n)),maxval(dataInUB(:,:,n))
          enddo
 
          if (regrid) then
@@ -558,9 +561,13 @@ subroutine ice_prescaero_run(mDateIn, secIn)
       call shr_tInterp_getFactors(mDateLB, secLB, mDateUB, secUB, &
       &                           mDateIn, secIN, fLB, fUB)
 
-      aero_global(:,:,:) = fLB*dataOutLB(:,:,:) + fUB*dataOutUB(:,:,:)
-
    end if    ! master_task
+
+   call broadcast_scalar(read_data, master_task)
+   call broadcast_scalar(fLB, master_task)
+   call broadcast_scalar(fUB, master_task)
+
+   if (read_data) then
 
   !-----------------------------------------------------------------
   ! Scatter aerosols to all processors
@@ -571,53 +578,54 @@ subroutine ice_prescaero_run(mDateIn, secIn)
       allocate(work_g1(1,1))
    endif
 
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,1)
-   call scatter_global(bcphodry,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+   do n=1,nflds
 
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,2)
-   call scatter_global(bcdepwet,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+      if (my_task == master_task) work_g1(:,:) = dataOutLB(:,:,n)
+      call scatter_global(worka,   work_g1, &
+                          master_task,  distrb_info, & 
+                          field_loc_center, field_type_scalar)
 
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,3)
-   call scatter_global(bcphidry,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+      do iblk = 1,nblocks
+      do j = 1,ny_block
+      do i = 1,nx_block
+         aero_lb(i,j,n,iblk) = worka(i,j,iblk)
+      enddo
+      enddo
+      enddo
+   
+      if (my_task == master_task) work_g1(:,:) = dataOutUB(:,:,n)
+      call scatter_global(worka,   work_g1, &
+                          master_task,  distrb_info, & 
+                          field_loc_center, field_type_scalar)
 
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,4)
-   call scatter_global(dstx01depwet,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+      do iblk = 1,nblocks
+      do j = 1,ny_block
+      do i = 1,nx_block
+         aero_ub(i,j,n,iblk) = worka(i,j,iblk)
+      enddo
+      enddo
+      enddo
 
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,5)
-   call scatter_global(dstx01depdry,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
-
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,6)
-   call scatter_global(dstx02depwet,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
-
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,7)
-   call scatter_global(dstx02depdry,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
-
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,8)
-   call scatter_global(dstx03depwet,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
-
-   if (my_task == master_task) work_g1(:,:) = aero_global(:,:,9)
-   call scatter_global(dstx03depdry,   work_g1, &
-      &                master_task,  distrb_info, & 
-      &                field_loc_center, field_type_scalar)
+   enddo ! nflds
 
    deallocate(work_g1)
-   if (my_task == master_task) deallocate(aero_global)
+
+   endif ! read_data
+
+   !-----------------------------------------------------------------
+   ! Time interpolate aerosol data
+   !-----------------------------------------------------------------
+
+   do iblk = 1,nblocks
+   do n = 1,nflds
+   do j = 1,ny_block
+   do i = 1,nx_block
+      aero_loc(i,j,n,iblk) = fLB*aero_lb(i,j,n,iblk) + fUB*aero_ub(i,j,n,iblk)
+   enddo
+   enddo
+   enddo
+   enddo
+
 
   !-----------------------------------------------------------------
   ! Set prescribed aerosols
@@ -782,11 +790,10 @@ subroutine ice_prescaero_phys
    do iblk = 1,nblocks
    do j = 1,ny_block
    do i = 1,nx_block
-      faero(i,j,1,iblk) = bcphodry(i,j,iblk)
-      faero(i,j,2,iblk) = bcdepwet(i,j,iblk)+bcphidry(i,j,iblk)
-      faero(i,j,3,iblk) = dstx01depwet(i,j,iblk)+dstx01depdry(i,j,iblk)
-      faero(i,j,4,iblk) = dstx02depwet(i,j,iblk)+dstx02depdry(i,j,iblk)
-      faero(i,j,5,iblk) = dstx03depwet(i,j,iblk)+dstx03depdry(i,j,iblk)
+      faero(i,j,1,iblk) = aero_loc(i,j, 1,iblk)
+      do n=2,n_aero
+         faero(i,j,n,iblk) = aero_loc(i,j,2*n-2,iblk)+aero_loc(i,j,2*n-1,iblk)
+      enddo
    enddo                 ! i
    enddo                 ! j
    enddo                 ! iblk

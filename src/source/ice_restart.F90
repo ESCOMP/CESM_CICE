@@ -274,7 +274,7 @@
       use ice_calendar, only: istep0, istep1, time, time_forc, calendar
       use ice_flux
       use ice_state
-      use ice_grid, only: tmask
+      use ice_grid, only: tmask, umask
       use ice_itd
       use ice_ocean, only: oceanmixed_ice
       use ice_work, only: work_g1, work_g2
@@ -561,6 +561,28 @@
             stress12_2(i,j,iblk) = c0
             stress12_3(i,j,iblk) = c0
             stress12_4(i,j,iblk) = c0
+         enddo
+         enddo
+      enddo
+      !$OMP END PARALLEL DO
+
+      ! zero out prognostic fields at land points
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
+      do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (.not. tmask(i,j,iblk)) then
+               aicen(i,j,:,iblk) = c0
+               vicen(i,j,:,iblk) = c0
+               vsnon(i,j,:,iblk) = c0
+               trcrn(i,j,nt_Tsfc,:,iblk) = c0
+               eicen(i,j,:,iblk) = c0
+               esnon(i,j,:,iblk) = c0
+            endif
+            if (.not. umask(i,j,iblk)) then
+               uvel(i,j,iblk) = c0
+               vvel(i,j,iblk) = c0
+            endif
          enddo
          enddo
       enddo

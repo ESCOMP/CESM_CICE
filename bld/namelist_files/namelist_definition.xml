@@ -284,14 +284,63 @@ Default: FALSE
 <!-- Prescribed aerosol namelist -->
 <!--------------------------------->
 
-<entry id="prescribed_aero" type="logical"  category="cice" group="ice_prescaero_nml" valid_values="">
-use prescribed aerosol mode if true
-Default: FALSE
-</entry>
-
 <entry id="prescribed_aero_fill" type="logical"  category="cice" group="ice_prescaero_nml" valid_values="">
 true => prescribed aerosol data fill required
-Default: FALSE
+Default: TRUE
+</entry>
+
+<entry id="stream_fldvarname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+aerosol deposition variable names
+</entry>
+
+<entry id="stream_fldfilename_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values=""
+       input_pathname="abs" >
+file name containing aerosol deposition data 
+</entry>
+
+<entry id="stream_domtvarname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+domain file: time-dim var name
+Default: time
+</entry>
+
+<entry id="stream_domxvarname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+domain file: x-dim var name
+Default: lon
+</entry>
+
+<entry id="stream_domyvarname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+domain file: y-dim varname
+Default: lat
+</entry>
+
+<entry id="stream_domareaname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+domain file: area varname
+Default: area
+</entry>
+
+<entry id="stream_dommaskname_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values="">
+domain file: mask varname
+Default: mask
+</entry>
+
+<entry id="stream_domfilename_aero" type="char*256"  category="cice" group="ice_prescaero_nml" valid_values=""
+       input_pathname="abs" >
+domain file name
+</entry>
+
+<entry id="stream_year_first_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+first year in stream to use
+Default: 1
+</entry>
+
+<entry id="stream_year_last_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+Last year in stream to use
+Default: 1
+</entry>
+
+<entry id="model_year_align_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+Align stream_year_first with this model year
+Default: 1
 </entry>
 
 <!----------------------------->

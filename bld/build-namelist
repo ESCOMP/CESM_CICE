@@ -402,8 +402,19 @@ if ($cice_mode eq 'prescribed') {
 # namelist group: ice_prescaero_nml #
 ######################################
 
-add_default($nl, 'prescribed_aero');
-add_default($nl, 'prescribed_aero_fill');
+ my $presaero_type = 'climatology';
+ add_default($nl, 'prescribed_aero_fill');
+ add_default($nl, 'stream_domtvarname_aero');
+ add_default($nl, 'stream_domxvarname_aero');
+ add_default($nl, 'stream_domyvarname_aero');
+ add_default($nl, 'stream_domareaname_aero'); 
+ add_default($nl, 'stream_dommaskname_aero');
+ add_default($nl, 'stream_domfilename_aero','presaero_type'=>$presaero_type);
+ add_default($nl, 'stream_fldvarname_aero','presaero_type'=>$presaero_type);
+ add_default($nl, 'stream_fldfilename_aero','presaero_type'=>$presaero_type);
+ add_default($nl, 'model_year_align_aero');
+ add_default($nl, 'stream_year_first_aero');
+ add_default($nl, 'stream_year_last_aero');
 
 ######################################
 # namelist group: ice_fields_nml     #
