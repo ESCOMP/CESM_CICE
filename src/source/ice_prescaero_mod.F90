@@ -791,9 +791,15 @@ subroutine ice_prescaero_phys
    do j = 1,ny_block
    do i = 1,nx_block
       faero(i,j,1,iblk) = aero_loc(i,j, 1,iblk)
-      do n=2,n_aero
-         faero(i,j,n,iblk) = aero_loc(i,j,2*n-2,iblk)+aero_loc(i,j,2*n-1,iblk)
-      enddo
+      faero(i,j,2,iblk) = aero_loc(i,j, 2,iblk)+aero_loc(i,j, 3,iblk)
+!     Reduce dust to a single category
+      faero(i,j,3,iblk) = aero_loc(i,j, 4,iblk)+aero_loc(i,j, 5,iblk) &
+                        + aero_loc(i,j, 6,iblk)+aero_loc(i,j, 7,iblk) &
+                        + aero_loc(i,j, 8,iblk)+aero_loc(i,j, 9,iblk) &
+                        + aero_loc(i,j,10,iblk)+aero_loc(i,j,11,iblk)
+!     do n=2,n_aero
+!        faero(i,j,n,iblk) = aero_loc(i,j,2*n-2,iblk)+aero_loc(i,j,2*n-1,iblk)
+!     enddo
    enddo                 ! i
    enddo                 ! j
    enddo                 ! iblk

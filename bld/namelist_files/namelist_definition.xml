@@ -99,7 +99,7 @@ Default: 'nc' if CPP nc is defined, and 'bin' otherwise
 
 <entry id="diagfreq" type="integer"  category="cice" group="setup_nml" valid_values="">
 diagnostic output frequency (10 = once per 10 dt)
-Default: 24
+Default: 48
 </entry>
 
 <!---Restart output     ---->

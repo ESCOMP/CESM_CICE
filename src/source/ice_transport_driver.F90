@@ -192,7 +192,7 @@
       use ice_state
       use ice_grid, only: tarea, HTE, HTN
       use ice_exit
-      use ice_calendar, only: istep1
+      use ice_calendar, only: istep1, istep, diagfreq
       use ice_timers
       use ice_transport_remap, only: horizontal_remap, make_masks
 !
@@ -349,7 +349,7 @@
 !---! Optional conservation and monotonicity checks.
 !---!-------------------------------------------------------------------
 
-      if (l_conservation_check) then
+      if (l_conservation_check .and. mod(istep,diagfreq) == 0) then
 
     !-------------------------------------------------------------------
     ! Compute initial values of globally conserved quantities.
@@ -389,7 +389,7 @@
 
       endif                     ! l_conservation_check
       
-      if (l_monotonicity_check) then
+      if (l_monotonicity_check .and. mod(istep,diagfreq) == 0) then
 
          allocate(tmin(nx_block,ny_block,ntrace,ncat,max_blocks),     &
                   tmax(nx_block,ny_block,ntrace,ncat,max_blocks),     &
@@ -558,7 +558,7 @@
     ! Check global conservation of area and area*tracers.  (Optional)
     !-------------------------------------------------------------------
 
-      if (l_conservation_check) then
+      if (l_conservation_check .and. mod(istep,diagfreq) == 0) then
 
          do n = 0, ncat
             asum_final(n) = global_sum(aim(:,:,n,:),     distrb_info,      &
@@ -628,7 +628,7 @@
     ! Check tracer monotonicity.  (Optional)
     !-------------------------------------------------------------------
 
-      if (l_monotonicity_check) then
+      if (l_monotonicity_check .and. mod(istep,diagfreq) == 0) then
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo

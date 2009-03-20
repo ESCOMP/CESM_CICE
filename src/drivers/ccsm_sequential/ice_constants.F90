@@ -96,6 +96,10 @@
          awtidf = 0.36218_dbl_kind   ! near IR, diffuse
 
       real (kind=dbl_kind), parameter :: &
+         hs0   = 0.03_dbl_kind,     &! parameter for delta-Eddington snow frac
+         hsmin = 0.0001_dbl_kind     ! minimum snow thickness for dEdd
+
+      real (kind=dbl_kind), parameter :: &
          qqqice  = 11637800._dbl_kind   ,&! for qsat over ice
          TTTice  = 5897.8_dbl_kind      ,&! for qsat over ice
          qqqocn  = 627572.4_dbl_kind    ,&! for qsat over ocn

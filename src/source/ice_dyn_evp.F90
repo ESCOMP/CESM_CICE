@@ -161,6 +161,8 @@
          umass    , & ! total mass of ice and snow (u grid)
          umassdtei    ! mass of U-cell/dte (kg/m^2 s)
 
+      real (kind=dbl_kind), allocatable :: fld2(:,:,:,:)
+
       real (kind=dbl_kind), dimension(nx_block,ny_block,8):: &
          str          ! stress combinations for momentum equation
 
@@ -312,16 +314,33 @@
       enddo  ! iblk
       !$OMP END PARALLEL DO
 
+      allocate(fld2(nx_block,ny_block,2,max_blocks))
+
+      !$OMP PARALLEL DO PRIVATE(iblk)
+      do iblk = 1,nblocks
+         fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
+         fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
+      enddo
+      !$OMP END PARALLEL DO
+
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (strength,           halo_info, &
                            field_loc_center,   field_type_scalar)
       ! velocities may have changed in evp_prep2
-      call ice_HaloUpdate (uvel,               halo_info, &
+      call ice_HaloUpdate (fld2,               halo_info, &
                            field_loc_NEcorner, field_type_vector)
-      call ice_HaloUpdate (vvel,               halo_info, &
-                           field_loc_NEcorner, field_type_vector)
+!     call ice_HaloUpdate (uvel,               halo_info, &
+!                          field_loc_NEcorner, field_type_vector)
+!     call ice_HaloUpdate (vvel,               halo_info, &
+!                          field_loc_NEcorner, field_type_vector)
       call ice_timer_stop(timer_bound)
 
+      !$OMP PARALLEL DO PRIVATE(iblk)
+      do iblk = 1,nblocks
+         uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
+         vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
+      enddo
+      !$OMP END PARALLEL DO
 
       do ksub = 1,ndte        ! subcycling
 
@@ -375,14 +394,31 @@
          enddo
          !$OMP END PARALLEL DO
 
+         !$OMP PARALLEL DO PRIVATE(iblk)
+         do iblk = 1,nblocks
+            fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
+            fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
+         enddo
+         !$OMP END PARALLEL DO
+
          call ice_timer_start(timer_bound)
-         call ice_HaloUpdate (uvel,               halo_info, &
+         call ice_HaloUpdate (fld2,               halo_info, &
                               field_loc_NEcorner, field_type_vector)
-         call ice_HaloUpdate (vvel,               halo_info, &
-                              field_loc_NEcorner, field_type_vector)
+!        call ice_HaloUpdate (uvel,               halo_info, &
+!                             field_loc_NEcorner, field_type_vector)
+!        call ice_HaloUpdate (vvel,               halo_info, &
+!                             field_loc_NEcorner, field_type_vector)
          call ice_timer_stop(timer_bound)
 
+         !$OMP PARALLEL DO PRIVATE(iblk)
+         do iblk = 1,nblocks
+            uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
+            vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
+         enddo
+         !$OMP END PARALLEL DO
       enddo                     ! subcycling
+
+      deallocate(fld2)
 
       !-----------------------------------------------------------------
       ! ice-ocean stress

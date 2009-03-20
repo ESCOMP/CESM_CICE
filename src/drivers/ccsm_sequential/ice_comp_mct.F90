@@ -871,6 +871,9 @@ contains
     integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
     type(block) :: this_block      ! block information for current block
 
+    integer,parameter :: nflds=15,nfldv=6
+    real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
+
     real (kind=dbl_kind) :: &
          gsum, workx, worky, maxwork
     real (kind=dbl_kind), allocatable, dimension (:,:,:) :: &
@@ -891,30 +894,11 @@ contains
     ! the initilized value (see ice_flux.F init_coupler_flux) of
     ! 34 ppt
 
-    !-----------------------------------------------------------------
-    ! Zero stuff while waiting, only filling in active cells.
-    !-----------------------------------------------------------------
-    
-    zlvl   (:,:,:) = c0
-    uatm   (:,:,:) = c0
-    vatm   (:,:,:) = c0
-    potT   (:,:,:) = c0
-    Tair   (:,:,:) = c0
-    Qa     (:,:,:) = c0
-    rhoa   (:,:,:) = c0
-    swvdr  (:,:,:) = c0
-    swvdf  (:,:,:) = c0
-    swidr  (:,:,:) = c0
-    swidf  (:,:,:) = c0
-    flw    (:,:,:) = c0
-    frain  (:,:,:) = c0
-    fsnow  (:,:,:) = c0
-    uocn   (:,:,:) = c0
-    vocn   (:,:,:) = c0
-    sst    (:,:,:) = c0
-    ss_tltx(:,:,:) = c0
-    ss_tlty(:,:,:) = c0
-    frzmlt (:,:,:) = c0
+    ! Use aflds to gather the halo updates of multiple fields
+    ! Need to separate the scalar from the vector halo updates
+
+    allocate(aflds(nx_block,ny_block,nflds,nblocks))
+    aflds = c0
 
     n=0
     do iblk = 1, nblocks
@@ -928,39 +912,106 @@ contains
        do i = ilo, ihi
 
           n = n+1
-          !--- ocn states--
-          sst  (i,j,iblk)   = x2i_i%rAttr(index_x2i_So_t   ,n) 
-          sss  (i,j,iblk)   = x2i_i%rAttr(index_x2i_So_s   ,n)
-          uocn (i,j,iblk)   = x2i_i%rAttr(index_x2i_So_u   ,n)
-          vocn (i,j,iblk)   = x2i_i%rAttr(index_x2i_So_v   ,n)
-          
-          !--- atm states-
-          zlvl (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_z   ,n)
-          uatm (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_u   ,n)
-          vatm (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_v   ,n)
-          potT (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_ptem,n)
-          Tair (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_tbot,n)
-          Qa   (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_shum,n)
-          rhoa (i,j,iblk)   = x2i_i%rAttr(index_x2i_Sa_dens,n)
-          
-          !--- ocn states--
-          ss_tltx(i,j,iblk) = x2i_i%rAttr(index_x2i_So_dhdx ,n)
-          ss_tlty(i,j,iblk) = x2i_i%rAttr(index_x2i_So_dhdy ,n)
-          frzmlt (i,j,iblk) = x2i_i%rAttr(index_x2i_Fioo_q  ,n)
-          
-          !--- atm fluxes--
-          swvdr(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdr,n)
-          swidr(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndr,n)
-          swvdf(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdf,n)
-          swidf(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndf,n)
-          flw  (i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_lwdn ,n)
-          frain(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_rain ,n)
-          fsnow(i,j,iblk)   = x2i_i%rAttr(index_x2i_Faxa_snow ,n)
+          aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_t,n)
+          aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_s,n)
+          aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_z,n)
+          aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_ptem,n)
+          aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_Sa_tbot,n)
+          aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_Sa_shum,n)
+          aflds(i,j, 7,iblk)   = x2i_i%rAttr(index_x2i_Sa_dens,n)
+          aflds(i,j, 8,iblk)   = x2i_i%rAttr(index_x2i_Fioo_q,n)
+          aflds(i,j, 9,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdr,n)
+          aflds(i,j,10,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndr,n)
+          aflds(i,j,11,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdf,n)
+          aflds(i,j,12,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndf,n)
+          aflds(i,j,13,iblk)   = x2i_i%rAttr(index_x2i_Faxa_lwdn,n)
+          aflds(i,j,14,iblk)   = x2i_i%rAttr(index_x2i_Faxa_rain,n)
+          aflds(i,j,15,iblk)   = x2i_i%rAttr(index_x2i_Faxa_snow,n)
 
          enddo    !i
          enddo    !j
 
      enddo        !iblk
+
+     if (.not.prescribed_ice) then
+        call t_startf ('cice_imp_halo')
+        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
+                                              field_type_scalar)
+        call t_stopf ('cice_imp_halo')
+     endif
+ 
+     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+     do iblk = 1, nblocks
+        do j = 1,ny_block
+        do i = 1,nx_block
+           sst  (i,j,iblk)   = aflds(i,j, 1,iblk)
+           sss  (i,j,iblk)   = aflds(i,j, 2,iblk)
+           zlvl (i,j,iblk)   = aflds(i,j, 3,iblk)
+           potT (i,j,iblk)   = aflds(i,j, 4,iblk)
+           Tair (i,j,iblk)   = aflds(i,j, 5,iblk)
+           Qa   (i,j,iblk)   = aflds(i,j, 6,iblk)
+           rhoa (i,j,iblk)   = aflds(i,j, 7,iblk)
+           frzmlt (i,j,iblk) = aflds(i,j, 8,iblk)
+           swvdr(i,j,iblk)   = aflds(i,j, 9,iblk)
+           swidr(i,j,iblk)   = aflds(i,j,10,iblk)
+           swvdf(i,j,iblk)   = aflds(i,j,11,iblk)
+           swidf(i,j,iblk)   = aflds(i,j,12,iblk)
+           flw  (i,j,iblk)   = aflds(i,j,13,iblk)
+           frain(i,j,iblk)   = aflds(i,j,14,iblk)
+           fsnow(i,j,iblk)   = aflds(i,j,15,iblk)
+        enddo    !i
+        enddo    !j
+     enddo        !iblk
+     !$OMP END PARALLEL DO
+ 
+     deallocate(aflds)
+     allocate(aflds(nx_block,ny_block,nfldv,nblocks))
+     aflds = c0
+
+     n=0
+     do iblk = 1, nblocks
+        this_block = get_block(blocks_ice(iblk),iblk)
+        ilo = this_block%ilo
+        ihi = this_block%ihi
+        jlo = this_block%jlo
+        jhi = this_block%jhi
+ 
+        do j = jlo, jhi
+        do i = ilo, ihi
+           n = n+1
+           aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_u,n)
+           aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_v,n)
+           aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_u,n)
+           aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_v,n)
+           aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_So_dhdx,n)
+           aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_So_dhdy,n)
+        enddo
+        enddo
+     enddo
+
+     if (.not.prescribed_ice) then
+        call t_startf ('cice_imp_halo')
+        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
+                                             field_type_vector)
+        call t_stopf ('cice_imp_halo')
+     endif
+
+     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+     do iblk = 1, nblocks
+        do j = 1,ny_block
+        do i = 1,nx_block
+           uocn (i,j,iblk)   = aflds(i,j, 1,iblk)
+           vocn (i,j,iblk)   = aflds(i,j, 2,iblk)
+           uatm (i,j,iblk)   = aflds(i,j, 3,iblk)
+           vatm (i,j,iblk)   = aflds(i,j, 4,iblk)
+           ss_tltx(i,j,iblk) = aflds(i,j, 5,iblk)
+           ss_tlty(i,j,iblk) = aflds(i,j, 6,iblk)
+        enddo    !i
+        enddo    !j
+     enddo        !iblk
+     !$OMP END PARALLEL DO
+
+     deallocate(aflds)
 
      !-------------------------------------------------------
      ! Accept aerosols from coupler when not prescribed.
@@ -1017,13 +1068,14 @@ contains
 
             faero(i,j,2,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphidry,n) &
                               + x2i_i%rAttr(index_x2i_Faxa_bcphiwet,n)
+         ! Combine all of the dust into one category
             faero(i,j,3,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet1,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry1,n)
-            faero(i,j,4,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet2,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry2,n)
-            faero(i,j,5,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet3,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry3,n)
-            faero(i,j,6,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet4,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry1,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstwet2,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry2,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstwet3,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstdry3,n) &
+                              + x2i_i%rAttr(index_x2i_Faxa_dstwet4,n) &
                               + x2i_i%rAttr(index_x2i_Faxa_dstdry4,n)
 
          enddo    !i
@@ -1032,57 +1084,6 @@ contains
       enddo        !iblk
 
      endif
-
-     !-------------------------------------------------------
-     ! Update ghost cells for imported quantities
-     !-------------------------------------------------------
-
-     if (.not.prescribed_ice) then
-        call t_startf ('cice_imp_halo')
-        call ice_HaloUpdate(sst    , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(sss    , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(uocn   , halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(vocn   , halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(zlvl   , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(uatm   , halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(vatm   , halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(potT   , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(Tair   , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(Qa     , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(rhoa   , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(ss_tltx, halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(ss_tlty, halo_info, field_loc_center, &
-                                                field_type_vector)
-        call ice_HaloUpdate(frzmlt , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(swvdr  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(swidr  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(swvdf  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(swidf  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(flw    , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(frain  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call ice_HaloUpdate(fsnow  , halo_info, field_loc_center, &
-                                                field_type_scalar)
-        call t_stopf ('cice_imp_halo')
-     end if
 
      !-----------------------------------------------------------------
      ! rotate zonal/meridional vectors to local coordinates

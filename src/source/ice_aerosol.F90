@@ -190,11 +190,10 @@
 
 !MH These need to be the same as in the DE code. Put in a common place?
       real (kind=dbl_kind) :: &
-        hi_ssl, hs_ssl, hsmin
+        hi_ssl, hs_ssl
 
       data hs_ssl  / .040_dbl_kind /
       data hi_ssl  / .050_dbl_kind /
-      data hsmin   / .00001_dbl_kind /
       data kscav   / .03_dbl_kind, .20_dbl_kind,&
            .02_dbl_kind,.02_dbl_kind,.01_dbl_kind,.01_dbl_kind /
       data kscavsi / .03_dbl_kind, .20_dbl_kind,&

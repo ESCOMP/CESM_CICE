@@ -210,11 +210,20 @@
 !        if (Tsfcn(i,j) .lt. Timelt-0.15) apondn(i,j) = c0
 
          ! fractional area of snow cover
-         if (hs > puny) then
-            asnow = hs / (hs + snowpatch)
+         ! use linear function as in delta-Eddington
+         if (hs >= hsmin) then
+            asnow = min( hs/hs0, c1 )
          else
             asnow = c0
          endif
+
+         ! fractional area of snow cover
+         ! use snowpatch as in the CCSM3 shortwave
+!        if (hs > puny) then
+!           asnow = hs / (hs + snowpatch)
+!        else
+!           asnow = c0
+!        endif
 
 !        If we have snow, reduce ponds
          if ( hs .gt. puny ) then

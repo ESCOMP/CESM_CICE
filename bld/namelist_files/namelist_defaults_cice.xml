@@ -141,7 +141,7 @@
 
 <!--- diagnostic information --->
 
-<diagfreq> 24   </diagfreq>
+<diagfreq> 48   </diagfreq>
 
 <!--- restart information --->
 <pointer_file>rpointer.ice</pointer_file>

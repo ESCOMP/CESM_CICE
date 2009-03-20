@@ -1,4 +1,36 @@
 ===============================================================
+cice4_0_20090320
+Originator: dbailey
+Date: Fri Mar 20 10:16:18 MDT 2009
+Version: 4.0
+One-line Summary: performance mods and reducing dust to one
+                  category
+CCSM Version compatible with: ccsm4_0_beta11+
+Changes made:
+
+This tag includes the following changes:
+
+1. Combining ice_Halo calls (tcraig)
+2. Reducing the frequency of the monotonicty and convervation
+   checks in the advection scheme to once a day instead of
+   every timestep.
+3. Combining the four dust categories into one.
+4. Albedo tuning mods.
+
+M      bld/configure
+M      bld/config_files/definition.xml
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_prescaero_mod.F90
+M      src/drivers/ccsm_sequential/ice_constants.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090316
 Originator: dbailey
 Date: Mon Mar 16 13:12:11 MDT 2009

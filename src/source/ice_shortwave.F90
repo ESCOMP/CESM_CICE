@@ -2109,27 +2109,49 @@
 
       ! aerosol optical properties   -> band  |
       !                                       v aerosol
+      ! for combined dust category, let's use category 4 properties
       data kaer_tab/ &
           11580.61872,   5535.41835,   2793.79690, &
           25798.96479,  11536.03871,   4688.24207, &
+            196.49772,    204.14078,    214.42287, &
            2665.85867,   2256.71027,    820.36024, &
             840.78295,   1028.24656,   1163.03298, &
-            387.51211,    414.68808,    450.29814, &
-            196.49772,    204.14078,    214.42287  /
+            387.51211,    414.68808,    450.29814/
       data waer_tab/ &
               0.29003,      0.17349,      0.06613, &
               0.51731,      0.41609,      0.21324, &
+              0.84467,      0.94216,      0.95666, &
               0.97764,      0.99402,      0.98552, &
               0.94146,      0.98527,      0.99093, &
-              0.90034,      0.96543,      0.97678, &
-              0.84467,      0.94216,      0.95666  /
+              0.90034,      0.96543,      0.97678/
       data gaer_tab/ &
               0.35445,      0.19838,      0.08857, &
               0.52581,      0.32384,      0.14970, &
+              0.83162,      0.78306,      0.74375, &
               0.68861,      0.70836,      0.54171, &
               0.70239,      0.66115,      0.71983, &
-              0.78734,      0.73580,      0.64411, &
-              0.83162,      0.78306,      0.74375  /
+              0.78734,      0.73580,      0.64411/
+!     data kaer_tab/ &
+!         11580.61872,   5535.41835,   2793.79690, &
+!         25798.96479,  11536.03871,   4688.24207, &
+!          2665.85867,   2256.71027,    820.36024, &
+!           840.78295,   1028.24656,   1163.03298, &
+!           387.51211,    414.68808,    450.29814, &
+!           196.49772,    204.14078,    214.42287  /
+!     data waer_tab/ &
+!             0.29003,      0.17349,      0.06613, &
+!             0.51731,      0.41609,      0.21324, &
+!             0.97764,      0.99402,      0.98552, &
+!             0.94146,      0.98527,      0.99093, &
+!             0.90034,      0.96543,      0.97678, &
+!             0.84467,      0.94216,      0.95666  /
+!     data gaer_tab/ &
+!             0.35445,      0.19838,      0.08857, &
+!             0.52581,      0.32384,      0.14970, &
+!             0.68861,      0.70836,      0.54171, &
+!             0.70239,      0.66115,      0.71983, &
+!             0.78734,      0.73580,      0.64411, &
+!             0.83162,      0.78306,      0.74375  /
 
 !-----------------------------------------------------------------------
 ! Initialize and tune bare ice/ponded ice iops
@@ -3422,15 +3444,16 @@
          rsnw_nm ! actual used nonmelt snow grain radius (micro-meters)
 
       real (kind=dbl_kind), parameter :: &
-         hsmin  = .0001_dbl_kind, & ! minimum allowed snow depth (m) for DE
-         hs0    = .0300_dbl_kind, & ! snow depth for transition to bare sea ice
-         dT_mlt    = c1, & ! change in temp to give non-melt to melt change
+!        Move these to ice_constants
+!        hsmin  = .0001_dbl_kind, & ! minimum allowed snow depth (m) for DE
+!        hs0    = .0300_dbl_kind, & ! snow depth for transition to bare sea ice
+         dT_mlt    = c2, & ! change in temp to give non-melt to melt change
                            ! in snow grain radius
          ! units for the following are 1.e-6 m (micro-meters)
          rsnw_fresh    =  100._dbl_kind, & ! freshly-fallen snow grain radius 
          rsnw_nonmelt  =  500._dbl_kind, & ! nonmelt snow grain radius
          rsnw_sig      =  250._dbl_kind, & ! assumed sigma for snow grain radius
-         rsnw_melt     = 1000._dbl_kind    ! melting snow grain radius
+         rsnw_melt     = 2000._dbl_kind    ! melting snow grain radius
 
 !-----------------------------------------------------------------------
 
