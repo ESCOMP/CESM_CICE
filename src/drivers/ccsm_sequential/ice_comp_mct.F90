@@ -1019,7 +1019,7 @@ contains
      
      ! Check for special values in coupler input.
 
-     if (first_call) then
+     if (tr_aero .and. first_call) then
         allocate(work(nx_block,ny_block,max_blocks))
         n=0
         do iblk = 1, nblocks

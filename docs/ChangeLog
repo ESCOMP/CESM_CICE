@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090324
+Originator: dbailey
+Date: Tue Mar 24 14:38:10 MDT 2009
+Version: 4.0
+One-line Summary: Fix bug when ntr_aero=0
+CCSM Version compatible with: ccsm4_0_beta11+
+Changes made:
+
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090320
 Originator: dbailey
 Date: Fri Mar 20 10:16:18 MDT 2009
