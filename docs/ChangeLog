@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20090326
+Originator: dbailey
+Date: Thu Mar 26 22:07:42 MDT 2009
+Version: 4.0
+One-line Summary: Fix bug in transport with near underflows. 
+CCSM Version compatible with: ccsm4_0_beta12+
+Changes made:
+
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_aerosol.F90
+
+===============================================================
 cice4_0_20090324
 Originator: dbailey
 Date: Tue Mar 24 14:38:10 MDT 2009

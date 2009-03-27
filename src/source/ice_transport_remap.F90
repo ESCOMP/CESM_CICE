@@ -1538,14 +1538,16 @@
          qmn = min (w1, w2, w3, w4)
          qmx = max (w1, w2, w3, w4)
 
+         ! Watch for underflows here
+
          ! the limiting coefficient
-         if (abs(qmn) > c0) then ! 'abs(qmn) > puny' not sufficient
+         if (abs(qmn) > 1.0e-300_dbl_kind) then ! 'abs(qmn) > puny' not sufficient
             w1 = max(c0, pmn/qmn)
          else
             w1 = c1
          endif
 
-         if (abs(qmx) > c0) then
+         if (abs(qmx) > 1.0e-300_dbl_kind) then
             w2 = max(c0, pmx/qmx)
          else
             w2 = c1

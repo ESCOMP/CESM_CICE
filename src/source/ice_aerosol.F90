@@ -554,8 +554,8 @@
       do ij = 1, icells
        i = indxi(ij)
        j = indxj(ij)
-       if (trcrn(i,j,nt_aero) < c0 .or. trcrn(i,j,nt_aero+1) < c0    &
-        .or. trcrn(i,j,nt_aero+2) < c0 .or. trcrn(i,j,nt_aero+3) < c0) then
+       if (trcrn(i,j,nt_aero) < -puny .or. trcrn(i,j,nt_aero+1) < -puny    &
+       .or. trcrn(i,j,nt_aero+2) < -puny .or. trcrn(i,j,nt_aero+3) < -puny) then
            write(nu_diag,*) 'MH aerosol negative in aerosol code'
            write(nu_diag,*) 'MH INT neg in aerosol my_task = ',&
                                my_task &
