@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090330
+Originator: dbailey
+Date: Mon Mar 30 11:08:50 MDT 2009
+Version: 4.0
+One-line Summary: Workaround fix in transport with NaNs.
+CCSM Version compatible with: ccsm4_0_beta12+
+Changes made:
+
+M      src/source/ice_transport_driver.F90
+
+===============================================================
 cice4_0_20090326
 Originator: dbailey
 Date: Thu Mar 26 22:07:42 MDT 2009

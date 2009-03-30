@@ -369,7 +369,13 @@
                                       tarea)
                elseif (tracer_type(nt)==2) then ! depends on another tracer
                   nt1 = depend(nt)
-                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)
+                  do iblk = 1, nblocks
+                     do j= 1,ny_block  
+                        do i = 1,nx_block
+                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk)
+                        end do
+                     end do
+                  end do
                   atsum_init(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -377,8 +383,14 @@
                elseif (tracer_type(nt)==3) then ! depends on two tracers
                   nt1 = depend(nt)
                   nt2 = depend(nt1)
-                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)          &
-                                                *trm(:,:,nt2,n,:)
+                  do iblk = 1, nblocks
+                     do j= 1,ny_block  
+                        do i = 1,nx_block
+                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk) &
+	                                                       *trm(i,j,nt2,n,iblk)
+                        end do
+                     end do
+                  end do
                   atsum_init(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -574,7 +586,13 @@
                                       tarea)
                elseif (tracer_type(nt)==2) then ! depends on another tracer
                   nt1 = depend(nt)
-                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)
+                  do iblk = 1, nblocks
+                     do j= 1,ny_block  
+                        do i = 1,nx_block
+                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk)
+                        end do
+                     end do
+                  end do
                   atsum_final(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -582,8 +600,14 @@
                elseif (tracer_type(nt)==3) then ! depends on two tracers
                   nt1 = depend(nt)
                   nt2 = depend(nt1)
-                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)          &
-                                                *trm(:,:,nt2,n,:)
+                  do iblk = 1, nblocks
+                     do j= 1,ny_block  
+                        do i = 1,nx_block
+                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk) &
+	                                                       *trm(i,j,nt2,n,iblk)
+                        end do
+                     end do
+                  end do
                   atsum_final(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
