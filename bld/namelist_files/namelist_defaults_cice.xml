@@ -41,7 +41,6 @@
 <grid_format hgrid="4x5"       >'nc' </grid_format> 
 <grid_format hgrid="10x15"     >'nc' </grid_format> 
 <grid_format hgrid="1.9x2.5"   >'nc' </grid_format> 
-<grid_format hgrid="2x2.5"     >'nc' </grid_format> 
 <grid_format hgrid="0.9x1.25"  >'nc' </grid_format> 
 <grid_format hgrid="0.47x0.63" >'nc' </grid_format> 
 <grid_format hgrid="0.23x0.31" >'nc' </grid_format> 
@@ -56,9 +55,8 @@
 <grid_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </grid_file>
 <grid_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_USGS_070807.nc'       </grid_file> 
 <grid_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </grid_file> 
-<grid_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v5_070816.nc'  </grid_file> 
-<grid_file hgrid="2x2.5"     >'atm/cam/ocnfrac/domain.camocn.2x2.5_USGS_070807.nc'     </grid_file> 
-<grid_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v5_071008.nc' </grid_file> 
+<grid_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </grid_file> 
+<grid_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </grid_file> 
 <grid_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v5_071220.nc'</grid_file> 
 <grid_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</grid_file> 
 <grid_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20010402.grid'</grid_file> 
@@ -75,9 +73,8 @@
 <kmt_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </kmt_file>
 <kmt_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_USGS_070807.nc'       </kmt_file> 
 <kmt_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </kmt_file> 
-<kmt_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v5_070816.nc'  </kmt_file> 
-<kmt_file hgrid="2x2.5"     >'atm/cam/ocnfrac/domain.camocn.2x2.5_USGS_070807.nc'     </kmt_file> 
-<kmt_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v5_071008.nc' </kmt_file> 
+<kmt_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </kmt_file> 
+<kmt_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </kmt_file> 
 <kmt_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v5_071220.nc'</kmt_file> 
 <kmt_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</kmt_file> 
 <kmt_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20090204.kmt'</kmt_file> 

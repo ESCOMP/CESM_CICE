@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090406
+Originator: mvertens
+Date: Mon Apr  6 14:05:06 MDT 2009
+Version: 4.0
+One-line Summary: gx1v6 functionality for F case
+CCSM Version compatible with: ccsm4_0_beta12+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090330
 Originator: dbailey
 Date: Mon Mar 30 11:08:50 MDT 2009
