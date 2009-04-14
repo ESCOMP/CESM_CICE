@@ -193,16 +193,16 @@
    call get_ice_timer(timer_sw,       'Shortwave',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_ridge,    'Ridging',  nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_catconv,  'Cat Conv', nblocks,distrb_info%nprocs)
+#ifndef CCSMCOUPLED
    call get_ice_timer(timer_couple,   'Coupling', nblocks,distrb_info%nprocs)
+#endif
    call get_ice_timer(timer_readwrite,'ReadWrite',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_diags,    'Diags    ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_hist,     'History  ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bound,    'Bound',    nblocks,distrb_info%nprocs)
 #ifdef CCSMCOUPLED
-   call get_ice_timer(timer_cplrecv,  'Cpl-recv', nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_rcvsnd,   'Rcv->Snd', nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_cplsend,  'Cpl-Send', nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_sndrcv,   'Snd->Rcv', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_cplrecv,  'Cpl-Imp', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_cplsend,  'Cpl-Exp', nblocks,distrb_info%nprocs)
 #endif
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
 

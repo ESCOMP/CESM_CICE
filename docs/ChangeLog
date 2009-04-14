@@ -1,4 +1,26 @@
 ===============================================================
+cice4_0_20090414
+Originator: dbailey
+Date: Tue Apr 14 10:39:39 MDT 2009
+Version: 4.0
+One-line Summary: Fix ice timers and restriction on monotonicty
+                  check.
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+The timers were broken with the move to CPL7. I have fixed up
+the internal ice timers in this tag. The next tag will have
+enhanced Rosinski timers. Also, I added the criteria to check
+ice area > puny in the monotonicity check for tracers. Also,
+added a bit more comments in ice_aerosol.
+
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_step_mod.F90
+M      src/mpi/ice_timers.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090406
 Originator: mvertens
 Date: Mon Apr  6 14:05:06 MDT 2009

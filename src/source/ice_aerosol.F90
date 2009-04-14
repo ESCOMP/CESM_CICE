@@ -9,7 +9,8 @@
 ! !REVISION HISTORY:
 !  SVN:$$
 !
-! authors Elizabeth Hunke
+! authors Marika Holland, NCAR
+!         David Bailey, NCAR
 !
 ! !INTERFACE:
 !
@@ -613,7 +614,9 @@
 !
 ! !REVISION HISTORY:
 !
-! author Elizabeth C. Hunke, LANL
+! authors Elizabeth Hunke, LANL (original version)
+!         David Bailey, NCAR
+!         Marika Holland, NCAR
 !
 ! !USES:
 !
@@ -692,7 +695,9 @@
 !
 ! !REVISION HISTORY:
 !
-! author Elizabeth C. Hunke, LANL
+! authors Elizabeth Hunke, LANL (original version)
+!         David Bailey, NCAR
+!         Marika Holland, NCAR
 !
 ! !USES:
 !

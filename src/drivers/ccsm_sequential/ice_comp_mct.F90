@@ -50,7 +50,7 @@ module ice_comp_mct
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday
-  use ice_timers,      only : ice_timer_stop, ice_timer_start, ice_timer_print_all, timer_total 
+  use ice_timers
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
 !  use ice_init
   use ice_boundary,    only : ice_HaloUpdate 
@@ -319,6 +319,8 @@ contains
     endif
 #endif
 
+    call ice_timer_stop(timer_total) ! time entire run
+
   end subroutine ice_init_mct
 
 !---------------------------------------------------------------------------
@@ -373,6 +375,8 @@ contains
 !EOP
 !---------------------------------------------------------------------------
 
+    call ice_timer_start(timer_total) ! time entire run
+
 #if (defined _MEMTRACE)
     if(my_task == 0 ) then
        lbnum=1
@@ -399,12 +403,16 @@ contains
     !-------------------------------------------------------------------
     
     call t_startf ('cice_import')
+    call ice_timer_start(timer_cplrecv)
     call ice_import_mct( x2i_i )
+    call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_import')
  
     !--------------------------------------------------------------------
     ! timestep update
     !--------------------------------------------------------------------
+
+    call ice_timer_start(timer_step)
 
     istep  = istep  + 1    ! update time step counters
     istep1 = istep1 + 1
@@ -442,7 +450,9 @@ contains
     !-----------------------------------------------------------------
 
     call t_startf ('cice_prep_radiation')
+    call ice_timer_start(timer_sw)
     call prep_radiation(dt)
+    call ice_timer_stop(timer_sw)
     call t_stopf ('cice_prep_radiation')
     
     !-----------------------------------------------------------------
@@ -488,7 +498,9 @@ contains
     !-----------------------------------------------------------------
 
     call t_startf ('cice_radiation')
+    call ice_timer_start(timer_sw)
     call step_radiation(dt)
+    call ice_timer_stop(timer_sw)
     call t_stopf ('cice_radiation')
     
     !-----------------------------------------------------------------
@@ -497,22 +509,27 @@ contains
 
     call coupling_prep
 
+    call ice_timer_stop(timer_step)
+
     !-----------------------------------------------------------------
     ! write data
     !-----------------------------------------------------------------
     
     call t_startf ('cice_diag')
+    call ice_timer_start(timer_diags)
     if (mod(istep,diagfreq) == 0) call runtime_diags(dt) ! log file
+    call ice_timer_stop(timer_diags)
     call t_stopf ('cice_diag')
     
     call t_startf ('cice_hist')
+    call ice_timer_start(timer_hist)
 #if (defined _NOIO)
 !  Not enought memory on BGL to write a history file yet! 
 !    call ice_write_hist (dt)    ! history file
 #else
     call ice_write_hist (dt)    ! history file
 #endif
-
+    call ice_timer_stop(timer_hist)
     call t_stopf ('cice_hist')
 
     rstwr = seq_timemgr_RestartAlarmIsOn(EClock)
@@ -550,10 +567,12 @@ contains
 !  Not enought memory on BGL to call dumpfile  file yet! 
 !       call dumpfile(fname)
 #else
+       call ice_timer_start(timer_readwrite)
        call dumpfile(fname)
        if (tr_aero) call write_restart_aero(filename_aero)
        if (tr_iage) call write_restart_age(filename_iage)
        if (tr_pond) call write_restart_pond(filename_volpn)
+       call ice_timer_stop(timer_readwrite)
 #endif
     end if
 
@@ -562,7 +581,9 @@ contains
     !-----------------------------------------------------------------
     
     call t_startf ('cice_export')
+    call ice_timer_start(timer_cplsend)
     call ice_export_mct ( i2x_i )
+    call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_export')
     
     !--------------------------------------------------------------------
@@ -592,9 +613,11 @@ contains
     ! the ice_final_mct.F90 will still be called even in aqua-planet mode
     ! Could put this logic in the driver - but it seems easier here 
 
+    ! Need to stop this at the end of every run phase in a coupled run.
+    call ice_timer_stop(timer_total)        ! stop timing
+
     stop_now = seq_timemgr_StopAlarmIsOn( EClock )
     if (stop_now) then
-       call ice_timer_stop(timer_total)        ! stop timing entire run
        call ice_timer_print_all(stats=.false.) ! print timing information
        call release_all_fileunits
     end if

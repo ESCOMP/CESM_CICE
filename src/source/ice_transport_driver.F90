@@ -1515,7 +1515,7 @@
             nt1 = depend(nt)
             do j = jlo, jhi
             do i = ilo, ihi
-               if (abs(trm(i,j,nt1)) > puny) then
+               if (abs(trm(i,j,nt1)) > puny .and. aim(i,j) > puny) then
                   l_check(i,j) = .true.
                else
                   l_check(i,j) = .false.
@@ -1530,7 +1530,7 @@
             do j = jlo, jhi
             do i = ilo, ihi
                if (abs(trm(i,j,nt1)) > puny .and.     &
-                   abs(trm(i,j,nt2)) > puny) then
+                   abs(trm(i,j,nt2)) > puny .and. aim(i,j) > puny) then
                   l_check(i,j) = .true.
                else
                   l_check(i,j) = .false.
