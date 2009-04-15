@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090414b
+Originator: mvertens
+Date: Tue Apr 14 21:33:30 MDT 2009
+Version: 4.0
+One-line Summary: added $CICE_NAMELIST_OPTS to cice.cpl7.template
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+M      bld/cice.cpl7.template
+	
+===============================================================
 cice4_0_20090414
 Originator: dbailey
 Date: Tue Apr 14 10:39:39 MDT 2009

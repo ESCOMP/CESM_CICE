@@ -46,7 +46,7 @@ set cice_prestype = " "
 if ($CICE_MODE == 'prescribed') set cice_prestype = "-cice_prestype $CICE_PRESTYPE "
 
 $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-                                      -inputdata $CASEBUILD/cice.input_data_list || exit -1
+                                      -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in
