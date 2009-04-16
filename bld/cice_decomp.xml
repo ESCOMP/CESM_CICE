@@ -149,22 +149,22 @@
 
   <decomp nproc="160" res="gx1v[3456]" model="cice">
     <maxblocks >1</maxblocks>
-    <bsize_x   >2</bsize_x>
-    <bsize_y   >384</bsize_y>
+    <bsize_x   >4</bsize_x>
+    <bsize_y   >192</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
   <decomp nproc="320" res="gx1v[3456]" model="cice">
     <maxblocks >1</maxblocks>
-    <bsize_x   >1</bsize_x>
-    <bsize_y   >384</bsize_y>
+    <bsize_x   >2</bsize_x>
+    <bsize_y   >192</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
   <decomp nproc="640" res="gx1v[3456]" model="cice">
     <maxblocks >1</maxblocks>
-    <bsize_x   >1</bsize_x>
-    <bsize_y   >192</bsize_y>
+    <bsize_x   >2</bsize_x>
+    <bsize_y   >96</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 

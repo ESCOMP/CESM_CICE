@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20090416
+Originator: dbailey
+Date: Thu Apr 16 11:50:54 MDT 2009
+Version: 4.0
+One-line Summary: Added Jon Wolfe's threading and timing mods.
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+ 
+This tag includes additional timers and threading mods along
+with a few decomposition changes.
+
+M      bld/cice_decomp.xml
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_step_mod.F90
+
+===============================================================
 cice4_0_20090414b
 Originator: mvertens
 Date: Tue Apr 14 21:33:30 MDT 2009

@@ -48,6 +48,7 @@
       use ice_timers
       use ice_transport_driver
       use ice_transport_remap
+      use perf_mod, only: t_startf, t_stopf, t_barrierf
 
       implicit none
       private
@@ -305,6 +306,7 @@
                         eicen, esnon)
       call ice_timer_stop(timer_bound)
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
 
       !-----------------------------------------------------------------
@@ -334,6 +336,7 @@
          enddo
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
 !      call ice_timer_stop(timer_tmp)  ! temporary timer
       call ice_timer_stop(timer_thermo)  ! column physics
@@ -654,17 +657,23 @@
       ! Elastic-viscous-plastic ice dynamics
       !-----------------------------------------------------------------
 
+      call t_barrierf ('cice_dyn_evp_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_evp')
       if (kdyn == 1) call evp (dt_dyn)
+      call t_stopf ('cice_dyn_evp')
 
       !-----------------------------------------------------------------
       ! Horizontal ice transport
       !-----------------------------------------------------------------
 
+      call t_barrierf ('cice_dyn_horz_transport_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_horz_transport')
       if (advection == 'upwind') then
          call transport_upwind (dt_dyn)    ! upwind
       else
          call transport_remap (dt_dyn)     ! incremental remapping
       endif
+      call t_stopf ('cice_dyn_horz_transport')
 
       !-----------------------------------------------------------------
       ! Ridging
@@ -672,6 +681,8 @@
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_ridge)
+      call t_barrierf ('cice_dyn_ridge_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_ridge')
 
       l_stop = .false.
 
@@ -737,6 +748,10 @@
       !$OMP END PARALLEL DO
 
       call ice_timer_stop(timer_ridge)
+      call t_stopf ('cice_dyn_ridge')
+
+      call t_barrierf ('cice_dyn_column_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_column')
 
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,&
       !$OMP	                icells,indxi,indxj,l_stop,istop,jstop)
@@ -780,17 +795,25 @@
       enddo              ! iblk
       !$OMP END PARALLEL DO
 
+      call t_stopf ('cice_dyn_column')
+
       !-------------------------------------------------------------------
       ! Ghost cell updates for state variables.
       !-------------------------------------------------------------------
 
+      call t_barrierf ('cice_dyn_bound_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_bound')
       call ice_timer_start(timer_bound)
       call bound_state (aicen, trcrn, &
                         vicen, vsnon, &
                         eicen, esnon)
       call ice_timer_stop(timer_bound)
+      call t_stopf ('cice_dyn_bound')
 
-      !$OMP PARALLEL DO PRIVATE(iblk)
+      call t_barrierf ('cice_dyn_agg_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_dyn_agg')
+
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
 
       !-----------------------------------------------------------------
@@ -827,6 +850,7 @@
       enddo              ! iblk
       !$OMP END PARALLEL DO
 
+      call t_stopf ('cice_dyn_agg')
       call ice_timer_stop(timer_column)
 
       end subroutine step_dynamics

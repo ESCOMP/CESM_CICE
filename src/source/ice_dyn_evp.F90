@@ -45,9 +45,10 @@
 !
       use ice_kinds_mod
       use ice_fileunits
-      use ice_communicate, only: my_task, master_task
+      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_domain_size
       use ice_constants
+      use perf_mod,        only: t_startf, t_stopf, t_barrierf
 !
 !EOP
 !
@@ -197,6 +198,9 @@
 !                           field_loc_center,  field_type_scalar)
 !      call ice_timer_stop(timer_bound)
 
+!     call t_barrierf ('cice_dyn_evp_prep_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_prep')
+
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
 
@@ -231,10 +235,18 @@
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
+!     call t_stopf ('cice_dyn_evp_prep')
+!     call t_barrierf ('cice_dyn_evp_bound_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_bound')
+
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (icetmask,          halo_info, &
                            field_loc_center,  field_type_scalar)
       call ice_timer_stop(timer_bound)
+
+!     call t_stopf ('cice_dyn_evp_bound')
+!     call t_barrierf ('cice_dyn_evp_convert_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_convert')
 
       !-----------------------------------------------------------------
       ! convert fields from T to U grid
@@ -255,6 +267,10 @@
       call t2ugrid_vector(strairx)
       call t2ugrid_vector(strairy)
 #endif
+
+!     call t_stopf ('cice_dyn_evp_convert')
+!     call t_barrierf ('cice_dyn_evp_prep2_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_prep2')
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -323,6 +339,10 @@
       enddo
       !$OMP END PARALLEL DO
 
+!     call t_stopf ('cice_dyn_evp_prep2')
+!     call t_barrierf ('cice_dyn_evp_bound_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_bound')
+
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (strength,           halo_info, &
                            field_loc_center,   field_type_scalar)
@@ -342,11 +362,16 @@
       enddo
       !$OMP END PARALLEL DO
 
+!     call t_stopf ('cice_dyn_evp_bound')
+!     call t_barrierf ('cice_dyn_evp_stress_BARRIER',MPI_COMM_ICE)
+
       do ksub = 1,ndte        ! subcycling
 
       !-----------------------------------------------------------------
       ! stress tensor equation, total surface stress
       !-----------------------------------------------------------------
+
+!        call t_startf ('cice_dyn_evp_stress')
 
          !$OMP PARALLEL DO PRIVATE(iblk,str)
          do iblk = 1, nblocks
@@ -394,6 +419,10 @@
          enddo
          !$OMP END PARALLEL DO
 
+!        call t_stopf ('cice_dyn_evp_stress')
+!        call t_barrierf ('cice_dyn_evp_bound2_BARRIER',MPI_COMM_ICE)
+!        call t_startf ('cice_dyn_evp_bound2')
+
          !$OMP PARALLEL DO PRIVATE(iblk)
          do iblk = 1,nblocks
             fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
@@ -416,9 +445,15 @@
             vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
          enddo
          !$OMP END PARALLEL DO
+
+!        call t_stopf ('cice_dyn_evp_bound2')
+        
       enddo                     ! subcycling
 
       deallocate(fld2)
+
+!     call t_barrierf ('cice_dyn_evp_finish_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_evp_finish')
 
       !-----------------------------------------------------------------
       ! ice-ocean stress
@@ -444,6 +479,7 @@
       call u2tgrid_vector(strocnyT)
 
       call ice_timer_stop(timer_dynamics)    ! dynamics
+!     call t_stopf ('cice_dyn_evp_finish')
 
       end subroutine evp
 

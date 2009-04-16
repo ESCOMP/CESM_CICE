@@ -413,7 +413,7 @@
          tmin(:,:,:,:,:) = c0
          tmax(:,:,:,:,:) = c0
 
-         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,n)
+         !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -457,7 +457,7 @@
                               field_loc_center, field_type_scalar)
          call ice_timer_stop(timer_bound)
 
-         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,n)
+         !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -496,7 +496,7 @@
 
          if (l_fixed_area) then
 
-            !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi)
+            !$OMP PARALLEL DO PRIVATE(iblk,this_block,i,j,ilo,ihi,jlo,jhi)
             do iblk = 1, nblocks
                this_block = get_block(blocks_ice(iblk),iblk)         
                ilo = this_block%ilo
@@ -755,7 +755,7 @@
     ! Average corner velocities to edges.
     !-------------------------------------------------------------------
       
-      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi)
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,i,j,ilo,ihi,jlo,jhi)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -779,7 +779,7 @@
                            field_loc_Nface, field_type_scalar)
       call ice_timer_stop(timer_bound)
 
-      !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi)
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo

@@ -40,10 +40,11 @@
 ! !USES:
 !
       use ice_kinds_mod
-      use ice_communicate, only: my_task, master_task
+      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_domain_size
       use ice_constants
       use ice_fileunits, only: nu_diag
+      use perf_mod,      only: t_startf, t_stopf, t_barrierf
 !
 !EOP
 !
@@ -479,21 +480,21 @@
          tx, ty         ,&! limited derivative of tracer wrt x and y
          tmask            ! = 1. if tracer is present, = 0. otherwise
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,0:ncat) ::     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,0:ncat,max_blocks) ::     &
          mflxe, mflxn     ! mass transports across E and N cell edges
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat) ::     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
          mtflxe, mtflxn   ! mass*tracer transports across E and N cell edges
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ngroups) ::     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ngroups,max_blocks) ::     &
          triarea          ! area of east-edge departure triangle
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,0:nvert,ngroups) ::  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,0:nvert,ngroups,max_blocks) ::  &
          xp, yp           ! x and y coordinates of special triangle points
                           ! (need 4 points for triangle integrals)
 
       integer (kind=int_kind),     &
-         dimension (nx_block,ny_block,ngroups) ::     &
+         dimension (nx_block,ny_block,ngroups,max_blocks) ::     &
          iflux          ,&! i index of cell contributing transport
          jflux            ! j index of cell contributing transport
 
@@ -504,13 +505,13 @@
          dimension(nx_block*ny_block,ngroups,max_blocks) ::     &
          indxing, indxjng ! compressed i/j indices
 
-      logical (kind=log_kind) ::     &
+      logical (kind=log_kind), dimension(max_blocks) ::     &
          l_stop           ! if true, abort the model
 
-      integer (kind=int_kind) ::     &
+      integer (kind=int_kind), dimension(max_blocks) ::     &
          istop, jstop     ! indices of grid cell where model aborts
 
-      character (len=char_len) ::   &
+      character (len=char_len), dimension(max_blocks) ::   &
          edge             ! 'north' or 'east'
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -518,6 +519,15 @@
          workb, &
          workc, &
          workd
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,2,max_blocks) ::     &
+          dpwork          
+ 
+       real (kind=dbl_kind), dimension(nx_block,ny_block,3,0:ncat,max_blocks) :: &
+          mwork
+
+!     call t_barrierf ('cice_dyn_remap1_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_remap1')
 
       l_stop = .false.
       istop = 0
@@ -569,6 +579,7 @@
 !---! Remap the open water area (without tracers).
 !---!-------------------------------------------------------------------
 
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
       do iblk = 1, nblocks
 
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -583,13 +594,13 @@
     !  being used to compute tracer gradients.
     !------------------------------------------------------------------- 
 
-         call make_masks (nx_block,       ny_block,                  &
-                          ilo, ihi,       jlo, jhi,                  &
-                          nghost,             has_dependents,        &
-                          icellsnc(:,iblk),                          &
-                          indxinc(:,:,iblk),  indxjnc(:,:,iblk),     &
-                          mm(:,:,:,iblk),     mmask(:,:,:,iblk),     &
-                          tm(:,:,:,:,iblk),   tmask(:,:,:,:,iblk))
+         call make_masks (nx_block,           ny_block,             &
+                          ilo, ihi,           jlo, jhi,             &
+                          nghost,             has_dependents,       &
+                          icellsnc (:,iblk),                        &
+                          indxinc(:,:,iblk),  indxjnc  (:,:,iblk),  &
+                          mm   (:,:,:,iblk),  mmask  (:,:,:,iblk),  &
+                          tm (:,:,:,:,iblk),  tmask(:,:,:,:,iblk))
 
     !-------------------------------------------------------------------
     ! Construct linear fields, limiting gradients to preserve monotonicity.
@@ -599,83 +610,84 @@
 
          ! open water
 
-         call construct_fields(nx_block,            ny_block,           &
-                               ilo, ihi,            jlo, jhi,           &
-                               nghost,                                  &
-                               tracer_type,         depend,             &
-                               has_dependents,      icellsnc (0,iblk),  &
-                               indxinc  (:,0,iblk), indxjnc(:,0,iblk),  &
-!                               HTN      (:,:,iblk), HTE  (:,:,iblk),    &
-                               worka    (:,:),      workb(:,:),         &
-                               hm       (:,:,iblk), xav  (:,:,iblk),    &
-                               yav      (:,:,iblk), xxav (:,:,iblk),    &
-                               xyav     (:,:,iblk), yyav (:,:,iblk),    &
-                               xxxav    (:,:,iblk), xxyav(:,:,iblk),    &
-                               xyyav    (:,:,iblk), yyyav(:,:,iblk),    &
-!                               dxt      (:,:,iblk), dyt  (:,:,iblk),    &
-                               workc    (:,:),      workd(:,:),         &
-                               mm    (:,:,0,iblk),  mc(:,:,0,iblk),     &
-                               mx    (:,:,0,iblk),  my(:,:,0,iblk),     &
-                               mmask (:,:,0,iblk) )
+         call construct_fields(nx_block,           ny_block,           &
+                               ilo, ihi,           jlo, jhi,           &
+                               nghost,                                 &
+                               tracer_type,        depend,             &
+                               has_dependents,     icellsnc (0,iblk),  &
+                               indxinc(:,0,iblk),  indxjnc(:,0,iblk),  &
+!                               HTN     :,:,iblk),  HTE    (:,:,iblk),  &
+                               worka       (:,:),  workb       (:,:),  &
+                               hm     (:,:,iblk),  xav    (:,:,iblk),  &
+                               yav    (:,:,iblk),  xxav   (:,:,iblk),  &
+                               xyav   (:,:,iblk),  yyav   (:,:,iblk),  &
+                               xxxav  (:,:,iblk),  xxyav  (:,:,iblk),  &
+                               xyyav  (:,:,iblk),  yyyav  (:,:,iblk),  &
+!                               dxt    (:,:,iblk),  dyt    (:,:,iblk),  &
+                               workc       (:,:),  workd       (:,:),  &
+                               mm   (:,:,0,iblk),  mc   (:,:,0,iblk),  &
+                               mx   (:,:,0,iblk),  my   (:,:,0,iblk),  &
+                               mmask(:,:,0,iblk) )
 
          ! ice categories
 
          do n = 1, ncat
 
-            call construct_fields(nx_block,            ny_block,            &
-                                  ilo, ihi,            jlo, jhi,            &
+            call construct_fields(nx_block,             ny_block,           &
+                                  ilo, ihi,             jlo, jhi,           &
                                   nghost,                                   &
-                                  tracer_type,         depend,              &
-                                  has_dependents,      icellsnc (n,iblk),   &
-                                  indxinc  (:,n,iblk), indxjnc(:,n,iblk),   &
-!                                  HTN      (:,:,iblk), HTE    (:,:,iblk),   &
-                                  worka    (:,:),      workb  (:,:),        &
-                                  hm       (:,:,iblk), xav    (:,:,iblk),   &
-                                  yav      (:,:,iblk), xxav   (:,:,iblk),   &
-                                  xyav     (:,:,iblk), yyav   (:,:,iblk),   &
-                                  xxxav    (:,:,iblk), xxyav  (:,:,iblk),   &
-                                  xyyav    (:,:,iblk), yyyav  (:,:,iblk),   &
-!                                  dxt      (:,:,iblk), dyt  (:,:,iblk),     &
-                                  workc    (:,:),      workd  (:,:),        &
-                                  mm    (:,:,n,iblk),  mc  (:,:,n,iblk),    &
-                                  mx    (:,:,n,iblk),  my  (:,:,n,iblk),    &
-                                  mmask (:,:,n,iblk),                       &
-                                  tm  (:,:,:,n,iblk),  tc(:,:,:,n,iblk),    &
-                                  tx  (:,:,:,n,iblk),  ty(:,:,:,n,iblk),    &
+                                  tracer_type,          depend,             &
+                                  has_dependents,       icellsnc (n,iblk),  &
+                                  indxinc  (:,n,iblk),  indxjnc(:,n,iblk),  &
+!                                  HTN      (:,:,iblk),  HTE    (:,:,iblk),  &
+                                  worka         (:,:),  workb       (:,:),  &
+                                  hm       (:,:,iblk),  xav    (:,:,iblk),  &
+                                  yav      (:,:,iblk),  xxav   (:,:,iblk),  &
+                                  xyav     (:,:,iblk),  yyav   (:,:,iblk),  &
+                                  xxxav    (:,:,iblk),  xxyav  (:,:,iblk),  &
+                                  xyyav    (:,:,iblk),  yyyav  (:,:,iblk),  &
+!                                  dxt      (:,:,iblk),  dyt   (:,:,iblk),   &
+                                  workc         (:,:),  workd       (:,:),  &
+                                  mm     (:,:,n,iblk),  mc   (:,:,n,iblk),  &
+                                  mx     (:,:,n,iblk),  my   (:,:,n,iblk),  &
+                                  mmask  (:,:,n,iblk),                      &
+                                  tm   (:,:,:,n,iblk),  tc (:,:,:,n,iblk),  &
+                                  tx   (:,:,:,n,iblk),  ty (:,:,:,n,iblk),  &
                                   tmask(:,:,:,n,iblk) )
 
          enddo                  ! n
 
-       
     !-------------------------------------------------------------------
     ! Given velocity field at cell corners, compute departure points
     ! of trajectories.
     !-------------------------------------------------------------------
 
-         call departure_points(nx_block,         ny_block,          &
-                               ilo, ihi,         jlo, jhi,          &
-                               nghost,           dt,                &
-                               uvel  (:,:,iblk), vvel(:,:,iblk),    &
-                               dxu   (:,:,iblk), dyu (:,:,iblk),    &
-                               HTN   (:,:,iblk), HTE (:,:,iblk),    &
-                               dpx   (:,:,iblk), dpy (:,:,iblk),    &
-                               l_dp_midpt,        l_stop,           &
-                               istop,             jstop)
+         call departure_points(nx_block,        ny_block,        &
+                               ilo, ihi,        jlo, jhi,        &
+                               nghost,          dt,              &
+                               uvel(:,:,iblk),  vvel(:,:,iblk),  &
+                               dxu (:,:,iblk),  dyu (:,:,iblk),  &
+                               HTN (:,:,iblk),  HTE (:,:,iblk),  &
+                               dpx (:,:,iblk),  dpy (:,:,iblk),  &
+                               l_dp_midpt,      l_stop  (iblk),  &
+                               istop   (iblk),  jstop   (iblk))
 
-         if (l_stop) then
+         if (l_stop(iblk)) then
             this_block = get_block(blocks_ice(iblk),iblk)         
-            write(nu_diag,*) 'istep1, my_task, iblk =',     &
+            write(nu_diag,*) 'istep1, my_task, iblk =',            &
                               istep1, my_task, iblk
             write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0)     &
-                 write(nu_diag,*) 'Global i and j:',     &
-                                  this_block%i_glob(istop),     &
-                                  this_block%j_glob(jstop) 
+            if (istop(iblk) > 0 .and. jstop(iblk) > 0)             &
+                 write(nu_diag,*) 'Global i and j:',               &
+                                  this_block%i_glob(istop(iblk)),  &
+                                  this_block%j_glob(jstop(iblk)) 
             call abort_ice('remap transport: bad departure points')
          endif
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
+!     call t_stopf ('cice_dyn_remap1')
     !-------------------------------------------------------------------
     ! Ghost cell updates
     ! If nghost >= 2, these calls are not needed
@@ -683,21 +695,60 @@
 
       if (nghost==1) then
 
+!        call t_barrierf ('cice_dyn_remap_update1_BARRIER',MPI_COMM_ICE)
+!        call t_startf ('cice_dyn_remap_update1')
          call ice_timer_start(timer_bound)
 
          ! departure points
-         call ice_HaloUpdate (dpx,                halo_info, &
-                              field_loc_NEcorner, field_type_vector)
-         call ice_HaloUpdate (dpy,                halo_info, &
+
+         ! load em up
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+         do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+              dpwork(i,j,1,  iblk) = dpx(i,j,iblk)
+              dpwork(i,j,2,  iblk) = dpy(i,j,iblk)
+              mwork (i,j,1,:,iblk) = mc (i,j,:,iblk)
+              mwork (i,j,2,:,iblk) = mx (i,j,:,iblk)
+              mwork (i,j,3,:,iblk) = my (i,j,:,iblk)
+            enddo
+            enddo
+         enddo
+         !$OMP END PARALLEL DO
+!jw         call ice_HaloUpdate (dpx,                halo_info, &
+!jw                              field_loc_NEcorner, field_type_vector)
+!jw         call ice_HaloUpdate (dpy,                halo_info, &
+!jw                              field_loc_NEcorner, field_type_vector)
+         call ice_HaloUpdate (dpwork,             halo_info, &
                               field_loc_NEcorner, field_type_vector)
 
          ! mass field
-         call ice_HaloUpdate (mc,               halo_info, &
-                              field_loc_center, field_type_scalar)
-         call ice_HaloUpdate (mx,               halo_info, &
+!jw         call ice_HaloUpdate (mc,               halo_info, &
+!jw                              field_loc_center, field_type_scalar)
+!jw         call ice_HaloUpdate (mx,               halo_info, &
+!jw                              field_loc_center, field_type_vector)
+!jw         call ice_HaloUpdate (my,               halo_info, &
+!jw                              field_loc_center, field_type_vector)
+         call ice_HaloUpdate (mwork,            halo_info, &
                               field_loc_center, field_type_vector)
-         call ice_HaloUpdate (my,               halo_info, &
-                              field_loc_center, field_type_vector)
+
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+         do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+              dpx(i,j,  iblk) = dpwork(i,j,1,  iblk)
+              dpy(i,j,  iblk) = dpwork(i,j,2,  iblk)
+              mc (i,j,:,iblk) = mwork (i,j,1,:,iblk)
+              mx (i,j,:,iblk) = mwork (i,j,2,:,iblk)
+              my (i,j,:,iblk) = mwork (i,j,3,:,iblk)
+            enddo
+            enddo
+         enddo
+         !$OMP END PARALLEL DO
+
+!        call t_stopf ('cice_dyn_remap_update1')
+!        call t_barrierf ('cice_dyn_remap_update2_BARRIER',MPI_COMM_ICE)
+!        call t_startf ('cice_dyn_remap_update2')
 
          ! tracer fields
          call ice_HaloUpdate (tc,               halo_info, &
@@ -707,9 +758,14 @@
          call ice_HaloUpdate (ty,               halo_info, &
                               field_loc_center, field_type_vector)
          call ice_timer_stop(timer_bound)
+!        call t_stopf ('cice_dyn_remap_update2')
 
       endif  ! nghost
 
+!     call t_barrierf ('cice_dyn_remap2_BARRIER',MPI_COMM_ICE)
+!     call t_startf ('cice_dyn_remap2')
+
+      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
       do iblk = 1, nblocks
 
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -726,60 +782,59 @@
     ! Compute areas and vertices of departure triangles.
     !-------------------------------------------------------------------
 
-         edge = 'east'
-         call locate_triangles(nx_block,          ny_block,           &
-                               ilo, ihi,          jlo, jhi,           &
-                               nghost,            edge,               &
-                               icellsng (:,iblk),                     &
-                               indxing(:,:,iblk), indxjng(:,:,iblk),  &
-                               dpx  (:,:,iblk),   dpy (:,:,iblk),     &
-                               dxu  (:,:,iblk),   dyu (:,:,iblk),     &
-                               xp(:,:,:,:),       yp(:,:,:,:),        &
-                               iflux,             jflux,              &
-                               triarea,                               &
-                               l_fixed_area,      edgearea_e(:,:,iblk))
+         edge(iblk) = 'east'
+         call locate_triangles(nx_block,              ny_block,           &
+                               ilo, ihi,              jlo, jhi,           &
+                               nghost,                edge(iblk),         &
+                               icellsng    (:,iblk),                      &
+                               indxing   (:,:,iblk),  indxjng(:,:,iblk),  &
+                               dpx       (:,:,iblk),  dpy    (:,:,iblk),  &
+                               dxu       (:,:,iblk),  dyu    (:,:,iblk),  &
+                               xp    (:,:,:,:,iblk),  yp (:,:,:,:,iblk),  &
+                               iflux   (:,:,:,iblk),  jflux(:,:,:,iblk),  &
+                               triarea (:,:,:,iblk),  l_fixed_area,       &
+                               edgearea_e(:,:,iblk))
 
     !-------------------------------------------------------------------
     ! Given triangle vertices, compute coordinates of triangle points
     !  needed for transport integrals.
     !-------------------------------------------------------------------
 
-         call triangle_coordinates (nx_block,          ny_block,          &
-                                    integral_order,    icellsng (:,iblk), &
-                                    indxing(:,:,iblk), indxjng(:,:,iblk), &
-                                    xp,                yp)
+         call triangle_coordinates (nx_block,           ny_block,           &
+                                    integral_order,     icellsng (:,iblk),  &
+                                    indxing(:,:,iblk),  indxjng(:,:,iblk),  &
+                                    xp (:,:,:,:,iblk),  yp (:,:,:,:,iblk))
 
-    !-------------------------------------------------------------------
     ! Compute the transport across east cell edges by summing contributions
     ! from each triangle.
     !-------------------------------------------------------------------
 
          ! open water
 
-         call transport_integrals(nx_block,          ny_block,           &
-                                  icellsng (:,iblk),                     &
-                                  indxing(:,:,iblk), indxjng(:,:,iblk),  &
-                                  tracer_type,       depend,             &
-                                  integral_order,    triarea,            &
-                                  iflux,             jflux,              &
-                                  xp,                yp,                 &
-                                  mc(:,:,0,iblk),    mx   (:,:,0,iblk),  &
-                                  my(:,:,0,iblk),    mflxe(:,:,0))
+         call transport_integrals(nx_block,           ny_block,             &
+                                  icellsng (:,iblk),                        &
+                                  indxing(:,:,iblk),  indxjng  (:,:,iblk),  &
+                                  tracer_type,        depend,               &
+                                  integral_order,     triarea(:,:,:,iblk),  &
+                                  iflux(:,:,:,iblk),  jflux  (:,:,:,iblk),  &
+                                  xp (:,:,:,:,iblk),  yp   (:,:,:,:,iblk),  &
+                                  mc   (:,:,0,iblk),  mx     (:,:,0,iblk),  &
+                                  my   (:,:,0,iblk),  mflxe  (:,:,0,iblk))
 
          ! ice categories
          do n = 1, ncat
-            call transport_integrals                                     &
-                               (nx_block,          ny_block,             &
-                                icellsng (:,iblk),                       &
-                                indxing(:,:,iblk), indxjng(:,:,iblk),    &
-                                tracer_type,       depend,               &
-                                integral_order,    triarea,              &
-                                iflux,             jflux,                &
-                                xp,                yp,                   &
-                                mc(:,:,  n,iblk),  mx   (:,:,  n,iblk),  &
-                                my(:,:,  n,iblk),  mflxe(:,:,  n),       &
-                                tc(:,:,:,n,iblk),  tx   (:,:,:,n,iblk),  &
-                                ty(:,:,:,n,iblk),  mtflxe(:,:,:,n))
+            call transport_integrals                                       &
+                               (nx_block,           ny_block,              &
+                                icellsng (:,iblk),                         &
+                                indxing(:,:,iblk),  indxjng   (:,:,iblk),  &
+                                tracer_type,        depend,                &
+                                integral_order,     triarea (:,:,:,iblk),  &
+                                iflux(:,:,:,iblk),  jflux   (:,:,:,iblk),  &
+                                xp (:,:,:,:,iblk),  yp    (:,:,:,:,iblk),  &
+                                mc   (:,:,n,iblk),  mx      (:,:,n,iblk),  &
+                                my   (:,:,n,iblk),  mflxe   (:,:,n,iblk),  &
+                                tc (:,:,:,n,iblk),  tx    (:,:,:,n,iblk),  &
+                                ty (:,:,:,n,iblk),  mtflxe(:,:,:,n,iblk))
 
          enddo
 
@@ -787,49 +842,49 @@
     ! Repeat for north edges
     !-------------------------------------------------------------------
 
-         edge = 'north'
-         call locate_triangles(nx_block,          ny_block,           &
-                               ilo, ihi,          jlo, jhi,           &
-                               nghost,            edge,               &
-                               icellsng (:,iblk),                     &
-                               indxing(:,:,iblk), indxjng(:,:,iblk),  &
-                               dpx  (:,:,iblk),   dpy (:,:,iblk),     &
-                               dxu  (:,:,iblk),   dyu (:,:,iblk),     &
-                               xp(:,:,:,:),       yp(:,:,:,:),        &
-                               iflux,             jflux,              &
-                               triarea,                               &
-                               l_fixed_area,      edgearea_n(:,:,iblk))
+         edge(iblk) = 'north'
+         call locate_triangles(nx_block,              ny_block,           &
+                               ilo, ihi,              jlo, jhi,           &
+                               nghost,                edge(iblk),         &
+                               icellsng    (:,iblk),                      &
+                               indxing   (:,:,iblk),  indxjng(:,:,iblk),  &
+                               dpx       (:,:,iblk),  dpy    (:,:,iblk),  &
+                               dxu       (:,:,iblk),  dyu    (:,:,iblk),  &
+                               xp    (:,:,:,:,iblk),  yp (:,:,:,:,iblk),  &
+                               iflux   (:,:,:,iblk),  jflux(:,:,:,iblk),  &
+                               triarea (:,:,:,iblk),  l_fixed_area,       &
+                               edgearea_n(:,:,iblk))
 
-         call triangle_coordinates (nx_block,          ny_block,          &
-                                    integral_order,    icellsng (:,iblk), &
-                                    indxing(:,:,iblk), indxjng(:,:,iblk), &
-                                    xp,                yp)
+         call triangle_coordinates (nx_block,           ny_block,           &
+                                    integral_order,     icellsng (:,iblk),  &
+                                    indxing(:,:,iblk),  indxjng(:,:,iblk),  &
+                                    xp (:,:,:,:,iblk),  yp (:,:,:,:,iblk))
 
          ! open water
-         call transport_integrals(nx_block,           ny_block,          &
-                                  icellsng (:,iblk),                     &
-                                  indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                  tracer_type,        depend,            &
-                                  integral_order,     triarea,           &
-                                  iflux,              jflux,             &
-                                  xp,                 yp,                &
-                                  mc(:,:,0,iblk),     mx(:,:,0,iblk),    &
-                                  my(:,:,0,iblk),     mflxn(:,:,0))
+         call transport_integrals(nx_block,           ny_block,             &
+                                  icellsng (:,iblk),                        &
+                                  indxing(:,:,iblk),  indxjng(:,:,iblk),    &
+                                  tracer_type,        depend,               &
+                                  integral_order,     triarea(:,:,:,iblk),  &
+                                  iflux(:,:,:,iblk),  jflux  (:,:,:,iblk),  &
+                                  xp (:,:,:,:,iblk),  yp   (:,:,:,:,iblk),  &
+                                  mc   (:,:,0,iblk),  mx     (:,:,0,iblk),  &
+                                  my   (:,:,0,iblk),  mflxn  (:,:,0,iblk))
 
          ! ice categories
          do n = 1, ncat
-            call transport_integrals                                   &
-                               (nx_block,           ny_block,          &
-                                icellsng (:,iblk),                     &
-                                indxing(:,:,iblk),  indxjng(:,:,iblk), &
-                                tracer_type,        depend,            &
-                                integral_order,     triarea,           &
-                                iflux,              jflux,             &
-                                xp,                 yp,                &
-                                mc  (:,:,n,iblk),   mx  (:,:,n,iblk),  &
-                                my  (:,:,n,iblk),   mflxn(:,:,n),      &
-                                tc(:,:,:,n,iblk),   tx(:,:,:,n,iblk),  &
-                                ty(:,:,:,n,iblk),   mtflxn(:,:,:,n))
+            call transport_integrals                                       &
+                               (nx_block,           ny_block,              &
+                                icellsng (:,iblk),                         &
+                                indxing(:,:,iblk),  indxjng   (:,:,iblk),  &
+                                tracer_type,        depend,                &
+                                integral_order,     triarea (:,:,:,iblk),  &
+                                iflux(:,:,:,iblk),  jflux   (:,:,:,iblk),  &
+                                xp (:,:,:,:,iblk),  yp    (:,:,:,:,iblk),  &
+                                mc   (:,:,n,iblk),  mx      (:,:,n,iblk),  &
+                                my   (:,:,n,iblk),  mflxn   (:,:,n,iblk),  &
+                                tc (:,:,:,n,iblk),  tx    (:,:,:,n,iblk),  &
+                                ty (:,:,:,n,iblk),  mtflxn(:,:,:,n,iblk))
 
          enddo                  ! n
 
@@ -842,20 +897,20 @@
          call update_fields (nx_block,           ny_block,          &
                              ilo, ihi,           jlo, jhi,          &
                              tracer_type,        depend,            &
-                             tarear(:,:,iblk),   l_stop,            &
-                             istop,              jstop,             &
-                             mflxe(:,:,0),       mflxn(:,:,0),      &
+                             tarear(:,:,iblk),   l_stop(iblk),      &
+                             istop(iblk),        jstop (iblk),      &
+                             mflxe(:,:,0,iblk),  mflxn(:,:,0,iblk), &
                              mm   (:,:,0,iblk))
 
-         if (l_stop) then
+         if (l_stop(iblk)) then
             this_block = get_block(blocks_ice(iblk),iblk)         
-            write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
+            write (nu_diag,*) 'istep1, my_task, iblk, cat =',      &
                                istep1, my_task, iblk, '0'
             write (nu_diag,*) 'Global block:', this_block%block_id
-            if (istop > 0 .and. jstop > 0)     &
-                 write(nu_diag,*) 'Global i and j:',              &
-                                  this_block%i_glob(istop),       &
-                                  this_block%j_glob(jstop) 
+            if (istop(iblk) > 0 .and. jstop(iblk) > 0)             &
+                 write(nu_diag,*) 'Global i and j:',               &
+                                  this_block%i_glob(istop(iblk)),  &
+                                  this_block%j_glob(jstop(iblk)) 
             call abort_ice ('ice remap_transport: negative area (open water)')
          endif
 
@@ -863,30 +918,33 @@
          ! ice categories
          do n = 1, ncat
 
-            call update_fields(nx_block,             ny_block,         &
-                               ilo, ihi,             jlo, jhi,         &
-                               tracer_type,          depend,           &
-                               tarear(:,:,iblk),     l_stop,           &
-                               istop,                jstop,            &
-                               mflxe(:,:,  n),       mflxn(:,:,  n),   &
-                               mm   (:,:,  n,iblk),                    &
-                               mtflxe(:,:,:,n),      mtflxn(:,:,:,n),  &
-                               tm   (:,:,:,n,iblk))
+            call update_fields(nx_block,              ny_block,              &
+                               ilo, ihi,              jlo, jhi,              &
+                               tracer_type,           depend,                &
+                               tarear(:,:,iblk),      l_stop(iblk),          &
+                               istop(iblk),           jstop(iblk),           &
+                               mflxe (:,:,  n,iblk),  mflxn (:,:,  n,iblk),  &
+                               mm    (:,:,  n,iblk),                         &
+                               mtflxe(:,:,:,n,iblk),  mtflxn(:,:,:,n,iblk),  &
+                               tm    (:,:,:,n,iblk))
 
-            if (l_stop) then
+            if (l_stop(iblk)) then
                this_block = get_block(blocks_ice(iblk),iblk)         
-               write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
+               write (nu_diag,*) 'istep1, my_task, iblk, cat =',      &
                                   istep1, my_task, iblk, n
                write (nu_diag,*) 'Global block:', this_block%block_id
-               if (istop > 0 .and. jstop > 0)     &
-                    write(nu_diag,*) 'Global i and j:',     &
-                                     this_block%i_glob(istop),     &
-                                     this_block%j_glob(jstop) 
+               if (istop(iblk) > 0 .and. jstop(iblk) > 0)             &
+                    write(nu_diag,*) 'Global i and j:',               &
+                                     this_block%i_glob(istop(iblk)),  &
+                                     this_block%j_glob(jstop(iblk)) 
                call abort_ice ('ice remap_transport: negative area (ice)')
             endif
          enddo                  ! n
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
+
+!     call t_stopf ('cice_dyn_remap2')
 
       end subroutine horizontal_remap
 
@@ -1475,16 +1533,17 @@
       do j = jlo-nghost+1, jhi+nghost-1
       do i = ilo-nghost+1, ihi+nghost-1
          if (phimask(i,j) > puny) then
-            icells = icells + 1
-            indxi(icells) = i
-            indxj(icells) = j
-         endif                  ! phimask > puny
-      enddo
-      enddo
 
-      do ij = 1, icells
-         i = indxi(ij)
-         j = indxj(ij)
+!jw            icells = icells + 1
+!jw            indxi(icells) = i
+!jw            indxj(icells) = j
+!jw         endif                  ! phimask > puny
+!jw      enddo
+!jw      enddo
+
+!jw      do ij = 1, icells
+!jw         i = indxi(ij)
+!jw         j = indxj(ij)
 
          ! Store values of phi in the 8 neighbor cells.
          ! Note: phimask = 1. or 0.  If phimask = 1., use the true value;
@@ -1559,7 +1618,10 @@
          gx(i,j) = w1 * gxtmp
          gy(i,j) = w1 * gytmp
 
-      enddo                     ! ij
+!jw      enddo                     ! ij
+          endif
+       enddo
+      enddo
 
       end subroutine limited_gradient
 
