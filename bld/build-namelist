@@ -44,6 +44,7 @@ OPTIONS
      -cice_prestype        cice prescribed type [ data_clim_2000 | data_clim_1870 ]. 
                            Default: data_clim_2000
                            Only used if cice mode is set to "prescribed"
+     -presaero_type        cice prescribed aero type [ data_clim_2000 | data_clim_1850 | data_clim_1990 | transient ]
      -config "filepath"    Read the given CICE configuration cache file. 
                            Default: "config_cache.xml".
      -csmdata "dir"        Root directory of CCSM input data.
@@ -97,6 +98,7 @@ my $outdirname = ".";                     # Default name of output directory nam
 # Process command-line options.
 
 my %opts = ( cice_prestype  => 'data_clim_2000',
+             presaero_type  => 'data_clim_2000',
 	     config         => $cfg_cache,
 	     csmdata        => undef,
 	     help           => 0,
@@ -315,6 +317,7 @@ if (defined $opts{'infile'}) {
 # This is done either by using the namelist default object, or directly with inline logic.
 
 my $cice_prestype = "$opts{'cice_prestype'}";
+my $presaero_type = "$opts{'presaero_type'}";
 
 ##################################
 # namelist group: setup_nml      #
@@ -402,19 +405,18 @@ if ($cice_mode eq 'prescribed') {
 # namelist group: ice_prescaero_nml #
 ######################################
 
- my $presaero_type = 'climatology';
  add_default($nl, 'prescribed_aero_fill');
  add_default($nl, 'stream_domtvarname_aero');
  add_default($nl, 'stream_domxvarname_aero');
  add_default($nl, 'stream_domyvarname_aero');
  add_default($nl, 'stream_domareaname_aero'); 
  add_default($nl, 'stream_dommaskname_aero');
+ add_default($nl, 'stream_fldvarname_aero' );
  add_default($nl, 'stream_domfilename_aero','presaero_type'=>$presaero_type);
- add_default($nl, 'stream_fldvarname_aero','presaero_type'=>$presaero_type);
  add_default($nl, 'stream_fldfilename_aero','presaero_type'=>$presaero_type);
- add_default($nl, 'model_year_align_aero');
- add_default($nl, 'stream_year_first_aero');
- add_default($nl, 'stream_year_last_aero');
+ add_default($nl, 'model_year_align_aero'  ,'presaero_type'=>$presaero_type);
+ add_default($nl, 'stream_year_first_aero' ,'presaero_type'=>$presaero_type);
+ add_default($nl, 'stream_year_last_aero'  ,'presaero_type'=>$presaero_type);
 
 ######################################
 # namelist group: ice_fields_nml     #

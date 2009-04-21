@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20090420
+Originator: dbailey
+Date: Mon Apr 20 16:29:21 MDT 2009
+Version: 4.0
+One-line Summary: Added functionality for transient aerosols.
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+ 
+M      bld/build-namelist
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090416
 Originator: dbailey
 Date: Thu Apr 16 11:50:54 MDT 2009
