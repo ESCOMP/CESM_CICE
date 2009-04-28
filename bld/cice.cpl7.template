@@ -45,7 +45,9 @@ EOF1
 set cice_prestype = " "
 if ($CICE_MODE == 'prescribed') set cice_prestype = "-cice_prestype $CICE_PRESTYPE "
 
-$CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+set presaero_type = "-presaero_type $CICE_PRESAERO_TYPE "
+
+$CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
                                       -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3

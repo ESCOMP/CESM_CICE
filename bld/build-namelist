@@ -116,6 +116,7 @@ GetOptions(
     "infile=s"                  => \$opts{'infile'},
     "inputdata=s"               => \$opts{'inputdata'},
     "namelist=s"                => \$opts{'namelist'},
+    "presaero_type=s"           => \$opts{'presaero_type'},
     "s|silent"                  => \$opts{'silent'},
     "test"                      => \$opts{'test'},
     "v|verbose"                 => \$opts{'verbose'},
