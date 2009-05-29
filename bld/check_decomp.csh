@@ -1,6 +1,6 @@
 #!/bin/csh
 
-set res = gx1v5
+set res = gx1v6
 set n = 0
 set nmax = 400
 set file = $res.$nmax

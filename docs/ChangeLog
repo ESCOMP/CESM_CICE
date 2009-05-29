@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20090529
+Originator: dbailey
+Date: Fri May 29 12:30:49 MDT 2009
+Version: 4.0
+One-line Summary: Make gx1v6 the default.
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+A couple residual places where gx1v5 was the default.
+
+M      bld/check_decomp.csh
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      bld/generate_cice_decomp.pl
+
+===============================================================
 cice4_0_20090427
 Originator: dbailey
 Date: Mon Apr 27 2009
