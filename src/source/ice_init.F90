@@ -66,7 +66,7 @@
                               npt, dt, xndt_dyn, days_per_year, write_ic
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
-          runid, runtype, ice_ic, resttype
+          runid, runtype, ice_ic, resttype, restart_format
       use ice_history, only: hist_avg, &
                              history_format, history_dir, history_file, &
                              incond_dir, incond_file
@@ -88,10 +88,12 @@
                                R_snw
       use ice_atmo, only: atmbndy, calc_strair
       use ice_transport_driver, only: advection
-      use ice_age, only: tr_iage, restart_age
-      use ice_meltpond, only: tr_pond, restart_pond
-      use ice_aerosol, only: tr_aero, restart_aero     !MH for soot
-      use ice_state, only: nt_Tsfc, nt_iage, nt_volpn, nt_aero
+      use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_volpn, nt_aero, &
+                           tr_aero, tr_iage, tr_FY, tr_pond
+      use ice_aerosol, only: restart_aero
+      use ice_age, only: restart_age
+      use ice_FY, only: restart_FY
+      use ice_meltpond, only: restart_pond
       use ice_therm_vertical, only: calc_Tsfc, heat_capacity
       use ice_restoring
 !
@@ -101,7 +103,8 @@
 !
       integer (kind=int_kind) :: &
         nml_error, & ! namelist i/o error flag
-        ntr           ! counter for number of tracers turned on
+        ntr      , & ! counter for number of tracers turned on
+        ns
 
       character (len=6) :: chartmp
 
@@ -117,7 +120,8 @@
         days_per_year,  year_init,      istep0,          dt,            &
         npt,            xndt_dyn,                                       &
         runtype,        runid,                                          &
-        ice_ic,         restart,        restart_dir,     restart_file,  &
+        ice_ic,         restart,                                        &
+        restart_dir,    restart_file,   restart_format,                 &
         pointer_file,   dumpfreq,       dumpfreq_n,                     &
         diagfreq,       diag_type,      diag_file,                      &
         print_global,   print_points,   latpnt,          lonpnt,        &
@@ -146,6 +150,7 @@
 #ifndef CCSMCOUPLED
       namelist /tracer_nml/    &
         tr_iage, restart_age,  &
+        tr_FY,   restart_FY,   &
         tr_pond, restart_pond, &
         tr_aero, restart_aero         !MH for soot
 #endif
@@ -167,8 +172,8 @@
       print_global = .true.  ! if true, print global diagnostic data
       diag_type = 'stdout'
       diag_file = 'ice_diag.d'
-      histfreq='m'           ! output frequency option
-      histfreq_n = 1         ! output frequency
+      histfreq(:) = 'm'      ! output frequency option for different streams
+      histfreq_n(:) = 1      ! output frequency of histfreq
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
       history_dir  = ' '     ! write to executable dir for default
       history_file = 'iceh'  ! history file name prefix
@@ -181,6 +186,7 @@
       restart = .false.      ! if true, read restart files for initialization
       restart_dir  = ' '     ! write to executable dir for default
       restart_file = 'iced'  ! restart file name prefix
+      restart_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
       pointer_file = 'ice.restart_file'
       ice_ic       = 'default'      ! latitude and sst-dependent
       grid_format  = 'bin'          ! file format ('bin'=binary or 'nc'=netcdf)
@@ -250,6 +256,9 @@
       tr_iage      = .false. ! ice age
       restart_age  = .false. ! ice age restart
       filename_iage = 'none'
+      tr_FY        = .false. ! FY ice area
+      restart_FY   = .false. ! FY ice area restart
+      filename_FY  = 'none'
       tr_pond      = .false. ! explicit melt ponds
       restart_pond = .false. ! melt ponds restart
       filename_volpn = 'none'
@@ -261,6 +270,7 @@
 
 #ifdef CCSMCOUPLED
       if (ntr_iage > 0) tr_iage  = .true. 
+      if (ntr_FY   > 0) tr_FY    = .true. 
       if (ntr_pond > 0) tr_pond  = .true. 
       if (ntr_aero > 0) tr_aero  = .true. 
 #endif
@@ -368,12 +378,12 @@
 #ifndef ncdf
       ! netcdf is unavailable
       history_format  = 'bin'
+      restart_format  = 'bin'
       grid_format     = 'bin'
       atm_data_format = 'bin'
       ocn_data_format = 'bin'
 #endif
 
-      if (histfreq == '1') hist_avg = .false.         ! potential conflict
       if (days_per_year /= 365) shortwave = 'default' ! definite conflict
 
       chartmp = advection(1:6)
@@ -409,8 +419,12 @@
       call broadcast_scalar(diag_type,          master_task)
       call broadcast_scalar(diag_file,          master_task)
       call broadcast_scalar(history_format,     master_task)
-      call broadcast_scalar(histfreq,           master_task)
-      call broadcast_scalar(histfreq_n,         master_task)
+!     call broadcast_scalar(histfreq,           master_task)
+!     call broadcast_scalar(histfreq_n,         master_task)
+      do ns=1,nstreams
+         call broadcast_scalar(histfreq(ns),         master_task)
+      enddo
+      call broadcast_array(histfreq_n(:),       master_task)
       call broadcast_scalar(hist_avg,           master_task)
       call broadcast_scalar(history_dir,        master_task)
       call broadcast_scalar(history_file,       master_task)
@@ -422,6 +436,7 @@
       call broadcast_scalar(restart_file,       master_task)
       call broadcast_scalar(restart,            master_task)
       call broadcast_scalar(restart_dir,        master_task)
+      call broadcast_scalar(restart_format,     master_task)
       call broadcast_scalar(pointer_file,       master_task)
       call broadcast_scalar(ice_ic,             master_task)
       call broadcast_scalar(grid_format,        master_task)
@@ -479,10 +494,12 @@
       ! tracers
       call broadcast_scalar(tr_iage,            master_task)
       call broadcast_scalar(restart_age,        master_task)
+      call broadcast_scalar(tr_FY,              master_task)
+      call broadcast_scalar(restart_FY,         master_task)
       call broadcast_scalar(tr_pond,            master_task)
       call broadcast_scalar(restart_pond,       master_task)
-      call broadcast_scalar(tr_aero,            master_task) !MH
-      call broadcast_scalar(restart_aero,       master_task) !MH
+      call broadcast_scalar(tr_aero,            master_task)
+      call broadcast_scalar(restart_aero,       master_task)
 
       !-----------------------------------------------------------------
       ! spew
@@ -508,9 +525,8 @@
                                print_global
          write(nu_diag,1010) ' print_points              = ', &
                                print_points
-         write(nu_diag,1030) ' histfreq                  = ', &
-                               trim(histfreq)
-         write(nu_diag,1020) ' histfreq_n                = ', histfreq_n
+         write(nu_diag,1050) ' histfreq                  = ', histfreq(:)
+         write(nu_diag,1040) ' histfreq_n                = ', histfreq_n(:)
          write(nu_diag,1010) ' hist_avg                  = ', hist_avg
          if (hist_avg) then
             write (nu_diag,*) 'History data will be averaged over ', &
@@ -522,6 +538,8 @@
                                trim(history_dir)
          write(nu_diag,*)    ' history_file              = ', &
                                trim(history_file)
+         write(nu_diag,*)    ' history_format            = ', &
+                               trim(history_format)
          if (write_ic) then
             write (nu_diag,*) 'Initial condition will be written in ', &
                                trim(incond_dir)
@@ -534,6 +552,8 @@
                                trim(restart_dir)
          write(nu_diag,*)    ' restart_file              = ', &
                                trim(restart_file)
+         write(nu_diag,*)    ' restart_format            = ', &
+                               trim(restart_format)
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
          write(nu_diag,*   ) ' ice_ic                    = ', &
@@ -634,6 +654,8 @@
          ! tracers
          write(nu_diag,1010) ' tr_iage                   = ', tr_iage
          write(nu_diag,1010) ' restart_age               = ', restart_age
+         write(nu_diag,1010) ' tr_FY                     = ', tr_FY
+         write(nu_diag,1010) ' restart_FY                = ', restart_FY
          write(nu_diag,1010) ' tr_pond                   = ', tr_pond
          write(nu_diag,1010) ' restart_pond              = ', restart_pond
          write(nu_diag,1010) ' tr_aero                   = ', tr_aero      !MH
@@ -648,12 +670,19 @@
          else
             nt_iage = 1
          endif
+         if (tr_FY) then
+            ntr = ntr + 1
+            nt_FY = nt_iage + 1
+            write(nu_diag,1020) ' nt_FY                      = ', nt_FY
+         else
+            nt_FY = nt_iage
+         endif
          if (tr_pond) then
             ntr = ntr + 1
-            nt_volpn = nt_iage + 1
+            nt_volpn = nt_FY + 1
             write(nu_diag,1020) ' nt_volpn                   = ', nt_volpn
          else
-            nt_volpn = nt_iage
+            nt_volpn = nt_FY
          endif
          if (tr_aero) then
             ntr = ntr + n_aero*4 !MH 2 for snow soot and 2 for ice
@@ -675,6 +704,8 @@
  1010    format (a30,2x,l6)    ! logical
  1020    format (a30,2x,i6)    ! integer
  1030    format (a30,   a8)    ! character
+ 1040    format (a30,2x,6i6)   ! integer
+ 1050    format (a30,   6a8)   ! character
 
          write (nu_diag,*) ' '
          if (grid_type  /=  'displaced_pole' .and. &
@@ -689,6 +720,7 @@
       endif                     ! my_task = master_task
 
       call broadcast_scalar(nt_iage,            master_task)
+      call broadcast_scalar(nt_FY,              master_task)
       call broadcast_scalar(nt_volpn,           master_task)
       call broadcast_scalar(nt_aero,            master_task)
 
@@ -721,9 +753,6 @@
       use ice_state
       use ice_itd
       use ice_exit
-      use ice_age, only: tr_iage
-      use ice_meltpond, only: tr_pond
-      use ice_aerosol, only: tr_aero  ! MH for soot
       use ice_therm_vertical, only: heat_capacity
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -781,6 +810,7 @@
 
       trcr_depend(nt_Tsfc)  = 0   ! ice/snow surface temperature
       if (tr_iage) trcr_depend(nt_iage)  = 1   ! volume-weighted ice age
+      if (tr_FY)   trcr_depend(nt_FY)    = 0   ! area-weighted FY conc
       if (tr_pond) trcr_depend(nt_volpn) = 0   ! melt pond volume
       if (tr_aero) then
         do n=1,n_aero

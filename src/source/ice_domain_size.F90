@@ -42,19 +42,24 @@
         n_aeromx  =   6       , & ! number of aerosols maximum
 #ifdef CCSMCOUPLED
         ntr_iage  = NTR_IAGE  , & ! 1 or 0
+        ntr_FY    = NTR_FY    , & ! 1 or 0
         ntr_pond  = NTR_POND  , & ! 1 or 0
         ntr_aero  = NTR_AERO  , & ! number of aerosols in use (<= N_AEROMX)
 	n_aero    = ntr_aero  , &
-        ntrcr     =  1 + ntr_iage + ntr_pond + ntr_aero*4  ! number of tracers 
-	                                                   ! (defined in ice_state)
-                                                           ! 1 = surface temperature
+        ! number of tracers 
+        ! (defined in ice_state)
+        ! 1 = surface temperature
+        ntrcr     =  1 + ntr_iage + ntr_FY + ntr_pond + ntr_aero*4  
 #else
         n_aero    =   0       , & ! number of aerosols in use 
         ntrcr     =   2           ! number of tracers (defined in ice_state)
                                   ! 1 = surface temperature
-                                  ! ice age, pond volume
+                                  ! ice age, FY ice, pond volume
                                   ! plus 4 for each of the n_aero aerosols MH
 #endif
+
+      integer (kind=int_kind), parameter :: &
+        nstreams = 6              ! Number of output streams
 
       integer (kind=int_kind), parameter :: &
         block_size_x = BLCKX  , & ! size of block in first horiz dimension

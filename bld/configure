@@ -80,6 +80,7 @@ OPTIONS
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
      -ntr_pond <0,1>     Turns on pond tracer (valid values are 0,1, default is 1)
      -ntr_iage <0,1>     Turns on iage tracer (valid values are 0,1, default is 0)
+     -ntr_FY   <0,1>     Turns on FY area tracer (valid values are 0,1, default is 0)
      -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5,6, default is 3)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
@@ -120,6 +121,7 @@ my %opts = (
 	    cache     => "config_cache.xml",
 	    ntr_pond  => 1,
 	    ntr_iage  => 0,
+	    ntr_FY    => 0,
 	    ntr_aero  => 3,
 	    );
 GetOptions(
@@ -134,6 +136,7 @@ GetOptions(
     "hgrid=s"                   => \$opts{'hgrid'},
     "ntr_aero=s"                => \$opts{'ntr_aero'},
     "ntr_iage=s"                => \$opts{'ntr_iage'},
+    "ntr_FY=s"                  => \$opts{'ntr_FY'},
     "ntr_pond=s"                => \$opts{'ntr_pond'},
     "ntasks=s"                  => \$opts{'ntasks'},
     "nthreads=s"                => \$opts{'nthreads'},
@@ -335,6 +338,14 @@ if ($ntr_iage > 1){
 EOF
 }
 
+my $ntr_FY = $cfg_ref->get('ntr_FY');
+if (defined $opts{'ntr_FY'}) {$ntr_FY = $opts{'ntr_FY'}};
+if ($ntr_FY > 1){ 
+    die <<"EOF";
+**  ERROR: ntr_FY value of $ntr_FY is invalid, only values of 0 and 1 are supported
+EOF
+}
+
 my $ntr_pond = $cfg_ref->get('ntr_pond');
 if (defined $opts{'ntr_pond'}) {$ntr_pond = $opts{'ntr_pond'}};
 if ($ntr_pond > 1){ 
@@ -343,7 +354,7 @@ if ($ntr_pond > 1){
 EOF
 }
 
-my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTR_IAGE=$ntr_iage -DNTR_POND=$ntr_pond -DNTR_AERO=$ntr_aero";
+my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTR_IAGE=$ntr_iage -DNTR_FY=$ntr_FY -DNTR_POND=$ntr_pond -DNTR_AERO=$ntr_aero";
 
 #-----------------------------------------------------------------------------------------------
 # Determine if will set the cice decomposition

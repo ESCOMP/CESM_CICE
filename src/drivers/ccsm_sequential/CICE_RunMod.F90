@@ -35,6 +35,7 @@
       use ice_fileunits
       use ice_flux
       use ice_forcing
+      use ice_FY
       use ice_grid
       use ice_history
       use ice_restart
@@ -331,6 +332,14 @@
                                 dt, icells,              &
                                 indxi, indxj,            &
                                 trcrn(:,:,nt_iage,n,iblk))
+         endif
+         if (tr_FY) then
+            call update_FYarea (nx_block, ny_block,      &
+                                dt, icells,              &
+                                indxi, indxj,            &
+                                lmask_n(:,:,iblk),       &
+                                lmask_s(:,:,iblk),       &
+                                trcrn(:,:,nt_FY,n,iblk))
          endif
 
       !-----------------------------------------------------------------

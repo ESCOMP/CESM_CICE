@@ -56,6 +56,8 @@
          nu_restart_aero,&  ! restart input file for ice aerosol tracer MH
          nu_dump_age   , &  ! dump file for restarting ice age tracer
          nu_restart_age, &  ! restart input file for ice age tracer
+         nu_dump_FY    , &  ! dump file for restarting FY ice tracer
+         nu_restart_FY , &  ! restart input file for FY ice tracer
          nu_dump_pond  , &  ! dump file for restarting melt pond tracer
          nu_restart_pond,&  ! restart input file for melt pond tracer
          nu_rst_pointer, &  ! pointer to latest restart file
@@ -113,11 +115,13 @@ contains
          nu_forcing     = shr_file_getUnit()
          nu_dump        = shr_file_getUnit()
          nu_restart     = shr_file_getUnit()
-         nu_dump_aero  = shr_file_getUnit()    !MH
-         nu_restart_aero= shr_file_getUnit()   !MH
-         nu_dump_age   = shr_file_getUnit()
+         nu_dump_aero   = shr_file_getUnit() 
+         nu_restart_aero= shr_file_getUnit()
+         nu_dump_age    = shr_file_getUnit()
          nu_restart_age = shr_file_getUnit()
-         nu_dump_pond  = shr_file_getUnit()
+         nu_dump_FY     = shr_file_getUnit()
+         nu_restart_FY  = shr_file_getUnit()
+         nu_dump_pond   = shr_file_getUnit()
          nu_restart_pond = shr_file_getUnit()
          nu_rst_pointer = shr_file_getUnit()
          nu_history     = shr_file_getUnit()
@@ -128,10 +132,12 @@ contains
          call get_fileunit(nu_forcing)
          call get_fileunit(nu_dump)
          call get_fileunit(nu_restart)
-         call get_fileunit(nu_dump_aero)     !MH
-         call get_fileunit(nu_restart_aero)  !MH
+         call get_fileunit(nu_dump_aero)
+         call get_fileunit(nu_restart_aero)
          call get_fileunit(nu_dump_age)
          call get_fileunit(nu_restart_age)
+         call get_fileunit(nu_dump_FY)
+         call get_fileunit(nu_restart_FY)
          call get_fileunit(nu_dump_pond)
          call get_fileunit(nu_restart_pond)
          call get_fileunit(nu_rst_pointer)
@@ -211,10 +217,12 @@ contains
       call release_fileunit(nu_forcing)
       call release_fileunit(nu_dump)
       call release_fileunit(nu_restart)
-      call release_fileunit(nu_dump_aero)     !MH
-      call release_fileunit(nu_restart_aero)  !MH
+      call release_fileunit(nu_dump_aero)
+      call release_fileunit(nu_restart_aero)
       call release_fileunit(nu_dump_age)
       call release_fileunit(nu_restart_age)
+      call release_fileunit(nu_dump_FY)
+      call release_fileunit(nu_restart_FY)
       call release_fileunit(nu_dump_pond)
       call release_fileunit(nu_restart_pond)
       call release_fileunit(nu_rst_pointer)

@@ -32,7 +32,6 @@
       implicit none
 
       logical (kind=log_kind) :: &
-         tr_pond,       & ! if .true., use explicit meltponds
          restart_pond    ! if .true., read meltponds restart file
 
 !=======================================================================
@@ -76,8 +75,6 @@
 
       integer (kind=int_kind) :: i, j, ij, n, iblk
       
-      ! Need to compute albedos before init_cpl in CCSM
-
       if (trim(filename_volpn) /= 'none') restart_pond = .true.
 
       if (restart_pond) then
@@ -86,10 +83,6 @@
          else
             call read_restart_pond(filename_volpn)
          endif
-      else
-         trcrn(:,:,nt_volpn,:,:) = c0
-         apondn(:,:,:,:) = c0
-         hpondn(:,:,:,:) = c0
       endif
 
       end subroutine init_meltponds

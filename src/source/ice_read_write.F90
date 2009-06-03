@@ -451,6 +451,158 @@
       end subroutine ice_write
 
 !=======================================================================
+!BOP
+!
+! !IROUTINE: ice_write_nc - writes a field to a netcdf file
+!
+! !INTERFACE:
+!
+      subroutine ice_write_nc(fid, nrec, varname, work, atype, diag)
+!
+! !DESCRIPTION:
+!
+! Writes a field to a netcdf file \\
+! work is a real array, atype indicates the format of the data
+!
+! !REVISION HISTORY:
+!
+! author: David A Bailey, NCAR
+!
+! !USES:
+!
+      use ice_gather_scatter
+      use ice_domain
+      use ice_work, only: work_g1, work_gr, work_gi4, work_gi8
+      use ice_exit
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      integer (kind=int_kind), intent(in) :: &
+           fid          ,&   ! netcdf file id
+           nrec              ! record number
+
+      character (len=*), intent(in) :: varname
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
+           intent(in) :: &
+           work              ! input array (real, 8-byte)
+
+      character (len=4), intent(in) :: &
+           atype             ! format for output array
+                             ! (real/integer, 4-byte/8-byte)
+
+      logical (kind=log_kind), intent(in) :: &
+           diag              ! if true, write diagnostic output
+!
+!EOP
+!
+      integer (kind=int_kind) :: i, j, varid, numDims
+
+      integer (kind=int_kind) :: &
+         status        ! status variable from netCDF routine 
+
+      real (kind=dbl_kind) :: &
+         amin, amax     ! min and max values of ouput array
+
+      integer (kind=int_kind), allocatable :: &
+         start_arr(:), count_arr(:)
+
+    !-------------------------------------------------------------------
+    ! Gather data from individual processors
+    !-------------------------------------------------------------------
+
+      if (my_task == master_task) then
+         allocate(work_g1(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1)) ! to save memory
+      endif
+
+      call gather_global(work_g1, work, master_task, distrb_info)
+
+      if (my_task == master_task) then
+
+         status = nf90_inq_varid(fid, trim(varname), varid)
+
+         if (status /= nf90_noerr) then
+           call abort_ice ( &
+               'ice_write_nc: Cannot find variable '//trim(varname) )
+         endif
+
+         status = nf90_inquire_variable(fid, varid, ndims = numDims)
+
+         if (status /= nf90_noerr) then
+           call abort_ice ( &
+               'ice_write_nc: Cannot find dimensions for '//trim(varname) )
+         endif
+
+         allocate(start_arr(numDims))
+         allocate(count_arr(numDims))
+
+         if (numDims > 2) then
+            start_arr(1) = 1
+            start_arr(2) = 1
+            start_arr(3) = nrec
+            count_arr(1) = nx_global
+            count_arr(2) = ny_global
+            count_arr(3) = 1
+         else
+            start_arr(1) = 1
+            start_arr(2) = 1
+            count_arr(1) = nx_global
+            count_arr(2) = ny_global
+         endif
+
+    !-------------------------------------------------------------------
+    ! Write global array according to format atype
+    !-------------------------------------------------------------------
+         if (atype == 'ida4') then
+            allocate(work_gi4(nx_global,ny_global))
+            work_gi4 = nint(work_g1)
+            status = nf90_put_var(fid,varid,work_gi4, &
+                                  start=start_arr,  &
+                                  count=count_arr)
+            deallocate(work_gi4)
+         elseif (atype == 'ida8') then
+            allocate(work_gi8(nx_global,ny_global))
+            work_gi8 = nint(work_g1)
+            status = nf90_put_var(fid,varid,work_gi8, &
+                                  start=start_arr,  &
+                                  count=count_arr)
+            deallocate(work_gi8)
+         elseif (atype == 'rda4') then
+            allocate(work_gr(nx_global,ny_global))
+            work_gr = work_g1
+            status = nf90_put_var(fid,varid,work_gr, &
+                                  start=start_arr,  &
+                                  count=count_arr)
+            deallocate(work_gr)
+         elseif (atype == 'rda8') then
+            status = nf90_put_var(fid,varid,work_g1, &
+                                  start=start_arr,  &
+                                  count=count_arr)
+         else
+            write(nu_diag,*) ' ERROR: writing unknown atype ',atype
+         endif
+
+    !-------------------------------------------------------------------
+    ! diagnostics
+    !-------------------------------------------------------------------
+         if (diag) then
+            amin = minval(work_g1)
+            amax = maxval(work_g1, mask = work_g1 /= spval_dbl)
+            write(nu_diag,*) ' write_global ', fid, varid, nrec, amin, amax
+         endif
+
+         deallocate(start_arr)
+         deallocate(count_arr)
+
+      endif                     ! my_task = master_task
+
+      deallocate(work_g1)
+
+      end subroutine ice_write_nc
+      
+!=======================================================================
 !
 !BOP
 !
@@ -612,7 +764,7 @@
          status = nf90_get_var( fid, varid, work_g2, &
                start=(/1,1,nrec/), &
                count=(/nx_global+2,ny_global+1,1/) )
-        work_g1=work_g2(2:nx_global+1,1:ny_global)
+         work_g1=work_g2(2:nx_global+1,1:ny_global)
 #endif
 
       endif                     ! my_task = master_task
@@ -623,19 +775,18 @@
 
       if (my_task==master_task .and. diag) then
 
-          write(nu_diag,*) & 
-            'ice_read_nc, fid= ',fid, ', nrec = ',nrec, & 
-            ', varname = ',trim(varname)
-          status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
-          write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
-          do id=1,ndim
-            status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
-            write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
+!        write(nu_diag,*) & 
+!          'ice_read_nc, fid= ',fid, ', nrec = ',nrec, & 
+!          ', varname = ',trim(varname)
+         status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
+!        write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
+         do id=1,ndim
+           status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
+!          write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
          enddo
          amin = minval(work_g1)
          amax = maxval(work_g1, mask = work_g1 /= spval_dbl)
-         write(nu_diag,*) ' min and max =', amin, amax
-         write(nu_diag,*) ''
+         write(nu_diag,*) ' read_global ',fid, varid, nrec, amin, amax
 
       endif
 
@@ -769,19 +920,20 @@
 
       if (my_task == master_task .and. diag) then
 
-          write(nu_diag,*) & 
-            'ice_read_global_nc, fid= ',fid, ', nrec = ',nrec, & 
-            ', varname = ',trim(varname)
+!         write(nu_diag,*) & 
+!           'ice_read_global_nc, fid= ',fid, ', nrec = ',nrec, & 
+!           ', varname = ',trim(varname)
           status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
-          write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
+!         write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
           do id=1,ndim
             status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
-            write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
+!           write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
          enddo
          amin = minval(work_g)
          amax = maxval(work_g, mask = work_g /= spval_dbl)
-         write(nu_diag,*) 'min and max = ', amin, amax
-         write(nu_diag,*) ''
+!        write(nu_diag,*) 'min and max = ', amin, amax
+!        write(nu_diag,*) ''
+         write(nu_diag,*) ' read_global ',fid, varid, nrec, amin, amax
 
       endif
 

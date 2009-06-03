@@ -173,6 +173,11 @@ Ice age tracer.
 Default: FALSE
 </entry>
 
+<entry id="tr_FY" type="logical"  category="cice" group="tracer_nml" valid_values="">
+FY area tracer.
+Default: FALSE
+</entry>
+
 <entry id="tr_pond" type="logical"  category="cice" group="tracer_nml" valid_values="">
 Pond volume tracer.
 Default: TRUE

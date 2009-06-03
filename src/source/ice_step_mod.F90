@@ -23,7 +23,6 @@
 !
 ! !USES:
 !
-      use ice_aerosol, only: tr_aero
       use ice_atmo
       use ice_calendar
       use ice_communicate
@@ -38,7 +37,6 @@
       use ice_itd
       use ice_kinds_mod
       use ice_mechred
-      use ice_meltpond
       use ice_ocean
       use ice_orbital
       use ice_shortwave

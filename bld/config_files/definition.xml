@@ -40,6 +40,10 @@ Number of aerosol tracers
 If 1, then have an ice age tracer.
 </entry>
 
+<entry id="ntr_FY" valid_values="0,1" value="0">
+If 1, then have a FY area tracer.
+</entry>
+
 <entry id="ntr_pond" valid_values="0,1" value="1">
 If 1, then have an ice age tracer.
 </entry>

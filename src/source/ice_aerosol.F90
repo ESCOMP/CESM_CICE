@@ -31,7 +31,6 @@
       implicit none
 
       logical (kind=log_kind) :: & 
-         tr_aero,       & ! if .true., use aerosol tracer
          restart_aero      ! if .true., read aerosol tracer restart file
 
 !=======================================================================
@@ -63,6 +62,7 @@
 !
 !EOP
 !
+
       if (trim(filename_aero) /= 'none') restart_aero = .true.
 
       if (restart_aero) then
@@ -71,9 +71,6 @@
          else
             call read_restart_aero(filename_aero)
          endif
-      else
-         if (tr_aero) &
-            trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
       endif
 
       end subroutine init_aerosol

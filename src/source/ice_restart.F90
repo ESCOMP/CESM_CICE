@@ -32,6 +32,7 @@
       use ice_read_write
       use ice_fileunits
       use ice_timers
+      use ice_exit, only: abort_ice	
 !
 !EOP
 !
@@ -61,6 +62,10 @@
          restart_dir   , & ! directory name for restart dump
          runid             ! identifier for CCSM coupled run
 
+      character (len=char_len) :: &
+         restart_format, & ! format of restart files 'nc' or 'bin'
+         restart_format_in ! format of restart files 'nc' or 'bin'
+
       character (len=char_len_long) :: &
          pointer_file      ! input pointer file for restarts
 
@@ -70,6 +75,13 @@
       real (kind=dbl_kind), private, &
          dimension(nx_block,ny_block,max_blocks) :: &
          work1
+
+      integer (kind=int_kind) :: ncid ! netcdf restart file id
+
+      integer (kind=int_kind) :: &
+        status        ! status variable from netCDF routine
+
+      character (len=1) :: nchar
 
 !=======================================================================
 
@@ -122,6 +134,10 @@
 
       logical (kind=log_kind) :: diag
 
+      integer (kind=int_kind) :: dimid_ni, dimid_nj, dimid_ncat, &
+                                 dimid_ntilyr, dimid_ntslyr
+      integer (kind=int_kind), allocatable :: dims(:)
+
       ! construct path/file
       if (present(filename_spec)) then
          filename = trim(filename_spec)
@@ -130,12 +146,21 @@
          imonth = month
          iday = mday
          
-         write(filename,'(a,a,a,i4.4,a,i2.2,a,i2.2,a,i5.5)') &
-              restart_dir(1:lenstr(restart_dir)), &
-              restart_file(1:lenstr(restart_file)),'.', &
-              iyear,'-',month,'-',mday,'-',sec
+         if (restart_format == 'nc') then
+            write(filename,'(a,a,a,i4.4,a,i2.2,a,i2.2,a,i5.5,a)') &
+                 restart_dir(1:lenstr(restart_dir)), &
+                 restart_file(1:lenstr(restart_file)),'.', &
+                 iyear,'-',month,'-',mday,'-',sec,'.nc'
+         else
+            write(filename,'(a,a,a,i4.4,a,i2.2,a,i2.2,a,i5.5)') &
+                 restart_dir(1:lenstr(restart_dir)), &
+                 restart_file(1:lenstr(restart_file)),'.', &
+                 iyear,'-',month,'-',mday,'-',sec
+         endif
       end if
          
+      if (restart_format == 'nc') filename = trim(filename) // '.nc'
+
       ! write pointer (path/file)
       if (my_task == master_task) then
         open(nu_rst_pointer,file=pointer_file)
@@ -144,15 +169,278 @@
       endif
 
       ! begin writing restart data
-      call ice_open(nu_dump,filename,0)
+      if (restart_format == "nc") then
 
-      if (my_task == master_task) then
-        write(nu_dump) istep1,time,time_forc
-        write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
-        write(nu_diag,*) 'Restart written ',istep1,time,time_forc
+         if (my_task == master_task) then
+#ifdef _HIRES
+            status = nf90_create(filename, NF90_64BIT_OFFSET, ncid)
+#else
+            status = nf90_create(filename, nf90_clobber, ncid)
+#endif
+            if (status /= nf90_noerr) call abort_ice( &
+               'ice: Error creating restart file '//filename)
+
+            status = nf90_put_att(ncid,nf90_global,'istep1',istep1)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute istep1')
+            status = nf90_put_att(ncid,nf90_global,'time',time)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute time')
+            status = nf90_put_att(ncid,nf90_global,'time_forc',time_forc)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute time_forc')
+
+            status = nf90_def_dim(ncid,'ni',nx_global,dimid_ni)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error defining dim ni')
+
+            status = nf90_def_dim(ncid,'nj',ny_global,dimid_nj)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error defining dim nj')
+
+            status = nf90_def_dim(ncid,'ncat',ncat,dimid_ncat)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error defining dim ncat')
+
+            status = nf90_def_dim(ncid,'ntilyr',ntilyr,dimid_ntilyr)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error defining dim ntilyr')
+
+            status = nf90_def_dim(ncid,'ntslyr',ntslyr,dimid_ntslyr)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error defining dim ntslyr')
+
+            write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
+         endif
+
+         call broadcast_scalar(ncid, master_task)
+      else
+         filename = trim(filename_spec)
+         call ice_open(nu_dump,filename,0)
+
+         if (my_task == master_task) then
+           write(nu_dump) istep1,time,time_forc
+           write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
+           write(nu_diag,*) 'Restart written ',istep1,time,time_forc
+         endif
+
       endif
 
       diag = .true.
+
+      if (restart_format == 'nc') then
+
+      if (my_task == master_task) then
+
+      allocate(dims(3))
+
+      dims(1) = dimid_ni
+      dims(2) = dimid_nj
+      dims(3) = dimid_ncat
+
+      call define_rest_field(ncid,'aicen',dims)
+      call define_rest_field(ncid,'vicen',dims)
+      call define_rest_field(ncid,'vsnon',dims)
+      call define_rest_field(ncid,'Tsfcn',dims)
+
+      if (tr_aero) then
+         do k=1,n_aero
+            write(nchar,'(i1.1)') k
+            call define_rest_field(ncid,'aerosnossl'//nchar, dims)
+            call define_rest_field(ncid,'aerosnoint'//nchar, dims)
+            call define_rest_field(ncid,'aeroicessl'//nchar, dims)
+            call define_rest_field(ncid,'aeroiceint'//nchar, dims)
+         enddo
+      endif
+
+      if (tr_iage) call define_rest_field(ncid,'iage',dims)
+
+      if (tr_FY)   call define_rest_field(ncid,'FY',dims)
+
+      if (tr_pond) then
+         call define_rest_field(ncid,'volpn',dims)
+         call define_rest_field(ncid,'apondn',dims)
+         call define_rest_field(ncid,'hpondn',dims)
+      endif
+
+      dims(3) = dimid_ntilyr
+      call define_rest_field(ncid,'eicen',dims)
+      dims(3) = dimid_ntslyr
+      call define_rest_field(ncid,'esnon',dims)
+
+      deallocate(dims)
+
+      allocate(dims(2))
+      dims(1) = dimid_ni
+      dims(2) = dimid_nj
+
+      call define_rest_field(ncid,'uvel',dims)
+      call define_rest_field(ncid,'vvel',dims)
+
+      call define_rest_field(ncid,'coszen',dims)
+      call define_rest_field(ncid,'scale_factor',dims)
+      call define_rest_field(ncid,'swvdr',dims)
+      call define_rest_field(ncid,'swvdf',dims)
+      call define_rest_field(ncid,'swidr',dims)
+      call define_rest_field(ncid,'swidf',dims)
+
+      call define_rest_field(ncid,'strocnxT',dims)
+      call define_rest_field(ncid,'strocnyT',dims)
+
+      call define_rest_field(ncid,'stressp_1',dims)
+      call define_rest_field(ncid,'stressp_2',dims)
+      call define_rest_field(ncid,'stressp_3',dims)
+      call define_rest_field(ncid,'stressp_4',dims)
+
+      call define_rest_field(ncid,'stressm_1',dims)
+      call define_rest_field(ncid,'stressm_2',dims)
+      call define_rest_field(ncid,'stressm_3',dims)
+      call define_rest_field(ncid,'stressm_4',dims)
+
+      call define_rest_field(ncid,'stress12_1',dims)
+      call define_rest_field(ncid,'stress12_2',dims)
+      call define_rest_field(ncid,'stress12_3',dims)
+      call define_rest_field(ncid,'stress12_4',dims)
+
+      call define_rest_field(ncid,'iceumask',dims)
+
+      if (oceanmixed_ice) then
+         call define_rest_field(ncid,'sst',dims)
+         call define_rest_field(ncid,'frzmlt',dims)
+      endif
+
+      deallocate(dims)
+
+      status = nf90_enddef(ncid)
+
+      endif ! master_task
+
+      !-----------------------------------------------------------------
+      ! state variables
+      !-----------------------------------------------------------------
+
+      do n=1,ncat
+         call ice_write_nc(ncid,n,'aicen',aicen(:,:,n,:),'rda8',diag)
+         call ice_write_nc(ncid,n,'vicen',vicen(:,:,n,:),'rda8',diag)
+         call ice_write_nc(ncid,n,'vsnon',vsnon(:,:,n,:),'rda8',diag)
+         call ice_write_nc(ncid,n,'Tsfcn',trcrn(:,:,nt_Tsfc,n,:),'rda8',diag)
+      enddo
+
+      do k=1,ntilyr
+         call ice_write_nc(ncid,k,'eicen',eicen(:,:,k,:),'rda8',diag)
+      enddo
+
+      do k=1,ntslyr
+         call ice_write_nc(ncid,k,'esnon',esnon(:,:,k,:),'rda8',diag)
+      enddo
+
+      !-----------------------------------------------------------------
+      ! velocity
+      !-----------------------------------------------------------------
+      call ice_write_nc(ncid,1,'uvel',uvel,'rda8',diag)
+      call ice_write_nc(ncid,1,'vvel',vvel,'rda8',diag)
+
+      !-----------------------------------------------------------------
+      ! radiation fields
+      !-----------------------------------------------------------------
+      call ice_write_nc(ncid,1,'coszen',coszen,'rda8',diag)
+      call ice_write_nc(ncid,1,'scale_factor',scale_factor,'rda8',diag)
+      call ice_write_nc(ncid,1,'swvdr',swvdr,'rda8',diag)
+      call ice_write_nc(ncid,1,'swvdf',swvdf,'rda8',diag)
+      call ice_write_nc(ncid,1,'swidr',swidr,'rda8',diag)
+      call ice_write_nc(ncid,1,'swidf',swidf,'rda8',diag)
+
+      !-----------------------------------------------------------------
+      ! ocean stress (for bottom heat flux in thermo)
+      !-----------------------------------------------------------------
+      call ice_write_nc(ncid,1,'strocnxT',strocnxT,'rda8',diag)
+      call ice_write_nc(ncid,1,'strocnyT',strocnyT,'rda8',diag)
+
+      !-----------------------------------------------------------------
+      ! internal stress
+      !-----------------------------------------------------------------
+      call ice_write_nc(ncid,1,'stressp_1',stressp_1,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressp_2',stressp_2,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressp_3',stressp_3,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressp_4',stressp_4,'rda8',diag)
+
+      call ice_write_nc(ncid,1,'stressm_1',stressm_1,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressm_2',stressm_2,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressm_3',stressm_3,'rda8',diag)
+      call ice_write_nc(ncid,1,'stressm_4',stressm_4,'rda8',diag)
+
+      call ice_write_nc(ncid,1,'stress12_1',stress12_1,'rda8',diag)
+      call ice_write_nc(ncid,1,'stress12_2',stress12_2,'rda8',diag)
+      call ice_write_nc(ncid,1,'stress12_3',stress12_3,'rda8',diag)
+      call ice_write_nc(ncid,1,'stress12_4',stress12_4,'rda8',diag)
+
+      !-----------------------------------------------------------------
+      ! ice mask for dynamics
+      !-----------------------------------------------------------------
+      
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
+      do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            work1(i,j,iblk) = c0
+            if (iceumask(i,j,iblk)) work1(i,j,iblk) = c1
+         enddo
+         enddo
+      enddo
+      !$OMP END PARALLEL DO
+      call ice_write_nc(ncid,1,'iceumask',work1,'rda8',diag)
+
+      ! for mixed layer model
+      if (oceanmixed_ice) then
+         call ice_write_nc(ncid,1,'sst',sst,'rda8',diag)
+         call ice_write_nc(ncid,1,'frzmlt',frzmlt,'rda8',diag)
+      endif
+
+      if (tr_aero) then
+         do k=1,n_aero
+         do n=1,ncat
+            write(nchar,'(i1.1)') k
+            call ice_write_nc(ncid,n,'aerosnossl'//nchar, &
+                trcrn(:,:,nt_aero  +(k-1)*4,n,:),'rda8',diag)
+            call ice_write_nc(ncid,n,'aerosnoint'//nchar, &
+                trcrn(:,:,nt_aero+1+(k-1)*4,n,:),'rda8',diag)
+            call ice_write_nc(ncid,n,'aeroicessl'//nchar, &
+                trcrn(:,:,nt_aero+2+(k-1)*4,n,:),'rda8',diag)
+            call ice_write_nc(ncid,n,'aeroiceint'//nchar, &
+                trcrn(:,:,nt_aero+3+(k-1)*4,n,:),'rda8',diag)
+         enddo
+         enddo
+      endif
+
+      if (tr_iage) then
+         do n=1,ncat
+            call ice_write_nc(ncid,n,'iage',trcrn(:,:,nt_iage,n,:),'rda8',diag)
+         enddo
+      endif
+
+      if (tr_FY) then
+         do n=1,ncat
+            call ice_write_nc(ncid,n,'FY',trcrn(:,:,nt_FY,n,:),'rda8',diag)
+         enddo
+      endif
+
+      if (tr_pond) then
+         do n=1,ncat
+            call ice_write_nc(ncid,n,'volpn',trcrn(:,:,nt_volpn,n,:),'rda8', &
+                              diag)
+            call ice_write_nc(ncid,n,'apondn',apondn(:,:,n,:),'rda8',diag)
+            call ice_write_nc(ncid,n,'hpondn',hpondn(:,:,n,:),'rda8',diag)
+         enddo
+      endif
+
+      if (my_task == master_task) then
+         status = nf90_close(ncid)
+         if (status /= nf90_noerr) call abort_ice( &
+                       'ice: Error closing netCDF restart file')
+         write(nu_diag,*) 'Restart written ',istep1,time,time_forc
+      endif
+
+      else ! binary restart files
 
       !-----------------------------------------------------------------
       ! state variables
@@ -240,13 +528,48 @@
          write(nu_dump) filename_volpn
          write(nu_dump) filename_aero
          write(nu_dump) filename_iage
+         write(nu_dump) filename_FY
 
          close(nu_dump)
 
       endif
 
+      endif ! netcdf or binary restart files
 
       end subroutine dumpfile
+
+!=======================================================================
+!BOP
+!
+! !IROUTINE: define_rest_field
+!
+! !INTERFACE:
+!
+      subroutine define_rest_field(ncid, vname, dims)
+!
+! !DESCRIPTION:
+!
+! Defines a restart field
+!
+! !REVISION HISTORY:
+!
+! author David A Bailey, NCAR
+!
+! !USES:
+
+      character (len=*), intent(in) :: vname
+
+      integer (kind=int_kind), intent(in) :: ncid
+
+      integer (kind=int_kind), intent(in) :: dims(:)
+
+      integer (kind=int_kind) :: status, varid
+
+      status = nf90_def_var(ncid,trim(vname),nf90_double,dims,varid)
+      if (status /= nf90_noerr) call abort_ice( &
+                    'ice: Error defining variable '//trim(vname))
+
+      end subroutine define_rest_field
 
 !=======================================================================
 !BOP
@@ -307,21 +630,59 @@
             close(nu_rst_pointer)
             write(nu_diag,*) 'Read ',pointer_file(1:lenstr(pointer_file))
          endif
+         call broadcast_scalar(filename, master_task)
       endif
-
-      ! determine format of restart file
-
-      resttype = restformat(nu_restart,filename) 
 
       ! read restart file
 
-      call ice_open(nu_restart,filename,0)
+      restart_format_in = restart_format
+      if (index(filename,'nc') == 0) restart_format = 'bin'
 
-      if (my_task == master_task) then
-         write(nu_diag,*) 'Using restart dump=', trim(filename)
-         read (nu_restart) istep0,time,time_forc
-         write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
+      ! Initialize all tracer fields to zero and read in from
+      ! restart when available.
+      if (tr_iage) trcrn(:,:,nt_iage, :,:) = c0
+      if (tr_FY)   trcrn(:,:,nt_FY,   :,:) = c0
+      if (tr_aero) trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
+
+      ! Need to initialize ponds in all cases.
+      trcrn(:,:,nt_volpn,:,:) = c0
+      apondn(:,:,:,:) = c0
+      hpondn(:,:,:,:) = c0
+
+      if (restart_format == 'nc') then
+         call ice_open_nc(filename, ncid)
+
+         if (my_task == master_task) then
+            write(nu_diag,*) 'Using restart dump=', trim(filename)
+            ! Need to read istep1 into istep0 here.
+            status = nf90_get_att(ncid,nf90_global,'istep1',istep0)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute istep1')
+            status = nf90_get_att(ncid,nf90_global,'time',time)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute time')
+            status = nf90_get_att(ncid,nf90_global,'time_forc',time_forc)
+            if (status /= nf90_noerr) call abort_ice( &
+                          'ice: Error in global attribute time_forc')
+            write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
+         endif
+
+         resttype = 'new'
+
+      else
+         ! determine format of restart file
+
+         resttype = restformat(nu_restart,filename) 
+
+         call ice_open(nu_restart,filename,0)
+
+         if (my_task == master_task) then
+            write(nu_diag,*) 'Using restart dump=', trim(filename)
+            read (nu_restart) istep0,time,time_forc
+            write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
+         endif
       endif
+
       call calendar(time)
 
       call broadcast_scalar(istep0,master_task)
@@ -333,6 +694,224 @@
 
       diag = .true.     ! write min/max diagnostics for field
 	
+
+      if (restart_format == 'nc') then
+
+      !-----------------------------------------------------------------
+      ! state variables
+      !-----------------------------------------------------------------
+      do n=1,ncat
+         if (my_task == master_task) &
+              write(nu_diag,*) 'cat ',n, &
+                               ' min/max area, vol ice, vol snow, Tsfc'
+         call ice_read_nc(ncid,n,'aicen',aicen(:,:,n,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+         call ice_read_nc(ncid,n,'vicen',vicen(:,:,n,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+         call ice_read_nc(ncid,n,'vsnon',vsnon(:,:,n,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+         call ice_read_nc(ncid,n,'Tsfcn',trcrn(:,:,nt_Tsfc,n,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+      enddo
+
+      if (my_task == master_task) &
+           write(nu_diag,*) 'min/max eicen for each layer'
+
+      do k=1,ntilyr
+         call ice_read_nc(ncid,k,'eicen',eicen(:,:,k,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+      enddo
+
+      if (my_task == master_task) &
+           write(nu_diag,*) 'min/max esnon for each layer'
+
+      do k=1,ntslyr
+         call ice_read_nc(ncid,k,'esnon',esnon(:,:,k,:),diag, &
+            field_type=field_type_scalar,field_loc=field_loc_center)
+      enddo
+
+      !-----------------------------------------------------------------
+      ! velocity
+      !-----------------------------------------------------------------
+      if (my_task == master_task) &
+           write(nu_diag,*) 'min/max velocity components'
+
+      call ice_read_nc(ncid,1,'uvel',uvel,diag, &
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+      call ice_read_nc(ncid,1,'vvel',vvel,diag, &
+         field_type=field_type_vector,field_loc=field_loc_NEcorner)
+
+      !-----------------------------------------------------------------
+      ! radiation fields
+      !-----------------------------------------------------------------
+
+      if (my_task == master_task) &
+           write(nu_diag,*) 'radiation fields'
+
+      call ice_read_nc(ncid,1,'coszen',coszen,diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read_nc(ncid,1,'scale_factor',scale_factor,diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read_nc(ncid,1,'swvdr',swvdr,diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read_nc(ncid,1,'swvdf',swvdf,diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read_nc(ncid,1,'swidr',swidr,diag, &
+                    field_loc_center, field_type_scalar)
+      call ice_read_nc(ncid,1,'swidf',swidf,diag, &
+                    field_loc_center, field_type_scalar)
+
+      !-----------------------------------------------------------------
+      ! ocean stress
+      !-----------------------------------------------------------------
+      if (my_task == master_task) &
+           write(nu_diag,*) 'min/max ocean stress components'
+
+      call ice_read_nc(ncid,1,'strocnxT',strocnxT,diag)
+      call ice_read_nc(ncid,1,'strocnyT',strocnyT,diag)
+
+      !-----------------------------------------------------------------
+      ! internal stress
+      ! The stress tensor must be read and scattered in pairs in order
+      ! to properly match corner values across a tripole grid cut.
+      !-----------------------------------------------------------------
+      if (my_task == master_task) write(nu_diag,*) &
+           'internal stress components'
+      
+      if (my_task==master_task) then
+         allocate(work_g1(nx_global,ny_global))
+         allocate(work_g2(nx_global,ny_global))
+      else
+         allocate(work_g1(1,1))
+         allocate(work_g2(1,1))   ! to save memory
+      endif
+
+      call ice_read_global_nc(ncid,1,'stressp_1',work_g1,diag) ! stressp_1
+      call ice_read_global_nc(ncid,1,'stressp_3',work_g2,diag) ! stressp_3
+      call scatter_global_stress(stressp_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressp_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global_nc(ncid,1,'stressp_2',work_g1,diag) ! stressp_2
+      call ice_read_global_nc(ncid,1,'stressp_4',work_g2,diag) ! stressp_4
+      call scatter_global_stress(stressp_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressp_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global_nc(ncid,1,'stressm_1',work_g1,diag) ! stressm_1
+      call ice_read_global_nc(ncid,1,'stressm_3',work_g2,diag) ! stressm_3
+      call scatter_global_stress(stressm_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressm_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global_nc(ncid,1,'stressm_2',work_g1,diag) ! stressm_2
+      call ice_read_global_nc(ncid,1,'stressm_4',work_g2,diag) ! stressm_4
+      call scatter_global_stress(stressm_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stressm_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global_nc(ncid,1,'stress12_1',work_g1,diag) ! stress12_1
+      call ice_read_global_nc(ncid,1,'stress12_3',work_g2,diag) ! stress12_3
+      call scatter_global_stress(stress12_1, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stress12_3, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      call ice_read_global_nc(ncid,1,'stress12_2',work_g1,diag) ! stress12_2
+      call ice_read_global_nc(ncid,1,'stress12_4',work_g2,diag) ! stress12_4
+      call scatter_global_stress(stress12_2, work_g1, work_g2, &
+                                 master_task, distrb_info)
+      call scatter_global_stress(stress12_4, work_g2, work_g1, &
+                                 master_task, distrb_info)
+
+      deallocate (work_g1, work_g2)
+
+      !-----------------------------------------------------------------
+      ! ice mask for dynamics
+      !-----------------------------------------------------------------
+      if (my_task == master_task) &
+           write(nu_diag,*) 'ice mask for dynamics'
+
+      call ice_read_nc(ncid,1,'iceumask',work1,diag)
+
+      iceumask(:,:,:) = .false.
+      !$OMP PARALLEL DO PRIVATE(iblk,j,i)
+      do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (work1(i,j,iblk) > p5) iceumask(i,j,iblk) = .true.
+         enddo
+         enddo
+      enddo
+      !$OMP END PARALLEL DO
+
+      ! for mixed layer model
+      if (oceanmixed_ice) then
+
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max sst, frzmlt'
+
+         call ice_read_nc(ncid,1,'sst',sst,diag)
+         call ice_read_nc(ncid,1,'frzmlt',frzmlt,diag)
+      endif
+
+      if (tr_aero) then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max aerosols'
+
+         do k=1,n_aero
+         do n=1,ncat
+            write(nchar,'(i1.1)') k
+            call ice_read_nc(ncid,n,'aerosnossl'//nchar, &
+               trcrn(:,:,nt_aero  +(k-1)*4,n,:),diag,    &
+               field_loc_center, field_type_scalar)
+            call ice_read_nc(ncid,n,'aerosnoint'//nchar, &
+               trcrn(:,:,nt_aero+1+(k-1)*4,n,:),diag,    &
+               field_loc_center, field_type_scalar)
+            call ice_read_nc(ncid,n,'aeroicessl'//nchar, &
+               trcrn(:,:,nt_aero+2+(k-1)*4,n,:),diag,    &
+               field_loc_center, field_type_scalar)
+            call ice_read_nc(ncid,n,'aeroiceint'//nchar, &
+               trcrn(:,:,nt_aero+3+(k-1)*4,n,:),diag,    &
+               field_loc_center, field_type_scalar)
+         enddo
+         enddo
+      endif
+
+      if (tr_iage) then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max ice age'
+         do n=1,ncat
+            call ice_read_nc(ncid,n,'iage',trcrn(:,:,nt_iage,n,:),diag, &
+               field_loc_center, field_type_scalar)
+         enddo
+      endif
+
+      if (tr_FY) then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max FY area'
+         do n=1,ncat
+            call ice_read_nc(ncid,n,'FY',trcrn(:,:,nt_FY,n,:),diag, &
+               field_loc_center, field_type_scalar)
+         enddo
+      endif
+
+      if (tr_pond) then
+         if (my_task == master_task) &
+              write(nu_diag,*) 'min/max melt ponds'
+         do n=1,ncat
+            call ice_read_nc(ncid,n,'volpn',trcrn(:,:,nt_volpn,n,:),diag, &
+               field_loc_center, field_type_scalar)
+            call ice_read_nc(ncid,n,'apondn',apondn(:,:,n,:),diag)
+            call ice_read_nc(ncid,n,'hpondn',hpondn(:,:,n,:),diag)
+         enddo
+      endif
+
+      else ! binary restart
 
       !-----------------------------------------------------------------
       ! state variables
@@ -510,6 +1089,7 @@
          read(nu_restart, end=99) filename_volpn
          read(nu_restart, end=99) filename_aero
          read(nu_restart, end=99) filename_iage
+         read(nu_restart, end=99) filename_FY
 
    99    continue
       endif
@@ -518,6 +1098,7 @@
          write(nu_diag,'(a,a)') 'filename_volpn: ',filename_volpn
          write(nu_diag,'(a,a)') 'filename_aero : ',filename_aero
          write(nu_diag,'(a,a)') 'filename_iage : ',filename_iage
+         write(nu_diag,'(a,a)') 'filename_FY   : ',filename_FY
       endif
        
       if (my_task == master_task) close(nu_restart)
@@ -525,6 +1106,11 @@
       call broadcast_scalar(filename_volpn, master_task)
       call broadcast_scalar(filename_aero,  master_task)
       call broadcast_scalar(filename_iage,  master_task)
+      call broadcast_scalar(filename_FY,    master_task)
+
+      restart_format = restart_format_in
+
+      endif ! netcdf or binary restart
 
       !-----------------------------------------------------------------
       ! Ensure unused stress values in west and south ghost cells are 0
@@ -566,6 +1152,15 @@
       enddo
       !$OMP END PARALLEL DO
 
+      !-----------------------------------------------------------------
+      ! Ensure ice is binned in correct categories
+      ! (should not be necessary unless restarting from a run with
+      !  different category boundaries).
+      !
+      ! If called, this subroutine does not give exact restart.
+      !-----------------------------------------------------------------
+!!!      call cleanup_itd
+
       ! zero out prognostic fields at land points
       !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
@@ -587,15 +1182,6 @@
          enddo
       enddo
       !$OMP END PARALLEL DO
-
-      !-----------------------------------------------------------------
-      ! Ensure ice is binned in correct categories
-      ! (should not be necessary unless restarting from a run with
-      !  different category boundaries).
-      !
-      ! If called, this subroutine does not give exact restart.
-      !-----------------------------------------------------------------
-!!!      call cleanup_itd
 
       !-----------------------------------------------------------------
       ! compute aggregate ice state and open water area
@@ -683,7 +1269,6 @@
 !
 ! !USES:
 !
-      use ice_exit, only: abort_ice	
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -715,7 +1300,7 @@
 
          if (nrec == nrecold) then
             restformat = 'old'
-         else if (nrec == nrecnew) then
+         else if (nrec >= nrecnew) then
             restformat = 'new'
 	 else
             call abort_ice ( & 

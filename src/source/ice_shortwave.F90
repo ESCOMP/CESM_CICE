@@ -1210,7 +1210,7 @@
 ! !USES:
 !
       use ice_calendar
-      use ice_state, only: nt_aero
+      use ice_state, only: nt_aero, tr_aero
 ! BPB 8 February 2007  For diagnostic prints
       use ice_diagnostics
 !

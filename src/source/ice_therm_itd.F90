@@ -852,9 +852,8 @@
 !
       use ice_itd, only: hin_max, ilyr1, column_sum, &
                          column_conservation_check
-      use ice_state, only: nt_Tsfc, nt_iage, nt_aero 
-      use ice_age, only: tr_iage
-      use ice_aerosol, only: tr_aero
+      use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_aero, &
+                           tr_iage, tr_FY, tr_aero
       use ice_flux, only: update_ocn_f
 
 ! !INPUT/OUTPUT PARAMETERS:
@@ -1185,6 +1184,10 @@
 
          endif
 
+         if (tr_FY) &
+             trcrn(i,j,nt_FY,1) = (ai0new(m) + trcrn(i,j,nt_FY,1)*area1) &
+                                / aicen(i,j,1)
+
          vlyr(m)    = vi0new(m) / rnilyr
       enddo                     ! ij
 
@@ -1246,8 +1249,7 @@
 ! !USES:
 !
       use ice_itd, only: ilyr1, slyr1
-      use ice_aerosol, only: tr_aero
-      use ice_state, only: nt_aero 
+      use ice_state, only: nt_aero, tr_aero
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

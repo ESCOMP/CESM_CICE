@@ -1,4 +1,48 @@
 ===============================================================
+cice4_0_20090603
+Originator: dbailey
+Date: Wed Jun  3 16:12:58 MDT 2009
+Version: 4.0
+One-line Summary: New history option with multiple frequencies and
+                  netCDF restarts.
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+This is spread through a lot of the code, but includes a number of changes
+to handle mutiple output streams for the history files. This is the first
+step in this process. A more flexible version from Elizabeth Hunke will
+appear in a newer tag. Also, there will be some parallel i/o changes
+coming. Additionally the restarts are now in netCDF format by default.
+Currently, the binary option is still available through the flag,
+restart_format.
+
+M      bld/cice.cpl7.template
+M      bld/configure
+M      bld/config_files/definition.xml
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_calendar.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_age.F90
+M      src/source/ice_fileunits.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_therm_vertical.F90
+M      src/source/ice_step_mod.F90
+A      src/source/ice_FY.F90
+M      src/source/ice_therm_itd.F90
+M      src/source/ice_state.F90
+M      src/source/ice_restart.F90
+M      src/source/ice_read_write.F90
+M      src/source/ice_domain_size.F90
+M      src/source/ice_history.F90
+M      src/drivers/ccsm_sequential/CICE_InitMod.F90
+M      src/drivers/ccsm_sequential/CICE_RunMod.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090529
 Originator: dbailey
 Date: Fri May 29 12:30:49 MDT 2009

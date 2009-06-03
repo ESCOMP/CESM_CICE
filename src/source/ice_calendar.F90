@@ -23,6 +23,7 @@
 ! !USES:
 !
       use ice_constants
+      use ice_domain_size, only: nstreams
       use ice_exit, only: abort_ice
 !
 !EOP
@@ -73,8 +74,11 @@
          stop_now     , & ! if 1, end program execution
          write_restart, & ! if 1, write restart now
          diagfreq     , & ! diagnostic output frequency (10 = once per 10 dt)
-         dumpfreq_n   , & ! restart output frequency (10 = once per 10 d,m,y)
-         histfreq_n       ! history output frequency (10 = once per 10 h,d,m,y)
+         dumpfreq_n       ! restart output frequency (10 = once per 10 d,m,y)
+
+      integer (kind=int_kind) :: &
+         histfreq_n(nstreams) ! history output frequency 
+                              ! (10 = once per 10 h,d,m,y)
 
       real (kind=dbl_kind) :: &
          dt             , & ! thermodynamics timestep (s)
@@ -93,12 +97,14 @@
          new_month      , & ! new month = .true.
          new_day        , & ! new day = .true.
          new_hour       , & ! new hour = .true.
-         write_ic       , & ! write initial condition now
-         write_history      ! write history now
+         write_ic           ! write initial condition now
+
+      logical (kind=log_kind) :: &
+         write_history(nstreams) ! write history now
 
       character (len=1) :: &
-         histfreq       , & ! history output frequency, 'y','m','d','h','1'
-         dumpfreq           ! restart frequency, 'y','m','d'
+         histfreq(nstreams) , & ! history output frequency, 'y','m','d','h','1'
+         dumpfreq               ! restart frequency, 'y','m','d'
 
       character (len=char_len) :: calendar_type
 
@@ -135,6 +141,9 @@
 
       istep = 0         ! local timestep number
       time=istep0*dt    ! s
+#ifdef CCSMCOUPLED
+      time_forc = c0    ! for coupled runs
+#endif
       yday=c0           ! absolute day number
       mday=0            ! day of the month
       month=0           ! month
@@ -202,7 +211,7 @@
 !EOP
 !
       integer (kind=int_kind) :: &
-         k, ileap                   , &
+         k, ileap, ns               , &
          nyrp,mdayp,hourp           , & ! previous year, day, hour
          elapsed_days               , & ! since beginning this run
          elapsed_months             , & ! since beginning this run
@@ -216,7 +225,7 @@
       new_month=.false.
       new_day=.false.
       new_hour=.false.
-      write_history=.false.
+      write_history(:)=.false.
       write_restart=0
 
       sec = mod(ttime,secday)           ! elapsed seconds into date at
@@ -265,23 +274,34 @@
 
       endif ! calendar_type GREGORIAN
 
-      if (histfreq == '1') write_history=.true.
+      do ns = 1, nstreams
+         if (histfreq(ns) == '1') write_history(ns)=.true.
+      enddo
 
       if (istep > 1) then
-        select case (histfreq)
+
+        do ns = 1, nstreams
+
+        select case (histfreq(ns))
         case ("y", "Y")
-          if (new_year  .and. mod(nyr, histfreq_n)==0) &
-                write_history = .true.
+          if (new_year  .and. mod(nyr, histfreq_n(ns))==0) &
+                write_history(ns) = .true.
         case ("m", "M")
-          if (new_month .and. mod(elapsed_months,histfreq_n)==0) &
-                write_history = .true.
+          if (new_month .and. mod(elapsed_months,histfreq_n(ns))==0) &
+                write_history(ns) = .true.
         case ("d", "D")
-          if (new_day .and. mod(elapsed_days,histfreq_n)==0) &
-                write_history = .true.
+          if (new_day .and. mod(elapsed_days,histfreq_n(ns))==0) &
+                write_history(ns) = .true.
         case ("h", "H")
-          if (new_hour .and. mod(elapsed_hours,histfreq_n)==0) &
-                write_history = .true.
+          if (new_hour .and. mod(elapsed_hours,histfreq_n(ns))==0) &
+                write_history(ns) = .true.
+        case ("x", "X")
+          write_history(ns) = .false.
+        case default
+          call abort_ice('ice_calendar: Invalid histfreq: '//histfreq(ns))
         end select
+
+        enddo ! nstreams
 
         select case (dumpfreq)
         case ("y", "Y")
@@ -293,6 +313,8 @@
         case ("d", "D")
           if (new_day   .and. mod(elapsed_days, dumpfreq_n)==0) &
                 write_restart = 1
+        case default
+          call abort_ice('ice_calendar: Invalid dumpfreq: '//dumpfreq)
         end select
       endif
 

@@ -132,8 +132,8 @@
 
 <!--- history information --->
 
-<histfreq    >'m'     </histfreq> 
-<histfreq_n  >1       </histfreq_n>
+<histfreq    >'m','x','x','x','x','x' </histfreq> 
+<histfreq_n  >1,1,1,1,1,1             </histfreq_n>
 <hist_avg    >.true.  </hist_avg> 
 
 <!--- diagnostic information --->
@@ -148,6 +148,7 @@
 <!--------------------------->
 
 <tr_iage> .false. </tr_iage>
+<tr_FY>   .false. </tr_FY>
 <tr_pond> .true.  </tr_pond>
 <tr_aero> .false. </tr_aero>
 

@@ -35,7 +35,6 @@
       use ice_domain_size, only: ncat, nilyr, nslyr, ntilyr, ntslyr, ntrcr
       use ice_constants
       use ice_fileunits, only: nu_diag
-      use ice_age, only: tr_iage
       use ice_prescribed_mod, only: prescribed_ice
 !
 !EOP
@@ -130,7 +129,7 @@
       use ice_exit
       use ice_ocean
       use ice_itd, only: ilyr1, slyr1, ilyrn, slyrn
-      use ice_state, only: nt_Tsfc, nt_iage
+      use ice_state, only: nt_Tsfc, nt_iage, tr_iage
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

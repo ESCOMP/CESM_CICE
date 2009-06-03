@@ -38,7 +38,8 @@ module ice_comp_mct
 		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
                               faero
   use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
-                              filename_volpn
+                              filename_volpn, filename_FY, &
+                              tr_aero, tr_iage, tr_FY, tr_pond
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
   use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info
   use ice_blocks,      only : block, get_block, nx_block, ny_block
@@ -59,7 +60,6 @@ module ice_comp_mct
   use ice_dyn_evp,     only:  kdyn
   use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
   use ice_prescaero_mod
-  use ice_aerosol, only: tr_aero, write_restart_aero
   use ice_step_mod
   use CICE_RunMod
   use ice_global_reductions
@@ -107,7 +107,7 @@ contains
 ! !USES:
 
     use CICE_InitMod
-    use ice_restart, only: runid, runtype, restart_dir
+    use ice_restart, only: runid, runtype, restart_dir, restart_format
     use ice_history, only: history_dir, history_file
 !
 ! !ARGUMENTS:
@@ -335,11 +335,13 @@ contains
 ! Run thermodynamic CICE
 !
 ! !USES:
-    use ice_age, only: tr_iage, write_restart_age
     use ice_history
     use ice_restart
     use ice_diagnostics
-    use ice_meltpond, only: tr_pond, write_restart_pond
+    use ice_aerosol, only: write_restart_aero
+    use ice_age, only: write_restart_age
+    use ice_meltpond, only: write_restart_pond
+    use ice_FY, only: write_restart_FY
     use ice_restoring, only: restore_ice, ice_HaloRestore
     use ice_shortwave, only: init_shortwave
 
@@ -537,41 +539,59 @@ contains
        call seq_timemgr_EClockGetData(EClock, curr_ymd=ymd_sync, curr_tod=tod_sync, &
           curr_yr=yr_sync,curr_mon=mon_sync,curr_day=day_sync)
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
+
        write(nu_diag,*)'ice_comp_mct: calling dumpfile for restart filename= ',&
             fname
-       if (tr_pond) then
-            n = index(fname,'cice.r') + 6
-            string1 = trim(fname(1:n-1))
-            string2 = trim(fname(n:lenstr(fname)))
-            write(filename_volpn,'(a,a,a,a)') &
-               string1(1:lenstr(string1)),'.volpn', &
-               string2(1:lenstr(string2))
-       endif
-       if (tr_aero) then
-            n = index(fname,'cice.r') + 6
-            string1 = trim(fname(1:n-1))
-            string2 = trim(fname(n:lenstr(fname)))
-            write(filename_aero,'(a,a,a,a)') &
-               string1(1:lenstr(string1)),'.aero', &
-               string2(1:lenstr(string2))
-       endif
-       if (tr_iage) then
-            n = index(fname,'cice.r') + 6
-            string1 = trim(fname(1:n-1))
-            string2 = trim(fname(n:lenstr(fname)))
-            write(filename_iage,'(a,a,a,a)') &
-               string1(1:lenstr(string1)),'.age', &
-               string2(1:lenstr(string2))
-       endif
+
+       if (restart_format /= 'nc') then
+
+          if (tr_pond) then
+               n = index(fname,'cice.r') + 6
+               string1 = trim(fname(1:n-1))
+               string2 = trim(fname(n:lenstr(fname)))
+               write(filename_volpn,'(a,a,a,a)') &
+                  string1(1:lenstr(string1)),'.volpn', &
+                  string2(1:lenstr(string2))
+          endif
+          if (tr_aero) then
+               n = index(fname,'cice.r') + 6
+               string1 = trim(fname(1:n-1))
+               string2 = trim(fname(n:lenstr(fname)))
+               write(filename_aero,'(a,a,a,a)') &
+                  string1(1:lenstr(string1)),'.aero', &
+                  string2(1:lenstr(string2))
+          endif
+          if (tr_iage) then
+               n = index(fname,'cice.r') + 6
+               string1 = trim(fname(1:n-1))
+               string2 = trim(fname(n:lenstr(fname)))
+               write(filename_iage,'(a,a,a,a)') &
+                  string1(1:lenstr(string1)),'.age', &
+                  string2(1:lenstr(string2))
+          endif
+          if (tr_FY) then
+               n = index(fname,'cice.r') + 6
+               string1 = trim(fname(1:n-1))
+               string2 = trim(fname(n:lenstr(fname)))
+               write(filename_FY,'(a,a,a,a)') &
+                  string1(1:lenstr(string1)),'.FY', &
+                  string2(1:lenstr(string2))
+          endif
+
+       endif ! restart_format
+
 #if (defined _NOIO)
 !  Not enought memory on BGL to call dumpfile  file yet! 
 !       call dumpfile(fname)
 #else
        call ice_timer_start(timer_readwrite)
        call dumpfile(fname)
-       if (tr_aero) call write_restart_aero(filename_aero)
-       if (tr_iage) call write_restart_age(filename_iage)
-       if (tr_pond) call write_restart_pond(filename_volpn)
+       if (restart_format /= 'nc') then
+          if (tr_aero) call write_restart_aero(filename_aero)
+          if (tr_iage) call write_restart_age(filename_iage)
+          if (tr_pond) call write_restart_pond(filename_volpn)
+          if (tr_FY)   call write_restart_FY(filename_FY)
+       endif
        call ice_timer_stop(timer_readwrite)
 #endif
     end if
@@ -857,6 +877,8 @@ contains
                i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
+!              i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
+!                                                    / ailohi(i,j,iblk)
             
                !--- a/i fluxes computed by ice
                i2x_i%rAttr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    

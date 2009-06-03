@@ -27,7 +27,6 @@
       use ice_constants
       use ice_calendar, only: diagfreq, istep1, istep
       use ice_fileunits
-      use ice_aerosol, only: tr_aero   !MH
       use ice_domain_size
 !
 !EOP

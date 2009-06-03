@@ -24,8 +24,9 @@
 !
 ! !USES:
 !
-      use ice_aerosol, only: tr_aero, init_aerosol    !MH
+      use ice_aerosol
       use ice_age
+      use ice_FY
       use ice_calendar
       use ice_communicate
       use ice_diagnostics
@@ -44,6 +45,7 @@
       use ice_meltpond
       use ice_orbital
       use ice_shortwave
+      use ice_state, only: tr_aero, tr_iage, tr_FY, tr_pond
       use ice_therm_itd
       use ice_therm_vertical
       use ice_timers
@@ -94,6 +96,8 @@
 !
 !     local temporary variables
 
+      character(len=char_len_long) :: fname
+
       call init_communicate( mpicom_ice ) ! initial setup for message passing
       call init_fileunits       ! set unit numbers (including nu_diag)
       call input_data           ! namelist variables
@@ -126,6 +130,7 @@
 
       ! tracers
       if (tr_iage) call init_age        ! ice age tracer
+      if (tr_FY)   call init_FY         ! FY area tracer
       if (tr_pond) call init_meltponds  ! melt ponds
       if (tr_aero) call init_aerosol    ! ice aerosol MH
 
