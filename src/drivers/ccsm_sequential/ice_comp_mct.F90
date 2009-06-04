@@ -50,7 +50,8 @@ module ice_comp_mct
   use ice_communicate, only : my_task, master_task
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
-                              calendar_type, nextsw_cday
+                              calendar_type, nextsw_cday, days_per_year,&
+                              get_daycal, leap_year_count
   use ice_timers
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
 !  use ice_init
@@ -136,6 +137,8 @@ contains
     integer            :: shrlogunit,shrloglev ! old values
     integer            :: iam,ierr
     integer            :: lbnum
+    integer            :: daycal(13)  !number of cumulative days per month
+    integer            :: nleaps      ! number of leap days before current year
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall
 !EOP
@@ -259,8 +262,17 @@ contains
        iyear = (idate/10000)                     ! integer year of basedate
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
+                                                 ! (starts at 0)
        time  = (((iyear)*daycal(13)+daycal(month)+mday)*secday) &
              + start_tod
+       call get_daycal(year=iyear,days_per_year_in=days_per_year, &
+                       daycal_out=daycal)
+
+       nleaps = leap_year_count(iyear)   ! this sets nleaps in ice_calendar
+       write(6,*)'DRBDBG nleaps ',nleaps
+       time  = (((iyear)*days_per_year  + nleaps + daycal(month)+mday) &
+               *secday) + start_tod
+
        call shr_sys_flush(nu_diag)
     end if
 

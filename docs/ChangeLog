@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20090604
+Originator: dbailey
+Date: Thu Jun  4 12:58:52 MDT 2009
+Version: 4.0
+One-line Summary: Leap year calculation added (coleman).
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+This tag adds the capability for leap years to the ice. Added
+by Dani Coleman. These are bfb as long as the 365 day calendar
+is used.
+
+M      src/source/ice_calendar.F90
+M      src/drivers/ccsm_sequential/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090603
 Originator: dbailey
 Date: Wed Jun  3 16:12:58 MDT 2009

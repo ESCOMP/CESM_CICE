@@ -108,6 +108,9 @@
 
       character (len=char_len) :: calendar_type
 
+      integer :: nleaps = 0    ! The number of leap days *before* the current year
+                               ! This is set by ice_comp_mct and used there & here (must be consistent)
+
 !=======================================================================
 
       contains
@@ -156,27 +159,34 @@
       dt_thm = dt       ! convenience copy of thermodynamic timestep
       dt_dyn = dt/xndt_dyn ! dynamics et al timestep
 
-      dayyr = real(days_per_year, kind=dbl_kind)
-      if (days_per_year.eq.360) then
-        daymo  = daymo360
-        daycal = daycal360
-      elseif (days_per_year.eq.365) then
-        daymo  = daymo365
-        daycal = daycal365
-      else
-         call abort_ice('ice: year must have 360 or 365 days')
-      endif
+      dayyr = real(days_per_year, kind=dbl_kind)  ! days_per_year set by ice_init
+
 
       ! determine initial date (assumes namelist year_init, istep0 unchanged)     
       sec = mod(time,secday)            ! elapsed seconds into date at
                                         ! end of dt
       tday = (time-sec)/secday + c1     ! absolute day number
-      yday = mod(tday-c1,dayyr) + c1    ! day of the year
+
+      !(The following leap-year code is repeated in the calendar subroutine below)
+      if (calendar_type == "GREGORIAN") then 	
+         ! divide the number of days by the number of days in 400 years (the length of a leap-year cycle)
+         nyr = int((tday-c1)*real(400.,kind=dbl_kind)/(400*365 + 97 )) + 1
+      else
+         nyr = int((tday-c1)/dayyr) + 1    ! year number
+      endif
+
+      ! get the daycal variable, which is dependant on calendar and days_per_year
+      call get_daycal(year=nyr+year_init-1,days_per_year_in=days_per_year,&
+           daycal_out=daycal,daymo_out=daymo)
+
+      ! subtract the number of days in prior years from the number of days to get the number of days this year
+      yday = tday-nleaps - (nyr-1)*dayyr    ! days that have passed this year
+
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
       enddo
       mday = int(yday) - daycal(month)  ! day of the month
-      nyr = int((tday-c1)/dayyr) + 1    ! year number
+
       idate0 = (nyr+year_init-1)*10000 + month*100 + mday ! date (yyyymmdd) 
 
       end subroutine init_calendar
@@ -211,7 +221,7 @@
 !EOP
 !
       integer (kind=int_kind) :: &
-         k, ileap, ns               , &
+         k, ns                      , &
          nyrp,mdayp,hourp           , & ! previous year, day, hour
          elapsed_days               , & ! since beginning this run
          elapsed_months             , & ! since beginning this run
@@ -231,13 +241,37 @@
       sec = mod(ttime,secday)           ! elapsed seconds into date at
                                         ! end of dt
       tday = (ttime-sec)/secday + c1    ! absolute day number
-      yday = mod(tday-c1,dayyr) + c1    ! day of the year
-      hour = int((ttime-dt)/c3600) + c1 ! hour
+      
+      !(The following leap-year code is repeated in the init_calendar subroutine above)
+      if (calendar_type == "GREGORIAN") then 	
+         ! divide the number of days by the number of days in 400 years (the length of a leap-year cycle)
+         nyr = int((tday-c1)*real(400.,kind=dbl_kind)/(400*365 + 97 )) + 1
+         
+      else
+         nyr = int((tday-c1)/dayyr) + 1    ! year number
+      endif
+
+
+      ! reset the number of leap days: this is necessary to add one one
+      ! the year turns from a leap-year to a non-leap year
+      nleaps = leap_year_count(nyr+year_init-1)
+
+      ! get the daycal variable, depending on calendar and days_per_year
+      call get_daycal(year=nyr+year_init-1,days_per_year_in=days_per_year,&
+           daycal_out=daycal) 
+
+      ! subtract the number of days in prior years from the number of days to get the number of days this year
+      yday = tday-nleaps - (nyr-1)*dayyr    ! days that have passed this year
+
+
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
       enddo
-      mday = int(yday) - daycal(month)  ! day of the month
-      nyr = int((tday-c1)/dayyr) + 1    ! year number
+      mday = int(yday) - daycal(month)  ! day of the month 
+
+      hour = int((ttime-dt)/c3600) + c1 ! hour  
+
+
       elapsed_months = (nyr - 1)*12 + month - 1
       elapsed_days = int(tday) - 1 
       elapsed_hours = int(ttime/3600)
@@ -253,26 +287,6 @@
       if (mday  /= mdayp)  new_day = .true.
       if (hour  /= hourp)  new_hour = .true.
 
-      if (calendar_type == "GREGORIAN") then
-
-      ileap = 0
-      if (mod(nyr+year_init-1,  4) == 0) ileap = 1
-      if (mod(nyr+year_init-1,100) == 0) ileap = 0
-      if (mod(nyr+year_init-1,400) == 0) ileap = 1
-
-      if (ileap == 1) then
-         daycal = daycal366
-         yday = mod(tday-c1,dayyr+c1) + c1    ! day of the year
-         do k = 1, 12
-           if (yday > real(daycal(k),kind=dbl_kind)) month = k
-         enddo
-         mday = int(yday) - daycal(month)  ! day of the month
-         idate = (nyr+year_init-1)*10000 + month*100 + mday ! date (yyyymmdd) 
-      else
-         daycal = daycal365
-      endif
-
-      endif ! calendar_type GREGORIAN
 
       do ns = 1, nstreams
          if (histfreq(ns) == '1') write_history(ns)=.true.
@@ -328,6 +342,123 @@
       end subroutine calendar
 
 !=======================================================================
+      subroutine get_daycal(year,days_per_year_in,daycal_out,daymo_out)
+
+      ! Input/output paramters
+        integer, intent(in), optional  :: year    ! year
+        integer, intent(in), optional  :: days_per_year_in   ! 360 or 365
+        integer, intent(out), optional :: daycal_out(13)     ! cumumulative days per month
+        integer, intent(out), optional :: daymo_out(12)     ! days per month
+
+      ! 360-day year data
+      integer (kind=int_kind) :: &
+         daymo360(12)         , & ! number of days in each month
+         daycal360(13)            ! day number at end of month
+      data daymo360 /   30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30/
+      data daycal360/ 0,30, 60, 90,120,150,180,210,240,270,300,330,360/
+
+      ! 365-day year data
+      integer (kind=int_kind) :: &
+         daymo365(12)         , & ! number of days in each month
+         daycal365(13)            ! day number at end of month
+      data daymo365 /   31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
+      data daycal365/ 0,31, 59, 90,120,151,181,212,243,273,304,334,365/
+
+      ! 366-day year data (leap year)
+      integer (kind=int_kind) :: &
+         daycal366(13)            ! day number at end of month
+      data daycal366/ 0,31, 60, 91,121,152,182,213,244,274,305,335,366/
+
+
+        if ( present(daymo_out) ) then
+           if ( .not. present(days_per_year_in)) &
+                call abort_ice('ice: get_daycal needs days_per_year_in to return daymo_out')
+           if (days_per_year_in.eq.360) then
+              daymo_out  = daymo360
+           elseif (days_per_year_in.eq.365) then
+              daymo_out  = daymo365
+           else
+              call abort_ice('ice: year must have 360 or 365 days')
+           endif
+        endif ! daymo_out
+
+        if ( present(daycal_out) ) then
+
+           ! initialize to check for non-setting
+           daycal_out(:) = 0
+
+           ! calculate from days_per_year_in
+           if ( present(days_per_year_in) ) then
+              if (days_per_year_in.eq.360) then
+                 daycal_out = daycal360
+              elseif (days_per_year_in.eq.365) then
+                 daycal_out = daycal365
+              else
+                 call abort_ice('ice: year must have 360 or 365 days')
+              endif
+           endif  ! present(days_per_year_in) 
+
+
+           if (calendar_type == "GREGORIAN") then 	
+              if ( .not. present(year) ) &
+                   call abort_ice('ice: get_daycal needs year to return daycal_out for Gregorian calendar')
+              if ( is_leap_year(year) ) then
+                 daycal_out = daycal366
+              else
+                 daycal_out = daycal365
+              endif
+           endif ! calendar_type GREGORIAN
+
+           if ( daycal_out(13) .eq. 0 ) call abort_ice('ice: get_daycal failed to set daycal_out')
+
+        endif  ! daycal_out
+
+
+      end subroutine get_daycal
+
+!=======================================================================
+
+      logical function is_leap_year(year)
+        ! returns .true. if year is a leap year
+
+        ! Input/output paramters
+        integer, intent(in) :: year
+
+        is_leap_year = .false.
+        if (mod(year,  4) == 0) is_leap_year = .true.
+        if (mod(year,100) == 0) is_leap_year = .false.
+        if (mod(year,400) == 0) is_leap_year = .true.
+
+        end function is_leap_year
+
+!=======================================================================
+      integer function leap_year_count(Y)
+        ! counts the number of leap years since year 1
+
+! Input/output paramters
+        integer, intent(in) :: Y
+
+
+        if (calendar_type == "GREGORIAN") then 	
+           ! count the number of leap years before Y
+           if ( Y .lt. 0 ) then
+              leap_year_count = 0
+              write(6,*) 'WARNING: leap_year_count for year ',Y,'assumes no leap years before year 0'
+           else
+              leap_year_count  = ( (Y-1)/4 - (Y-1)/100 + (Y-1)/400 ) + 1   ! +1 for year 0
+           endif
+        else
+           leap_year_count = 0
+        endif
+
+        ! set module variable
+        nleaps = leap_year_count
+
+        return
+
+      end function leap_year_count
+
+
 
       end module ice_calendar
 
