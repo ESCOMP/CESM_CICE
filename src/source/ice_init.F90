@@ -172,7 +172,7 @@
       print_global = .true.  ! if true, print global diagnostic data
       diag_type = 'stdout'
       diag_file = 'ice_diag.d'
-      histfreq(:) = 'm'      ! output frequency option for different streams
+      histfreq(:) = 'd'      ! output frequency option for different streams  **** note this is only for testing - needs to get changed back'
       histfreq_n(:) = 1      ! output frequency of histfreq
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
       history_dir  = ' '     ! write to executable dir for default

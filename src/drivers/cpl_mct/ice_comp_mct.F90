@@ -269,7 +269,6 @@ contains
                        daycal_out=daycal)
 
        nleaps = leap_year_count(iyear)   ! this sets nleaps in ice_calendar
-       write(6,*)'DRBDBG nleaps ',nleaps
        time  = (((iyear)*days_per_year  + nleaps + daycal(month)+mday) &
                *secday) + start_tod
 

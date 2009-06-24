@@ -349,6 +349,25 @@ Default: 1
 </entry>
 
 <!----------------------------->
+<!---pio information        --->
+<!----------------------------->
+
+<entry id="ice_num_iotasks" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
+Number of output io tasks
+Default: -1 
+</entry>
+
+<entry id="ice_pio_stride" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
+Stride of io output
+Default: -1 
+</entry>
+
+<entry id="ice_pio_type_name" type="character*80"  category="cice" group="ice_pio_nml" valid_values="netcdf,pnetcdf">
+Type of io output
+Default: netcdf 
+</entry>
+
+<!----------------------------->
 <!-- History output namelist -->
 <!----------------------------->
 

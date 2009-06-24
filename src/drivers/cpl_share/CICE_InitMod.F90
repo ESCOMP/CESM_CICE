@@ -122,10 +122,20 @@
       call ice_prescaero_init
 
       if (runtype == 'continue') then ! start from core restart file
-         call restartfile()           ! given by pointer in ice_in
+         ! given by pointer in ice_in
+         if (restart_format == 'bin') then
+            call restartfile()        
+         else
+            call restartfile(usepio=.true.)
+         end if
          call calendar(time)          ! For continuation runs.
-      else if (restart) then          ! ice_ic = core restart file
-         call restartfile (ice_ic)    !  or 'default' or 'none'
+      else if (restart) then          
+         ! ice_ic = core restart file or 'default' or 'none'
+         if (index(ice_ic,'nc') == 0) then
+            call restartfile (ice_ic)      
+         else
+            call restartfile (usepio=.true., ice_ic=ice_ic)
+         end if
       endif
 
       ! tracers

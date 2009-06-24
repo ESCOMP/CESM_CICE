@@ -2318,20 +2318,23 @@
       !----------------------------------------------------------------
 
       allocate(work_g2(nx_block,ny_block))  ! not used as global here
-      !$OMP PARALLEL DO PRIVATE(iblk,icorner)
+      !NOTE - this is commented below due to problems with OpenMP
+      !reproducibility in this loop  
+      !!$OMP PARALLEL DO PRIVATE(iblk,icorner,work_g2)
       do iblk = 1, nblocks
          do icorner = 1, 4
             work_g2(:,:) = lont_bounds(icorner,:,:,iblk) + c360
             where (work_g2 > c360) work_g2 = work_g2 - c360
             where (work_g2 < c0 )  work_g2 = work_g2 + c360
             lont_bounds(icorner,:,:,iblk) = work_g2(:,:)
+
             work_g2(:,:) = lonu_bounds(icorner,:,:,iblk) + c360
             where (work_g2 > c360) work_g2 = work_g2 - c360
             where (work_g2 < c0 )  work_g2 = work_g2 + c360
             lonu_bounds(icorner,:,:,iblk) = work_g2(:,:)
          enddo
       enddo
-      !$OMP END PARALLEL DO
+      !!$OMP END PARALLEL DO
       deallocate(work_g2)
 
       end subroutine gridbox_corners

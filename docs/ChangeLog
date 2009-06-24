@@ -1,3 +1,65 @@
+cice4_0_200924
+Originator: mvertens
+Date: Wed Jun 24 16:32:52 MDT 2009
+Version: 4.0
+One-line Summary: implemented pio for history and restart
+CCSM Version compatible with: ccsm4_0_beta14+
+Changes made:
+
+- implemented pio for history and restarts
+  (namelist generation for pnetcdf, etc. is not yet handled by configure 
+  and build-namelist)
+- put in new directory structure needed for esmf interfaces
+  - introduced new share code for i/o in source/ and removed all netcdf
+    and binary calls to cpl_share/ and cice4 (this will enable cice4
+    interfaces to not use pio)
+- fixed history bugs using openmp that were introduced in cice4_0_20090603
+- tests done
+  - verified that running a gx1v6 ice (in a B case scenario) the
+    a 256x1 case restarted and was bfb in history output with ccsm4_0_beta18
+    output (except for the grid fields which were different in only the 
+    eliminated land blocks) - and the pond fields which were changed 
+    relative to beta18	
+  - verified that running a gx1v6 ice (in a B case scenario) the
+    a 64x4 case restarted and was bfb in history output with ccsm4_0_beta18
+    output (except for the grid fields which were different in only the 
+    eliminated land blocks) - and the pond fields which were changed relative
+    to beta18	
+	
+M      bld/configure
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      src/source/ice_init.F90
+D      src/source/ice_restart.F90
+M      src/source/ice_grid.F90
+A      src/source/ice_history_fields.F90
+M      src/source/ice_history.F90
+D      src/drivers/ccsm_sequential
+D      src/drivers/ccsm_sequential/CICE.F90
+D      src/drivers/ccsm_sequential/ice_scam.F90
+D      src/drivers/ccsm_sequential/ice_communicate.F90
+D      src/drivers/ccsm_sequential/CICE_InitMod.F90
+D      src/drivers/ccsm_sequential/CICE_RunMod.F90
+D      src/drivers/ccsm_sequential/ice_constants.F90
+D      src/drivers/ccsm_sequential/ice_comp_mct.F90
+D      src/drivers/ccsm_sequential/ice_prescribed_mod.F90
+A      src/drivers/cpl_share
+A  +   src/drivers/cpl_share/CICE.F90
+A  +   src/drivers/cpl_share/ice_scam.F90
+A  +   src/drivers/cpl_share/ice_communicate.F90
+A      src/drivers/cpl_share/ice_restart.F90
+A  +   src/drivers/cpl_share/CICE_InitMod.F90
+A  +   src/drivers/cpl_share/CICE_RunMod.F90
+A      src/drivers/cpl_share/ice_pio.F90
+A      src/drivers/cpl_share/ice_history_write.F90
+A  +   src/drivers/cpl_share/ice_constants.F90
+A  +   src/drivers/cpl_share/ice_prescribed_mod.F90
+A      src/drivers/cpl_mct
+A  +   src/drivers/cpl_mct/ice_comp_mct.F90
+A  +   src/drivers/cice4/ice_restart.F90
+A      src/drivers/cice4/ice_history_write.F90
+A      src/drivers/cpl_esmf
+	
 ===============================================================
 cice4_0_20090604
 Originator: dbailey
