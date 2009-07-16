@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090718
+Originator: dbailey
+Date: Sat Jul 18
+Version: 4.0
+One-line Summary: fix tripole grid and kmt file names
+CCSM Version compatible with: ccsm4_0_beta18+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090717
 Originator: dbailey
 Date: Fri Jul 17

@@ -63,7 +63,7 @@
 <grid_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20010402.grid'</grid_file> 
 <grid_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'</grid_file> 
 <grid_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20030806.grid'</grid_file> 
-<grid_file hgrid="tx0.1v2"   >'ice/cice/grid.3600x2400.fob.da'</grid_file> 
+<grid_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.grid'</grid_file> 
 <grid_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.grid'</grid_file>
 
 <kmt_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
@@ -81,7 +81,7 @@
 <kmt_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20061229.kmt'</kmt_file> 
 <kmt_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'</kmt_file> 
 <kmt_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'</kmt_file> 
-<kmt_file hgrid="tx0.1v2"   >'ice/cice/kmt_pbc.3600x2400.tripole.s2.0.merge_caspian.da'</kmt_file> 
+<kmt_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.kmt'</kmt_file> 
 <kmt_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.kmt'</kmt_file>
 
 <kcatbound> 0 </kcatbound>
