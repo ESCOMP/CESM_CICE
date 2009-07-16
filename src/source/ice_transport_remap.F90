@@ -523,7 +523,7 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,2,max_blocks) ::     &
           dpwork          
  
-       real (kind=dbl_kind), dimension(nx_block,ny_block,3,0:ncat,max_blocks) :: &
+       real (kind=dbl_kind), dimension(nx_block,ny_block,2,0:ncat,max_blocks) :: &
           mwork
 
 !     call t_barrierf ('cice_dyn_remap1_BARRIER',MPI_COMM_ICE)
@@ -708,9 +708,8 @@
             do i = 1, nx_block
               dpwork(i,j,1,  iblk) = dpx(i,j,iblk)
               dpwork(i,j,2,  iblk) = dpy(i,j,iblk)
-              mwork (i,j,1,:,iblk) = mc (i,j,:,iblk)
-              mwork (i,j,2,:,iblk) = mx (i,j,:,iblk)
-              mwork (i,j,3,:,iblk) = my (i,j,:,iblk)
+              mwork (i,j,1,:,iblk) = mx (i,j,:,iblk)
+              mwork (i,j,2,:,iblk) = my (i,j,:,iblk)
             enddo
             enddo
          enddo
@@ -723,8 +722,8 @@
                               field_loc_NEcorner, field_type_vector)
 
          ! mass field
-!jw         call ice_HaloUpdate (mc,               halo_info, &
-!jw                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (mc,               halo_info, &
+                              field_loc_center, field_type_scalar)
 !jw         call ice_HaloUpdate (mx,               halo_info, &
 !jw                              field_loc_center, field_type_vector)
 !jw         call ice_HaloUpdate (my,               halo_info, &
@@ -738,9 +737,8 @@
             do i = 1, nx_block
               dpx(i,j,  iblk) = dpwork(i,j,1,  iblk)
               dpy(i,j,  iblk) = dpwork(i,j,2,  iblk)
-              mc (i,j,:,iblk) = mwork (i,j,1,:,iblk)
-              mx (i,j,:,iblk) = mwork (i,j,2,:,iblk)
-              my (i,j,:,iblk) = mwork (i,j,3,:,iblk)
+              mx (i,j,:,iblk) = mwork (i,j,1,:,iblk)
+              my (i,j,:,iblk) = mwork (i,j,2,:,iblk)
             enddo
             enddo
          enddo
