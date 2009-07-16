@@ -1,10 +1,21 @@
 ===============================================================
+cice4_0_20090717
+Originator: dbailey
+Date: Fri Jul 17
+Version: 4.0
+One-line Summary: leap year changes (bundy)
+CCSM Version compatible with: ccsm4_0_beta18+
+Changes made:
+
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090716
 Originator: dbailey
 Date: Thu Jul 16 11:27:49 MDT 2009
 Version: 4.0
 One-line Summary: fixed transport halo update bug
-CCSM Version compatible with: ccsm4_0_beta14+
+CCSM Version compatible with: ccsm4_0_beta18+
 Changes made:
 
 M      src/source/ice_transport_remap.F90

@@ -263,14 +263,13 @@ contains
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
-       time  = (((iyear)*daycal(13)+daycal(month)+mday)*secday) &
-             + start_tod
+
        call get_daycal(year=iyear,days_per_year_in=days_per_year, &
                        daycal_out=daycal)
 
        nleaps = leap_year_count(iyear)   ! this sets nleaps in ice_calendar
-       time  = (((iyear)*days_per_year  + nleaps + daycal(month)+mday) &
-               *secday) + start_tod
+       time  = (((iyear)*days_per_year  + nleaps + daycal(month)+mday)*secday) &
+             + start_tod    
 
        call shr_sys_flush(nu_diag)
     end if
