@@ -16,6 +16,9 @@
 !
 !EOP
 !
+      implicit none
+      save
+
       logical (kind=log_kind) :: &
          hist_avg  ! if true, write averaged data instead of snapshots
 
@@ -218,11 +221,6 @@
            n_aeroic1n(n_aero*ncat_hist), &
            n_aeroic2n(n_aero*ncat_hist)
 
-!
-!EOP
-!
-      implicit none
-      save
 
 !=======================================================================
 

@@ -41,13 +41,13 @@
       save
 
       interface dumpfile
-         procedure dumpfile_bin
-         procedure dumpfile_pio
+         module procedure dumpfile_bin
+         module procedure dumpfile_pio
       end interface
 
       interface restartfile
-         procedure restartfile_bin
-         procedure restartfile_pio
+         module procedure restartfile_bin
+         module procedure restartfile_pio
       end interface
 
       character (len=char_len) :: &       	 

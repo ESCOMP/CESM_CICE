@@ -39,9 +39,9 @@ module ice_pio
   !PUBLIC MEMBER FUNCTIONS:
 
   interface ice_pio_initdecomp
-     procedure ice_pio_initdecomp_2d
-     procedure ice_pio_initdecomp_3d
-     procedure ice_pio_initdecomp_3d_inner
+     module procedure ice_pio_initdecomp_2d
+     module procedure ice_pio_initdecomp_3d
+     module procedure ice_pio_initdecomp_3d_inner
   end interface
 
   public ice_pio_init
