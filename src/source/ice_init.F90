@@ -557,7 +557,7 @@
          write(nu_diag,*)    ' restart_format            = ', &
                                trim(restart_format)
          write(nu_diag,*)    ' lcdf64                    = ', &
-                               trim(lcdf64)
+                               lcdf64
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
          write(nu_diag,*   ) ' ice_ic                    = ', &
