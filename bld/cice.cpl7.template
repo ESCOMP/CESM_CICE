@@ -47,6 +47,10 @@ if ($CICE_MODE == 'prescribed') set cice_prestype = "-cice_prestype $CICE_PRESTY
 
 set presaero_type = "-presaero_type $CICE_PRESAERO_TYPE "
 
+if ($ICE_CDF64 == "TRUE") then
+    setenv CICE_NAMELIST_OPTS "$CICE_NAMELIST_OPTS lcdf64=.true."
+endif
+
 $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
                                       -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
 

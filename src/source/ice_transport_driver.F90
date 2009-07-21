@@ -751,6 +751,9 @@
 !                        vicen, vsnon,     &
 !                        eicen, esnon)
 
+      uee(:,:,:) = c0
+      vnn(:,:,:) = c0
+
     !-------------------------------------------------------------------
     ! Average corner velocities to edges.
     !-------------------------------------------------------------------
@@ -774,9 +777,9 @@
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (uee,             halo_info,     &
-                           field_loc_Eface, field_type_scalar)
+                           field_loc_Eface, field_type_vector)
       call ice_HaloUpdate (vnn,             halo_info,     &
-                           field_loc_Nface, field_type_scalar)
+                           field_loc_Nface, field_type_vector)
       call ice_timer_stop(timer_bound)
 
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi)

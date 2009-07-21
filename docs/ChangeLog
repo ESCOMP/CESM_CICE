@@ -1,9 +1,29 @@
+===============================================================
+cice4_0_20090721
+Originator: dbailey
+Date: Tue Jul 21
+Version: 4.0
+One-line Summary: 64 bit addressing and upwind bug fixes
+CCSM Version compatible with: ccsm4_0_beta19+
+Changes made:
+
+M      bld/cice.cpl7.template
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_transport_driver.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20090719
 Originator: mvertens
 Date: Sun Jul 19
 Version: 4.0
 One-line Summary: fixed compilation problems with pgi (jaguar)
-CCSM Version compatible with: ccsm4_0_beta18+
+CCSM Version compatible with: ccsm4_0_beta19+
 Changes made:
 
 Since pio was introduced, the code was not tested with pgi - and

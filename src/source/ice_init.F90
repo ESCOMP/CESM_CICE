@@ -66,7 +66,7 @@
                               npt, dt, xndt_dyn, days_per_year, write_ic
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
-          runid, runtype, ice_ic, resttype, restart_format
+          runid, runtype, ice_ic, resttype, restart_format, lcdf64
       use ice_history, only: hist_avg, &
                              history_format, history_dir, history_file, &
                              incond_dir, incond_file
@@ -121,7 +121,7 @@
         npt,            xndt_dyn,                                       &
         runtype,        runid,                                          &
         ice_ic,         restart,                                        &
-        restart_dir,    restart_file,   restart_format,                 &
+        restart_dir,    restart_file,   restart_format, lcdf64,         &
         pointer_file,   dumpfreq,       dumpfreq_n,                     &
         diagfreq,       diag_type,      diag_file,                      &
         print_global,   print_points,   latpnt,          lonpnt,        &
@@ -187,6 +187,7 @@
       restart_dir  = ' '     ! write to executable dir for default
       restart_file = 'iced'  ! restart file name prefix
       restart_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
+      lcdf64       = .false. ! 64 bit offset for netCDF
       pointer_file = 'ice.restart_file'
       ice_ic       = 'default'      ! latitude and sst-dependent
       grid_format  = 'bin'          ! file format ('bin'=binary or 'nc'=netcdf)
@@ -437,6 +438,7 @@
       call broadcast_scalar(restart,            master_task)
       call broadcast_scalar(restart_dir,        master_task)
       call broadcast_scalar(restart_format,     master_task)
+      call broadcast_scalar(lcdf64,             master_task)
       call broadcast_scalar(pointer_file,       master_task)
       call broadcast_scalar(ice_ic,             master_task)
       call broadcast_scalar(grid_format,        master_task)
@@ -554,6 +556,8 @@
                                trim(restart_file)
          write(nu_diag,*)    ' restart_format            = ', &
                                trim(restart_format)
+         write(nu_diag,*)    ' lcdf64                    = ', &
+                               trim(lcdf64)
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
          write(nu_diag,*   ) ' ice_ic                    = ', &

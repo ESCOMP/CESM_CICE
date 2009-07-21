@@ -143,6 +143,9 @@
 <!--- restart information --->
 <pointer_file>rpointer.ice</pointer_file>
 
+<!--- 64 bit offset --->
+<lcdf64>.false. </lcdf64>
+
 <!--------------------------->
 <!-- Tracer namelist- --->
 <!--------------------------->

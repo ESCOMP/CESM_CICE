@@ -86,6 +86,8 @@
          dimension(nx_block,ny_block,max_blocks) :: &
          work1
 
+      logical (kind=log_kind) :: lcdf64
+
       integer (kind=int_kind) :: ncid ! netcdf restart file id
 
       integer (kind=int_kind) :: &
@@ -319,7 +321,7 @@
 
       File%fh=-1
       call ice_pio_init(mode='write',filename=trim(filename), File=File, &
-           clobber=.true., cdf64=.false. )
+           clobber=.true., cdf64=lcdf64 )
 
       call ice_pio_initdecomp(iodesc=iodesc2d)
       call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat)

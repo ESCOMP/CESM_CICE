@@ -109,6 +109,13 @@ ice restart pointer file
 Default: rpointer.ice
 </entry>
 
+<!---64 bit offset      ---->
+
+<entry id="lcdf64" type="logical"  category="cice" group="setup_nml" valid_values="">
+64 bit offset
+Default: FALSE
+</entry>
+
 <!---Grid information    ---->
 
 <entry id="grid_type" type="char*256"  category="cice" 

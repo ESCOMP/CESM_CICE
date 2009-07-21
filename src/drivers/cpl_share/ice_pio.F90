@@ -163,7 +163,7 @@ contains
          if (exists) then
             if (lclobber) then
                nmode = pio_clobber
-               ! if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
+               if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
                status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
                if (my_task == master_task) then
                   write(nu_diag,*) subname,' create file ',trim(filename)
@@ -176,7 +176,7 @@ contains
             endif
          else
             nmode = pio_noclobber
-            ! if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
+            if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
             status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
             if (my_task == master_task) then
                write(nu_diag,*) subname,' create file ',trim(filename)

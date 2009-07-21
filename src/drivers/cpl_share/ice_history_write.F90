@@ -57,7 +57,7 @@
                               year_init, new_year, new_month, new_day, &
                               dayyr, daymo, days_per_year
       use ice_work, only: work_g1, work_gr, work_gr3
-      use ice_restart, only: lenstr, runid
+      use ice_restart, only: lenstr, runid, lcdf64
       use ice_domain, only: distrb_info
       use ice_itd, only: c_hi_range
       use ice_exit
@@ -147,7 +147,7 @@
       ! create file
       File%fh=-1
       call ice_pio_init(mode='write', filename=trim(filename), File=File, &
-	clobber=.true., cdf64=.false.)
+	clobber=.true., cdf64=lcdf64)
 
       call ice_pio_initdecomp(iodesc=iodesc2d)
       call ice_pio_initdecomp(ndim3=nverts, inner_dim=.true., iodesc=iodesc3d)
