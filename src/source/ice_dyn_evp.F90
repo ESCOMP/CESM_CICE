@@ -529,9 +529,9 @@
       call set_evp_parameters (dt)
 
       if (my_task == master_task) then
-         write(nu_diag,*) 'dt  = ',dt
-         write(nu_diag,*) 'dte = ',dt/real(ndte,kind=dbl_kind)
-         write(nu_diag,*) 'tdamp =', eyc*dt
+         write(nu_diag,*) 'dt_dyn  = ',dt
+         write(nu_diag,*) 'dte     = ',dt/real(ndte,kind=dbl_kind)
+         write(nu_diag,*) 'tdamp   =', eyc*dt
       endif
 
       allocate(fcor_blk(nx_block,ny_block,max_blocks))

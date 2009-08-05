@@ -593,7 +593,7 @@
 
       call ice_read_global(nu_grid,7,work_g1,'rda8',.true.)   ! ANGLE
       call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
-                          field_loc_NEcorner, field_type_scalar)
+                          field_loc_NEcorner, field_type_angle)
 
       !-----------------------------------------------------------------
       ! cell dimensions
@@ -731,7 +731,7 @@
       fieldname='angle'
       call ice_read_global_nc(fid_grid,7,fieldname,work_g1,diag) ! ANGLE    
       call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
-                          field_loc_NEcorner, field_type_scalar)
+                          field_loc_NEcorner, field_type_angle)
 
       ! fix ANGLE: roundoff error due to single precision
       where (ANGLE >  pi) ANGLE =  pi
@@ -875,7 +875,7 @@
 
       call ice_read_global(nu_grid,8,work_g1,'rda8',.true.)   ! ANGLE
       call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
-                          field_loc_NEcorner, field_type_scalar)
+                          field_loc_NEcorner, field_type_angle)
 
       !-----------------------------------------------------------------
       ! cell dimensions
@@ -1253,7 +1253,7 @@
          work_g1(:,:) = work_g1(:,:) / rad_to_deg
       endif
       call scatter_global(ULON, work_g1, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
+                          field_loc_NEcorner, field_type_scalar)
 
       if (my_task == master_task) then
          work_g1 = c0
@@ -1267,7 +1267,7 @@
          work_g1(:,:) = work_g1(:,:) / rad_to_deg
       endif
       call scatter_global(ULAT, work_g1, master_task, distrb_info, &
-                          field_loc_center, field_type_scalar)
+                          field_loc_NEcorner, field_type_scalar)
 
       if (my_task == master_task) then
          do j = 1, ny_global
@@ -1877,7 +1877,7 @@
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (work1,            halo_info, &
-                           field_loc_center, field_type_vector)
+                           field_loc_NEcorner, field_type_vector)
       call ice_timer_stop(timer_bound)
 
       call to_tgrid(work1,work)

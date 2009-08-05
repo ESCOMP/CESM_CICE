@@ -1,4 +1,26 @@
 ===============================================================
+cice4_0_20090805
+Originator: dbailey
+Date: Wed Aug 05
+Version: 4.0
+One-line Summary: Mainly bug fixes.
+CCSM Version compatible with: ccsm4_0_beta20+
+Changes made:
+
+A couple small bug fixes added here. A bug with the dynamic timestep 
+with sub-cycling was fixed. A bug in the monotonicity check was fixed 
+in the remapping advection. Various halo updates were fixed. Also, 
+the diagnostic print statement of writing a restart file is now only 
+done on the master task.
+
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_grid.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/CICE_InitMod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090721
 Originator: dbailey
 Date: Tue Jul 21

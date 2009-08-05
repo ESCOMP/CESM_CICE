@@ -1127,8 +1127,7 @@
       ! state variables
       !-----------------------------------------------------------------
       if (my_task == master_task) &
-         write(nu_diag,*) 'cat ',n, &
-              ' min/max area, vol ice, vol snow, Tsfc'
+         write(nu_diag,*) ' min/max area, vol ice, vol snow, Tsfc'
 
       status = pio_inq_varid(File,'aicen',varid)
       call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)

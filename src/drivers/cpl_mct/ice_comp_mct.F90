@@ -550,8 +550,10 @@ contains
           curr_yr=yr_sync,curr_mon=mon_sync,curr_day=day_sync)
        fname = restart_filename(yr_sync, mon_sync, day_sync, tod_sync)
 
-       write(nu_diag,*)'ice_comp_mct: calling dumpfile for restart filename= ',&
-            fname
+       if (my_task == master_task) then
+          write(nu_diag,*) &
+            'ice_comp_mct: calling dumpfile for restart filename= ', fname
+       endif
 
        if (restart_format /= 'nc') then
 
