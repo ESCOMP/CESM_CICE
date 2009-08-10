@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090810
+Originator: dbailey
+Date: Mon Aug 10
+Version: 4.0
+One-line Summary: New transient aerosol dataset.
+CCSM Version compatible with: ccsm4_0_beta20+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090805
 Originator: dbailey
 Date: Wed Aug 05

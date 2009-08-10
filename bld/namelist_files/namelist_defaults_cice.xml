@@ -305,10 +305,10 @@
 <model_year_align_aero   presaero_type='data_clim_2000'> 1  </model_year_align_aero>
 
 
-<stream_domfilename_aero presaero_type='transient'> 'ice/cice/aerosoldep_monthly_1849-2001_1.9x2.5_c090420.nc'</stream_domfilename_aero>
-<stream_fldfilename_aero presaero_type='transient'> 'ice/cice/aerosoldep_monthly_1849-2001_1.9x2.5_c090420.nc'</stream_fldfilename_aero>
+<stream_domfilename_aero presaero_type='transient'> 'ice/cice/aerosoldep_monthly_1849-2006_1.9x2.5_c090803.nc'</stream_domfilename_aero>
+<stream_fldfilename_aero presaero_type='transient'> 'ice/cice/aerosoldep_monthly_1849-2006_1.9x2.5_c090803.nc'</stream_fldfilename_aero>
 <stream_year_first_aero  presaero_type='transient'> 1849  </stream_year_first_aero>
-<stream_year_last_aero   presaero_type='transient'> 2001  </stream_year_last_aero>
+<stream_year_last_aero   presaero_type='transient'> 2006  </stream_year_last_aero>
 <model_year_align_aero   presaero_type='transient'> 1849  </model_year_align_aero>
 
 <stream_fldvarname_aero  > 'BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD:DSTX04WD:DSTX04DD' </stream_fldvarname_aero>
