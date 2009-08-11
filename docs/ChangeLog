@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20090811
+Originator: dbailey, mvertens
+Date: Tue Aug 11
+Version: 4.0
+One-line Summary: Fix exact restart on tripole for jaguar/kraken.
+CCSM Version compatible with: ccsm4_0_beta20+
+Changes made:
+
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+
+===============================================================
 cice4_0_20090810
 Originator: dbailey
 Date: Mon Aug 10

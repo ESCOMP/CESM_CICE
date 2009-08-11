@@ -42,6 +42,7 @@ module ice_pio
      module procedure ice_pio_initdecomp_2d
      module procedure ice_pio_initdecomp_3d
      module procedure ice_pio_initdecomp_3d_inner
+     module procedure ice_pio_initdecomp_2d_tripole
   end interface
 
   public ice_pio_init
@@ -319,6 +320,55 @@ contains
       deallocate(dof2d)
  
     end subroutine ice_pio_initdecomp_2d
+
+!================================================================================
+
+   subroutine ice_pio_initdecomp_2d_tripole(iodesc, tripole)
+
+      type(io_desc_t), intent(out) :: iodesc
+      logical, intent(in) :: tripole
+
+      integer (kind=int_kind) :: &
+          iblk,ilo,ihi,jlo,jhi,lon,lat,i,j,n,k
+
+      type(block) :: this_block 
+
+      integer(kind=int_kind), pointer :: dof2d(:)
+
+      allocate(dof2d(nx_block*nblocks*12))
+      dof2d(:) = 0
+
+      n=0
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
+         
+         do j=jlo,jhi
+            if (this_block%j_glob(j) == ny_global) then
+               do k=1,12
+               do i=1,nx_block
+                  n = n+1
+                  if (i < ilo .or. i > ihi) then
+                     dof2d(n) = 0
+                  else
+                     lon = this_block%i_glob(i)
+                     dof2d(n) = (k-1)*nx_global + lon
+                  endif
+               enddo !i
+               enddo !k
+            end if
+         end do
+      end do
+
+      call pio_initdecomp(ice_pio_subsystem, pio_double, (/nx_global,12/), &
+           dof2d, iodesc)
+
+      deallocate(dof2d)
+ 
+    end subroutine ice_pio_initdecomp_2d_tripole
 
 !================================================================================
 
