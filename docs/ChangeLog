@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090812
+Originator: dbailey, mvertens
+Date: Wed Aug 12
+Version: 4.0
+One-line Summary: Change fill value for restarts to 0.
+CCSM Version compatible with: ccsm4_0_beta20+
+Changes made:
+
+M      src/drivers/cpl_share/ice_restart.F90
+
+===============================================================
 cice4_0_20090811
 Originator: dbailey, mvertens
 Date: Tue Aug 11
