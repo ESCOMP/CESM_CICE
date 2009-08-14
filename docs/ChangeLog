@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20090814
+Originator: dbailey, mvertens
+Date: Fri Aug 14
+Version: 4.0
+One-line Summary: Wrong location for transient aerosol dataset.
+CCSM Version compatible with: ccsm4_0_beta20+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20090812
 Originator: dbailey, mvertens
 Date: Wed Aug 12
