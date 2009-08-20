@@ -343,8 +343,8 @@
       status = pio_put_att(File,pio_global,'istep1',istep1)
       status = pio_put_att(File,pio_global,'time',time)
       status = pio_put_att(File,pio_global,'time_forc',time_forc)
-      status = pio_put_att(File, varid, 'missing_value', c0)
-      status = pio_put_att(File,varid,'_FillValue',c0)
+      status = pio_put_att(File,pio_global, 'missing_value', c0)
+      status = pio_put_att(File,pio_global,'_FillValue',c0)
 
       status = pio_def_dim(File,'ni',nx_global,dimid_ni)
       status = pio_def_dim(File,'nj',ny_global,dimid_nj)
