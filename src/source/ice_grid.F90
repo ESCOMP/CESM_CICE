@@ -1457,7 +1457,7 @@
       real (kind=dbl_kind), dimension(:,:) :: work_g
 
       integer (kind=int_kind) :: &
-         i, j, &
+         i, j, nyg, &
          im1     ! i-1
 
       if (my_task == master_task) then
@@ -1478,9 +1478,11 @@
          enddo
       enddo
       ! extrapolate to obtain dyu along j=ny_global
+      ! workaround for intel compiler
+      nyg = ny_global
       do i = 1, nx_global
-         work_g2(i,ny_global) = c2*work_g(i,ny_global-1) &
-                                 - work_g(i,ny_global-2) ! dyu
+         work_g2(i,nyg) = c2*work_g(i,nyg-1) &
+                           - work_g(i,nyg-2) ! dyu
       enddo
       endif
       call scatter_global(HTE, work_g, master_task, distrb_info, &

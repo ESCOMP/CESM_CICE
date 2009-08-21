@@ -1,6 +1,17 @@
 ===============================================================
+cice4_0_20090821
+Originator: dbailey
+Date: Fri Aug 21
+Version: 4.0
+One-line Summary: Workaround for intel compiler.
+CCSM Version compatible with: ccsm4_0_beta21+
+Changes made:
+
+M      src/source/ice_grid.F90
+
+===============================================================
 cice4_0_20090820
-Originator: dbailey, mvertens
+Originator: dbailey
 Date: Thu Aug 20
 Version: 4.0
 One-line Summary: Bug will fill value in restart.
