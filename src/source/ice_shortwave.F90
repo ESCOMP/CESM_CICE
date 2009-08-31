@@ -105,6 +105,10 @@
          R_pnd , & ! ponded ice tuning parameter; +1 > 1sig increase in albedo
          R_snw     ! snow tuning parameter; +1 > ~.01 change in broadband albedo
 
+      real (kind=dbl_kind) :: &
+         dT_mlt_in          , &  ! temperature at which melt begins (tuning)
+         rsnw_melt_in            ! maximum snow grain radius (tuning)
+
       ! for delta Eddington
       real (kind=dbl_kind) :: &
          exp_min              ! minimum exponential value
@@ -3447,15 +3451,20 @@
 !        Move these to ice_constants
 !        hsmin  = .0001_dbl_kind, & ! minimum allowed snow depth (m) for DE
 !        hs0    = .0300_dbl_kind, & ! snow depth for transition to bare sea ice
-         dT_mlt    = c2, & ! change in temp to give non-melt to melt change
-                           ! in snow grain radius
          ! units for the following are 1.e-6 m (micro-meters)
          rsnw_fresh    =  100._dbl_kind, & ! freshly-fallen snow grain radius 
          rsnw_nonmelt  =  500._dbl_kind, & ! nonmelt snow grain radius
-         rsnw_sig      =  250._dbl_kind, & ! assumed sigma for snow grain radius
-         rsnw_melt     = 2000._dbl_kind    ! melting snow grain radius
+         rsnw_sig      =  250._dbl_kind    ! assumed sigma for snow grain radius
+
+       real (kind=dbl_kind) :: &
+         dT_mlt            , & ! change in temp to give non-melt to melt change
+                               ! in snow grain radius
+         rsnw_melt             ! melting snow grain radius
 
 !-----------------------------------------------------------------------
+
+      dT_mlt    = dT_mlt_in
+      rsnw_melt = rsnw_melt_in
 
       fs(:,:)       = c0
       do ks = 1, nslyr

@@ -85,7 +85,7 @@
       use ice_dyn_evp, only: ndte, kdyn, evp_damping, yield_curve
       use ice_shortwave, only: albicev, albicei, albsnowv, albsnowi, &
                                shortwave, albedo_type, R_ice, R_pnd, &
-                               R_snw
+                               R_snw, dT_mlt_in, rsnw_melt_in
       use ice_atmo, only: atmbndy, calc_strair
       use ice_transport_driver, only: advection
       use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_volpn, nt_aero, &
@@ -140,6 +140,7 @@
         heat_capacity,  shortwave,       albedo_type,                   &
         albicev,        albicei,         albsnowv,      albsnowi,       &
         R_ice,          R_pnd,           R_snw,                         &
+        dT_mlt_in,      rsnw_melt_in,                                   &
         atmbndy,        fyear_init,      ycycle,        atm_data_format,&
         atm_data_type,  atm_data_dir,    calc_strair,   calc_Tsfc,      &
         precip_units,   Tfrzpt,          update_ocn_f,                  &
@@ -215,6 +216,8 @@
       R_ice     = 0.00_dbl_kind   ! tuning parameter for sea ice
       R_pnd     = 0.00_dbl_kind   ! tuning parameter for ponded sea ice
       R_snw     = 0.00_dbl_kind   ! tuning parameter for snow over sea ice
+      dT_mlt_in = 1.50_dbl_kind   ! melt transition (tuning)
+      rsnw_melt_in = 1500._dbl_kind ! max snow grain radius (tuning)
       albicev   = 0.78_dbl_kind   ! visible ice albedo for h > ahmax
       albicei   = 0.36_dbl_kind   ! near-ir ice albedo for h > ahmax
       albsnowv  = 0.98_dbl_kind   ! cold snow albedo, visible
@@ -462,6 +465,8 @@
       call broadcast_scalar(R_ice,              master_task)
       call broadcast_scalar(R_pnd,              master_task)
       call broadcast_scalar(R_snw,              master_task)
+      call broadcast_scalar(dT_mlt_in,          master_task)
+      call broadcast_scalar(rsnw_melt_in,       master_task)
       call broadcast_scalar(albicev,            master_task)
       call broadcast_scalar(albicei,            master_task)
       call broadcast_scalar(albsnowv,           master_task)
@@ -596,6 +601,8 @@
          write(nu_diag,1000) ' R_ice                     = ', R_ice
          write(nu_diag,1000) ' R_pnd                     = ', R_pnd
          write(nu_diag,1000) ' R_snw                     = ', R_snw
+         write(nu_diag,1000) ' dT_mlt_in                 = ', dT_mlt_in
+         write(nu_diag,1000) ' rsnw_melt_in             = ', rsnw_melt_in
          write(nu_diag,1000) ' albicev                   = ', albicev
          write(nu_diag,1000) ' albicei                   = ', albicei
          write(nu_diag,1000) ' albsnowv                  = ', albsnowv

@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20090831
+Originator: dbailey
+Date: Mon Aug 31
+Version: 4.0
+One-line Summary: New default albedos in namelist.
+CCSM Version compatible with: ccsm4_0_beta21+
+Changes made:
+
+M      src/source/ice_init.F90
+M      src/source/ice_shortwave.F90
+
+===============================================================
 cice4_0_20090821
 Originator: dbailey
 Date: Fri Aug 21
