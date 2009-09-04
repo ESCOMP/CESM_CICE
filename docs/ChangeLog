@@ -1,7 +1,30 @@
 ===============================================================
+cice4_0_20090904
+Originator: dbailey
+Date: Fri Sep 04 2009
+Version: 4.0
+One-line Summary: New more general history changes.
+CCSM Version compatible with: ccsm4_0_beta21+
+Changes made:
+
+These changes include Elizabeth Hunke's generalization of the
+multiple frequency history output. This tag changes the meaning
+of the f_* variables from logical to string.
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_calendar.F90
+M      src/source/ice_history_fields.F90
+M      src/source/ice_domain_size.F90
+M      src/source/ice_history.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20090831
 Originator: dbailey
-Date: Mon Aug 31
+Date: Mon Aug 31 2009
 Version: 4.0
 One-line Summary: New default albedos in namelist.
 CCSM Version compatible with: ccsm4_0_beta21+
@@ -13,7 +36,7 @@ M      src/source/ice_shortwave.F90
 ===============================================================
 cice4_0_20090821
 Originator: dbailey
-Date: Fri Aug 21
+Date: Fri Aug 21 2009
 Version: 4.0
 One-line Summary: Workaround for intel compiler.
 CCSM Version compatible with: ccsm4_0_beta21+
@@ -24,7 +47,7 @@ M      src/source/ice_grid.F90
 ===============================================================
 cice4_0_20090820
 Originator: dbailey
-Date: Thu Aug 20
+Date: Thu Aug 20 2009
 Version: 4.0
 One-line Summary: Bug will fill value in restart.
 CCSM Version compatible with: ccsm4_0_beta21+
@@ -35,7 +58,7 @@ M      src/drivers/cpl_share/ice_restart.F90
 ===============================================================
 cice4_0_20090814
 Originator: dbailey, mvertens
-Date: Fri Aug 14
+Date: Fri Aug 14 2009
 Version: 4.0
 One-line Summary: Wrong location for transient aerosol dataset.
 CCSM Version compatible with: ccsm4_0_beta20+
@@ -46,7 +69,7 @@ M      bld/namelist_files/namelist_defaults_cice.xml
 ===============================================================
 cice4_0_20090812
 Originator: dbailey, mvertens
-Date: Wed Aug 12
+Date: Wed Aug 12 2009
 Version: 4.0
 One-line Summary: Change fill value for restarts to 0.
 CCSM Version compatible with: ccsm4_0_beta20+
@@ -57,7 +80,7 @@ M      src/drivers/cpl_share/ice_restart.F90
 ===============================================================
 cice4_0_20090811
 Originator: dbailey, mvertens
-Date: Tue Aug 11
+Date: Tue Aug 11 2009
 Version: 4.0
 One-line Summary: Fix exact restart on tripole for jaguar/kraken.
 CCSM Version compatible with: ccsm4_0_beta20+
@@ -69,7 +92,7 @@ M      src/drivers/cpl_share/ice_pio.F90
 ===============================================================
 cice4_0_20090810
 Originator: dbailey
-Date: Mon Aug 10
+Date: Mon Aug 10 2009
 Version: 4.0
 One-line Summary: New transient aerosol dataset.
 CCSM Version compatible with: ccsm4_0_beta20+
@@ -80,7 +103,7 @@ M      bld/namelist_files/namelist_defaults_cice.xml
 ===============================================================
 cice4_0_20090805
 Originator: dbailey
-Date: Wed Aug 05
+Date: Wed Aug 05 2009
 Version: 4.0
 One-line Summary: Mainly bug fixes.
 CCSM Version compatible with: ccsm4_0_beta20+
@@ -102,7 +125,7 @@ M      src/drivers/cpl_mct/ice_comp_mct.F90
 ===============================================================
 cice4_0_20090721
 Originator: dbailey
-Date: Tue Jul 21
+Date: Tue Jul 21 2009
 Version: 4.0
 One-line Summary: 64 bit addressing and upwind bug fixes
 CCSM Version compatible with: ccsm4_0_beta19+
@@ -121,7 +144,7 @@ M      src/drivers/cpl_share/ice_history_write.F90
 ===============================================================
 cice4_0_20090719
 Originator: mvertens
-Date: Sun Jul 19
+Date: Sun Jul 19 2009
 Version: 4.0
 One-line Summary: fixed compilation problems with pgi (jaguar)
 CCSM Version compatible with: ccsm4_0_beta19+
@@ -138,7 +161,7 @@ M      src/drivers/cpl_share/ice_pio.F90
 ===============================================================
 cice4_0_20090718
 Originator: dbailey
-Date: Sat Jul 18
+Date: Sat Jul 18 2009
 Version: 4.0
 One-line Summary: fix tripole grid and kmt file names
 CCSM Version compatible with: ccsm4_0_beta18+
@@ -149,7 +172,7 @@ M      bld/namelist_files/namelist_defaults_cice.xml
 ===============================================================
 cice4_0_20090717
 Originator: dbailey
-Date: Fri Jul 17
+Date: Fri Jul 17 2009
 Version: 4.0
 One-line Summary: leap year changes (bundy)
 CCSM Version compatible with: ccsm4_0_beta18+

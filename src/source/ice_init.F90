@@ -67,7 +67,7 @@
       use ice_restart, only: &
           restart, restart_dir, restart_file, pointer_file, &
           runid, runtype, ice_ic, resttype, restart_format, lcdf64
-      use ice_history, only: hist_avg, &
+      use ice_history_fields, only: hist_avg, &
                              history_format, history_dir, history_file, &
                              incond_dir, incond_file
       use ice_exit
@@ -314,6 +314,10 @@
 
       call release_fileunit(nu_nml)
 
+      ! Need to broadcast ice_ic at this point.
+
+      call broadcast_scalar(ice_ic,             master_task)
+
       !-----------------------------------------------------------------
       ! set up diagnostics output and resolve conflicts
       !-----------------------------------------------------------------
@@ -425,10 +429,11 @@
       call broadcast_scalar(history_format,     master_task)
 !     call broadcast_scalar(histfreq,           master_task)
 !     call broadcast_scalar(histfreq_n,         master_task)
-      do ns=1,nstreams
+      do ns=1,max_nstrm
          call broadcast_scalar(histfreq(ns),         master_task)
+         call broadcast_scalar(histfreq_n(ns),       master_task)
       enddo
-      call broadcast_array(histfreq_n(:),       master_task)
+!     call broadcast_array(histfreq_n(:),       master_task)
       call broadcast_scalar(hist_avg,           master_task)
       call broadcast_scalar(history_dir,        master_task)
       call broadcast_scalar(history_file,       master_task)
@@ -443,7 +448,6 @@
       call broadcast_scalar(restart_format,     master_task)
       call broadcast_scalar(lcdf64,             master_task)
       call broadcast_scalar(pointer_file,       master_task)
-      call broadcast_scalar(ice_ic,             master_task)
       call broadcast_scalar(grid_format,        master_task)
       call broadcast_scalar(grid_type,          master_task)
       call broadcast_scalar(grid_file,          master_task)

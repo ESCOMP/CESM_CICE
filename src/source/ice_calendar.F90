@@ -23,7 +23,7 @@
 ! !USES:
 !
       use ice_constants
-      use ice_domain_size, only: nstreams
+      use ice_domain_size, only: max_nstrm
       use ice_exit, only: abort_ice
 !
 !EOP
@@ -74,11 +74,9 @@
          stop_now     , & ! if 1, end program execution
          write_restart, & ! if 1, write restart now
          diagfreq     , & ! diagnostic output frequency (10 = once per 10 dt)
-         dumpfreq_n       ! restart output frequency (10 = once per 10 d,m,y)
-
-      integer (kind=int_kind) :: &
-         histfreq_n(nstreams) ! history output frequency 
-                              ! (10 = once per 10 h,d,m,y)
+         dumpfreq_n   , & ! restart output frequency (10 = once per 10 d,m,y)
+         nstreams     , & ! number of history output streams
+         histfreq_n(max_nstrm) ! history output frequency 
 
       real (kind=dbl_kind) :: &
          dt             , & ! thermodynamics timestep (s)
@@ -97,13 +95,11 @@
          new_month      , & ! new month = .true.
          new_day        , & ! new day = .true.
          new_hour       , & ! new hour = .true.
-         write_ic           ! write initial condition now
-
-      logical (kind=log_kind) :: &
-         write_history(nstreams) ! write history now
+         write_ic       , & ! write initial condition now
+         write_history(max_nstrm) ! write history now
 
       character (len=1) :: &
-         histfreq(nstreams) , & ! history output frequency, 'y','m','d','h','1'
+         histfreq(max_nstrm) , & ! history output frequency, 'y','m','d','h','1'
          dumpfreq               ! restart frequency, 'y','m','d'
 
       character (len=char_len) :: calendar_type
@@ -289,31 +285,38 @@
 
 
       do ns = 1, nstreams
-         if (histfreq(ns) == '1') write_history(ns)=.true.
+         if (histfreq(ns)=='1' .and. histfreq_n(ns)/=0) then
+             if (mod(istep1, histfreq_n(ns))==0) &
+                write_history(ns)=.true.
+         endif
       enddo
 
       if (istep > 1) then
 
         do ns = 1, nstreams
 
-        select case (histfreq(ns))
-        case ("y", "Y")
-          if (new_year  .and. mod(nyr, histfreq_n(ns))==0) &
-                write_history(ns) = .true.
-        case ("m", "M")
-          if (new_month .and. mod(elapsed_months,histfreq_n(ns))==0) &
-                write_history(ns) = .true.
-        case ("d", "D")
-          if (new_day .and. mod(elapsed_days,histfreq_n(ns))==0) &
-                write_history(ns) = .true.
-        case ("h", "H")
-          if (new_hour .and. mod(elapsed_hours,histfreq_n(ns))==0) &
-                write_history(ns) = .true.
-        case ("x", "X")
-          write_history(ns) = .false.
-        case default
-          call abort_ice('ice_calendar: Invalid histfreq: '//histfreq(ns))
-        end select
+           select case (histfreq(ns))
+           case ("y", "Y")
+             if (new_year  .and. histfreq_n(ns)/=0) then
+                if (mod(nyr, histfreq_n(ns))==0) &
+                   write_history(ns) = .true.
+             endif
+           case ("m", "M")
+             if (new_month .and. histfreq_n(ns)/=0) then
+                if (mod(elapsed_months,histfreq_n(ns))==0) &
+                   write_history(ns) = .true.
+             endif
+           case ("d", "D")
+             if (new_day  .and. histfreq_n(ns)/=0) then
+                if (mod(elapsed_days,histfreq_n(ns))==0) &
+                   write_history(ns) = .true.
+             endif
+           case ("h", "H")
+             if (new_hour  .and. histfreq_n(ns)/=0) then
+                if (mod(elapsed_hours,histfreq_n(ns))==0) &
+                   write_history(ns) = .true.
+             endif
+           end select
 
         enddo ! nstreams
 

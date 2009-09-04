@@ -81,7 +81,7 @@
       integer (kind=int_kind), dimension(3) :: dimid_nverts
       real (kind=real_kind) :: ltime
       character (char_len) :: title
-      character (char_len_long) :: ncfile(nstreams)
+      character (char_len_long) :: ncfile(max_nstrm)
 
       integer (kind=int_kind) :: iyear, imonth, iday
       integer (kind=int_kind) :: icategory,ind,i_aice,boundid
@@ -337,7 +337,7 @@
       
       do n=1,num_avail_hist_fields
 
-         if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then
+         if (avail_hist_fields(n)%vhistfreq == histfreq(ns).or.write_ic) then
 
             status  = pio_def_var(File, avail_hist_fields(n)%vname, &
                  pio_real, dimid3, varid)
@@ -357,20 +357,15 @@
             ! Append ice thickness range to aicen comments
             !-----------------------------------------------------------------
 
-            c_aice = TRIM(avail_hist_fields(n)%vname)
-            i_aice = lenstr(c_aice)
-            if (c_aice(1:4) == 'aice' .and. i_aice > 4 ) then
-               if (i_aice == 5) then         ! categories 1-9
-                  read(c_aice(i_aice:i_aice), '(i1)') icategory
-               else                          ! categories > 9
-                  read(c_aice(i_aice-1:i_aice), '(i2)') icategory
-               endif
-	       call broadcast_scalar(c_hi_range(icategory),master_task)
-               avail_hist_fields(n)%vcomment = &
-                    'Ice range: '//c_hi_range(icategory)
-            endif
-            status = pio_put_att(File,varid,'comment', &
-                 avail_hist_fields(n)%vcomment)
+!           c_aice = TRIM(avail_hist_fields(n)%vname)
+!           i_aice = lenstr(c_aice)
+!           if (i_aice > 4 .and. c_aice(1:5) == 'aicen') then
+!             read(c_aice(6:9), '(i3)') icategory
+!             avail_hist_fields(n)%vcomment = &
+!                'Ice range: '//c_hi_range(icategory)
+!           endif
+!           status = pio_put_att(File,varid,'comment', &
+!                avail_hist_fields(n)%vcomment)
 
             !-----------------------------------------------------------------
             ! Add cell_methods attribute to variables if averaged
@@ -382,11 +377,13 @@
                endif
             endif
 
-            if (histfreq(ns) == '1'     .or. .not. hist_avg &
-                 .or. n==n_divu      .or. n==n_shear     &  ! snapshots
-                 .or. n==n_sig1      .or. n==n_sig2 .or. n==n_trsig &
-                 .or. n==n_mlt_onset .or. n==n_frz_onset &
-                 .or. n==n_hisnap    .or. n==n_aisnap .or. n==n_FY) then
+            if (histfreq(ns) == '1'     .or. .not. hist_avg      &
+                 .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
+                 .or. n==n_sig1(ns)      .or. n==n_sig2(ns)      & 
+                 .or. n==n_trsig(ns)                             &
+                 .or. n==n_mlt_onset(ns) .or. n==n_frz_onset(ns) &
+                 .or. n==n_hisnap(ns)    .or. n==n_aisnap(ns)    &
+                 .or. n==n_FY(ns)) then
                status = pio_put_att(File,varid,'time_rep','instantaneous')
             else
                status = pio_put_att(File,varid,'time_rep','averaged')
@@ -569,8 +566,10 @@
       !-----------------------------------------------------------------
 
       do n=1,num_avail_hist_fields
-         if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then
+         if (avail_hist_fields(n)%vhistfreq == histfreq(ns).or.write_ic) then
             status  = pio_inq_varid(File,avail_hist_fields(n)%vname,varid)
+            if (status /= PIO_noerr) call abort_ice( &
+               'ice: Error getting varid for '//avail_hist_fields(n)%vname)
             work1(:,:,:) = aa(:,:,n,:)
             call pio_setframe(varid, int(1,kind=PIO_OFFSET))
             call pio_write_darray(File, varid, iodesc2d,&
@@ -628,7 +627,7 @@
 
       integer (kind=int_kind) :: i,j,n,nrec,nbits
       character (char_len) :: title
-      character (char_len_long) :: ncfile(nstreams), hdrfile
+      character (char_len_long) :: ncfile(max_nstrm), hdrfile
 
       integer (kind=int_kind) :: icategory,i_aice
 
@@ -702,23 +701,21 @@
             ! Append ice thickness range to aicen comments
             c_aice = TRIM(avail_hist_fields(n)%vname)
             i_aice = lenstr(c_aice)
-            if (c_aice(1:4) == 'aice' .and. i_aice > 4 ) then
-              if (i_aice == 5) then         ! categories 1-9
-                read(c_aice(i_aice:i_aice), '(i1)') icategory
-              else                          ! categories > 9
-                read(c_aice(i_aice-1:i_aice), '(i2)') icategory
-              endif
+            if (i_aice > 4 .and. c_aice(1:5) == 'aicen') then
+              read(c_aice(6:9), '(i3)') icategory
               avail_hist_fields(n)%vcomment = &
                  'Ice range: '//c_hi_range(icategory)
             endif
             write (nu_hdr, 995) nrec,trim(avail_hist_fields(n)%vname), &
                trim(avail_hist_fields(n)%vcomment)
 
-            if (histfreq(ns) == '1'     .or. .not. hist_avg &
-                .or. n==n_divu      .or. n==n_shear     &  ! snapshots
-                .or. n==n_sig1      .or. n==n_sig2 .or. n==n_trsig &
-                .or. n==n_mlt_onset .or. n==n_frz_onset &
-                .or. n==n_hisnap    .or. n==n_aisnap) then
+            if (histfreq(ns) == '1'     .or. .not. hist_avg     &
+                .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
+                .or. n==n_sig1(ns)      .or. n==n_sig2(ns)      &
+                .or. n==n_trsig(ns)                             &
+                .or. n==n_mlt_onset(ns) .or. n==n_frz_onset(ns) &
+                .or. n==n_hisnap(ns)    .or. n==n_aisnap(ns)    &
+                .or. n==n_FY(ns)) then
                write (nu_hdr, 996) nrec,trim(avail_hist_fields(n)%vname), &
                   'time_rep','instantaneous'
             else

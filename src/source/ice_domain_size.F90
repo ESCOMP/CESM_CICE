@@ -59,7 +59,7 @@
 #endif
 
       integer (kind=int_kind), parameter :: &
-        nstreams = 6              ! Number of output streams
+        max_nstrm = 5              ! Number of output streams
 
       integer (kind=int_kind), parameter :: &
         block_size_x = BLCKX  , & ! size of block in first horiz dimension

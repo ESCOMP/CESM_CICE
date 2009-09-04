@@ -27,21 +27,23 @@
          incond_dir        ! directory for snapshot initial conditions
 
       character (len=char_len) :: &
-         history_format, & ! file format ('bin'=binary or 'nc'=netcdf)
          history_file  , & ! output file for history
          incond_file       ! output file for snapshot initial conditions
 
+      character (len=3) :: &
+         history_format    ! file format ('bin'=binary or 'nc'=netcdf)
+
       !---------------------------------------------------------------
-      ! Instructions for adding a field:
+      ! Instructions for adding a field: (search for 'example')
       !     Here:
-      ! (1) Add to logical flags
+      ! (1) Add to frequency flags (f_<field>)
       ! (2) Add to namelist (here and also in ice_in)
-      ! (3) Add unique index corresponding to logical flag.
+      ! (3) Add to index list
       !     In init_hist:
       ! (4) Add define_hist_field call with vname, vdesc, vunit,
       !     and vcomment, vcellmeas, and conversion factor if necessary.
-      ! (5) Add logical flag to broadcast list
-      ! (6) Add accum_hist_field call with appropriate variable.
+      ! (5) Add flag to broadcast list
+      ! (6) Add accum_hist_field call with appropriate variable
       !---------------------------------------------------------------
 
       type, public :: ice_hist_field
@@ -77,8 +79,8 @@
          nvar = 11                  ! number of grid fields that can be written
                                     !   excluding grid vertices
 
-      real (kind=real_kind) :: time_beg(nstreams), &
-                               time_end(nstreams) ! bounds for averaging
+      real (kind=real_kind) :: time_beg(max_nstrm), &
+                               time_end(max_nstrm) ! bounds for averaging
       real (kind=real_kind) :: time_bounds(2)
 
       real (kind=dbl_kind), allocatable :: &
@@ -116,111 +118,80 @@
            n_lonu_bnds  = 3, &
            n_latu_bnds  = 4
 
-       integer (kind=int_kind) :: &
-           n_hi         , &
-           n_hs         , &
-           n_Tsfc       , &
-           n_aice       , &
-           n_uvel       , &
-           n_vvel       , &
-           n_fswdn      , &
-           n_flwdn      , &
-           n_snow       , &
-           n_snow_ai    , &
-           n_rain       , &
-           n_rain_ai    , &
-           n_sst        , &
-           n_sss        , &
-           n_uocn       , &
-           n_vocn       , &
-           n_frzmlt     , &
-           n_fswabs     , &
-           n_fswabs_ai  , &
+       integer (kind=int_kind), dimension(max_nstrm) :: &
+!          n_example    , &
+           n_hi         , n_hs         , &
+           n_Tsfc       , n_aice       , &
+           n_uvel       , n_vvel       , &
+           n_fswdn      , n_flwdn      , &
+           n_snow       , n_snow_ai    , &
+           n_rain       , n_rain_ai    , &
+           n_sst        , n_sss        , &
+           n_uocn       , n_vocn       , &
+           n_frzmlt     , n_fswfac     , &
+           n_fswabs     , n_fswabs_ai  , &
            n_albsni     , &
-           n_flat       , &
-           n_flat_ai    , &
-           n_fsens      , &
-           n_fsens_ai   , &
-           n_flwup      , &
-           n_flwup_ai   , &
-           n_evap       , &
-           n_evap_ai    , &
-           n_Tref       , &
-           n_Qref       , &
-           n_congel     , &
-           n_frazil     , &
-           n_snoice     , &
-           n_meltt      , &
-           n_meltb      , &
-           n_meltl      , &
-           n_fresh      , &
-           n_fresh_ai   , &
-           n_fsalt      , &
-           n_fsalt_ai   , &
-           n_fhocn      , &
-           n_fhocn_ai   , &
-           n_fswthru    , &
-           n_fswthru_ai , &
-           n_strairx    , &
-           n_strairy    , &
-           n_strtltx    , &
-           n_strtlty    , &
-           n_strcorx    , &
-           n_strcory    , &
-           n_strocnx    , &
-           n_strocny    , &
-           n_strintx    , &
-           n_strinty    , &
-           n_strength   , &
-           n_divu       , &
-           n_shear      , &
-           n_sig1       , &
-           n_sig2       , &
-           n_dvidtt     , &
-           n_dvidtd     , &
-           n_daidtt     , &
-           n_daidtd     , &
-           n_mlt_onset  , &
-           n_frz_onset  , &
-           n_opening    , &
-           n_alvdr      , &
-           n_alidr      , &
-           n_dardg1dt   , &
-           n_dardg2dt   , &
-           n_dvirdgdt   , &
-           n_hisnap     , &
-           n_aisnap     , &
+           n_alvdr      , n_alidr      , &
+           n_albice     , n_albsno     , &
+           n_albpnd     , n_coszen     , &
+           n_flat       , n_flat_ai    , &
+           n_fsens      , n_fsens_ai   , &
+           n_flwup      , n_flwup_ai   , &
+           n_evap       , n_evap_ai    , &
            n_Tair       , &
-           n_trsig      , &
-           n_icepresent , &
-           n_iage       , &
-           n_FY         , &
+           n_Tref       , n_Qref       , &
+           n_congel     , n_frazil     , &
+           n_snoice     , n_meltt      , &
+           n_meltb      , n_meltl      , &
+           n_fresh      , n_fresh_ai   , &
+           n_fsalt      , n_fsalt_ai   , &
+           n_fhocn      , n_fhocn_ai   , &
+           n_fswthru    , n_fswthru_ai , &
+           n_strairx    , n_strairy    , &
+           n_strtltx    , n_strtlty    , &
+           n_strcorx    , n_strcory    , &
+           n_strocnx    , n_strocny    , &
+           n_strintx    , n_strinty    , &
+           n_strength   , n_opening    , &
+           n_divu       , n_shear      , &
+           n_sig1       , n_sig2       , &
+           n_dvidtt     , n_dvidtd     , &
+           n_daidtt     , n_daidtd     , &
+           n_mlt_onset  , n_frz_onset  , &
+           n_dardg1dt   , n_dardg2dt   , &
+           n_dvirdgdt   , &
+           n_hisnap     , n_aisnap     , &
+           n_trsig      , n_icepresent , &
+           n_iage       , n_FY         , &
            n_apond      , &
-           n_fsurf_ai   , &
-           n_fcondtop_ai, &
-           n_fmeltt_ai  , &
-           n_fswfac
+           n_ardg       , n_vrdg       , &
+           n_alvl       , n_vlvl       , &
+           n_fsurf_ai   , n_fcondtop_ai, &
+           n_fmeltt_ai
 
       ! Category dependent variables
-      integer(kind=int_kind) :: &
-           n_aicen(ncat_hist)       , &
-           n_vicen(ncat_hist)       , &
-           n_apondn(ncat_hist)      , &
-           n_fsurfn_ai(ncat_hist)   , &
-           n_fcondtopn_ai(ncat_hist), &
-           n_fmelttn_ai(ncat_hist)  , &
-           n_flatn_ai(ncat_hist)    , &
-           n_faero(n_aeromx)        , &
-           n_fsoot(n_aeromx)        , &
-           n_aerosn1(n_aeromx)      , &
-           n_aerosn2(n_aeromx)      , &
-           n_aeroic1(n_aeromx)      , &
-           n_aeroic2(n_aeromx)      , &
-           n_aerosn1n(n_aero*ncat_hist), &
-           n_aerosn2n(n_aero*ncat_hist), &
-           n_aeroic1n(n_aero*ncat_hist), &
-           n_aeroic2n(n_aero*ncat_hist)
+      integer(kind=int_kind), dimension(ncat_hist,max_nstrm) :: &
+           n_aicen       , &
+           n_vicen       , &
+           n_apondn      , &
+           n_fsurfn_ai   , &
+           n_fcondtopn_ai, &
+           n_fmelttn_ai  , &
+           n_flatn_ai
 
+      integer(kind=int_kind), dimension(n_aeromx,max_nstrm) :: &
+           n_faero_atm    , &
+           n_faero_ocn    , &
+           n_aerosn1      , &
+           n_aerosn2      , &
+           n_aeroic1      , &
+           n_aeroic2
+
+      integer(kind=int_kind), dimension(n_aeromx*ncat_hist,max_nstrm) :: &
+           n_aerosn1n, &
+           n_aerosn2n, &
+           n_aeroic1n, &
+           n_aeroic2n
 
 !=======================================================================
 
