@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20090915
+Originator: dbailey
+Date: Tue Sep 15 2009
+Version: 4.0
+One-line Summary: New halo updates for stresses.
+CCSM Version compatible with: ccsm4_0_beta26+
+Changes made:
+
+Add new halo updates for stresses along tripole seam. Also
+add gx3v7 support.
+
+M      bld/cice_decomp.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_step_mod.F90
+M      src/mpi/ice_boundary.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+
+===============================================================
 cice4_0_20090904
 Originator: dbailey
 Date: Fri Sep 04 2009

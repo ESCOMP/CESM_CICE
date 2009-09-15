@@ -176,57 +176,57 @@
   </decomp>
 
 <!-- -------------------------------------------------------------------------------- -->
-  <!-- gx3v5 resolution -->
-  <decomp nproc="1" res="gx3v5" model="cice">
+  <!-- gx3v? resolution -->
+  <decomp nproc="1" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >100</bsize_x>
     <bsize_y   >116</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="2" res="gx3v5" model="cice">
+  <decomp nproc="2" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >50</bsize_x>
     <bsize_y   >116</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="4" res="gx3v5" model="cice">
+  <decomp nproc="4" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >25</bsize_x>
     <bsize_y   >116</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="5" res="gx3v5" model="cice">
+  <decomp nproc="5" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >20</bsize_x>
     <bsize_y   >116</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="8" res="gx3v5" model="cice">
+  <decomp nproc="8" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >25</bsize_x>
     <bsize_y   >58</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="10" res="gx3v5" model="cice">
+  <decomp nproc="10" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >20</bsize_x>
     <bsize_y   >58</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="20" res="gx3v5" model="cice">
+  <decomp nproc="20" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >10</bsize_x>
     <bsize_y   >58</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
 
-  <decomp nproc="40" res="gx3v5" model="cice">
+  <decomp nproc="40" res="gx3v[567]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >5</bsize_x>
     <bsize_y   >58</bsize_y>

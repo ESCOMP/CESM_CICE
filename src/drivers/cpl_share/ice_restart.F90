@@ -86,10 +86,6 @@
          dimension(nx_block,ny_block,max_blocks) :: &
          work1
 
-      real (kind=dbl_kind), private, &
-         dimension(nx_block,12,max_blocks) :: &
-         trp_stress
-
       logical (kind=log_kind) :: lcdf64
 
       integer (kind=int_kind) :: ncid ! netcdf restart file id
@@ -299,8 +295,7 @@
       logical (kind=log_kind) :: diag
 
       integer (kind=int_kind) :: dimid_ni, dimid_nj, dimid_ncat, &
-                                 dimid_ntilyr, dimid_ntslyr, &
-                                 dimid_ntrp_stress
+                                 dimid_ntilyr, dimid_ntslyr
 
       integer (kind=int_kind), allocatable :: dims(:)
 
@@ -309,7 +304,6 @@
       type(io_desc_t)       :: iodesc3d_ncat
       type(io_desc_t)       :: iodesc3d_ntilyr
       type(io_desc_t)       :: iodesc3d_ntslyr
-      type(io_desc_t)       :: iodesc2d_tripole
       type(var_desc_t)      :: varid
 
       real (kind=dbl_kind) :: tmp1d(1) 
@@ -336,9 +330,6 @@
       call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat)
       call ice_pio_initdecomp(ndim3=ntilyr, iodesc=iodesc3d_ntilyr)
       call ice_pio_initdecomp(ndim3=ntslyr, iodesc=iodesc3d_ntslyr)
-      if (trim(grid_type) == 'tripole') then
-         call ice_pio_initdecomp(iodesc=iodesc2d_tripole, tripole=.true.)
-      end if
 
       status = pio_put_att(File,pio_global,'istep1',istep1)
       status = pio_put_att(File,pio_global,'time',time)
@@ -351,9 +342,6 @@
       status = pio_def_dim(File,'ncat',ncat,dimid_ncat)
       status = pio_def_dim(File,'ntilyr',ntilyr,dimid_ntilyr)
       status = pio_def_dim(File,'ntslyr',ntslyr,dimid_ntslyr)
-      if (trim(grid_type) == 'tripole') then
-         status = pio_def_dim(File,'ntrp_stress',12,dimid_ntrp_stress)
-      end if
       write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
       diag = .true.
 
@@ -429,12 +417,6 @@
 
       call define_rest_field(File,'iceumask',dims)
 
-      if (trim(grid_type) == 'tripole') then
-         dims(1) = dimid_ni
-         dims(2) = dimid_ntrp_stress
-         call define_rest_field(File,'trp_stress',dims)
-      end if
-
       status = pio_enddef(File)
 
       deallocate(dims)
@@ -503,42 +485,6 @@
       !-----------------------------------------------------------------
       ! internal stress
       !-----------------------------------------------------------------
-
-      if (trim(grid_type) == 'tripole') then
-
-         ! Need to read in the last row of ghost cells for the tripole grid.
-         do iblk=1,nblocks
-            this_block = get_block(blocks_ice(iblk),iblk)
-            ilo = this_block%ilo
-            ihi = this_block%ihi
-            jlo = this_block%jlo
-            jhi = this_block%jhi
-            do j=jlo,jhi
-               if (this_block%j_glob(j) == ny_global) then
-                  do i=ilo,ihi
-                     trp_stress(i,1,iblk) = stressp_1(i,j+1,iblk)
-                     trp_stress(i,2,iblk) = stressp_2(i,j+1,iblk)
-                     trp_stress(i,3,iblk) = stressp_3(i,j+1,iblk)
-                     trp_stress(i,4,iblk) = stressp_4(i,j+1,iblk)
-                     
-                     trp_stress(i,5,iblk) = stressm_1(i,j+1,iblk)
-                     trp_stress(i,6,iblk) = stressm_2(i,j+1,iblk)
-                     trp_stress(i,7,iblk) = stressm_3(i,j+1,iblk)
-                     trp_stress(i,8,iblk) = stressm_4(i,j+1,iblk)
-                     
-                     trp_stress(i, 9,iblk) = stress12_1(i,j+1,iblk)
-                     trp_stress(i,10,iblk) = stress12_2(i,j+1,iblk)
-                     trp_stress(i,11,iblk) = stress12_3(i,j+1,iblk)
-                     trp_stress(i,12,iblk) = stress12_4(i,j+1,iblk)
-                  enddo
-               endif
-            enddo
-         enddo
-         
-         status = pio_inq_varid(File,'trp_stress',varid)
-         call pio_write_darray(File, varid, iodesc2d_tripole, transfer(trp_stress,tmp1d), status)
-         
-      end if
 
       status = pio_inq_varid(File,'stressp_1',varid)
       call pio_write_darray(File, varid, iodesc2d, transfer(stressp_1,tmp1d), status)
@@ -1080,8 +1026,6 @@
       use ice_state
       use ice_grid, only: tmask, umask, grid_type
       use ice_itd
-      use ice_work, only: work_g1, work_g2
-      use ice_gather_scatter, only: scatter_global_stress, gather_global
       use ice_pio	
       use pio
 !
@@ -1111,15 +1055,13 @@
       type(io_desc_t)       :: iodesc3d_ncat
       type(io_desc_t)       :: iodesc3d_ntilyr
       type(io_desc_t)       :: iodesc3d_ntslyr
-      type(io_desc_t)       :: iodesc2d_tripole
       type(var_desc_t)      :: varid
 
       real(kind=dbl_kind), pointer :: &
 	tmpfield2d(:),        &
         tmpfield3d_ncat(:),   &
         tmpfield3d_ntilyr(:), &
-        tmpfield3d_ntslyr(:), &
-	tmpfield2d_trp(:)       
+        tmpfield3d_ntslyr(:)
 
       real(kind	= dbl_kind) :: &
 	tmp1d(1)
@@ -1161,9 +1103,6 @@
       call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat)
       call ice_pio_initdecomp(ndim3=ntilyr, iodesc=iodesc3d_ntilyr)
       call ice_pio_initdecomp(ndim3=ntslyr, iodesc=iodesc3d_ntslyr)
-      if (trim(grid_type) == 'tripole') then
-         call ice_pio_initdecomp(iodesc=iodesc2d_tripole, tripole=.true.)
-      end if
 
       if (my_task == master_task) then
          write(nu_diag,*) 'Using restart dump=', trim(filename)
@@ -1187,9 +1126,6 @@
       allocate(tmpfield3d_ncat  (nx_block*ny_block*ncat  *max_blocks))
       allocate(tmpfield3d_ntilyr(nx_block*ny_block*ntilyr*max_blocks))
       allocate(tmpfield3d_ntslyr(nx_block*ny_block*ntslyr*max_blocks))
-      if (trim(grid_type) == 'tripole') then
-         allocate(tmpfield2d_trp(nx_block*12*max_blocks))
-      end if
       
       !-----------------------------------------------------------------
       ! state variables
@@ -1313,14 +1249,6 @@
       if (my_task == master_task) write(nu_diag,*) &
            'internal stress components'
       
-         if (my_task==master_task) then
-            allocate(work_g1(nx_global,ny_global))
-            allocate(work_g2(nx_global,ny_global))
-         else
-            allocate(work_g1(1,1))
-            allocate(work_g2(1,1))   ! to save memory
-         endif
-
       status = pio_inq_varid(File,'stressp_1',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressp_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
@@ -1328,15 +1256,6 @@
       status = pio_inq_varid(File,'stressp_3',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressp_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
-
-         call gather_global(work_g1, stressp_1, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stressp_3, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stressp_1, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stressp_3, work_g2, work_g1, &
-                                    master_task, distrb_info)
 
       status = pio_inq_varid(File,'stressp_2',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
@@ -1346,15 +1265,6 @@
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressp_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
 
-         call gather_global(work_g1, stressp_2, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stressp_4, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stressp_2, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stressp_4, work_g2, work_g1, &
-                                    master_task, distrb_info)
-
       status = pio_inq_varid(File,'stressm_1',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressm_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
@@ -1362,15 +1272,6 @@
       status = pio_inq_varid(File,'stressm_3',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressm_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
-
-         call gather_global(work_g1, stressm_1, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stressm_3, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stressm_1, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stressm_3, work_g2, work_g1, &
-                                    master_task, distrb_info)
 
       status = pio_inq_varid(File,'stressm_2',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
@@ -1380,15 +1281,6 @@
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stressm_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
 
-         call gather_global(work_g1, stressm_2, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stressm_4, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stressm_2, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stressm_4, work_g2, work_g1, &
-                                    master_task, distrb_info)
-
       status = pio_inq_varid(File,'stress12_1',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stress12_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
@@ -1396,15 +1288,6 @@
       status = pio_inq_varid(File,'stress12_3',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stress12_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
-
-         call gather_global(work_g1, stress12_1, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stress12_3, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stress12_1, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stress12_3, work_g2, work_g1, &
-                                    master_task, distrb_info)
 
       status = pio_inq_varid(File,'stress12_2',varid)
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
@@ -1414,54 +1297,65 @@
       call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
       stress12_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
 
-         call gather_global(work_g1, stress12_2, &
-                            master_task, distrb_info)
-         call gather_global(work_g2, stress12_4, &
-                            master_task, distrb_info)
-         call scatter_global_stress(stress12_2, work_g1, work_g2, &
-                                    master_task, distrb_info)
-         call scatter_global_stress(stress12_4, work_g2, work_g1, &
-                                    master_task, distrb_info)
+      call ice_HaloUpdate(stressp_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressp_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressp_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressp_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
 
-         deallocate (work_g1, work_g2)
+      call ice_HaloUpdate(stressm_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressm_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressm_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stressm_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
+
+      call ice_HaloUpdate(stress12_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stress12_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stress12_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate(stress12_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
+
+      ! Special halo updates for tripole grid
 
       if (trim(grid_type) == 'tripole') then
 
-         status = pio_inq_varid(File,'trp_stress',varid)
-         call pio_read_darray(File, varid, iodesc2d_tripole, tmpfield2d_trp, status)
-         trp_stress(:,:,:) = reshape(tmpfield2d_trp,(/nx_block,12,max_blocks/))
+      call ice_HaloUpdate_stress(stressp_1, stressp_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressp_3, stressp_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressp_2, stressp_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressp_4, stressp_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
 
-         ! Reload the northernmost ghost cells from the tripole buffer
-         do iblk=1,nblocks
-            this_block = get_block(blocks_ice(iblk),iblk)
-            ilo = this_block%ilo
-            ihi = this_block%ihi
-            jlo = this_block%jlo
-            jhi = this_block%jhi
-            
-            do j=jlo,jhi
-               if (this_block%j_glob(j) == ny_global) then
-                  do i=ilo,ihi
-                     stressp_1(i,j+1,iblk) = trp_stress(i,1,iblk)
-                     stressp_2(i,j+1,iblk) = trp_stress(i,2,iblk)
-                     stressp_3(i,j+1,iblk) = trp_stress(i,3,iblk)
-                     stressp_4(i,j+1,iblk) = trp_stress(i,4,iblk)
+      call ice_HaloUpdate_stress(stressm_1, stressm_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressm_3, stressm_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressm_2, stressm_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stressm_4, stressm_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
 
-                     stressm_1(i,j+1,iblk) = trp_stress(i,5,iblk)
-                     stressm_2(i,j+1,iblk) = trp_stress(i,6,iblk)
-                     stressm_3(i,j+1,iblk) = trp_stress(i,7,iblk)
-                     stressm_4(i,j+1,iblk) = trp_stress(i,8,iblk)
+      call ice_HaloUpdate_stress(stress12_1, stress12_3, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stress12_3, stress12_1, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stress12_2, stress12_4, halo_info, &
+                           field_loc_center,  field_type_scalar)
+      call ice_HaloUpdate_stress(stress12_4, stress12_2, halo_info, &
+                           field_loc_center,  field_type_scalar)
 
-                     stress12_1(i,j+1,iblk) = trp_stress(i, 9,iblk)
-                     stress12_2(i,j+1,iblk) = trp_stress(i,10,iblk)
-                     stress12_3(i,j+1,iblk) = trp_stress(i,11,iblk)
-                     stress12_4(i,j+1,iblk) = trp_stress(i,12,iblk)
-                  enddo
-               endif
-            enddo
-         enddo
-
-      end if
+      endif
 
       !-----------------------------------------------------------------
       ! ice mask for dynamics
@@ -1544,9 +1438,6 @@
       deallocate(tmpfield3d_ncat  )
       deallocate(tmpfield3d_ntilyr)
       deallocate(tmpfield3d_ntslyr)
-      if (trim(grid_type) == 'tripole') then
-         deallocate(tmpfield2d_trp)
-      end if
 
       call pio_closefile(File)
 

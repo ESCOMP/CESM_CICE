@@ -221,7 +221,7 @@
 
       ! total ice-snow kinetic energy
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, max_blocks
+      do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
             work1(i,j,iblk) = p5 &
@@ -253,7 +253,7 @@
       ! mask out cells where sun is below horizon (for delta-Eddington)
 
 !      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, max_blocks
+      do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
             work1(i,j,iblk) = alvdr(i,j,iblk)*awtvdr &
@@ -266,7 +266,7 @@
 !      !$OMP END PARALLEL DO 
 
 !      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, max_blocks
+      do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
             if (coszen(i,j,iblk) > puny) then
@@ -291,7 +291,7 @@
       endif
 
 !      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, max_blocks
+      do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
             if (coszen(i,j,iblk) > puny) then

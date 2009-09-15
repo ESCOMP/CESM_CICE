@@ -63,6 +63,7 @@
 <grid_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20010402.grid'</grid_file> 
 <grid_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'</grid_file> 
 <grid_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20030806.grid'</grid_file> 
+<grid_file hgrid="gx3v7"     >'ice/cice/global_gx3v7_20030806.grid'</grid_file> 
 <grid_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.grid'</grid_file> 
 <grid_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.grid'</grid_file>
 
@@ -81,6 +82,7 @@
 <kmt_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20061229.kmt'</kmt_file> 
 <kmt_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'</kmt_file> 
 <kmt_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'</kmt_file> 
+<kmt_file hgrid="gx3v7"     >'ice/cice/global_gx3v7_20090828.kmt'</kmt_file> 
 <kmt_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.kmt'</kmt_file> 
 <kmt_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.kmt'</kmt_file>
 
@@ -101,6 +103,15 @@
 <albsnowv hgrid="gx3v5" >0.91</albsnowv> 
 <albsnowv               >0.98</albsnowv> 
 <albsnowi hgrid="gx3v5" >0.63</albsnowi> 
+<albsnowi               >0.73</albsnowi> 
+
+<albicev  hgrid="gx3v7" >0.68</albicev> 
+<albicev                >0.75</albicev> 
+<albicei  hgrid="gx3v7" >0.30</albicei> 
+<albicei                >0.45</albicei> 
+<albsnowv hgrid="gx3v7" >0.91</albsnowv> 
+<albsnowv               >0.98</albsnowv> 
+<albsnowi hgrid="gx3v7" >0.63</albsnowi> 
 <albsnowi               >0.73</albsnowi> 
 
 <albedo_type>'default'</albedo_type>
