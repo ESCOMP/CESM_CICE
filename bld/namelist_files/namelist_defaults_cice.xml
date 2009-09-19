@@ -366,7 +366,7 @@
 <f_aicen                       >'mxxxx' </f_aicen>  
 <f_aicen cice_mode='prescribed'>'xxxxx'</f_aicen> 
 
-<f_vicen                       >'xxxxx' </f_vicen>  
+<f_vicen                       >'mxxxx' </f_vicen>  
 <f_vicen cice_mode='prescribed'>'xxxxx'</f_vicen> 
 
 <f_fsalt                       >'mxxxx' </f_fsalt>  

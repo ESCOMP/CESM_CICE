@@ -36,11 +36,11 @@ Number of unique latitude points in rectangular lat/lon grid.
 Number of aerosol tracers
 </entry>
 
-<entry id="ntr_iage" valid_values="0,1" value="0">
+<entry id="ntr_iage" valid_values="0,1" value="1">
 If 1, then have an ice age tracer.
 </entry>
 
-<entry id="ntr_FY" valid_values="0,1" value="0">
+<entry id="ntr_FY" valid_values="0,1" value="1">
 If 1, then have a FY area tracer.
 </entry>
 

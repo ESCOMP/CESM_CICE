@@ -1100,9 +1100,6 @@ contains
            prescribed_aero_tmp = .true.
            call ice_prescaero_init(prescribed_aero_tmp)
         end if
-        if (my_task == master_task) then
-           write(nu_diag,*) 'prescribed_aero = ',prescribed_aero
-        endif
         deallocate(work)
         first_call = .false.
      endif

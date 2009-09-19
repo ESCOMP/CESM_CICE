@@ -338,7 +338,6 @@ subroutine ice_prescaero_init(prescribed_aero_in)
 
       call shr_ncread_varDimSizes(domain_info_fn,lonName,nlon)
       call shr_ncread_varDimSizes(domain_info_fn,latName,nlat)
-      write (nu_diag,*) 'nlon,nlat',nlon,nlat
       call shr_stream_getFile(data_path,domain_info_fn)
       call shr_sys_flush(nu_diag)
 
@@ -535,8 +534,6 @@ subroutine ice_prescaero_run(mDateIn, secIn)
                   dataOutUB(i,j,n) = dataDstUB(n,icnt)
                enddo
                enddo
-            write (nu_diag,*) 'min/max dataOutLB = ',n,minval(dataOutLB(:,:,n)),maxval(dataOutLB(:,:,n))
-            write (nu_diag,*) 'min/max dataOutUB = ',n,minval(dataOutUB(:,:,n)),maxval(dataOutUB(:,:,n))
             enddo
             deallocate(dataSrcLB)
             deallocate(dataSrcUB)

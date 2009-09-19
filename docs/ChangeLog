@@ -1,4 +1,24 @@
 ===============================================================
+cice4_0_20090919
+Originator: dbailey
+Date: Sat Sep 19 2009
+Version: 4.0
+One-line Summary: New CMIP/IPCC history variables.
+CCSM Version compatible with: ccsm4_0_beta26+
+Changes made:
+
+M      bld/config_files/definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_flux.F90
+M      src/source/ice_prescaero_mod.F90
+M      src/source/ice_history_fields.F90
+M      src/source/ice_history.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090915
 Originator: dbailey
 Date: Tue Sep 15 2009

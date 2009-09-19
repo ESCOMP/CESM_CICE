@@ -45,6 +45,7 @@ module ice_pio
   end interface
 
   public ice_pio_init
+  public ice_pio_finalize
   public ice_pio_initdecomp
 
   ! !PUBLIC DATA MEMBERS
@@ -418,6 +419,20 @@ contains
       deallocate(dof3d)
 
     end subroutine ice_pio_initdecomp_3d_inner
+
+!===============================================================================
+!BOP
+!
+! !IROUTINE: ice_pio_finalize - finalize io for input or output
+!
+! !INTERFACE: 
+   subroutine ice_pio_finalize
+   
+     integer  :: ierr
+
+!    call pio_finalize(ice_pio_subsystem,ierr)
+
+   end subroutine ice_pio_finalize
 
 
 end module ice_pio

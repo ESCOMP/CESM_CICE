@@ -587,6 +587,17 @@
          write(nu_diag,*) 'Finished writing ',trim(ncfile(ns))
       endif
 
+      !-------------------
+      ! Free PIO descriptors
+      !-------------------
+      call PIO_freeDecomp(File,iodesc2d)
+      call PIO_freeDecomp(File,iodesc3d)
+
+      !-------------------
+      ! free the IO-system
+      !-------------------
+!     call ice_pio_finalize
+
       end subroutine icecdf
 
 !=======================================================================

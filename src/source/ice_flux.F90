@@ -182,7 +182,11 @@
          alvdr_gbm, & ! visible, direct   (fraction)
          alidr_gbm, & ! near-ir, direct   (fraction)
          alvdf_gbm, & ! visible, diffuse  (fraction)
-         alidf_gbm    ! near-ir, diffuse  (fraction)
+         alidf_gbm, & ! near-ir, diffuse  (fraction)
+         ! components for history
+         albice   , & ! bare ice albedo
+         albsno   , & ! snow albedo
+         albpnd       ! melt pond albedo
 
        ! out to ocean
        ! (Note CICE_IN_NEMO does not use these for coupling.

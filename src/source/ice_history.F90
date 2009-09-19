@@ -88,9 +88,12 @@
       character (len=max_nstrm) :: &
 !          f_example   = 'mdxxx', &
            f_hi        = 'mxxxx', f_hs         = 'mxxxx', &
+           f_fs        = 'mxxxx', &
            f_Tsfc      = 'mxxxx', f_aice       = 'mxxxx', &
            f_uvel      = 'mxxxx', f_vvel       = 'mxxxx', &
-           f_fswdn     = 'mxxxx', f_flwdn      = 'mxxxx', &
+           f_transix   = 'mxxxx', f_transiy    = 'mxxxx', &
+           f_fswdn     = 'mxxxx', f_fswup      = 'mxxxx',  &
+           f_flwdn     = 'mxxxx', &
            f_snow      = 'mxxxx', f_snow_ai    = 'mxxxx', &
            f_rain      = 'mxxxx', f_rain_ai    = 'mxxxx', &
            f_faero_atm = 'mxxxx', f_faero_ocn  = 'mxxxx', &
@@ -99,16 +102,17 @@
            f_frzmlt    = 'mxxxx', &
            f_fswfac    = 'mxxxx', &
            f_fswabs    = 'mxxxx', f_fswabs_ai  = 'mxxxx', &
-           f_albsni    = 'mxxxx', &
            f_alvdr     = 'mxxxx', f_alidr      = 'mxxxx', &
            f_flat      = 'mxxxx', f_flat_ai    = 'mxxxx', &
            f_fsens     = 'mxxxx', f_fsens_ai   = 'mxxxx', &
            f_flwup     = 'mxxxx', f_flwup_ai   = 'mxxxx', &
            f_evap      = 'mxxxx', f_evap_ai    = 'mxxxx', &
+           f_qi        = 'mxxxx', f_qs         = 'mxxxx', &
            f_Tair      = 'mxxxx', &
            f_Tref      = 'mxxxx', f_Qref       = 'mxxxx', &
            f_congel    = 'mxxxx', f_frazil     = 'mxxxx', &
-           f_snoice    = 'mxxxx', f_meltt      = 'mxxxx', &
+           f_snoice    = 'mxxxx', &
+           f_meltt     = 'mxxxx', f_melts      = 'mxxxx', &
            f_meltb     = 'mxxxx', f_meltl      = 'mxxxx', &
            f_fresh     = 'mxxxx', f_fresh_ai   = 'mxxxx', &
            f_fsalt     = 'mxxxx', f_fsalt_ai   = 'mxxxx', &
@@ -126,17 +130,17 @@
            f_daidtt    = 'mxxxx', f_daidtd     = 'mxxxx', &
            f_mlt_onset = 'mxxxx', f_frz_onset  = 'mxxxx', &
            f_dardg1dt  = 'mxxxx', f_dardg2dt   = 'mxxxx', &
-           f_dvirdgdt  = 'mxxxx', f_iage       = 'xxxxx', &
-           f_FY        = 'xxxxx',                     &
+           f_dvirdgdt  = 'mxxxx', f_iage       = 'mxxxx', &
+           f_FY        = 'mxxxx',                     &
            f_aeron     = 'xxxxx', f_aero       = 'xxxxx', &
            f_apond     = 'xxxxx', f_apondn     = 'xxxxx', &
            f_hisnap    = 'mxxxx', f_aisnap     = 'mxxxx', &
            f_aicen     = 'mxxxx', f_vicen      = 'mxxxx', &
            f_trsig     = 'mxxxx', f_icepresent = 'mxxxx', &
            f_fsurf_ai  = 'mxxxx', f_fcondtop_ai= 'mxxxx', &
-           f_fmeltt_ai = 'mxxxx',                     &
-           f_fsurfn_ai = 'mxxxx',f_fcondtopn_ai= 'mxxxx', &
-           f_fmelttn_ai= 'mxxxx', f_flatn_ai   = 'mxxxx'
+           f_fmeltt_ai = 'xxxxx',                     &
+           f_fsurfn_ai = 'xxxxx',f_fcondtopn_ai= 'xxxxx', &
+           f_fmelttn_ai= 'xxxxx', f_flatn_ai   = 'xxxxx'
 
       !---------------------------------------------------------------
       ! namelist variables 
@@ -153,9 +157,12 @@
 !
 !          f_example               , &
            f_hi,        f_hs       , &
+           f_fs,                     &
            f_Tsfc,      f_aice     , &
            f_uvel,      f_vvel     , &
-           f_fswdn,     f_flwdn    , &
+           f_transix,   f_transiy  , &
+           f_fswdn,     f_fswup    , &
+           f_flwdn,                  &
            f_snow,      f_snow_ai  , &     
            f_rain,      f_rain_ai  , &
            f_faero_atm, f_faero_ocn, &
@@ -164,16 +171,17 @@
            f_frzmlt                , &
            f_fswfac                , &
            f_fswabs,    f_fswabs_ai, &
-           f_albsni                , &
            f_alvdr,     f_alidr    , &
            f_flat,      f_flat_ai  , &
            f_fsens,     f_fsens_ai , &
            f_flwup,     f_flwup_ai , &
            f_evap,      f_evap_ai  , &
+           f_qi,        f_qs       , &
            f_Tair                  , &
            f_Tref,      f_Qref     , &
            f_congel,    f_frazil   , &
-           f_snoice,    f_meltt    , &
+           f_snoice,                 & 
+           f_meltt,     f_melts    , &
            f_meltb,     f_meltl    , &
            f_fresh,     f_fresh_ai , &  
            f_fsalt,     f_fsalt_ai , &
@@ -339,11 +347,15 @@
 !     call broadcast_scalar (f_example, master_task)
       call broadcast_scalar (f_hi, master_task)
       call broadcast_scalar (f_hs, master_task)
+      call broadcast_scalar (f_fs, master_task)
       call broadcast_scalar (f_Tsfc, master_task)
       call broadcast_scalar (f_aice, master_task)
       call broadcast_scalar (f_uvel, master_task)
       call broadcast_scalar (f_vvel, master_task)
+      call broadcast_scalar (f_transix, master_task)
+      call broadcast_scalar (f_transiy, master_task)
       call broadcast_scalar (f_fswdn, master_task)
+      call broadcast_scalar (f_fswup, master_task)
       call broadcast_scalar (f_flwdn, master_task)
       call broadcast_scalar (f_snow, master_task)
       call broadcast_scalar (f_snow_ai, master_task)
@@ -359,7 +371,6 @@
       call broadcast_scalar (f_fswfac, master_task)
       call broadcast_scalar (f_fswabs, master_task)
       call broadcast_scalar (f_fswabs_ai, master_task)
-      call broadcast_scalar (f_albsni, master_task)
       call broadcast_scalar (f_alvdr, master_task)
       call broadcast_scalar (f_alidr, master_task)
       call broadcast_scalar (f_flat, master_task)
@@ -370,6 +381,8 @@
       call broadcast_scalar (f_flwup_ai, master_task)
       call broadcast_scalar (f_evap, master_task)
       call broadcast_scalar (f_evap_ai, master_task)
+      call broadcast_scalar (f_qi, master_task)
+      call broadcast_scalar (f_qs, master_task)
       call broadcast_scalar (f_Tair, master_task)
       call broadcast_scalar (f_Tref, master_task)
       call broadcast_scalar (f_Qref, master_task)
@@ -379,6 +392,7 @@
       call broadcast_scalar (f_meltt, master_task)
       call broadcast_scalar (f_meltb, master_task)
       call broadcast_scalar (f_meltl, master_task)
+      call broadcast_scalar (f_melts, master_task)
       call broadcast_scalar (f_fresh, master_task)
       call broadcast_scalar (f_fresh_ai, master_task)
       call broadcast_scalar (f_fsalt, master_task)
@@ -455,6 +469,12 @@
              "snow volume per unit grid cell area", c1, c0,        &
              ns1, f_hs)
       endif
+      if (f_fs(1:1) /= 'x') then
+         call define_hist_field(n_fs,"fs"," ",tstr, tcstr,         &
+             "grid cell mean snow fraction",                       &
+             "none", c1, c0,                                       &
+             ns1, f_fs)
+      endif
       if (f_Tsfc(1:1) /= 'x') then
          call define_hist_field(n_Tsfc,"Tsfc","degC",tstr, tcstr,  &
              "snow/ice surface temperature",                       &
@@ -468,7 +488,7 @@
              ns1, f_aice)
       endif
       if (f_uvel(1:1) /= 'x') then
-         call define_hist_field(n_uvel,"uvel","cm/s",ustr, Ucstr,  &
+         call define_hist_field(n_uvel,"uvel","cm/s",ustr, ucstr,  &
              "ice velocity (x)",                                   &
              "positive is x direction on U grid", m_to_cm, c0,     &
              ns1, f_uvel)
@@ -479,11 +499,29 @@
              "positive is y direction on U grid", m_to_cm, c0,     &
              ns1, f_vvel)
       endif
+      if (f_transix(1:1) /= 'x') then
+         call define_hist_field(n_transix,"transix","kg/s",tstr, tcstr,  &
+             "ice mass transport (x) on East side",                      &
+             "positive is x direction on U grid", c1, c0,     &
+             ns1, f_transix)
+      endif
+      if (f_transiy(1:1) /= 'x') then
+         call define_hist_field(n_transiy,"transiy","kg/s",tstr, tcstr,  &
+             "ice mass transport (y) on North side",                     &
+             "positive is y direction on U grid", c1, c0,     &
+             ns1, f_transiy)
+      endif
       if (f_fswdn(1:1) /= 'x') then
          call define_hist_field(n_fswdn,"fswdn","W/m^2",tstr, tcstr, &
              "down solar flux",                                      &
              "positive downward", c1, c0,                            &
              ns1, f_fswdn)
+      endif
+      if (f_fswup(1:1) /= 'x') then
+         call define_hist_field(n_fswup,"fswup","W/m^2",tstr, tcstr, &
+             "upward solar flux",                                    &
+             "positive downward", c1, c0,                            &
+             ns1, f_fswup)
       endif
       if (f_flwdn(1:1) /= 'x') then
          call define_hist_field(n_flwdn,"flwdn","W/m^2",tstr, tcstr, &
@@ -559,12 +597,6 @@
              "weighted by ice area", c1, c0,                                 &
              ns1, f_fswabs_ai)
       endif
-      if (f_albsni(1:1) /= 'x') then
-         call define_hist_field(n_albsni,"albsni","%",tstr, tcstr, &
-             "snw/ice broad band albedo",                          &
-             "none", c100, c0,                                     &
-             ns1, f_albsni)
-      endif
       if (f_flat(1:1) /= 'x') then
          call define_hist_field(n_flat,"flat","W/m^2",tstr, tcstr, &
              "latent heat flux (cpl)",                             &
@@ -613,6 +645,18 @@
              "weighted by ice area", mps_to_cmpdy/rhofresh, c0,           &
              ns1, f_evap_ai)
       endif
+      if (f_qi(1:1) /= 'x') then
+         call define_hist_field(n_qi,"qi","J",tstr, tcstr, &
+             "internal ice heat content",                  &
+             "none", c1, c0,                               &
+             ns1, f_qi)
+      endif
+      if (f_qs(1:1) /= 'x') then
+         call define_hist_field(n_qs,"qs","J",tstr, tcstr, &
+             "internal snow heat content",                 &
+             "none", c1, c0,                               &
+             ns1, f_qs)
+      endif
       if (f_Tref(1:1) /= 'x') then
          call define_hist_field(n_Tref,"Tref","C",tstr, tcstr, &
              "2m reference temperature",                       &
@@ -660,6 +704,12 @@
              "lateral ice melt",                                      &
              "none", mps_to_cmpdy/dt, c0,                             &
              ns1, f_meltl)
+      endif
+      if (f_melts(1:1) /= 'x') then
+         call define_hist_field(n_melts,"melts","cm/day",tstr, tcstr, &
+             "snow melt",                                             &
+             "none", mps_to_cmpdy/dt, c0,                             &
+             ns1, f_melts)
       endif
       if (f_fresh(1:1) /= 'x') then
          call define_hist_field(n_fresh,"fresh","cm/day",tstr, tcstr,   &
@@ -1113,8 +1163,8 @@
         enddo ! num_avail_hist_fields
         write(nu_diag,*) ' '
       endif
-  100 format (1x,a40,2x,a16,2x,a12,1x,a1,2x,i6)
-  101 format (2x,a19,10x,a16,9x,a12,2x,a,3x,a1)
+  100 format (1x,a40,2x,a12,2x,a12,1x,a1,2x,i6)
+  101 format (2x,a19,10x,a12,9x,a12,2x,a,3x,a1)
 
       call broadcast_array(ntmp, master_task)
       do ns = 1, nstreams
@@ -1166,6 +1216,7 @@
       use ice_constants
       use ice_flux
       use ice_dyn_evp
+      use ice_itd, only: ilyr1, slyr1
       use ice_timers
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -1193,7 +1244,12 @@
 
       real (kind=dbl_kind) :: &
            ai                ,& ! aice_init
-           ain                  ! aicen_init
+           ain               ,& ! aicen_init
+           hs                ,& ! snow depth
+           qs                ,& ! snow heat content
+           qi                ,& ! snow heat content
+           uee, vnn          ,& ! velocity component on east and north edge
+           hiee, hinn           ! ice volume on east and north edge
 
       !---------------------------------------------------------------
       ! increment step counter
@@ -1216,10 +1272,16 @@
       ! increment field
       !---------------------------------------------------------------
 
-     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,worka,workb,i,j,k,n,nct)
+     !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,worka,workb,i,j,k,n,nct,hs)
       do iblk = 1, nblocks
 
          workb(:,:) = aice_init(:,:,iblk)
+
+         this_block = get_block(blocks_ice(iblk),iblk)
+         ilo = this_block%ilo
+         ihi = this_block%ihi
+         jlo = this_block%jlo
+         jhi = this_block%jhi
 
          if (f_hi(1:1) /= 'x') &
             call accum_hist_field(n_hi,   iblk, vice(:,:,iblk))
@@ -1233,9 +1295,34 @@
             call accum_hist_field(n_uvel, iblk, uvel(:,:,iblk))
          if (f_vvel(1:1) /= 'x') &
             call accum_hist_field(n_vvel, iblk, vvel(:,:,iblk))
+         if (f_transix(1:1) /= 'x') then
+            worka(:,:) = c0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               uee = p5*(uvel(i,j,iblk)+uvel(i,j-1,iblk))
+               hiee = p5*(vice(i,j,iblk)+vice(i+1,j,iblk))
+               worka(i,j) = uee*hiee*HTE(i,j,iblk)*rhoi
+            enddo
+            enddo
+            call accum_hist_field(n_transix, iblk, worka(:,:))
+         endif
+         if (f_transiy(1:1) /= 'x') then
+            worka(:,:) = c0
+            do j = jlo, jhi
+            do i = ilo, ihi
+               vnn = p5*(vvel(i,j,iblk)+vvel(i-1,j,iblk))
+               hinn = p5*(vice(i,j,iblk)+vice(i,j+1,iblk))
+               worka(i,j) = vnn*hinn*HTN(i,j,iblk)*rhoi
+            enddo
+            enddo
+            call accum_hist_field(n_transiy, iblk, worka(:,:))
+         endif
 
          if (f_fswdn(1:1) /= 'x') &
             call accum_hist_field(n_fswdn, iblk, fsw(:,:,iblk))
+         if (f_fswup(1:1) /= 'x') &
+            call accum_hist_field(n_fswup, iblk, &
+                 (fsw(:,:,iblk)-fswabs(:,:,iblk)*workb(:,:)))
          if (f_flwdn(1:1) /= 'x') &
             call accum_hist_field(n_flwdn, iblk, flw(:,:,iblk))
          if (f_snow(1:1) /= 'x') &
@@ -1264,13 +1351,6 @@
             call accum_hist_field(n_fswabs,  iblk, fswabs(:,:,iblk))
          if (f_fswabs_ai(1:1) /= 'x') &
             call accum_hist_field(n_fswabs_ai,iblk,fswabs(:,:,iblk)*workb(:,:))
-
-         if (f_albsni(1:1) /= 'x') &
-            call accum_hist_field(n_albsni,  iblk, &
-                                                awtvdr*alvdr(:,:,iblk) &
-                                              + awtidr*alidr(:,:,iblk) &
-                                              + awtvdf*alvdf(:,:,iblk) &
-                                              + awtidf*alidf(:,:,iblk))
 
          if (f_alvdr(1:1) /= 'x') &
             call accum_hist_field(n_alvdr,  iblk, alvdr(:,:,iblk))
@@ -1311,6 +1391,8 @@
             call accum_hist_field(n_meltb, iblk, meltb(:,:,iblk))
          if (f_meltl(1:1) /= 'x') &
             call accum_hist_field(n_meltl, iblk, meltl(:,:,iblk))
+         if (f_melts(1:1) /= 'x') &
+            call accum_hist_field(n_melts, iblk, melts(:,:,iblk))
 
          if (f_fresh(1:1) /= 'x') &
             call accum_hist_field(n_fresh, iblk, fresh(:,:,iblk))
@@ -1389,12 +1471,6 @@
             call accum_hist_field(n_fcondtop_ai, iblk, &
                                                  fcondtop(:,:,iblk)*workb(:,:))
 
-         this_block = get_block(blocks_ice(iblk),iblk)
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
          if (f_icepresent(1:1) /= 'x') then
            worka(:,:) = c0
            do j = jlo, jhi
@@ -1430,6 +1506,61 @@
                call accum_hist_field(n_fmelttn_ai(n,:), iblk, &
                max(fsurfn(:,:,n,iblk) - fcondtopn(:,:,n,iblk),c0)*workb(:,:))
         enddo                    ! n
+        if (f_fs(1:1) /= 'x') then
+           worka(:,:) = c0
+           nct = min(ncat, ncat_hist)
+           do n=1,nct
+              workb(:,:) = aicen_init(:,:,n,iblk)
+              do j = jlo, jhi
+              do i = ilo, ihi
+                 hs = c0
+                 if (workb(i,j) > puny) &
+                    hs = vsnon(i,j,n,iblk)/workb(i,j)
+                 if (hs >= hsmin) &
+                    worka(i,j) = worka(i,j) + workb(i,j)*min( hs/hs0, c1 )
+              enddo
+              enddo
+           enddo
+           call accum_hist_field(n_fs, iblk, worka(:,:))
+        endif
+        ! Compute the internal heat content (enthalpy) of the ice 
+        if (f_qi(1:1) /= 'x') then
+           worka(:,:) = c0
+           nct = min(ncat, ncat_hist)
+           do n=1,nct
+              workb(:,:) = aicen_init(:,:,n,iblk)
+              do k=1,nilyr
+                 do j = jlo, jhi
+                 do i = ilo, ihi
+                    qi = c0
+                    if (vicen(i,j,n,iblk) > puny) &
+                       qi = eicen(i,j,ilyr1(n)+k-1,iblk)*tarea(i,j,iblk)
+                    worka(i,j) = worka(i,j) + workb(i,j)*qi
+                 enddo
+                 enddo
+              enddo
+           enddo
+           call accum_hist_field(n_qi, iblk, worka(:,:))
+         endif
+        ! Compute the internal heat content (enthalpy) of the snow
+         if (f_qs(1:1) /= 'x') then
+            worka(:,:) = c0
+            nct = min(ncat, ncat_hist)
+            do n=1,nct
+              workb(:,:) = aicen_init(:,:,n,iblk)
+               do k=1,nslyr
+                  do j = jlo, jhi
+                  do i = ilo, ihi
+                     qs = c0
+                     if (vsnon(i,j,n,iblk) > puny) &
+                        qs = esnon(i,j,slyr1(n)+k-1,iblk)*tarea(i,j,iblk)
+                     worka(i,j) = worka(i,j) + workb(i,j)*qs
+                  enddo
+                  enddo
+               enddo
+            enddo
+            call accum_hist_field(n_qs, iblk, worka(:,:))
+         endif
 
         ! Calculate aggregate melt pond area by summing category values
         if (f_apond(1:1) /= 'x') then

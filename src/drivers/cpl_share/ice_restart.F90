@@ -578,6 +578,19 @@
          write(nu_diag,*) 'Restart written ',istep1,time,time_forc
       endif
 
+      !-------------------
+      ! Free PIO descriptors
+      !-------------------
+      call PIO_freeDecomp(File,iodesc2d)
+      call PIO_freeDecomp(File,iodesc3d_ncat)
+      call PIO_freeDecomp(File,iodesc3d_ntilyr)
+      call PIO_freeDecomp(File,iodesc3d_ntslyr)
+
+      !-------------------
+      ! free the IO-system
+      !-------------------
+!     call ice_pio_finalize
+
     end subroutine dumpfile_pio
 
 !=======================================================================
@@ -1544,6 +1557,19 @@
 
       enddo
       !$OMP END PARALLEL DO
+
+      !-------------------
+      ! Free PIO descriptors
+      !-------------------
+      call PIO_freeDecomp(File,iodesc2d)
+      call PIO_freeDecomp(File,iodesc3d_ncat)
+      call PIO_freeDecomp(File,iodesc3d_ntilyr)
+      call PIO_freeDecomp(File,iodesc3d_ntslyr)
+
+      !-------------------
+      ! free the IO-system
+      !-------------------
+!     call ice_pio_finalize
 
     end subroutine restartfile_pio
 

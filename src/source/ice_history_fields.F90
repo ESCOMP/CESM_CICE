@@ -121,16 +121,18 @@
        integer (kind=int_kind), dimension(max_nstrm) :: &
 !          n_example    , &
            n_hi         , n_hs         , &
+           n_fs         ,                &
            n_Tsfc       , n_aice       , &
            n_uvel       , n_vvel       , &
-           n_fswdn      , n_flwdn      , &
+           n_transix    , n_transiy    , &
+           n_fswdn      , n_fswup      , &
+           n_flwdn      ,                &
            n_snow       , n_snow_ai    , &
            n_rain       , n_rain_ai    , &
            n_sst        , n_sss        , &
            n_uocn       , n_vocn       , &
            n_frzmlt     , n_fswfac     , &
            n_fswabs     , n_fswabs_ai  , &
-           n_albsni     , &
            n_alvdr      , n_alidr      , &
            n_albice     , n_albsno     , &
            n_albpnd     , n_coszen     , &
@@ -138,10 +140,12 @@
            n_fsens      , n_fsens_ai   , &
            n_flwup      , n_flwup_ai   , &
            n_evap       , n_evap_ai    , &
-           n_Tair       , &
+           n_qi         , n_qs         , &
+           n_Tair       ,                &
            n_Tref       , n_Qref       , &
            n_congel     , n_frazil     , &
-           n_snoice     , n_meltt      , &
+           n_snoice     ,                &
+           n_meltt      , n_melts      , &
            n_meltb      , n_meltl      , &
            n_fresh      , n_fresh_ai   , &
            n_fsalt      , n_fsalt_ai   , &
@@ -159,7 +163,7 @@
            n_daidtt     , n_daidtd     , &
            n_mlt_onset  , n_frz_onset  , &
            n_dardg1dt   , n_dardg2dt   , &
-           n_dvirdgdt   , &
+           n_dvirdgdt   ,                &
            n_hisnap     , n_aisnap     , &
            n_trsig      , n_icepresent , &
            n_iage       , n_FY         , &
