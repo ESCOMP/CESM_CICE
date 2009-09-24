@@ -14,7 +14,7 @@
 !
       use ice_kinds_mod
       use ice_broadcast
-      use ice_communicate, only: my_task, master_task
+      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_blocks
       use ice_grid
       use ice_fileunits
@@ -49,6 +49,8 @@
 !
 ! !USES:
 !
+      use shr_mpi_mod
+!     use shr_mem_mod, only : shr_get_memusage
       use ice_gather_scatter
       use ice_domain_size
       use ice_constants
@@ -129,6 +131,19 @@
       character(len=char_len_long) :: &
            filename
 
+      real(kind=dbl_kind) :: mrss, mrss0,msize,msize0
+
+      !-------------------------
+      !  Test memory usage
+      !-------------------------
+!     call shr_get_memusage(msize,mrss)
+!     call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
+!     call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
+!     if(my_task == master_task) then
+!       write(nu_diag,105) 'icecdf: [start of subroutine] memory_write: memory:= ',  &
+!    msize0,' MB (highwater) ',mrss0,' MB (usage)'
+!     endif
+
       ltime = time/int(secday)
 
       if (my_task == master_task) then
@@ -151,6 +166,19 @@
 
       call ice_pio_initdecomp(iodesc=iodesc2d)
       call ice_pio_initdecomp(ndim3=nverts, inner_dim=.true., iodesc=iodesc3d)
+
+      !-------------------------
+      !  Test memory usage
+      !-------------------------
+!     call shr_get_memusage(msize,mrss)
+!     call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
+!     call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
+!     if(my_task == master_task) then
+!       write(nu_diag,105) 'icecdf: [after initdecomp] memory_write: memory:= ',  &
+!    msize0,' MB (highwater) ',mrss,' MB (usage)'
+!     endif
+
+      ltime = time/int(secday)
 
       !-----------------------------------------------------------------
       ! define dimensions
@@ -586,17 +614,37 @@
          write(nu_diag,*) ' '
          write(nu_diag,*) 'Finished writing ',trim(ncfile(ns))
       endif
+      !-------------------------
+      !  Test memory usage
+      !-------------------------
+!     call shr_get_memusage(msize,mrss)
+!     call shr_mpi_max(mrss, mrss0,  MPI_COMM_ICE, 'ice_init_mct mrss0')
+!     call shr_mpi_max(msize,msize0, MPI_COMM_ICE, 'ice_init_mct msize0')
+!     if(my_task == master_task) then
+!       write(nu_diag,105) 'icecdf: [before freedecomp] memory_write: memory:= ', &
+!    msize0,' MB (highwater) ',mrss0,' MB (usage)'
+!     endif
+      
+      ! -------------------------
+      ! clean-up PIO descriptors
+      ! -------------------------
+      call pio_freedecomp(File,iodesc2d)
+      call pio_freedecomp(File,iodesc3d)
 
-      !-------------------
-      ! Free PIO descriptors
-      !-------------------
-      call PIO_freeDecomp(File,iodesc2d)
-      call PIO_freeDecomp(File,iodesc3d)
-
-      !-------------------
-      ! free the IO-system
-      !-------------------
 !     call ice_pio_finalize
+
+      !-------------------------
+      !  Test memory usage
+      !-------------------------
+!     call shr_get_memusage(msize,mrss)
+!     call shr_mpi_max(mrss, mrss0,  MPI_COMM_ICE, 'ice_init_mct mrss0')
+!     call shr_mpi_max(msize,msize0, MPI_COMM_ICE, 'ice_init_mct msize0')
+!     if(my_task == master_task) then
+!       write(nu_diag,105) 'icecdf: [end of subroutine] memory_write: memory:= ', &
+!    msize0,' MB (highwater) ',mrss0,' MB (usage)'
+!     endif
+
+  105  format( A, f10.2, A, f10.2, A)
 
       end subroutine icecdf
 

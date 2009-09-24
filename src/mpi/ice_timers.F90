@@ -24,8 +24,9 @@
    use ice_domain
    use ice_global_reductions
    use ice_exit
-   use ice_fileunits, only: nu_diag
-   use ice_communicate, only: my_task, master_task
+   use ice_fileunits, only: nu_diag, nu_timing
+   use ice_communicate, only: my_task, master_task, get_num_procs, lprint_stats
+   use ice_gather_scatter, only: gatherArray
 
    implicit none
    private
@@ -120,6 +121,14 @@
    real (dbl_kind) ::               &
       clock_rate               ! clock rate in seconds for each cycle
 
+   !----------------------------------------------
+   ! some arrays on which to collect timing info
+   !---------------------------------------------
+   integer (int_kind), public, parameter :: timerRoot = 2 ! MPI process ID to collect timing information
+
+   real(dbl_kind), public  :: all_ltime(max_timers) ! local times for each timer
+   real(dbl_kind), allocatable :: all_gtime(:)      ! global times for each timer
+
 
 !EOC
 !***********************************************************************
@@ -205,6 +214,16 @@
    call get_ice_timer(timer_cplsend,  'Cpl-Exp', nblocks,distrb_info%nprocs)
 #endif
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
+
+   !------------------------------------------------------
+   ! allocate the array of timer values from all processes
+   !------------------------------------------------------
+   if(my_task .eq. timerRoot) then
+     allocate(all_gtime(max_timers*distrb_info%nprocs))
+   else
+     allocate(all_gtime(1))
+   endif
+
 
 !-----------------------------------------------------------------------
 !EOC
@@ -543,6 +562,8 @@
             all_timers(timer_id)%num_starts   = 0
             all_timers(timer_id)%num_stops    = 0
 
+            all_ltime(timer_id) = all_timers(timer_id)%node_accum_time
+
          endif
 
          !$OMP END CRITICAL
@@ -559,6 +580,8 @@
          all_timers(timer_id)%node_accum_time = &
          all_timers(timer_id)%node_accum_time + &
             clock_rate*(cycles2 - cycles1)
+
+         all_ltime(timer_id) = all_timers(timer_id)%node_accum_time
 
       endif
    else
@@ -619,7 +642,7 @@
       mean_time          ! mean    accumulated time
 
    character (41), parameter :: &
-      timer_format = "('Timer ',i3,': ',a9,f11.2,' seconds')"
+      timer_format = "('Timer ',i3,': ',a20,f11.2,' seconds')"
 
    character (49), parameter :: &
       stats_fmt1 = "('  Timer stats (node): min = ',f11.2,' seconds')",&
@@ -754,6 +777,8 @@
 !
 !-----------------------------------------------------------------------
 
+   integer (int_kind) :: nprocs
+
    integer (int_kind) :: n ! dummy loop index
 
 !-----------------------------------------------------------------------
@@ -775,6 +800,24 @@
          endif
       endif
    end do
+
+   !-----------------------------------------------------
+   ! gather all timing values onto the timeRoot processor
+   !-----------------------------------------------------
+   call gatherArray(all_gtime,all_ltime,max_timers,timerRoot)
+
+   !--------------------------
+   ! write out the timing data
+   !--------------------------
+   if(my_task == timerRoot) then
+     if(lprint_stats) then
+        nprocs = get_num_procs()
+        open(nu_timing,file='timing.bin',recl=8*max_timers*nprocs, &
+           form = 'unformatted', access = 'direct', status='unknown')
+        write(nu_timing,rec=1) all_gtime
+        close(nu_timing)
+     endif
+   endif
 
 !-----------------------------------------------------------------------
 !EOC

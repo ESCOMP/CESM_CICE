@@ -651,6 +651,8 @@
 
       call init_history_dyn     ! initialize dynamic history variables
 
+      dynCnt = dynCnt + 1
+
       !-----------------------------------------------------------------
       ! Elastic-viscous-plastic ice dynamics
       !-----------------------------------------------------------------
@@ -703,6 +705,8 @@
          icells = 0
          do j = jlo, jhi
          do i = ilo, ihi
+!PERF  There is a performance advantage here to only perform the ridging over a limited set of points
+!PERF            if (tmask(i,j,iblk) .and. aice(i,j,iblk) > c0) then
             if (tmask(i,j,iblk)) then
                icells = icells + 1
                indxi(icells) = i
@@ -880,11 +884,19 @@
       integer (kind=int_kind) :: &
          i,j,n,iblk    ! block index
 
+
       alvdr(:,:,:) = c0
       alvdf(:,:,:) = c0
       alidr(:,:,:) = c0
       alidf(:,:,:) = c0
       Sswabsn(:,:,:,:) = c0
+!      do iblk = 1,nblocks
+!         alvdr(:,:,iblk) = c0
+!         alvdf(:,:,iblk) = c0
+!         alidr(:,:,iblk) = c0
+!         alidf(:,:,iblk) = c0
+!         Sswabsn(:,:,:,iblk) = c0
+!      enddo
 
       if (calc_Tsfc) then
 

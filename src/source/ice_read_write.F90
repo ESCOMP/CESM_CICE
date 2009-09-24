@@ -37,6 +37,13 @@
 
       implicit none
 
+       public :: ice_read_global_nc
+
+       interface ice_read_global_nc
+          module procedure ice_read_global_nc_dbl, &
+                           ice_read_global_nc_r4
+       end interface
+
 !=======================================================================
 
       contains
@@ -820,7 +827,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine ice_read_global_nc (fid,  nrec, varname, work_g, diag)
+      subroutine ice_read_global_nc_dbl (fid,  nrec, varname, work_g, diag)
 !
 ! !DESCRIPTION:
 !
@@ -944,7 +951,139 @@
 #else
       work_g = c0 ! to satisfy intent(out) attribute
 #endif
-      end subroutine ice_read_global_nc
+      end subroutine ice_read_global_nc_dbl
+!=======================================================================
+!BOP
+!
+! !IROUTINE: ice_read_global_nc - read one field from a netcdf file
+!
+! !INTERFACE:
+!
+      subroutine ice_read_global_nc_r4 (fid,  nrec, varname, work_g, diag)
+!
+! !DESCRIPTION:
+!
+! Read a netcdf file \\
+! Just like ice_read_nc except that it returns a global array \\
+! work_g is a real array
+!
+! !REVISION HISTORY:
+! Adapted by William Lipscomb, LANL, from ice_read
+! Adapted by Ann Keen, Met Office, to read from a netcdf file 
+!
+! !USES:
+! 
+      use ice_exit
+#ifdef ORCA_GRID
+      use ice_work, only: work_g3
+#endif
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+      integer (kind=int_kind), intent(in) :: &
+           fid           , & ! file id
+           nrec              ! record number 
+
+     character (len=*), intent(in) :: & 
+           varname           ! field name in netcdf file        
+
+      real (kind=real_kind), dimension(:,:), &
+           intent(out) :: &
+           work_g            ! output array (real, 8-byte)
+
+      logical (kind=log_kind) :: &
+           diag              ! if true, write diagnostic output
+!
+!EOP
+!
+#ifdef ncdf
+! netCDF file diagnostics:
+      integer (kind=int_kind) :: & 
+         varid,           & ! netcdf id for field
+         status,          & ! status output from netcdf routines
+         ndim, nvar,      & ! sizes of netcdf file
+         id,              & ! dimension index
+         dimlen             ! size of dimension      
+
+      real (kind=dbl_kind) :: &
+         amin, amax         ! min and max values of input array
+
+     character (char_len) :: &
+         dimname            ! dimension name            
+
+!
+#ifdef ORCA_GRID
+      if (my_task == master_task) then
+          allocate(work_g3(nx_global+2,ny_global+1))
+       else
+          allocate(work_g3(1,1))   ! to save memory
+       endif
+
+      work_g3(:,:) = c0
+#endif
+      work_g(:,:) = c0
+
+      if (my_task == master_task) then
+
+        !-------------------------------------------------------------
+        ! Find out ID of required variable
+        !-------------------------------------------------------------
+
+         status = nf90_inq_varid(fid, trim(varname), varid)
+
+         if (status /= nf90_noerr) then
+           call abort_ice ( & 
+            'ice_read_global_nc: Cannot find variable '//trim(varname) )
+         endif
+
+       !--------------------------------------------------------------
+       ! Read global array 
+       !--------------------------------------------------------------
+ 
+#ifndef ORCA_GRID
+         status = nf90_get_var( fid, varid, work_g, &
+               start=(/1,1,nrec/), & 
+               count=(/nx_global,ny_global,1/) )
+#else
+         status = nf90_get_var( fid, varid, work_g3, &
+               start=(/1,1,nrec/), &
+               count=(/nx_global+2,ny_global+1,1/) )
+         work_g=work_g3(2:nx_global+1,1:ny_global)
+#endif
+
+      endif                     ! my_task = master_task
+
+    !-------------------------------------------------------------------
+    ! optional diagnostics
+    !-------------------------------------------------------------------
+
+      if (my_task == master_task .and. diag) then
+
+!         write(nu_diag,*) & 
+!           'ice_read_global_nc, fid= ',fid, ', nrec = ',nrec, & 
+!           ', varname = ',trim(varname)
+          status = nf90_inquire(fid, nDimensions=ndim, nVariables=nvar)
+!         write(nu_diag,*) 'ndim= ',ndim,', nvar= ',nvar
+          do id=1,ndim
+            status = nf90_inquire_dimension(fid,id,name=dimname,len=dimlen)
+!           write(nu_diag,*) 'Dim name = ',trim(dimname),', size = ',dimlen
+         enddo
+         amin = minval(work_g)
+         amax = maxval(work_g, mask = work_g /= spval_dbl)
+!        write(nu_diag,*) 'min and max = ', amin, amax
+!        write(nu_diag,*) ''
+         write(nu_diag,*) ' read_global ',fid, varid, nrec, amin, amax
+
+      endif
+
+#ifdef ORCA_GRID
+      deallocate(work_g3)
+#endif
+
+#else
+      work_g = c0 ! to satisfy intent(out) attribute
+#endif
+      end subroutine ice_read_global_nc_r4
 
 !=======================================================================
 !BOP

@@ -37,6 +37,7 @@
       use ice_gather_scatter
       use ice_read_write
       use ice_timers
+      use ice_probability
       use ice_exit
 !
 !EOP
@@ -171,6 +172,11 @@
          fid_grid, &     ! file id for netCDF grid file
          fid_kmt         ! file id for netCDF kmt file
 
+      real (dbl_kind), allocatable, dimension(:,:) :: bStats
+
+      integer(kind=int_kind), allocatable :: WorkPerBlock(:),blockType(:)
+      real(kind=dbl_kind), allocatable :: ProbPerBlock(:)
+
       character (char_len) :: &
          fieldname       ! field name in netCDF file
 
@@ -221,6 +227,8 @@
          call ice_read_global(nu_grid,1,work_g2,'ida8',.true.)  ! KMT
          call ice_read_global(nu_grid,2,work_g1,'rda8',.true.)  ! ULAT
 
+
+
          if (my_task == master_task) close (nu_grid)
 
       else   ! rectangular grid
@@ -233,11 +241,27 @@
       call broadcast_array(work_g1, master_task)   ! ULAT
       call broadcast_array(work_g2, master_task)   ! KMT
 
+      allocate(WorkPerBlock(nblocks_tot),ProbPerBlock(nblocks_tot),blockType(nblocks_tot))
+      allocate(bStats(numCoeff,nblocks_tot))
+      call CalcWorkPerBlock(distribution_wght, work_g2,work_g1, &
+                WorkPerBlock,ProbPerBlock,blockType,bStats)
       !-----------------------------------------------------------------
       ! distribute blocks among processors
       !-----------------------------------------------------------------
+!      call broadcast_array(WorkPerBlock,master_task)
+!      call broadcast_array(ProbPerBlock,master_task)
+!      call broadcast_array(blockType,master_task)
 
-      call init_domain_distribution(work_g2, work_g1)  ! KMT, ULAT
+
+!      call abort_ice('init_grid1: after call to CalcWorkPerBlock')
+!      stop 'init_grid1: after call to CalcWorkPerBlock'
+
+      call init_domain_distribution(work_g2, work_g1,  &
+                WorkPerBlock,ProbPerBlock,blockType,bStats)  ! KMT, ULAT
+!DBG      print *,'init_grid1: after call to init_domain_distribution'
+
+      deallocate(bStats)
+      deallocate(WorkPerBlock,ProbPerBlock,blockType)
 
       deallocate(work_g1)
       deallocate(work_g2)
@@ -1767,10 +1791,15 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
            intent(inout) :: & 
            work
+      
+      integer (int_kind) :: iblk
 !
 !EOP
 !
       work1(:,:,:) = work(:,:,:)
+!      do iblk = 1,nblocks
+!         work1(:,:,iblk) = work(:,:,iblk)
+!      enddo
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (work1,            halo_info, &

@@ -374,7 +374,14 @@ add_default($nl, 'advection');
 
 add_default($nl, 'processor_shape');
 add_default($nl, 'distribution_type');
-add_default($nl, 'distribution_type');
+my $distribution_type = $nl->get_value('distribution_type');
+if ($distribution_type =~ 'spacecurve') {
+  add_default($nl, 'distribution_wght');
+}
+my $distribution_wght = $nl->get_value('distribution_wght');
+if ($distribution_wght =~ 'file') {
+  add_default($nl, 'distribution_wght_file');
+}
 add_default($nl, 'ew_boundary_type');
 add_default($nl, 'ns_boundary_type');
 
@@ -477,6 +484,9 @@ add_default($nl, 'f_apondn');
 add_default($nl, 'f_faero_atm');
 add_default($nl, 'f_faero_ocn');
 add_default($nl, 'f_aero');
+add_default($nl, 'f_FY');
+add_default($nl, 'f_aisnap');
+add_default($nl, 'f_hisnap');
 
 #-----------------------------------------------------------------------------------------------
 # Write output files

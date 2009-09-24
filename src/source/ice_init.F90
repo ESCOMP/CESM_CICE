@@ -25,7 +25,7 @@
 ! !USES:
 !
       use ice_kinds_mod
-      use ice_communicate, only: my_task, master_task
+      use ice_communicate, only: my_task, master_task, lprint_stats
       use ice_domain_size
       use ice_constants
 !
@@ -127,7 +127,7 @@
         print_global,   print_points,   latpnt,          lonpnt,        &
         dbug,           histfreq,       histfreq_n,      hist_avg,      &
         history_dir,    history_file,   history_format,                 &
-        write_ic,       incond_dir,     incond_file
+        write_ic,       incond_dir,     incond_file, lprint_stats
 
       namelist /grid_nml/ &
         grid_format,    grid_type,       grid_file,     kmt_file,       &
@@ -171,6 +171,7 @@
       diagfreq = 24          ! how often diag output is written
       print_points = .false. ! if true, print point data
       print_global = .true.  ! if true, print global diagnostic data
+      lprint_stats = .false. ! if true, prints decomposition statistics
       diag_type = 'stdout'
       diag_file = 'ice_diag.d'
       histfreq(:) = 'd'      ! output frequency option for different streams  **** note this is only for testing - needs to get changed back'

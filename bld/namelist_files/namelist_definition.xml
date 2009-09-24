@@ -209,9 +209,14 @@ method to use for distributing blocks
 Default: cartesian
 </entry>
 
-<entry id="distribution_wght" type="char*80"  category="cice" group="domain_nml" valid_values="block,latitude">
+<entry id="distribution_wght" type="char*80"  category="cice" group="domain_nml" valid_values="block,latitude,erfc,file">
 method to use for distributing blocks
 Default: block
+</entry>
+
+<entry id="distribution_wght_file" type="char*256"  category="cice" group="domain_nml" valid_values="">
+file containing probability distribution for distribution_wght method
+Default: unknown
 </entry>
 
 <entry id="ew_boundary_type" type="char*80"  category="cice" group="domain_nml" valid_values="cyclic,closed">
@@ -524,6 +529,15 @@ Default: mxxxx
 </entry>
 <entry id="f_aero" type="character*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
+</entry>
+<entry id="f_FY" type="character*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mdxxx
+</entry>
+<entry id="f_aisnap" type="character*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mdxxx
+</entry>
+<entry id="f_hisnap" type="character*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mdxxx
 </entry>
 
 </namelist_definition>

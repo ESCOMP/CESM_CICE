@@ -28,6 +28,7 @@
               get_num_procs,             &
               create_communicator
 
+  public :: ice_barrier
 ! !PUBLIC DATA MEMBERS:
 
    integer (int_kind), public :: &
@@ -41,6 +42,8 @@
    integer (int_kind), parameter, public :: &
       mpitagHalo            = 1,    &! MPI tags for various
       mpitag_gs             = 1000   ! communication patterns
+
+   logical (log_kind), public :: lprint_stats ! if true output decomposition statistics
 
 !EOP
 !BOC
@@ -223,6 +226,39 @@
  end subroutine create_communicator
 
 !***********************************************************************
+!BOP 
+! !IROUTINE: ice_barrier 
+! !INTERFACE: 
+ 
+ subroutine ice_barrier
+
+! !DESCRIPTION:
+!  This routine performs a barrier.
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INCLUDES:
+
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+   integer(int_kind) :: ierr
+
+    call MPI_Barrier(MPI_COMM_ICE,ierr)
+
+!-----------------------------------------------------------------------
+!EOC
+
+ end subroutine ice_barrier
+
+
+!***********************************************************************
+
 
  end module ice_communicate
 

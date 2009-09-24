@@ -538,7 +538,6 @@
 !
 ! !USES:
 !
-      use ice_domain, only: nblocks
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -587,7 +586,6 @@
 !
 ! !USES:
 !
-      use ice_domain, only: nblocks
       use ice_state, only: aice, vice
 !
 ! !INPUT/OUTPUT PARAMETERS:

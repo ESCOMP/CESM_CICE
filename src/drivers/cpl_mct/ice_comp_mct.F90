@@ -12,6 +12,7 @@ module ice_comp_mct
 
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod,  only : shr_sys_abort, shr_sys_flush
+! use shr_mem_mod,  only : shr_get_memusage, shr_init_memusage
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
 		           shr_file_setloglevel, shr_file_setlogunit
   use mct_mod
@@ -41,18 +42,21 @@ module ice_comp_mct
                               filename_volpn, filename_FY, &
                               tr_aero, tr_iage, tr_FY, tr_pond
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
-  use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info
+  use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info, profile_barrier
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
  		              grid_type, t2ugrid_vector
   use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
 		              field_loc_center, field_type_scalar, field_type_vector, c100
-  use ice_communicate, only : my_task, master_task
+  use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
                               get_daycal, leap_year_count
   use ice_timers
+  use ice_probability, only : init_numIceCells, print_numIceCells,  &
+ 			      write_numIceCells, accum_numIceCells2
+
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
 !  use ice_init
   use ice_boundary,    only : ice_HaloUpdate 
@@ -139,6 +143,9 @@ contains
     integer            :: lbnum
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
+
+    real(r8) :: mrss, mrss0,msize,msize0
+
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall
 !EOP
@@ -154,13 +161,7 @@ contains
     ! Determine time of next atmospheric shortwave calculation
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
-#if (defined _MEMTRACE)
-    call MPI_comm_rank(mpicom_ice,iam,ierr)
-    if(iam == 0 ) then
-       lbnum=1
-       call memmon_dump_fort('memmon.out','ice_init_mct:start::',lbnum)
-    endif
-#endif
+!   call shr_init_memusage()
 
     !---------------------------------------------------------------------------
     ! use infodata to determine type of run
@@ -206,6 +207,7 @@ contains
     call t_startf ('cice_init')
     call cice_init( mpicom_ice )
     call t_stopf ('cice_init')
+    call init_numIceCells
 
     !---------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -321,15 +323,16 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-#if (defined _MEMTRACE)
-    if(iam == 0) then
-       lbnum=1
-       call memmon_dump_fort('memmon.out','ice_init_mct:end::',lbnum)
-       call memmon_reset_addr()
-    endif
-#endif
-
     call ice_timer_stop(timer_total) ! time entire run
+!   call shr_get_memusage(msize,mrss)
+!   call shr_mpi_max(mrss, mrss0, mpicom_ice,'ice_init_mct mrss0')
+!   call shr_mpi_max(msize,msize0,mpicom_ice,'ice_init_mct msize0')
+!   if(my_task == 0) then
+!     write(shrlogunit,105) 'ice_init_mct: memory_write: model date = ',start_ymd,start_tod, &
+!           ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
+!   endif
+ 
+  105  format( A, 2i8, A, f10.2, A, f10.2, A)
 
   end subroutine ice_init_mct
 
@@ -380,6 +383,9 @@ contains
     character(len=char_len_long) :: fname
     character(len=char_len_long) :: string1, string2
     character(len=*), parameter  :: SubName = "ice_run_mct"
+
+    real(r8) :: mrss, mrss0,msize,msize0
+
 !
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall, Mariana Vertenstein
@@ -389,14 +395,6 @@ contains
 
     call ice_timer_start(timer_total) ! time entire run
 
-#if (defined _MEMTRACE)
-    if(my_task == 0 ) then
-       lbnum=1
-       call memmon_dump_fort('memmon.out','ice_run_mct:start::',lbnum)
-!       write(6,*) SubName // ':start::'
-!       call memmon_print_usage()
-    endif
-#endif
     !---------------------------------------------------------------------------
     ! Reset shr logging to my log file
     !---------------------------------------------------------------------------
@@ -543,6 +541,11 @@ contains
 #endif
     call ice_timer_stop(timer_hist)
     call t_stopf ('cice_hist')
+ 
+    !--------------------------------------------
+    ! Accumualate the number of active ice cells
+    !--------------------------------------------
+    call accum_numIceCells2(aice)
 
     rstwr = seq_timemgr_RestartAlarmIsOn(EClock)
     if (rstwr) then
@@ -650,16 +653,24 @@ contains
 
     stop_now = seq_timemgr_StopAlarmIsOn( EClock )
     if (stop_now) then
-       call ice_timer_print_all(stats=.false.) ! print timing information
+       call ice_timer_print_all(stats=.true.) ! print timing information
+       if(lprint_stats) then 
+          call write_numIceCells()
+       endif
        call release_all_fileunits
     end if
     
-#if (defined _MEMTRACE)
-    if(my_task == 0 ) then
-       lbnum=1
-       call memmon_dump_fort('memmon.out','ice_run_mct:end::',lbnum)
-    endif
-#endif
+!   if(tod == 0) then
+!      call shr_get_memusage(msize,mrss)
+!      call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_run_mct mrss0')
+!      call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_run_mct msize0')
+!      if(my_task == 0 ) then
+!          write(shrlogunit,105) 'ice_run_mct: memory_write: model date = ',ymd,tod, &
+!               ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
+!      endif
+!   endif
+ 
+  105  format( A, 2i8, A, f10.2, A, f10.2, A)
 
   end subroutine ice_run_mct
 

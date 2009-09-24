@@ -39,6 +39,7 @@
              global_minval,   &
              init_global_reductions
 
+   public :: sum_vector_dbl
 !EOP
 !BOC
 !-----------------------------------------------------------------------
@@ -118,6 +119,45 @@
 !EOC
 
  end subroutine init_global_reductions
+
+ subroutine sum_vector_dbl(local_vector,global_vector, dist)
+
+!-----------------------------------------------------------------------
+!
+!  this function returns the sum of vector value across processors
+!
+!-----------------------------------------------------------------------
+
+   include 'mpif.h'  ! MPI Fortran include file
+
+   type (distrb), intent(in) :: &
+      dist                 ! distribution from which this is called
+
+   real (dbl_kind), intent(inout) :: &
+      local_vector(:)                ! local vector to be compared
+
+   real (dbl_kind) :: global_vector(:)   ! resulting global sum
+
+   integer (int_kind) :: ierr ! MPI error flag
+
+   integer (int_kind) :: len
+!-----------------------------------------------------------------------
+
+   len = size(local_vector)
+   if (dist%nprocs > 1) then
+      if (my_task < dist%nprocs) then
+         call MPI_ALLREDUCE(local_vector, global_vector, len, &
+                            mpiR8, MPI_SUM, dist%communicator, ierr)
+      else
+         global_vector = c0
+      endif
+   else
+      global_vector = local_vector
+   endif
+
+!-----------------------------------------------------------------------
+
+ end subroutine sum_vector_dbl
 
 !***********************************************************************
 !BOP

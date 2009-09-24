@@ -50,6 +50,11 @@
              get_block_parameter ,&
              ice_blocksGetNbrID
 
+   public :: LocateTrouble,PrintTrouble
+   interface PrintTrouble
+       module procedure PrintTrouble_dbl, PrintTrouble_int
+   end interface
+
 ! !DEFINED PARAMETERS:
 
    integer (int_kind), parameter, public :: &
@@ -99,6 +104,12 @@
       nblocks_x        ,&! tot num blocks in i direction
       nblocks_y          ! tot num blocks in j direction
 
+   integer (int_kind), public, parameter ::  &
+		trouble_ig = 2, &
+		trouble_jg = 2
+				
+   integer (int_kind), public :: trouble_il,trouble_jl,trouble_ibl
+
 !EOP
 !BOC
 !-----------------------------------------------------------------------
@@ -123,6 +134,70 @@
 !***********************************************************************
 
 contains
+
+   subroutine PrintTrouble_dbl(name,array)
+
+     use ice_fileunits, only: nu_diag
+
+     character(len=*), intent(in) :: name
+     real(kind=dbl_kind), intent(in)         :: array(nx_block,ny_block) 
+       
+     write(nu_diag,*) TRIM(name),'(i,j) =',array(trouble_il,trouble_jl)
+
+   end subroutine PrintTrouble_dbl
+
+   subroutine PrintTrouble_int(name,array)
+
+     use ice_fileunits, only: nu_diag
+
+     character(len=*), intent(in) :: name
+     integer(int_kind), intent(in)         :: array(nx_block,ny_block) 
+        
+     write(nu_diag,*) TRIM(name),'(i,j) =',array(trouble_il,trouble_jl)
+
+   end subroutine PrintTrouble_int
+
+   subroutine LocateTrouble
+
+     type (block) :: this_block
+     integer(int_kind) :: n,gbid,ib,ie,jb,je,ig,jg,i,j
+     integer(int_kind) :: j_save,i_save,ib_save
+     logical  :: foundi, foundj
+    
+
+      do n=1,nblocks_tot
+	  foundi=.false.;foundj=.false.
+	  gbid = all_blocks(n)%block_id
+	  ib   = all_blocks(n)%ilo
+	  ie   = all_blocks(n)%ihi
+	  jb   = all_blocks(n)%jlo
+          je   = all_blocks(n)%jhi
+	  do i=ib,ie
+	     ig=all_blocks(n)%i_glob(i) 
+	     if(ig == trouble_ig) then 
+		i_save=i
+		foundi=.true.
+	     endif
+          enddo
+	  do j=jb,je
+	     jg=all_blocks(n)%j_glob(j) 
+	     if(jg == trouble_jg) then
+		j_save=j;foundj=.true.
+	     endif
+          enddo
+          if(foundi .and. foundj) then 
+		ib_save = n
+	  endif
+      enddo
+      trouble_il  = i_save
+      trouble_jl  = j_save
+      trouble_ibl = ib_save
+!      print *,'Trouble located: ib, i, j: ',ib_save,i_save,j_save
+
+   end subroutine LocateTrouble
+
+
+
 
 !***********************************************************************
 !BOP

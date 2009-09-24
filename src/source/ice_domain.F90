@@ -41,6 +41,8 @@
    public  :: init_domain_blocks ,&
               init_domain_distribution
 
+!   public :: CalcWorkPerBlock
+
 ! !PUBLIC DATA MEMBERS:
 
    integer (int_kind), public :: &
@@ -72,16 +74,33 @@
 !
 !-----------------------------------------------------------------------
 
-    character (char_len) :: &
+    character (char_len), public  :: &
        distribution_type,   &! method to use for distributing blocks
                              ! 'cartesian'
                              ! 'rake' 
+                             ! 'spacecurve'
        distribution_wght     ! method for weighting work per block 
                              ! 'block' = POP default configuration
                              ! 'latitude' = no. ocean points * |lat|
 
+    character (char_len), public :: &
+       distribution_wght     ! method for weighting work per block 
+                             ! 'block' = POP default configuration
+                             ! 'latitude' = no. ocean points * |lat|
+                             ! 'erfc' = erfc function weight based 
+                             !        on performance model [default for spacecurve]
+                             ! 'file' = ice_present weight based on performance model
+
+     character (char_len_long), public :: &
+       distribution_wght_file  ! file which contains the ice_present field
+
     integer (int_kind) :: &
        nprocs                ! num of processors
+
+    logical (log_kind), public :: profile_barrier ! flag to turn on use of barriers before timers
+
+    logical (log_kind), public :: FixMaxBlock
+    integer (int_kind), public :: maxBlock 
 
 !EOC
 !***********************************************************************
@@ -127,8 +146,12 @@
                          processor_shape,   &
                          distribution_type, &
                          distribution_wght, &
+   			 distribution_wght_file, &
                          ew_boundary_type,  &
-                         ns_boundary_type
+                         ns_boundary_type,   &
+                         maxBlock,           &
+                         FixMaxBlock,        &
+                         profile_barrier
 
 !----------------------------------------------------------------------
 !
@@ -140,8 +163,12 @@
    processor_shape   = 'slenderX2'
    distribution_type = 'cartesian'
    distribution_wght = 'latitude'
+   distribution_wght_file  = 'unknown_distribution_wght_file'
    ew_boundary_type  = 'cyclic'
    ns_boundary_type  = 'open'
+   maxBlock          = max_blocks
+   profile_barrier   = .false.
+   FixMaxBlock       = .false.
 
    call get_fileunit(nu_nml)
    if (my_task == master_task) then
@@ -167,15 +194,27 @@
    call broadcast_scalar(nprocs,            master_task)
    call broadcast_scalar(processor_shape,   master_task)
    call broadcast_scalar(distribution_type, master_task)
+
+   call broadcast_scalar(distribution_wght_file,  master_task)
    call broadcast_scalar(distribution_wght, master_task)
+
    call broadcast_scalar(ew_boundary_type,  master_task)
    call broadcast_scalar(ns_boundary_type,  master_task)
+   call broadcast_scalar(profile_barrier,   master_task)
+   call broadcast_scalar(maxBlock,          master_task)
 
 !----------------------------------------------------------------------
 !
 !  perform some basic checks on domain
 !
 !----------------------------------------------------------------------
+   if(trim(distribution_type) == 'spacecurve') then 
+      if(trim(distribution_wght_file) == 'unknown_distribution_wght_file') then 
+	distribution_wght = 'erfc'
+      else 
+        distribution_wght =  'file'
+      endif
+   endif
 
    if (trim(ns_boundary_type) == 'tripole') then
       ltripole_grid = .true.
@@ -238,8 +277,14 @@
                                   trim(processor_shape)
      write(nu_diag,'(a25,a10)') '  Distribution type:      ', &
                                   trim(distribution_type)
+!     write(nu_diag,'(a31,a9)') '  Probability: ', &
+!                                  trim(probability_type)
      write(nu_diag,'(a25,a10)') '  Distribution weight:    ', &
                                   trim(distribution_wght)
+     if(trim(distribution_wght) == 'file') then 
+         write(nu_diag,'(a30,a80)') '  Distribution weight file:  ', &
+                                  trim(distribution_wght_file)
+     endif
      write(nu_diag,'(a26,i6)') '  max_blocks =            ', max_blocks
      write(nu_diag,'(a26,i6,/)')'  Number of ghost cells:  ', nghost
    endif
@@ -254,7 +299,7 @@
 ! !IROUTINE: init_domain_distribution
 ! !INTERFACE:
 
- subroutine init_domain_distribution(KMTG,ULATG)
+ subroutine init_domain_distribution(KMTG,ULATG,work_per_block,prob_per_block,blockType,bStats)
 
 ! !DESCRIPTION:
 !  This routine calls appropriate setup routines to distribute blocks
@@ -270,6 +315,12 @@
    real (dbl_kind), dimension(nx_global,ny_global), intent(in) :: &
       KMTG           ,&! global topography
       ULATG            ! global latitude field (radians)
+
+   integer(int_kind), intent(in), dimension(:) ::  work_per_block,blockType
+   
+   real (dbl_kind), intent(in), dimension(:) :: prob_per_block
+   
+   real (dbl_kind), intent(in), dimension(:,:)  :: bStats
 
 !EOP
 !BOC
@@ -295,8 +346,8 @@
       nblocks_max          ! max blocks on proc
 
    integer (int_kind), dimension(:), allocatable :: &
-      nocn               ,&! number of ocean points per block
-      work_per_block       ! number of work units per block
+      nocn               ! number of ocean points per block
+!JMD      work_per_block       ! number of work units per block
 
    type (block) :: &
       this_block           ! block information for current block
@@ -435,13 +486,6 @@
 
    !*** find number of work units per block
 
-   allocate(work_per_block(nblocks_tot))
-
-   where (nocn > 0)
-     work_per_block = nocn/work_unit + 1
-   elsewhere
-     work_per_block = 0
-   end where
    deallocate(nocn)
 
 !----------------------------------------------------------------------
@@ -450,10 +494,12 @@
 !
 !----------------------------------------------------------------------
 
-   distrb_info = create_distribution(distribution_type, &
-                                     nprocs, work_per_block)
+!DBG   print *,'init_domain_distribution: before call to create_distribution'
+   distrb_info = create_distribution(distribution_type, nprocs, maxBlock, &
+                     work_per_block, prob_per_block, blockType, bStats, FixMaxBlock )
+!JMD   call abort_ice('init_domain_distribution: after call to create_distribution')
 
-   deallocate(work_per_block)
+!DBG   print *,'after call to create_distribution'
 
 !----------------------------------------------------------------------
 !
@@ -462,6 +508,7 @@
 !----------------------------------------------------------------------
 
    call create_local_block_ids(blocks_ice, distrb_info)
+!DBG   print *,'after call to create_local_block_ids'
 
    if (associated(blocks_ice)) then
       nblocks = size(blocks_ice)
@@ -509,6 +556,7 @@
  end subroutine init_domain_distribution
 
 !***********************************************************************
+
 
  end module ice_domain
 

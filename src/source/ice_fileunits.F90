@@ -63,7 +63,8 @@
          nu_rst_pointer, &  ! pointer to latest restart file
          nu_history    , &  ! binary history output file
          nu_hdr        , &  ! header file for binary history output
-         nu_diag            ! diagnostics output file
+         nu_diag       , &  ! diagnostics output file
+         nu_timing          ! timing output file
 
       integer (kind=int_kind) :: &
          diag_level         ! per-processor diagnostics level
@@ -126,6 +127,7 @@ contains
          nu_rst_pointer = shr_file_getUnit()
          nu_history     = shr_file_getUnit()
          nu_hdr         = shr_file_getUnit()
+         nu_timing         = shr_file_getUnit()
 #else
          call get_fileunit(nu_grid)
          call get_fileunit(nu_kmt)
@@ -143,6 +145,7 @@ contains
          call get_fileunit(nu_rst_pointer)
          call get_fileunit(nu_history)
          call get_fileunit(nu_hdr)
+         call get_fileunit(nu_timing)
 #endif
 
  end subroutine init_fileunits
@@ -228,6 +231,7 @@ contains
       call release_fileunit(nu_rst_pointer)
       call release_fileunit(nu_history)
       call release_fileunit(nu_hdr)
+      call release_fileunit(nu_timing)
       if (nu_diag /= ice_stdout) call release_fileunit(nu_diag)
 
  end subroutine release_all_fileunits

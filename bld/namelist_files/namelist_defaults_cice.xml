@@ -11,7 +11,7 @@
 <dt> 3600 </dt> 
 
 <xndt_dyn                    > 1.0 </xndt_dyn>
-<xndt_dyn hgrid="tx0.1v2"    > 2.0 </xndt_dyn>
+<xndt_dyn hgrid="tx0.1v2"    > 3.0 </xndt_dyn>
 
 <!--------------------------->
 <!-- grid_nml settings ------>
@@ -135,7 +135,8 @@
 
 <evp_damping>.false.</evp_damping> 
 
-<shortwave>'dEdd'</shortwave>
+<shortwave                 >'dEdd'</shortwave>
+<shortwave hgrid="tx0.1v2" >'default'</shortwave>
 
 <R_snw> 1.5 </R_snw>
 
@@ -149,7 +150,7 @@
 
 <!--- diagnostic information --->
 
-<diagfreq> 48   </diagfreq>
+<diagfreq> 24   </diagfreq>
 
 <!--- restart information --->
 <pointer_file>rpointer.ice</pointer_file>
@@ -164,16 +165,22 @@
 <tr_iage> .false. </tr_iage>
 <tr_FY>   .false. </tr_FY>
 <tr_pond> .true.  </tr_pond>
+<tr_pond hgrid='tx0.1v2'> .false.  </tr_pond>
 <tr_aero> .false. </tr_aero>
 
 <!--------------------------->
 <!-- Domain namelist- --->
 <!--------------------------->
 
-<distribution_type hgrid='tx0.1v2'>'spacecurve'</distribution_type>
-<processor_shape                      >'square-pop' </processor_shape>
 <distribution_type                    >'cartesian' </distribution_type>
+<distribution_type hgrid='tx0.1v2'    >'spacecurve'</distribution_type>
 <distribution_wght                    >'block'     </distribution_wght>
+<distribution_wght_file               >'unknown_file'</distribution_wght_file>
+<processor_shape                      >'square-pop' </processor_shape>
+
+<distribution_wght distribution_type='spacecurve'>'erfc'</distribution_wght>
+<distribution_wght hgrid='tx0.1v2' distribution_type='spacecurve'>'file'</distribution_wght>
+<distribution_wght_file hgrid='tx0.1v2' distribution_wght='file'>'ice/cice/ice_present.0002.tx0.1v2.081119.nc'</distribution_wght_file>
 
 <ew_boundary_type>'cyclic'</ew_boundary_type>
 
@@ -479,5 +486,9 @@
 
 <f_aero                       >'mxxxx' </f_aero>  
 <f_aero cice_mode='prescribed'>'xxxxx'</f_aero> 
+
+<f_FY                     >'mdxxx'</f_FY>
+<f_aisnap                 >'mdxxx'</f_aisnap>
+<f_hisnap                 >'mdxxx'</f_hisnap>
 
 </namelist_defaults>

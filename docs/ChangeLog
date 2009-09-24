@@ -1,4 +1,47 @@
 ===============================================================
+cice4_0_20090924
+Originator: dbailey
+Date: Thu Sep 24 2009
+Version: 4.0
+One-line Summary: Space-filling curves update.
+CCSM Version compatible with: ccsm4_0_beta26+
+Changes made:
+
+This brings all of the branch changes for space-filling curves
+to the head of the trunk. These do not change answers for non-
+space-filling curve decompositions. Some related changes are
+additional timers and memor profiling (commented out currently).
+The _SINGLEMSG option has been added to the gather routines
+to improve performance (bfb) and is the default. Also included 
+are a few tracer history and restart fixes.
+
+M      bld/build-namelist
+M      bld/cice_decomp.xml
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_domain.F90
+M      src/source/ice_blocks.F90
+M      src/source/ice_fileunits.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_distribution.F90
+A  +   src/source/ice_probability.F90
+M      src/source/ice_read_write.F90
+M      src/source/ice_grid.F90
+M      src/source/ice_spacecurve.F90
+A  +   src/source/ice_probability_tools.F90
+M      src/mpi/ice_boundary.F90
+M      src/mpi/ice_timers.F90
+M      src/mpi/ice_gather_scatter.F90
+M      src/mpi/ice_global_reductions.F90
+M      src/drivers/cpl_share/ice_communicate.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20090921
 Originator: dbailey
 Date: Mon Sep 21 2009

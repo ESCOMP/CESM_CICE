@@ -68,6 +68,19 @@ contains
 !===============================================================================
 !BOP
 !
+! !IROUTINE: ice_pio_finalize - finalize io for input or output
+!
+! !INTERFACE: 
+   subroutine ice_pio_finalize
+   
+     integer  :: ierr
+
+!    call pio_finalize(ice_pio_subsystem,ierr)
+
+   end subroutine ice_pio_finalize
+!===============================================================================
+!BOP
+!
 ! !IROUTINE: ice_pio_init - initialize io for input or output
 !
 ! !INTERFACE: 
@@ -202,6 +215,8 @@ contains
    end if
       
   end subroutine ice_pio_init
+
+   
 
 !===============================================================================
 !BOP
@@ -419,20 +434,6 @@ contains
       deallocate(dof3d)
 
     end subroutine ice_pio_initdecomp_3d_inner
-
-!===============================================================================
-!BOP
-!
-! !IROUTINE: ice_pio_finalize - finalize io for input or output
-!
-! !INTERFACE: 
-   subroutine ice_pio_finalize
-   
-     integer  :: ierr
-
-!    call pio_finalize(ice_pio_subsystem,ierr)
-
-   end subroutine ice_pio_finalize
 
 
 end module ice_pio

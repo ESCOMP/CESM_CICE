@@ -574,22 +574,17 @@
       endif
 
       call pio_closefile(File)
-      if (my_task == master_task) then
-         write(nu_diag,*) 'Restart written ',istep1,time,time_forc
-      endif
 
-      !-------------------
-      ! Free PIO descriptors
-      !-------------------
       call PIO_freeDecomp(File,iodesc2d)
       call PIO_freeDecomp(File,iodesc3d_ncat)
       call PIO_freeDecomp(File,iodesc3d_ntilyr)
       call PIO_freeDecomp(File,iodesc3d_ntslyr)
 
-      !-------------------
-      ! free the IO-system
-      !-------------------
 !     call ice_pio_finalize
+
+      if (my_task == master_task) then
+         write(nu_diag,*) 'Restart written ',istep1,time,time_forc
+      endif
 
     end subroutine dumpfile_pio
 
@@ -1391,59 +1386,96 @@
       enddo
       enddo
 
-      if (tr_aero .or. tr_iage .or. tr_pond) then
+      if (tr_aero .or. tr_iage .or. tr_pond .or. tr_FY) then
          allocate(work1_trc(nx_block,ny_block,1,ncat,max_blocks))
       end if
 
       if (tr_aero) then
-         do k=1,n_aero
-            write(nchar,'(i1.1)') k
+         status = pio_inq_varid(File,'aerosnossl1',varid)
 
-            status = pio_inq_varid(File,'aerosnossl'//nchar,varid)
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_aero+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+         if (status == PIO_noerr) then
 
-            status = pio_inq_varid(File,'aerosnoint'//nchar,varid)
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_aero+1+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+            do k=1,n_aero
+               write(nchar,'(i1.1)') k
 
-            status = pio_inq_varid(File,'aeroicessl'//nchar,varid)
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_aero+2+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+               status = pio_inq_varid(File,'aerosnossl'//nchar,varid)
+               call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                    tmpfield3d_ncat, status)
+               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                       (/nx_block,ny_block,1,ncat,max_blocks/))
+               trcrn(:,:,nt_aero+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
 
-            status = pio_inq_varid(File,'aeroiceint'//nchar,varid)
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_aero+3+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
-         enddo
+               status = pio_inq_varid(File,'aerosnoint'//nchar,varid)
+               call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                    tmpfield3d_ncat, status)
+               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                       (/nx_block,ny_block,1,ncat,max_blocks/))
+               trcrn(:,:,nt_aero+1+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+   
+               status = pio_inq_varid(File,'aeroicessl'//nchar,varid)
+               call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                    tmpfield3d_ncat, status)
+               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                       (/nx_block,ny_block,1,ncat,max_blocks/))
+               trcrn(:,:,nt_aero+2+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+
+               status = pio_inq_varid(File,'aeroiceint'//nchar,varid)
+               call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                    tmpfield3d_ncat, status)
+               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                    (/nx_block,ny_block,1,ncat,max_blocks/))
+               trcrn(:,:,nt_aero+3+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+            enddo
+
+         endif
       endif
 
       if (tr_iage) then
          status = pio_inq_varid(File,'iage',varid)
-         call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-         work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-         trcrn(:,:,nt_iage,:,:) = work1_trc(:,:,1,:,:)
+         if (status == PIO_noerr) then
+            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, &
+                                 status)
+            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                    (/nx_block,ny_block,1,ncat,max_blocks/))
+            trcrn(:,:,nt_iage,:,:) = work1_trc(:,:,1,:,:)
+         endif
+      endif
+
+      if (tr_FY) then
+         status = pio_inq_varid(File,'FY',varid)
+         if (status == PIO_noerr) then
+            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, &
+                                 status)
+            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                    (/nx_block,ny_block,1,ncat,max_blocks/))
+            trcrn(:,:,nt_FY,:,:) = work1_trc(:,:,1,:,:)
+         endif
       endif
 
       if (tr_pond) then
          status = pio_inq_varid(File,'volpn',varid)
-         call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-         work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-         trcrn(:,:,nt_volpn,:,:) = work1_trc(:,:,1,:,:)
+         if (status == PIO_noerr) then
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 tmpfield3d_ncat, status)
+            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
+                                    (/nx_block,ny_block,1,ncat,max_blocks/))
+            trcrn(:,:,nt_volpn,:,:) = work1_trc(:,:,1,:,:)
          
-         status = pio_inq_varid(File,'apondn',varid)
-         call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-         apondn(:,:,:,:) = reshape(tmpfield3d_ncat,(/nx_block,ny_block,ncat,max_blocks/))
+            status = pio_inq_varid(File,'apondn',varid)
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 tmpfield3d_ncat, status)
+            apondn(:,:,:,:) = reshape(tmpfield3d_ncat, &
+                              (/nx_block,ny_block,ncat,max_blocks/))
          
-         status = pio_inq_varid(File,'hpondn',varid)
-         call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-         hpondn(:,:,:,:) = reshape(tmpfield3d_ncat,(/nx_block,ny_block,ncat,max_blocks/))
+            status = pio_inq_varid(File,'hpondn',varid)
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 tmpfield3d_ncat, status)
+            hpondn(:,:,:,:) = reshape(tmpfield3d_ncat, &
+                              (/nx_block,ny_block,ncat,max_blocks/))
+         endif
       endif
 
-      if (tr_aero .or. tr_iage .or. tr_pond) then
+      if (tr_aero .or. tr_iage .or. tr_pond .or. tr_FY) then
          deallocate(work1_trc)
       end if
 
@@ -1453,6 +1485,13 @@
       deallocate(tmpfield3d_ntslyr)
 
       call pio_closefile(File)
+
+      call PIO_freeDecomp(File,iodesc2d)
+      call PIO_freeDecomp(File,iodesc3d_ncat)
+      call PIO_freeDecomp(File,iodesc3d_ntilyr)
+      call PIO_freeDecomp(File,iodesc3d_ntslyr)
+
+!     call ice_pio_finalize
 
       call bound_state (aicen, trcrn, &
                         vicen, vsnon, &
@@ -1557,19 +1596,6 @@
 
       enddo
       !$OMP END PARALLEL DO
-
-      !-------------------
-      ! Free PIO descriptors
-      !-------------------
-      call PIO_freeDecomp(File,iodesc2d)
-      call PIO_freeDecomp(File,iodesc3d_ncat)
-      call PIO_freeDecomp(File,iodesc3d_ntilyr)
-      call PIO_freeDecomp(File,iodesc3d_ntslyr)
-
-      !-------------------
-      ! free the IO-system
-      !-------------------
-!     call ice_pio_finalize
 
     end subroutine restartfile_pio
 

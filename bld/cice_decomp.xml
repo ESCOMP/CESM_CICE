@@ -12,11 +12,19 @@
 <!-- -------------------------------------------------------------------------------- -->
   <!-- tx0.1v2 resolution -->
 
+<!-- wSFC partitioning for 480 cores
   <decomp nproc="480" res="tx0.1v2" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >180</bsize_x>
     <bsize_y   >100</bsize_y>
     <decomptype>cartesian</decomptype>
+  </decomp>
+-->
+  <decomp nproc="480" res="tx0.1v2" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   >48</bsize_x>
+    <bsize_y   >32</bsize_y>
+    <decomptype>spacecurve</decomptype>
   </decomp>
 
   <decomp nproc="512" res="tx0.1v2" model="cice">
@@ -25,6 +33,42 @@
     <bsize_y   >48</bsize_y>
     <decomptype>spacecurve</decomptype>
   </decomp>
+<!-- wSFC partitoning for 512 cores
+  <decomp nproc="512" res="tx0.1v2" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   ><48/bsize_x>
+    <bsize_y   >32</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+-->
+
+  <decomp nproc="600" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >12</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
+
+  <decomp nproc="720" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >10</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
+
+  <decomp nproc="800" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >9</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
+
+  <decomp nproc="900" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >8</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
 
   <decomp nproc="960" res="tx0.1v2" model="cice">
     <maxblocks >1</maxblocks>
@@ -32,19 +76,48 @@
     <bsize_y   >100</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
+<!-- wSFC partitioning for 960 cores
+  <decomp nproc="960" res="tx0.1v2" model="cice">
+    <maxblocks >3</maxblocks>
+    <bsize_x   >60</bsize_x>
+    <bsize_y   >80</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+-->
 
   <decomp nproc="1024" res="tx0.1v2" model="cice">
-    <maxblocks >3</maxblocks>
-    <bsize_x   >72</bsize_x>
-    <bsize_y   >48</bsize_y>
+    <maxblocks >15</maxblocks>
+    <bsize_x   >36</bsize_x>
+    <bsize_y   >24</bsize_y>
     <decomptype>spacecurve</decomptype>
+  </decomp>
+
+  <decomp nproc="1200" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >6</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
   </decomp>
 
   <decomp nproc="1440" res="tx0.1v2" model="cice">
     <maxblocks >1</maxblocks>
-    <bsize_x   >75</bsize_x>
-    <bsize_y   >80</bsize_y>
+    <bsize_x   >5</bsize_x>
+    <bsize_y   >1200</bsize_y>
     <decomptype>cartesian</decomptype>
+  </decomp>
+
+  <decomp nproc="1648" res="tx0.1v2" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   >24</bsize_x>
+    <bsize_y   >16</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+
+  <decomp nproc="1800" res="tx0.1v2" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   >24</bsize_x>
+    <bsize_y   >16</bsize_y>
+    <decomptype>spacecurve</decomptype>
   </decomp>
 
   <decomp nproc="1920" res="tx0.1v2" model="cice">
@@ -54,20 +127,52 @@
     <decomptype>cartesian</decomptype>
   </decomp>
 
+   <decomp nproc="2000" res="tx0.1v2" model="cice">
+     <maxblocks >1</maxblocks>
+     <bsize_x   >72</bsize_x>
+     <bsize_y   >60</bsize_y>
+     <decomptype>cartesian</decomptype>
+   </decomp>
+
   <decomp nproc="2048" res="tx0.1v2" model="cice">
-    <maxblocks >1</maxblocks>
-    <bsize_x   >72</bsize_x>
-    <bsize_y   >48</bsize_y>
+    <maxblocks >3</maxblocks>
+    <bsize_x   >45</bsize_x>
+    <bsize_y   >60</bsize_y>
     <decomptype>spacecurve</decomptype>
   </decomp>
 
-  <decomp nproc="2000" res="tx0.1v2" model="cice">
+<!-- cartesian configuration for 2400
+  <decomp nproc="2400" res="tx0.1v2" model="cice">
     <maxblocks >1</maxblocks>
-    <bsize_x   >72</bsize_x>
-    <bsize_y   >60</bsize_y>
+    <bsize_x   >3</bsize_x>
+    <bsize_y   >1200</bsize_y>
     <decomptype>cartesian</decomptype>
   </decomp>
- 
+-->
+  <decomp nproc="2400" res="tx0.1v2" model="cice">
+    <maxblocks >14</maxblocks>
+    <bsize_x   >15</bsize_x>
+    <bsize_y   >20</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+
+
+<!-- cartesian configuration for 3600
+  <decomp nproc="3600" res="tx0.1v2" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >2</bsize_x>
+    <bsize_y   >1200</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
+-->
+  <decomp nproc="3600" res="tx0.1v2" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   >18</bsize_x>
+    <bsize_y   >12</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+
+
 <!-- -------------------------------------------------------------------------------- -->
   <!-- gx1v[3456] resolution -->
   <decomp nproc="1" res="gx1v[3456]" model="cice">
@@ -140,6 +245,20 @@
     <decomptype>cartesian</decomptype>
   </decomp>
 
+  <decomp nproc="96" res="gx1v[3456]" model="cice">
+    <maxblocks >12</maxblocks>
+    <bsize_x   >10</bsize_x>
+    <bsize_y   >24</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+
+  <decomp nproc="120" res="gx1v[3456]" model="cice">
+    <maxblocks >15</maxblocks>
+    <bsize_x   >10</bsize_x>
+    <bsize_y   >12</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+
   <decomp nproc="128" res="gx1v[3456]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >5</bsize_x>
@@ -147,6 +266,13 @@
     <decomptype>cartesian</decomptype>
   </decomp>
 
+  <decomp nproc="150" res="gx1v[3456]" model="cice">
+    <maxblocks >12</maxblocks>
+    <bsize_x   >10</bsize_x>
+    <bsize_y   >24</bsize_y>
+    <decomptype>spacecurve</decomptype>
+  </decomp>
+ 
   <decomp nproc="160" res="gx1v[3456]" model="cice">
     <maxblocks >1</maxblocks>
     <bsize_x   >4</bsize_x>

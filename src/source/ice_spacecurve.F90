@@ -22,14 +22,19 @@ module ice_spacecurve
    type, public :: factor_t
         integer(int_kind)        :: numfact ! The # of factors for a value
         integer(int_kind), dimension(:),pointer :: factors ! The factors
+        integer(int_kind), dimension(:), pointer :: used
    end type
 
 ! !PUBLIC MEMBER FUNCTIONS: 
 
-   public :: Factor, 		&
-	     IsFactorable, 	&
-	     GenSpaceCurve,     &
+   public :: GenSpaceCurve,     &
 	     IsLoadBalanced
+
+   public :: Factor,            &
+             IsFactorable,      &
+             PrintFactor,       &
+             ProdFactor,        &
+             MatchFactor
 
 ! !PRIVATE MEMBER FUNCTIONS:
 
@@ -38,6 +43,9 @@ module ice_spacecurve
 	      Hilbert, 		&
 	      Cinco,  		&
               GenCurve
+
+   private :: FirstFactor,      &
+              FindandMark
 
    integer(int_kind), dimension(:,:), allocatable ::  &
 	dir,      &! direction to move along each level
@@ -1109,6 +1117,104 @@ contains
 
    end function GenCurve
 
+
+    function FirstFactor(fac) result(res)
+       type (factor_t) :: fac
+       integer :: res
+       logical :: found
+       integer (int_kind) :: i
+
+       found = .false.
+       i=1
+       do while (i<=fac%numfact .and. (.not. found))
+          if(fac%used(i) == 0) then
+                res = fac%factors(i)
+                found = .true.
+          endif
+          i=i+1
+        enddo
+
+    end function FirstFactor
+
+    function FindandMark(fac,val,f2) result(found)
+       type (factor_t) :: fac
+       integer :: val
+       logical :: found
+       logical :: f2
+       integer (int_kind) :: i
+
+       found = .false.
+       i=1
+       do while (i<=fac%numfact .and. (.not. found))
+          if(fac%used(i) == 0) then
+                if(fac%factors(i) .eq. val) then
+                   if(f2)  then
+                      fac%used(i) = 1
+                      found = .true.
+                   else if( .not. f2) then
+                      fac%used(i) = -1
+                      found = .false.
+                   endif
+                endif
+          endif
+          i=i+1
+        enddo
+
+    end function FindandMark
+
+
+   subroutine MatchFactor(fac1,fac2,val,found)
+      type (factor_t) :: fac1
+      type (factor_t) :: fac2
+      integer :: val
+      integer :: val1
+      logical :: found
+      logical :: tmp
+
+      found = .false.
+
+      val1 = FirstFactor(fac1)
+!JMD      print *,'Matchfactor: found value: ',val1
+      found = FindandMark(fac2,val1,.true.)
+      tmp = FindandMark(fac1,val1,found)
+      if (found) then
+        val = val1
+      else
+        val = 1
+      endif
+
+   end subroutine MatchFactor
+
+   function ProdFactor(fac) result(res)
+
+   type (factor_t) :: fac
+   integer :: res
+   integer (int_kind) :: i
+
+     res = 1
+     do i=1,fac%numfact
+        if(fac%used(i) <= 0) then
+          res = res * fac%factors(i)
+        endif
+     enddo
+
+   end function ProdFactor
+
+   subroutine PrintFactor(msg,fac)
+
+
+      character(len=*) :: msg
+      type (factor_t) :: fac
+      integer (int_kind) :: i
+
+      write(*,*) ' '
+      write(*,*) 'PrintFactor: ',msg
+      write(*,*) (fac%factors(i),i=1,fac%numfact)
+      write(*,*) (fac%used(i),i=1,fac%numfact)
+
+
+   end subroutine PrintFactor
+
 !***********************************************************************
 !BOP
 ! !IROUTINE: Factor
@@ -1151,23 +1257,11 @@ contains
    tmp = num
    tmp2 = log2(num)
    allocate(res%factors(tmp2))
+   allocate(res%used(tmp2))
 
+   res%used = 0
    n=0
 
-   !-----------------------
-   !  Look for factors of 5
-   !-----------------------
-   found=.TRUE.
-   do while (found)
-      found = .FALSE.
-      tmp5 = tmp/5
-      if( tmp5*5 == tmp ) then
-        n = n + 1
-        res%factors(n) = 5
-        found = .TRUE.
-        tmp = tmp5
-      endif
-   enddo
 
    !-----------------------
    !  Look for factors of 2
@@ -1199,6 +1293,20 @@ contains
       endif
    enddo
 
+   !-----------------------
+   !  Look for factors of 5
+   !-----------------------
+   found=.TRUE.
+   do while (found)
+      found = .FALSE.
+      tmp5 = tmp/5
+      if( tmp5*5 == tmp ) then
+        n = n + 1
+        res%factors(n) = 5
+        found = .TRUE.
+        tmp = tmp5
+      endif
+   enddo
 
 
    !------------------------------------
@@ -1581,6 +1689,55 @@ contains
 !-----------------------------------------------------------------------
 
   end subroutine GenSpaceCurve 
+
+  recursive subroutine qsort(a)
+   
+    integer, intent(inout) :: a(:)
+    integer :: split
+   
+    if(SIZE(a) > 1) then 
+      call partition(a,split)
+      call qsort(a(:split-1))
+      call qsort(a(split:))
+    endif 
+
+  end subroutine qsort
+
+  subroutine partition(a,marker)
+
+     INTEGER, INTENT(IN OUT) :: a(:)
+     INTEGER, INTENT(OUT) :: marker
+     INTEGER :: left, right, pivot, temp
+ 
+     pivot = (a(1) + a(size(a))) / 2  ! Average of first and last elements to prevent quadratic 
+     left = 0                         ! behavior with sorted or reverse sorted data
+     right = size(a) + 1
+ 
+     DO WHILE (left < right)
+        right = right - 1
+        DO WHILE (a(right) > pivot)
+           right = right-1
+        END DO
+        left = left + 1
+        DO WHILE (a(left) < pivot)
+           left = left + 1
+        END DO
+        IF (left < right) THEN 
+           temp = a(left)
+           a(left) = a(right)
+           a(right) = temp
+        END IF
+     END DO
+ 
+     IF (left == right) THEN
+        marker = left + 1
+     ELSE
+        marker = left
+     END IF
+
+  end subroutine partition
+     
+
 
 end module ice_spacecurve
 

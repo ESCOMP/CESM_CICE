@@ -1,3 +1,4 @@
+#define _SINGLEMSG 1
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 !BOP
 ! !MODULE: ice_gather_scatter
@@ -39,6 +40,7 @@
 
    public :: gather_global,      &
              scatter_global,     &
+             gatherArray,        & 
              scatter_global_stress
 
 !EOP
@@ -61,6 +63,10 @@
                       scatter_global_int
    end interface 
 
+   interface gatherArray
+     module procedure gatherArray_dbl
+   end interface
+
 !-----------------------------------------------------------------------
 !
 !  module variables
@@ -71,6 +77,23 @@
 !***********************************************************************
 
  contains
+
+
+ subroutine gatherArray_dbl(array_g,array,length,root)
+
+   include 'mpif.h'
+
+   real(dbl_kind) :: array_g(:)  ! The concatonated array
+   real(dbl_kind) :: array(:)    ! the local piece of the array
+   integer(int_kind) :: length   ! number of elements in the array
+   integer(int_kind) :: root     ! root to which to collect the array
+
+   integer(int_kind) :: ierr
+
+   call MPI_Gather(array,length,MPI_REAL8,array_g, length,MPI_REAL8,root,MPI_COMM_ICE,ierr)
+
+ end subroutine gatherArray_dbl
+
 
 !***********************************************************************
 !BOP
@@ -126,6 +149,7 @@
      i,j,n          ,&! dummy loop counters
      nsends         ,&! number of actual sends
      src_block      ,&! block locator for send
+     src_task       ,&! source of message
      ierr             ! MPI error flag
 
    integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
@@ -137,11 +161,20 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
+#ifdef _SINGLEMSG
+   real (dbl_kind), dimension(:,:,:), allocatable :: &
+     msg_buffer
+#else
    real (dbl_kind), dimension(:,:), allocatable :: &
      msg_buffer
+#endif
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind) :: ib, ig, itask, nprocs, maxBlocks
+   integer (int_kind) :: iig,ijg,it
+   integer (int_kind) :: msgLen, msgTag
 
 !-----------------------------------------------------------------------
 !
@@ -149,6 +182,8 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
+
+   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -185,7 +220,35 @@
      end do
 
      !*** receive blocks to fill up the rest
+#ifdef _SINGLEMSG
+     allocate (msg_buffer(nx_block,ny_block,max_blocks))
+     do itask = 0,nprocs-1
+        if(itask /= dst_task) then 
+           maxBlocks = src_dist%BlockCnt(itask+1)
+           msgLen = nx_block*ny_block*maxBlocks
+           msgTag = 3*mpitag_gs+itask
+           if(maxBlocks>0) then 
 
+             call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
+               mpiR8, itask, msgTag, MPI_COMM_ICE, status, ierr)
+
+             do ib=1,maxBlocks
+               ig = src_dist%blockIndex(itask+1,ib)
+      	       this_block = get_block(ig,ig)
+               do j=this_block%jlo,this_block%jhi
+                  do i=this_block%ilo,this_block%ihi
+                     iig = this_block%i_glob(i) 
+                     ijg = this_block%j_glob(j) 
+                     ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
+                  end do
+               end do
+              enddo
+            endif
+        endif
+     enddo
+
+     deallocate(msg_buffer)
+#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -208,6 +271,7 @@
      end do
 
      deallocate(msg_buffer)
+#endif
 
 !-----------------------------------------------------------------------
 !
@@ -217,6 +281,15 @@
 
    else
 
+#ifdef _SINGLEMSG
+
+     if(nblocks>0) then 
+        msgLen = nx_block*ny_block*nblocks
+        msgTag = 3*mpitag_gs+my_task
+	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task,msgTag,MPI_COMM_ICE,ierr)
+     endif
+
+#else
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
 
@@ -235,6 +308,7 @@
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
+#endif
 
    endif
 
@@ -300,11 +374,20 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
+#ifdef _SINGLEMSG
+   real (real_kind), dimension(:,:,:), allocatable :: &
+     msg_buffer
+#else
    real (real_kind), dimension(:,:), allocatable :: &
      msg_buffer
+#endif
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind) :: ib, ig, itask, nprocs, maxBlocks
+   integer (int_kind) :: iig,ijg
+   integer (int_kind) :: msgLen, msgTag
 
 !-----------------------------------------------------------------------
 !
@@ -312,6 +395,8 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
+
+   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -349,6 +434,37 @@
 
      !*** receive blocks to fill up the rest
 
+#ifdef _SINGLEMSG
+
+     allocate (msg_buffer(nx_block,ny_block,max_blocks))
+     do itask = 0,nprocs-1
+        if( itask /= dst_task) then
+           maxBlocks = src_dist%BlockCnt(itask+1)
+           msgLen = nx_block*ny_block*maxBlocks
+           msgTag = 3*mpitag_gs+itask
+           if( maxBlocks>0) then 
+
+              call MPI_RECV(msg_buffer(:,:,1:maxBlocks), msgLen, &
+                   mpiR4, itask, msgTag ,MPI_COMM_ICE, status, ierr)
+
+              do ib=1,maxBlocks
+                 ig = src_dist%blockIndex(itask+1,ib)
+                 this_block = get_block(ig,ig)
+                 do j=this_block%jlo,this_block%jhi
+                   do i=this_block%ilo,this_block%ihi
+                     iig = this_block%i_glob(i) 
+                     ijg = this_block%j_glob(j) 
+                     ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
+                   end do
+                 end do
+              enddo
+           endif
+        endif
+     enddo
+
+     deallocate(msg_buffer)
+
+#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -369,8 +485,9 @@
          end do
        endif
      end do
-
      deallocate(msg_buffer)
+#endif
+
 
 !-----------------------------------------------------------------------
 !
@@ -379,6 +496,15 @@
 !-----------------------------------------------------------------------
 
    else
+#ifdef _SINGLEMSG
+
+     if(nblocks>0) then
+        msgLen = nx_block*ny_block*nblocks
+        msgTag = 3*mpitag_gs+my_task 
+	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task,msgTag,MPI_COMM_ICE,ierr)
+     endif
+
+#else
 
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
@@ -398,6 +524,7 @@
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
+#endif
 
    endif
 
@@ -463,11 +590,20 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
+#ifdef _SINGLEMSG
+   integer (int_kind), dimension(:,:,:), allocatable :: &
+     msg_buffer
+#else
    integer (int_kind), dimension(:,:), allocatable :: &
      msg_buffer
+#endif
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind) :: ib, ig, len, itask, nprocs, maxBlocks
+   integer (int_kind) :: iig,ijg
+   integer (int_kind) :: msgLen, msgTag
 
 !-----------------------------------------------------------------------
 !
@@ -475,6 +611,8 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
+
+   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -512,6 +650,34 @@
 
      !*** receive blocks to fill up the rest
 
+#ifdef _SINGLEMSG
+
+     allocate (msg_buffer(nx_block,ny_block,max_blocks))
+     do itask = 0,nprocs-1
+        if( itask /= dst_task) then
+           maxBlocks = src_dist%BlockCnt(itask+1)
+           msgLen = nx_block*ny_block*max_blocks
+           msgTag = 3*mpitag_gs+itask
+           if(maxBLocks>0) then 
+             call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
+                   mpi_integer, itask, msgTag, MPI_COMM_ICE, status, ierr)
+             do ib=1,maxBlocks
+                ig = src_dist%blockIndex(itask+1,ib)
+                this_block = get_block(ig,ig)
+                do j=this_block%jlo,this_block%jhi
+                   do i=this_block%ilo,this_block%ihi
+                      iig = this_block%i_glob(i) 
+                      ijg = this_block%j_glob(j) 
+                      ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
+                   end do
+                end do
+              enddo
+           endif
+        endif
+     enddo
+     deallocate(msg_buffer)
+
+#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -532,8 +698,9 @@
          end do
        endif
      end do
-
      deallocate(msg_buffer)
+#endif
+
 
 !-----------------------------------------------------------------------
 !
@@ -542,6 +709,17 @@
 !-----------------------------------------------------------------------
 
    else
+
+#ifdef _SINGLEMSG
+
+     if(nblocks>0) then
+        msgLen = nx_block*ny_block*nblocks
+        msgTag = 3*mpitag_gs+my_task
+        call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen, &
+             mpi_integer, dst_task, msgTag, MPI_COMM_ICE, ierr)
+     endif
+
+#else
 
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
@@ -561,6 +739,7 @@
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
+#endif
 
    endif
 
