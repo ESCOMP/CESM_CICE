@@ -85,14 +85,14 @@
          Tocnfrz= -34.0_dbl_kind*depressT  ! freezing temp of seawater (C),
                                            ! used as Tsfcn for open water
 
-      ! weights for albedos (match those for isccp shortwave forcing)
+      ! weights for albedos 
 ! 4 Jan 2007 BPB  Following are appropriate for complete cloud
 ! in a summer polar atmosphere with 1.5m bare sea ice surface:
 ! .636/.364 vis/nir with only 0.5% direct for each band.
       real (kind=dbl_kind), parameter :: &           ! currently used only
          awtvdr = 0.00318_dbl_kind, &! visible, direct  ! for history and
-         awtidr = 0.63282_dbl_kind, &! near IR, direct  ! diagnostics
-         awtvdf = 0.00182_dbl_kind, &! visible, diffuse
+         awtidr = 0.00182_dbl_kind, &! near IR, direct
+         awtvdf = 0.63282_dbl_kind, &! visible, diffuse  ! diagnostics
          awtidf = 0.36218_dbl_kind   ! near IR, diffuse
 
       real (kind=dbl_kind), parameter :: &

@@ -203,7 +203,7 @@
          enddo
          enddo
       enddo
-     !$OMP END PARALLEL DO
+      !$OMP END PARALLEL DO
       extentn = global_sum(work1, distrb_info, field_loc_center, &
                            tarean)
       extents = global_sum(work1, distrb_info, field_loc_center, &
@@ -230,7 +230,7 @@
          enddo
          enddo
       enddo
-     !$OMP END PARALLEL DO
+      !$OMP END PARALLEL DO
       ketotn = global_sum(work1, distrb_info, field_loc_center, tarean)
       ketots = global_sum(work1, distrb_info, field_loc_center, tareas)
 
@@ -252,7 +252,7 @@
       ! average ice albedo
       ! mask out cells where sun is below horizon (for delta-Eddington)
 
-!      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -263,9 +263,9 @@
          enddo
          enddo
       enddo
-!      !$OMP END PARALLEL DO 
+      !$OMP END PARALLEL DO 
 
-!      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -277,7 +277,7 @@
          enddo
          enddo
       enddo
-!      !$OMP END PARALLEL DO 
+      !$OMP END PARALLEL DO 
       
       arean_alb = global_sum(aice, distrb_info, field_loc_center, work2)      
 
@@ -290,7 +290,7 @@
          albtotn = c0
       endif
 
-!      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -302,7 +302,7 @@
          enddo
          enddo
       enddo
-!      !$OMP END PARALLEL DO 
+      !$OMP END PARALLEL DO 
 
       areas_alb = global_sum(aice, distrb_info, field_loc_center, work2)      
 
@@ -416,7 +416,7 @@
          enddo
          enddo
       enddo
-     !$OMP END PARALLEL DO
+      !$OMP END PARALLEL DO
 
       umaxn = global_maxval(work1, distrb_info, lmask_n)
       umaxs = global_maxval(work1, distrb_info, lmask_s)
@@ -1033,7 +1033,7 @@
       enddo
       enddo
       enddo
-     !$OMP END PARALLEL DO
+      !$OMP END PARALLEL DO
       
       toten = global_sum(work1, distrb_info, field_loc_center, tarean)
       totes = global_sum(work1, distrb_info, field_loc_center, tareas)
@@ -1164,7 +1164,7 @@
                   if (hm(i,j,iblk) > p5) then
                      latdis = abs(latpnt(n)-TLAT(i,j,iblk)*rad_to_deg)
                      londis = abs(lonpnt(n)-TLON(i,j,iblk)*rad_to_deg) &
-                            * cos(TLON(i,j,iblk))
+                            * cos(TLAT(i,j,iblk))
                      totdis = sqrt(latdis**2 + londis**2)
                      if (totdis < mindis) then
                         mindis = totdis

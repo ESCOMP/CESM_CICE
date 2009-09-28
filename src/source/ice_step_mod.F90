@@ -1106,7 +1106,9 @@
                                 fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
                                 fswthrun(:,:,n,iblk),                   &
                                 Sswabsn(:,:,sl1:sl2,iblk),              &
-                                Iswabsn(:,:,il1:il2,iblk))
+                                Iswabsn(:,:,il1:il2,iblk),              &
+                                albicen(:,:,n,iblk),                    &
+                                albsnon(:,:,n,iblk),albpndn(:,:,n,iblk))
 
          else
 
@@ -1123,7 +1125,9 @@
                            alvdrn(:,:,n,iblk),alidrn(:,:,n,iblk),  &
                            alvdfn(:,:,n,iblk),alidfn(:,:,n,iblk),  &
                            fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),&
-                           fswthrun(:,:,n,iblk),Iswabsn(:,:,il1:il2,iblk))
+                           fswthrun(:,:,n,iblk),                   &
+                           Iswabsn(:,:,il1:il2,iblk),              &
+                           albicen(:,:,n,iblk),albsnon(:,:,n,iblk))
 
          endif
 

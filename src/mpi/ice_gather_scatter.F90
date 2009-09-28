@@ -805,6 +805,7 @@
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
      xoffset, yoffset,   &! offsets for tripole boundary conditions
+     yoffset2,           &!
      isign,              &! sign factor for tripole boundary conditions
      ierr                 ! MPI error flag
 
@@ -831,23 +832,44 @@
 
    ARRAY = c0
 
-   select case (field_loc)
-   case (field_loc_center)   ! cell center location
-      xoffset = 1
-      yoffset = 1
-   case (field_loc_NEcorner) ! cell corner (velocity) location
-      xoffset = 0
-      yoffset = 0
-   case (field_loc_Eface)    ! cell face location
-      xoffset = 0
-      yoffset = 1
-   case (field_loc_Nface)    ! cell face location
-      xoffset = 1
-      yoffset = 0
-   case (field_loc_noupdate) ! ghost cells never used - use cell center
-      xoffset = 1
-      yoffset = 1
-   end select
+   this_block = get_block(1,1) ! for the tripoleTflag - all blocks have it
+   if (this_block%tripoleTFlag) then
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 2
+        yoffset = 0
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 1
+        yoffset = -1
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 2
+        yoffset = -1
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   else
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 1
+        yoffset = 1
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 0
+        yoffset = 0
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 0
+        yoffset = 1
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   endif
 
    select case (field_type)
    case (field_type_scalar)
@@ -931,15 +953,19 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        msg_buffer(i,j) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         msg_buffer(i,j-yoffset2) = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1012,15 +1038,20 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        ARRAY(i,j,dst_block) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         ARRAY(i,j-yoffset2,dst_block) &
+                           = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1159,6 +1190,7 @@
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
      xoffset, yoffset,   &! offsets for tripole boundary conditions
+     yoffset2,           &!
      isign,              &! sign factor for tripole boundary conditions
      ierr                 ! MPI error flag
 
@@ -1185,23 +1217,44 @@
 
    ARRAY = 0._real_kind
 
-   select case (field_loc)
-   case (field_loc_center)   ! cell center location
-      xoffset = 1
-      yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
-      xoffset = 0
-      yoffset = 0
-   case (field_loc_Eface)   ! cell center location
-      xoffset = 0
-      yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
-      xoffset = 1
-      yoffset = 0
-   case (field_loc_noupdate) ! ghost cells never used - use cell center
-      xoffset = 1
-      yoffset = 1
-   end select
+   this_block = get_block(1,1) ! for the tripoleTflag - all blocks have it
+   if (this_block%tripoleTFlag) then
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 2
+        yoffset = 0
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 1
+        yoffset = 1
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 2
+        yoffset = 1
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   else
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 1
+        yoffset = 1
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 0
+        yoffset = 0
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 0
+        yoffset = 1
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   endif
 
    select case (field_type)
    case (field_type_scalar)
@@ -1285,15 +1338,19 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        msg_buffer(i,j) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         msg_buffer(i,j-yoffset2) = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1366,15 +1423,20 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        ARRAY(i,j,dst_block) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         ARRAY(i,j-yoffset2,dst_block) &
+                           = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1513,6 +1575,7 @@
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
      xoffset, yoffset,   &! offsets for tripole boundary conditions
+     yoffset2,           &!
      isign,              &! sign factor for tripole boundary conditions
      ierr                 ! MPI error flag
 
@@ -1539,23 +1602,44 @@
 
    ARRAY = 0
 
-   select case (field_loc)
-   case (field_loc_center)   ! cell center location
-      xoffset = 1
-      yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
-      xoffset = 0
-      yoffset = 0
-   case (field_loc_Eface)   ! cell center location
-      xoffset = 0
-      yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
-      xoffset = 1
-      yoffset = 0
-   case (field_loc_noupdate) ! ghost cells never used - use cell center
-      xoffset = 1
-      yoffset = 1
-   end select
+   this_block = get_block(1,1) ! for the tripoleTflag - all blocks have it
+   if (this_block%tripoleTFlag) then
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 2
+        yoffset = 0
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 1
+        yoffset = 1
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 2
+        yoffset = 1
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   else
+     select case (field_loc)
+     case (field_loc_center)   ! cell center location
+        xoffset = 1
+        yoffset = 1
+     case (field_loc_NEcorner) ! cell corner (velocity) location
+        xoffset = 0
+        yoffset = 0
+     case (field_loc_Eface)    ! cell face location
+        xoffset = 0
+        yoffset = 1
+     case (field_loc_Nface)    ! cell face location
+        xoffset = 1
+        yoffset = 0
+     case (field_loc_noupdate) ! ghost cells never used - use cell center
+        xoffset = 1
+        yoffset = 1
+     end select
+   endif
 
    select case (field_type)
    case (field_type_scalar)
@@ -1639,15 +1723,19 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        msg_buffer(i,j) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         msg_buffer(i,j-yoffset2) = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1720,15 +1808,20 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        ARRAY(i,j,dst_block) = isign * ARRAY_G(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         ARRAY(i,j-yoffset2,dst_block) &
+                           = isign * ARRAY_G(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif
@@ -1867,6 +1960,7 @@
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
      xoffset, yoffset,   &! offsets for tripole boundary conditions
+     yoffset2,           &!
      isign,              &! sign factor for tripole boundary conditions
      ierr                 ! MPI error flag
 
@@ -1893,8 +1987,14 @@
 
    ARRAY = c0
 
-   xoffset = 1  ! treat stresses as cell-centered scalars (they are not 
-   yoffset = 1  ! shared with neighboring grid cells)
+   this_block = get_block(1,1) ! for the tripoleTflag - all blocks have it
+   if (this_block%tripoleTFlag) then
+     xoffset = 2  ! treat stresses as cell-centered scalars (they are not 
+     yoffset = 0  ! shared with neighboring grid cells)
+   else
+     xoffset = 1  ! treat stresses as cell-centered scalars (they are not 
+     yoffset = 1  ! shared with neighboring grid cells)
+   endif
    isign   = 1
 
 !-----------------------------------------------------------------------
@@ -2047,15 +2147,20 @@
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = ny_global + yoffset + &
+                  ! for yoffset=0 or 1, yoffset2=0,0
+                  ! for yoffset=-1, yoffset2=0,1, for u-rows on T-fold grid
+                  do yoffset2=0,max(yoffset,0)-yoffset
+                    jsrc = ny_global + yoffset + yoffset2 + &
                          (this_block%j_glob(j) + ny_global)
-                  do i=1,nx_block
-                     if (this_block%i_glob(i) /= 0) then
-                        isrc = nx_global + xoffset - this_block%i_glob(i)
-                        if (isrc < 1) isrc = isrc + nx_global
-                        if (isrc > nx_global) isrc = isrc - nx_global
-                        ARRAY(i,j,dst_block) = isign * ARRAY_G2(isrc,jsrc)
-                     endif
+                    do i=1,nx_block
+                      if (this_block%i_glob(i) /= 0) then
+                         isrc = nx_global + xoffset - this_block%i_glob(i)
+                         if (isrc < 1) isrc = isrc + nx_global
+                         if (isrc > nx_global) isrc = isrc - nx_global
+                         ARRAY(i,j-yoffset2,dst_block) &
+                           = isign * ARRAY_G2(isrc,jsrc)
+                      endif
+                    end do
                   end do
 
                endif

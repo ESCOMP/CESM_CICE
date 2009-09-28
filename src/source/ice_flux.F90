@@ -188,6 +188,10 @@
          albsno   , & ! snow albedo
          albpnd       ! melt pond albedo
 
+      real (kind=dbl_kind), &
+         dimension(nx_block,ny_block,max_blocks,max_nstrm) :: &
+         albcnt       ! counter for zenith angle
+
        ! out to ocean
        ! (Note CICE_IN_NEMO does not use these for coupling.
        !  It uses fresh_gbm,fsalt_gbm,fhocn_gbm and fswthru_gbm)
@@ -563,7 +567,10 @@
       fsalt_gbm  (:,:,:) = c0
       fhocn_gbm  (:,:,:) = c0
       fswthru_gbm(:,:,:) = c0
-      
+      albice (:,:,:) = c0
+      albsno (:,:,:) = c0
+      albpnd (:,:,:) = c0
+     
       end subroutine init_history_therm
 
 !=======================================================================

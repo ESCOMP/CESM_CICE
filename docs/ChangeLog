@@ -1,4 +1,37 @@
 ===============================================================
+cice4_0_20090928
+Originator: dbailey
+Date: Mon Sep 28 2009
+Version: 4.0
+One-line Summary: Move to head of LANL trunk (r231)
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+This tag incorporates the majority of changes made by E. Hunke
+on the LANL CICE trunk. The remaining differences will not be
+accounted for here, including: the ridged ice tracer, the general
+tracer counting scheme, a small thermo difference, and a small
+itd difference. These changes are bfb with beta28.
+
+M      src/serial/ice_boundary.F90
+M      src/serial/ice_gather_scatter.F90
+M      src/serial/ice_global_reductions.F90
+M      src/source/ice_dyn_evp.F90
+M      src/source/ice_restoring.F90
+M      src/source/ice_blocks.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_diagnostics.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_history.F90
+M      src/mpi/ice_boundary.F90
+M      src/mpi/ice_gather_scatter.F90
+M      src/mpi/ice_global_reductions.F90
+M      src/drivers/cpl_share/CICE_RunMod.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+M      src/drivers/cpl_share/ice_constants.F90
+
+===============================================================
 cice4_0_20090924
 Originator: dbailey
 Date: Thu Sep 24 2009

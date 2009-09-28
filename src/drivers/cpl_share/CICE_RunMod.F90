@@ -283,6 +283,8 @@
          enddo               ! i
          enddo               ! j
 
+         if (calc_Tsfc .or. calc_strair .and. icells > 0) then
+
       !-----------------------------------------------------------------
       ! Atmosphere boundary layer calculation; compute coefficients
       ! for sensible and latent heat fluxes.
@@ -292,29 +294,39 @@
       !       components are set to the data values.
       !-----------------------------------------------------------------
 
-         if (trim(atmbndy) == 'constant') then
-            call atmo_boundary_const(nx_block,      ny_block,        &
-                                     'ice',          icells,         &
-                                     indxi,          indxj,          &
-                                     uatm(:,:,iblk), vatm(:,:,iblk), &
-                                     wind(:,:,iblk), rhoa(:,:,iblk), &
-                                     strairxn,       strairyn,       &
-                                     lhcoef,         shcoef)
-         else ! default
-            call atmo_boundary_layer(nx_block,       ny_block,       &
-                                     'ice',          icells,         &
-                                     indxi,          indxj,          &
-                                     trcrn(:,:,nt_Tsfc,n,iblk),      &
-                                     potT(:,:,iblk),                 &
-                                     uatm(:,:,iblk), vatm(:,:,iblk), &
-                                     uvel(:,:,iblk), vvel(:,:,iblk), &
-                                     wind(:,:,iblk), zlvl(:,:,iblk), &
-                                     Qa  (:,:,iblk), rhoa(:,:,iblk), &
-                                     strairxn,       strairyn,       &
-                                     Trefn,          Qrefn,          &
-                                     worka,          workb,          &
-                                     lhcoef,         shcoef)
-         endif ! atmbndy
+            if (trim(atmbndy) == 'constant') then
+               call atmo_boundary_const(nx_block,      ny_block,        &
+                                        'ice',          icells,         &
+                                        indxi,          indxj,          &
+                                        uatm(:,:,iblk), vatm(:,:,iblk), &
+                                        wind(:,:,iblk), rhoa(:,:,iblk), &
+                                        strairxn,       strairyn,       &
+                                        lhcoef,         shcoef)
+            else ! default
+               call atmo_boundary_layer(nx_block,       ny_block,       &
+                                        'ice',          icells,         &
+                                        indxi,          indxj,          &
+                                        trcrn(:,:,nt_Tsfc,n,iblk),      &
+                                        potT(:,:,iblk),                 &
+                                        uatm(:,:,iblk), vatm(:,:,iblk), &
+                                        uvel(:,:,iblk), vvel(:,:,iblk), &
+                                        wind(:,:,iblk), zlvl(:,:,iblk), &
+                                        Qa  (:,:,iblk), rhoa(:,:,iblk), &
+                                        strairxn,       strairyn,       &
+                                        Trefn,          Qrefn,          &
+                                        worka,          workb,          &
+                                        lhcoef,         shcoef)
+            endif ! atmbndy
+
+         else
+
+            ! Initialize for safety
+            Trefn (:,:)  = c0
+            Qrefn (:,:)  = c0
+            lhcoef(:,:)  = c0
+            shcoef(:,:)  = c0
+
+         endif   ! calc_Tsfc or calc_strair
 
          if (.not.(calc_strair)) then
             strairxn(:,:) = strax(:,:,iblk)
@@ -431,8 +443,7 @@
 
             call compute_ponds(nx_block, ny_block,                      &
                                ilo, ihi, jlo, jhi,                      &
-                               melttn, meltsn,                          &
-                               frain(:,:,iblk),                         &
+                               melttn, meltsn, frain(:,:,iblk),         &
                                aicen (:,:,n,iblk), vicen (:,:,n,iblk),  &
                                vsnon (:,:,n,iblk), trcrn (:,:,:,n,iblk),&
                                apondn(:,:,n,iblk), hpondn(:,:,n,iblk))
@@ -535,6 +546,8 @@
          i,j         , & ! horizontal indices
          ilo,ihi,jlo,jhi ! beginning and end of physical domain
 
+      real (kind=dbl_kind) :: cszn ! counter for history averaging
+
       call ice_timer_start(timer_column)
 
       !-----------------------------------------------------------------
@@ -556,6 +569,17 @@
             alidf(i,j,iblk) = c0
             alvdr(i,j,iblk) = c0
             alidr(i,j,iblk) = c0
+
+            albice(i,j,iblk) = c0
+            albsno(i,j,iblk) = c0
+            albpnd(i,j,iblk) = c0
+
+            ! for history averaging
+            cszn = c0
+            if (coszen(i,j,iblk) > puny) cszn = c1
+            do n = 1, nstreams
+               albcnt(i,j,iblk,n) = albcnt(i,j,iblk,n) + cszn
+            enddo
          enddo
          enddo
          do n = 1, ncat
@@ -569,6 +593,15 @@
                + alvdrn(i,j,n,iblk)*aicen(i,j,n,iblk)
             alidr(i,j,iblk) = alidr(i,j,iblk) &
                + alidrn(i,j,n,iblk)*aicen(i,j,n,iblk)
+
+            if (coszen(i,j,iblk) > puny) then ! sun above horizon
+               albice(i,j,iblk) = albice(i,j,iblk) &
+                  + albicen(i,j,n,iblk)*aicen(i,j,n,iblk)
+               albsno(i,j,iblk) = albsno(i,j,iblk) &
+                  + albsnon(i,j,n,iblk)*aicen(i,j,n,iblk)
+               albpnd(i,j,iblk) = albpnd(i,j,iblk) &
+                  + albpndn(i,j,n,iblk)*aicen(i,j,n,iblk)
+            endif
          enddo
          enddo
          enddo

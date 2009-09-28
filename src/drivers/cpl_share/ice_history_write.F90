@@ -385,15 +385,15 @@
             ! Append ice thickness range to aicen comments
             !-----------------------------------------------------------------
 
-!           c_aice = TRIM(avail_hist_fields(n)%vname)
-!           i_aice = lenstr(c_aice)
-!           if (i_aice > 4 .and. c_aice(1:5) == 'aicen') then
-!             read(c_aice(6:9), '(i3)') icategory
-!             avail_hist_fields(n)%vcomment = &
-!                'Ice range: '//c_hi_range(icategory)
-!           endif
-!           status = pio_put_att(File,varid,'comment', &
-!                avail_hist_fields(n)%vcomment)
+            c_aice = TRIM(avail_hist_fields(n)%vname)
+            i_aice = lenstr(c_aice)
+            if (i_aice > 4 .and. c_aice(1:5) == 'aicen') then
+              read(c_aice(6:9), '(i3)') icategory
+              avail_hist_fields(n)%vcomment = &
+                 'Ice range: '//c_hi_range(icategory)
+            endif
+            status = pio_put_att(File,varid,'comment', &
+                 avail_hist_fields(n)%vcomment)
 
             !-----------------------------------------------------------------
             ! Add cell_methods attribute to variables if averaged
@@ -405,8 +405,9 @@
                endif
             endif
 
+            ! Need divu and shear as monthly means for CMIP/IPCC.
             if (histfreq(ns) == '1'     .or. .not. hist_avg      &
-                 .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
+!                .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
                  .or. n==n_sig1(ns)      .or. n==n_sig2(ns)      & 
                  .or. n==n_trsig(ns)                             &
                  .or. n==n_mlt_onset(ns) .or. n==n_frz_onset(ns) &
@@ -768,8 +769,9 @@
             write (nu_hdr, 995) nrec,trim(avail_hist_fields(n)%vname), &
                trim(avail_hist_fields(n)%vcomment)
 
+            ! Need divu and shear as monthly means for CMIP/IPCC.
             if (histfreq(ns) == '1'     .or. .not. hist_avg     &
-                .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
+!               .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
                 .or. n==n_sig1(ns)      .or. n==n_sig2(ns)      &
                 .or. n==n_trsig(ns)                             &
                 .or. n==n_mlt_onset(ns) .or. n==n_frz_onset(ns) &
