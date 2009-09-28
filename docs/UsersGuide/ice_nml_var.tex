@@ -5,18 +5,17 @@
 %=======================================================================
 % Namelist Variables
 
-CSIM uses the same namelists for both the coupled and uncoupled models.
+CICE uses the same namelists for both the coupled and uncoupled models.
 This section describes the namelist variables in the namelist {\tt ice\_nml},
 which determine time management, output frequency, model physics, filenames,
 and options for the mixed layer ocean model. 
 The ice namelists for the coupled model are now located in
-{\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage}.  Modifications to the
-uncoupled namelist can be made in {\bf ccsm3/models/ice/csim4/src/csim.setup.csh}.
+{\bf \$CASE/Buildconf}.  
 
 A script reads the input namelist at runtime, and writes the namelist
-information to the file {\bf ice\_in} in the directory where the model executable
-is located.  Therefore, the namelist will be updated even if the ice model
-is not recompiled.  The default values of {\tt ice\_nml} are set in 
+information to the file {\bf ice\_in} in the directory where the model 
+executable is located.  Therefore, the namelist will be updated even if the 
+ice model is not recompiled.  The default values of {\tt ice\_nml} are set in 
 {\bf ice\_init.F}.  If they are not set in the namelist in the script, they will
 assume the default values listed in Tables \ref{table:nml_time}-\ref{table:nml_ocn},
 which list all available namelist parameters.  The default values shown here are
@@ -96,7 +95,7 @@ transport using the MPDATA advection scheme is
 \end{equation}
 Maximum values for {\tt dt} for the two standard CCSM POP grids, assuming 
 $max(u,v) = 0.5 m/s$, are shown in Table \ref{table:max_dt}.  The default
-timestep for CSIM is one hour.
+timestep for CICE is one hour.
 
 \begin{table}
   \begin{center}
@@ -455,55 +454,3 @@ coupled to an active ocean model.  Also, using the ice model with the slab ocean
 mixed layer turned on, coupled to an active atmosphere and a data ocean model
 will require changes to the coupler, since the ocean values calculated in the
 ice model will not be sent to the coupler and received by the atmosphere component.
-
-\subsection{Atmospheric Forcing}
-
-CSIM5 can be run uncoupled using atmospheric data from 1997, available from
-\begin{htmlonly}
-\htmladdnormallink{\tt http://www.ccsm.ucar.edu/models/ice_csim5/distribution}
-                      {http://www.ccsm.ucar.edu/models/ice-csim5/distribution}. \\
-\end{htmlonly}
-\begin{latexonly}
-  {\tt http://www.ccsm.ucar.edu/models/ice-csim5/distribution}.
-\end{latexonly}
-
-These data files are on the low resolution grid and were created for testing
-the ice model.  They will not produce the best sea ice simulation. Module
-{\it ice\_flux\_in.F} can be modified to change the forcing data.  Namelist
-options for using the atmospheric forcing data are shown in Table 
-\ref{table:nml_atm_for}. {\tt atm\_data\_dir} is the root directory where 
-the forcing resides. {\tt fyear\_init} and {\tt year\_init} should be set
-to 1997 and {\tt ycycle} should be set to 1 for the forcing provided.  
-{\tt ocn\_data\_dir} should not be set since no ocean forcing is provided.
-Subroutines in {\it ice\_flux\_in.F} are available for reading in ocean sea
-surface temperature and salinity data and may be used for initializing and/or
-restoring the mixed layer properties; these subroutines currently are commented
-out in {\it ice\_flux\_in.F}.  A sample namelist using these options is shown
-in section \ref{example4_nml}. A brief discussion of the atmospheric forcing
-files is given in section \ref{atm_forcing} as well as changes that should be
-made to {\it ice.F} to use this forcing.
-
-\begin{table}
-  \begin{center}
-  \caption{Namelist Variables for Atmospheric Forcing}
-  \label{table:nml_atm_for}
-  \begin{tabular}{p{4cm}p{2.0cm}p{3cm}p{5.5cm}} \hline
-  Varible Name & Type & Default Value & Description               \\
-
-  \hline \hline
-
-{\tt atm\_data\_dir} &  Path  &   &  Directory for atmospheric forcing data \\
-
-{\tt fyear\_init} &  Integer &  First year of atmospheric forcing data \\
-
-{\tt ocn\_data\_dir} &  Path &   &  Directory for oceanic forcing data \\
-
-{\tt ycycle} &  Integer &   &  Number of years in forcing data cycle \\
-
-{\tt year\_init} &  Integer & 1  &  Initial year, if not using restart file \\
-
-  \hline
-  \end{tabular}
-  \end{center}
-\end{table}
-

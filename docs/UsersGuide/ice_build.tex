@@ -6,10 +6,10 @@
 
 \subsection{The Build Environment}
 
-The coupled and uncoupled ice models use the same Makefile and make environment.
-These files are located in the {\bf ccsm3/models/bld} directory for the coupled
-model and in {\bf ccsm3/models/ice/csim4/src/bld} for the uncoupled model.
-These directories contain the following files:
+The coupled and uncoupled ice models use the Makefile and make environment.
+These files are located in the {\bf models/ice/cice/src/drivers/ccsm_sequential}
+directory for the coupled model and in {\bf models/ice/cice/src/drivers/cice4}
+for the uncoupled model. These directories contain the following files:
 
 \begin{itemize}
 \item  {\bf Macros.AIX} contains build settings specific to AIX (IBM SP3).
@@ -24,11 +24,11 @@ The {\bf Macros.$<$OS$>$} files for the uncoupled model have been simplified, si
 the libraries used by the coupled model are not used by the uncoupled ice model. 
 If you are running the model on a platform other than those tested, you
 will need to create a new {\bf Macros.$<$OS$>$} file and modify the paths and settings
-for your system.  In some cases, CSIM has a set of options that are different from
+for your system.  In some cases, CICE has a set of options that are different from
 the default values at the top of the file.  These are after the line
-{\tt ifeq (\$(MODEL),csim)} in the {\bf Macros.$<$OS$>$} files and are described below.
+{\tt ifeq (\$(MODEL),cice)} in the {\bf Macros.$<$OS$>$} files and are described below.
 
-\subsubsection{CSIM Preprocessor Flags}
+\subsubsection{CICE Preprocessor Flags}
 
 Preprocessor flags are activated in the form {\tt -Doption} in the {\bf Macros.$<$OS$>$}
 files.  The flags specific to the ice model are
@@ -43,11 +43,11 @@ runs, it has been removed.
 If a coupler other than the CCSM coupler is used, there is a flag called
 {\tt -Dfcd\_coupled} that will keep the fluxes from being divided by the ice area.
 In coupled runs, the CCSM coupler multiplies the fluxes by the ice area, so
-they are divided by the ice area in CSIM to get the correct fluxes.
+they are divided by the ice area in CICE to get the correct fluxes.
 
 The options {\tt -DNPROC\_X=\$(NX)} and {\tt -DNPROC\_Y=\$(NY)} set the number of
 processors used in each grid direction.  These values are set automatically
-in the scripts for the coupled model, and in {\bf csim\_run} by the user for
+in the scripts for the coupled model, and in {\bf cice\_run} by the user for
 uncoupled runs.  {\tt NX} and {\tt NY} must divide evenly into the grid, and
 are used only for MPI grid decomposition.  If {\tt NX} or {\tt NY} do not divide evenly
 into the grid, the model setup will exit from the setup script
@@ -58,11 +58,11 @@ for runs using a parallel environment.  To get a better idea of what code
 is included or excluded at compile time, grep for {\tt ifdef} and {\tt ifndef}
 in the source code or look at the {\bf *.f} files in the /{\bf obj} directory.
 
-\subsubsection{CSIM Compiler Options}
+\subsubsection{CICE Compiler Options}
 
 The name of the Fortran compiler is set by the variable {\tt FC} in the
 {\bf Macros.$<$OS$>$} files.  The default name of the compiler is {\tt f90}
-on the SGI and {\tt mpxlf90\_r} on the IBM SP.  CSIM uses the following compiler
+on the SGI and {\tt mpxlf90\_r} on the IBM SP.  CICE uses the following compiler
 options on the SGI platform:
 
 \begin{verbatim}

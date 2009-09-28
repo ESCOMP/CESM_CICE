@@ -4,9 +4,9 @@
 % CVS: $Name$
 %=======================================================================
 
-This section shows several examples of namelists from the coupled and uncoupled
-ice models.  These examples are taken directly from {\bf csim.buildnml\_prestage.csh}
-for the coupled model and from {\bf csim.setup.csh} for the uncoupled model.  
+This section shows several examples of namelists from the coupled
+ice model.  These examples are taken directly from {\bf cice.buildnml.csh}
+for the coupled model.  
 Most of the variables in the namelist are determined from environment variables
 set elsewhere in the scripts. Since the namelists from the coupled model are
 "resolved" by the scripts, meaning that the values of most of the shell script
@@ -20,7 +20,7 @@ in the ice dynamics {\tt ndte}.
 
 The following example is the namelist used for CCSM fully coupled, or
 the B configuration.  The variables that are still set to shell script
-variables have been set at the top of {\bf csim.buildnml\_prestage.csh}
+variables have been set at the top of {\bf cice.buildnml.csh}
 or in other scripts.  A completely resolved version of the namelist will
 be written to {\bf ice\_in} in the executable directory.
 
@@ -51,11 +51,11 @@ cat << EOF >! ice_in
   , grid_file     = 'data.domain.grid'
   , kmt_file      = 'data.domain.kmt'
   , incond_dir    = '$runinidir/'
-  , incond_file   = '$CASE.csim.i.'
+  , incond_file   = '$CASE.cice.i.'
   , restart_dir   = '$runrstdir/'
-  , dump_file     = '$CASE.csim.r.'
+  , dump_file     = '$CASE.cice.r.'
   , history_dir   = '$runhstdir/'
-  , history_file  = '$CASE.csim.h'
+  , history_file  = '$CASE.cice.h'
   , albicev       = 0.73
   , albicei       = 0.33
   , albsnowv      = 0.96
@@ -72,88 +72,24 @@ cat << EOF >! ice_in
 \subsubsection {Example 2: Coupled Ice Only Model}
 \label{example2_nml}
 
-This example is the M configuration.  It is CSIM with the latm data
-atmosphere model, data land model, and the ocean mixed layer model
-within the ice model all communicating through the coupler.  The 
+This example is the D configuration.  It is CICE with the datm7 data
+atmosphere model, data land model, and the docn7 ocean mixed layer model
+all communicating through the coupler.  The 
 following modifications will be made to the namelist when the resolved
-scrips are created for the M configuration.  See the 
+scrips are created for the D configuration.  See the 
 \begin{htmlonly}
-  \htmladdnormallink{CCSM3 User's Guide}{http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm}
+  \htmladdnormallink{CCSM4 User's Guide}{http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm}
 \end{htmlonly}
 \begin{latexonly}
-  CCSM3 User's Guide (http://www.ccsm.ucar.edu/models/ccsm3.0/ccsm)
+  CCSM4 User's Guide (http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm)
 \end{latexonly}
-on how to create scripts for the M configuration.
+on how to create scripts for the D configuration.
 
 \begin{verbatim}
     runid         = 'TER.01a.T62_gx1v3.M.bluesky.095234'
   , oceanmixed_ice             = .true.
   , oceanmixed_ice_sst_init    = $oml_ice_sst_init
 \end{verbatim}
-
-\subsubsection {Example 3: Uncoupled Ice Model}
-\label{example3_nml}
-
-This example is the namelist from the uncoupled ice model that resides
-in the file {\bf csim.setup.csh}.  {\tt npt}  has been modified, since
-it determines the length of the uncoupled run.  The snow and ice albedos
-used by CCSM are not set in the name list. The default values set in
-{\bf ice\_init.F} are used.  
-
-\begin{verbatim}
-cat << EOF >! ice_in
-  &ice_nml
-    runid        = '$CASE $CASESTR'
-  , runtype      = '$RUNTYPE'
-  , istep0       = 0
-  , dt           = 3600.0
-  , ndyn_dt      = 1
-  , ndte         = 120
-  , npt          = 240
-  , diagfreq     = 24
-  , histfreq     = 'm'
-  , dumpfreq     = 'd'
-  , dumpfreq_n   = 5
-  , hist_avg     = .true.
-  , restart      = $RESTART
-  , print_points = .false.
-  , kitd         = 1
-  , kdyn         = 1
-  , kstrength    = 1
-  , evp_damping  = .false.
-  , snow_into_ocn = .true.
-  , advection    = 'remap'
-  , grid_type    = 'displaced_pole'
-  , grid_file    = 'data.domain.grid'
-  , kmt_file     = 'data.domain.kmt'
-  , incond_dir   = '$INIDIR/'
-  , incond_file  = '$CASE.csim.i.'
-  , restart_dir  = '$RSTDIR/'
-  , dump_file    = '$CASE.csim.r.'
-  , history_dir  = '$HSTDIR/'
-  , history_file = '$CASE.csim.h'
-  , pointer_file  = '$CSIMDIR/rpointer.ice'
-  , oceanmixed_ice             = $OCEANMIXED_ICE
-  , oceanmixed_ice_file        = 'oceanmixed_ice.nc'
-  , oceanmixed_ice_sst_init    = $OML_ICE_SST_INIT
-  , prntdiag_oceanmixed        = .false.
-/
-\end{verbatim}
-
-\subsubsection {Example 4: Uncoupled Ice Model with Atmospheric Forcing}
-\label{example4_nml}
-
-To run the uncoupled ice model with atmospheric forcing, the following
-options should be added to the above namelist:
-
-\begin{verbatim}
-  , ycycle       = 1
-  , year_init    = 1997
-  , fyear_init   = 1997
-  , atm_data_dir = '/ptmp/$LOGNAME/csim_forcing/atm/gx3v5/'
-
-\end{verbatim}
-
 
 \subsubsection {Example 5: History File Namelist}
 \label{example5_nml}

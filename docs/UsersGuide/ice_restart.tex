@@ -6,7 +6,7 @@
 
 Restart files contain all of the initial condition information
 necessary to restart from a previous simulation.  These files are in a
-standard IEEE 64 bit binary format. A restart file is not necessary for
+standard netCDF 64-bit binary format. A restart file is not necessary for
 an initial run, but is highly recommended.  The initial conditions
 that are internal to the ice model produce an unrealistic ice cover
 that an uncoupled ice model will correct in several years.  The initial
@@ -21,9 +21,9 @@ located, modify the variable {\tt \$RSTDIR} at the top of the setup script.
 The names of the restart files follow the CCSM Output Filename Requirements.
 The form of the restart file names are as follows: \\
 
-{\bf \$CASE.csim.r.yyyy-mm-dd-sssss} \\
+{\bf \$CASE.cice.r.yyyy-mm-dd-sssss.nc} \\
 
-For example, the file {\bf \$CASE.csim.r.0002-01-01-00000} would be written
+For example, the file {\bf \$CASE.cice.r.0002-01-01-00000.nc} would be written
 out at the end of year 1, month 12.  A file containing the name of a restart
 file is called a restart pointer file. This filename information allows the
 model simulation to continue from the correct point in time, and hence the

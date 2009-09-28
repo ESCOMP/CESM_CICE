@@ -5,7 +5,7 @@
 #=======================================================================
 #--------------------------------------------------------
 # This script will create dvi, ps, pdf and html
-# versions of the CSIM4 User's Guide from the LaTeX files
+# versions of the CICE4 User's Guide from the LaTeX files
 #--------------------------------------------------------
 
 DOC   := ice_usrdoc

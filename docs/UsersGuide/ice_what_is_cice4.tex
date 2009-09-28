@@ -1,34 +1,37 @@
 %=======================================================================
-% CVS: $Id: ice_what_is_csim4.tex 5 2005-12-12 17:41:05Z mvr $
+% CVS: $Id: ice_what_is_cice4.tex 5 2005-12-12 17:41:05Z mvr $
 % CVS: $Source$
 % CVS: $Name$
 %=======================================================================
 
-This User's Guide accompanies the CCSM3 User's Guide, and is intended
-for those who would like to run CSIM coupled or uncoupled, on a supported
-platform, and "out of the box".  Users running CSIM fully coupled should first
-look at the CCSM3 User's Guide.  It includes a quick start guide for downloading
-the CCSM3 source code and input datasets, and information on how to configure,
+This User's Guide accompanies the CCSM4 User's Guide, and is intended
+for those who would like to run CICE coupled or uncoupled, on a supported
+platform, and "out of the box".  Users running CICE fully coupled should first
+look at the CCSM4 User's Guide.  It includes a quick start guide for downloading
+the CCSM4 source code and input datasets, and information on how to configure,
 build and run the model.  The supported configurations and scripts for building
-the fully coupled model are also described in the CCSM3 User's Guide.  The CSIM
+the fully coupled model are also described in the CCSM4 User's Guide.  The CICE
 User's Guide is intended for users interested in making modifications to the
 ice model scripts or namelists or running the uncoupled ice model.  Users
-interested in modifying the source code should see the CSIM Code Reference/
+interested in modifying the source code should see the CICE Code Reference/
 Developer's Guide.
 
-CSIM5 is the latest version of the NCAR Community Sea Ice Model.  It is the
+CICE4 is the latest version of the Los Alamos Sea Ice Model, sometimes
+referred to as the Community Ice CodE.  It is the
 result of a community effort to develop a portable, efficient sea ice model
 that can be run coupled in a global climate model or uncoupled as a stand-alone
 ice model. It has been released as the sea ice component of the Community
 Climate System Model (CCSM), a fully-coupled global climate model that
 provides simulations of the earths past, present and future climate states.
-CSIM5 is supported on high- and low-resolution Greenland Pole
-grids, which are identical to those used by the Parallel Ocean Program (POP)
+CICE4 is supported on high- and low-resolution Greenland Pole
+and tripole grids, which are identical to those used by the Parallel Ocean 
+Program (POP)
 ocean model.  The high resolution version is best suited for simulating 
 present-day and future climate scenarios while the low resolution option is
 used for paleoclimate simulations and debugging.
 
-An uncoupled version of CSIM is now available.  It provides a means of running
+An uncoupled version of CICE is available separately from Los Alamos National
+Laboratory (http://oceans11.lanl.gov/trac/CICE).  It provides a means of running
 the sea ice model independent of the other CCSM components.  It reads in
 atmospheric and ocean forcing, which eliminates the need for the flux coupler,
 and the atmosphere, land and ocean data models.  It can be run on a reduced
@@ -36,7 +39,7 @@ number of processors, or without MPI (Message Passing Interface) for researchers
 without access to these computer resources.
 
 The physics in the uncoupled ice model are identical to those in the
-ice model used in the fully coupled system.  CSIM is a dynamic-thermodynamic
+ice model used in the fully coupled system.  CICE is a dynamic-thermodynamic
 model that includes a subgrid-scale ice thickness distribution
 (\cite{bitz01};\cite{lips01}).  It uses the energy conserving thermodynamics
 of \cite{bitz99}, has multiple layers in each thickness category, and accounts
@@ -50,12 +53,12 @@ An attempt has been made throughout this document to provide the following
 text convention.  Variable names used in the code are {\tt typewritten}.
 Subroutine names are given in {\it italic}, and file names are in {\bf boldface}.
 
-\subsection{What's new in CSIM5?}
+\subsection{What's new in CICE4?}
 
-CSIM5 is an upgraded version of CSIM4 which was released in October 2002.  
-The model physics are similar to that of CSIM4, but a majority of the code
-has been rewritten for vectorization and to make the CSIM code similar
-to that of CICE, the LANL sea ice model.  The major changes are:
+CICE4 is an upgraded version of the Community Sea Ice Model, CSIM5, which was
+ based on CICE3, and was released in October 2002.  
+The model physics are similar to that of CSIM5, but it was decided to move to
+CICE, the LANL sea ice model for practical reasons.  The major changes are:
 
 \begin{itemize}
 
@@ -92,7 +95,7 @@ to that of CICE, the LANL sea ice model.  The major changes are:
 \item The snow and ice albedos, used for coupled model tuning, were moved to the
       namelist to make modification easier.
 
-\item It is now possible to run CSIM as an uncoupled model.  The module
+\item It is now possible to run CICE as an uncoupled model.  The module
       {\bf ice\_flux\_in.F} has been added to read in forcing data.
 
 \item Most modules have been modified to run efficiently on vector platforms.
@@ -101,7 +104,7 @@ to that of CICE, the LANL sea ice model.  The major changes are:
       the longer loops over {\tt i} and {\tt j}.  Directives have been placed
       before certain loops to enforce vectorization.
 
-\item The thermodynamics modules from CSIM4, {\bf ice\_tstm.F}, {\bf ice\_vthermo.F},
+\item The thermodynamics modules from CICE4, {\bf ice\_tstm.F}, {\bf ice\_vthermo.F},
       {\bf ice\_therm\_driver.F}, and {\bf ice\_dh.F}, have been replaced by two new
       modules {\bf ice\_therm\_vertical.F} and {\bf ice\_therm\_itd.F}.  The caclulations
       in {\bf ice\_therm\_vertical.F} are done before the {\it to\_coupler} call,
@@ -118,15 +121,15 @@ to that of CICE, the LANL sea ice model.  The major changes are:
 
 \item The prescribed ice model is not supported in this release.
 
-\item Most CSIM and CICE modules are very similar, except for the mechanical
+\item Most CICE and CICE modules are very similar, except for the mechanical
       redistribution modules.
 
 \end{itemize}
 
-The CSIM source code is based on the LOS Alamos sea ice model CICE model.
+The CICE source code is based on the LOS Alamos sea ice model CICE model.
 After a code merger with CICE was carried out to take advantage of the vector-
 friendly code, the models are very similar.  If there are some topics that
-are not covered in the CSIM documentation, users are encouraged to look
+are not covered in the CICE documentation, users are encouraged to look
 at the CICE documentation \cite{cice04}.  It is available at \\
 \begin{htmlonly}
   \htmladdnormallink{http://climate.lanl.gov/Models/CICE/index.htm}

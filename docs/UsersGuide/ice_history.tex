@@ -16,12 +16,12 @@ If {\tt history\_file} is not set in the namelist, the default character string
 are written. Options are also available to record averaged or instantaneous data.
 The form of the history file names are as follows: \\
 
-\noindent Yearly averaged:  {\bf \$CASE.csim.h.yyyy.nc} \\
-Monthly averaged: {\bf \$CASE.csim.h.yyyy-mm.nc} \\
-Weekly averaged: {\bf \$CASE.csim.hw.yyyy-mm-dd-sssss.nc} \\
-Daily averaged: {\bf \$CASE.csim.h.yyyy-mm-dd.nc} \\
-Instantaneous ({\tt histfreq} = 'y', 'm', 'w' or 'd'): {\bf \$CASE.csim.h.yyyy-mm-dd-sssss.nc} \\
-Instantaneous (written every dt, {\tt histfreq} = 1): {\bf \$CASE.csim.h.yyyy-mm-dd-sssss.nc} \\
+\noindent Yearly averaged:  {\bf \$CASE.cice.h.yyyy.nc} \\
+Monthly averaged: {\bf \$CASE.cice.h.yyyy-mm.nc} \\
+Weekly averaged: {\bf \$CASE.cice.hw.yyyy-mm-dd-sssss.nc} \\
+Daily averaged: {\bf \$CASE.cice.h.yyyy-mm-dd.nc} \\
+Instantaneous ({\tt histfreq} = 'y', 'm', 'w' or 'd'): {\bf \$CASE.cice.h.yyyy-mm-dd-sssss.nc} \\
+Instantaneous (written every dt, {\tt histfreq} = 1): {\bf \$CASE.cice.h.yyyy-mm-dd-sssss.nc} \\
 
 {\tt \$CASE} is set in the main setup script. All history files are written
 to {\bf /hist} in the executable directory.  Changes to the frequency and
@@ -31,7 +31,7 @@ of the history data comes from the file itself using the netCDF command
 written to every file and are listed in Table \ref{table:time_grid_hist}.
 In addition to the history files, a netCDF file containing a snapshot
 of the initial ice state is created at the start of each run.  The file
-name is {\bf \$CASE.csim.i.yyyy-mm-dd-sssss.nc} and is written to 
+name is {\bf \$CASE.cice.i.yyyy-mm-dd-sssss.nc} and is written to 
 {\bf /init} in the executable directory.
 
 \subsubsection{Caveats Regarding Averaged Fields} 
@@ -115,8 +115,8 @@ the last day of the month.
 The second namelist in the setup script controls what variables are written
 to the history file. To remove a field from this list, add the name of the
 logical variable associated with that field to the {\tt \&icefields\_nml}
-namelist in {\bf csim.buildnml\_prestage.csh} (coupled) or {\bf csim.setup.csh}
-(uncoupled) and assign it a value of {\tt .false.}.  For example, to remove
+namelist in {\bf cice.buildnml.csh}
+and assign it a value of {\tt .false.}.  For example, to remove
 ice thickness and snow cover from the history file, add
 
 \begin{verbatim}
