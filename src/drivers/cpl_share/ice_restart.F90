@@ -580,7 +580,7 @@
       call PIO_freeDecomp(File,iodesc3d_ntilyr)
       call PIO_freeDecomp(File,iodesc3d_ntslyr)
 
-!     call ice_pio_finalize
+      call ice_pio_finalize
 
       if (my_task == master_task) then
          write(nu_diag,*) 'Restart written ',istep1,time,time_forc
@@ -1491,7 +1491,7 @@
       call PIO_freeDecomp(File,iodesc3d_ntilyr)
       call PIO_freeDecomp(File,iodesc3d_ntslyr)
 
-!     call ice_pio_finalize
+      call ice_pio_finalize
 
       call bound_state (aicen, trcrn, &
                         vicen, vsnon, &

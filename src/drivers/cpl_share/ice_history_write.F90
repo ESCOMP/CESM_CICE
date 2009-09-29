@@ -632,7 +632,7 @@
       call pio_freedecomp(File,iodesc2d)
       call pio_freedecomp(File,iodesc3d)
 
-!     call ice_pio_finalize
+      call ice_pio_finalize
 
       !-------------------------
       !  Test memory usage

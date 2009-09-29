@@ -75,7 +75,7 @@ contains
    
      integer  :: ierr
 
-!    call pio_finalize(ice_pio_subsystem,ierr)
+     call pio_finalize(ice_pio_subsystem,ierr)
 
    end subroutine ice_pio_finalize
 !===============================================================================

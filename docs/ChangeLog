@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20090929
+Originator: dbailey
+Date: Tue Sep 29 2009
+Version: 4.0
+One-line Summary: Add pio_finalize calls.
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+This tag requires pio54_prod.
+
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20090928
 Originator: dbailey
 Date: Mon Sep 28 2009
