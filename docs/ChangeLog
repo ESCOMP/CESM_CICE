@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20091002
+Originator: dbailey
+Date: Fri Oct 2 2009
+Version: 4.0
+One-line Summary: Fix timerRoot parameter.
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+The parameter timerRoot was hard-coded as task 2, which was
+a problem when the code is run on 2 tasks or less. This is
+now a variable and set to min(nprocs-1,2).
+
+M      src/mpi/ice_timers.F90
+
+===============================================================
 cice4_0_20090929
 Originator: dbailey
 Date: Tue Sep 29 2009

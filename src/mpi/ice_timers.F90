@@ -124,7 +124,7 @@
    !----------------------------------------------
    ! some arrays on which to collect timing info
    !---------------------------------------------
-   integer (int_kind), public, parameter :: timerRoot = 2 ! MPI process ID to collect timing information
+   integer (int_kind), public :: timerRoot ! MPI process ID to collect timing information
 
    real(dbl_kind), public  :: all_ltime(max_timers) ! local times for each timer
    real(dbl_kind), allocatable :: all_gtime(:)      ! global times for each timer
@@ -167,6 +167,8 @@
 !-----------------------------------------------------------------------
 
    clock_rate = c1
+
+   timerRoot = min(distrb_info%nprocs-1,2)
 
    do n=1,max_timers
       all_timers(n)%name = 'unknown_timer_name'
