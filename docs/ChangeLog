@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20091006
+Originator: dbailey
+Date: Tue Oct 6 2009
+Version: 4.0
+One-line Summary: XML declarations of char.
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+M      bld/namelist_files/namelist_definition.xml
+
+===============================================================
 cice4_0_20091002
 Originator: dbailey
 Date: Fri Oct 2 2009
