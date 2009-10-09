@@ -306,8 +306,6 @@
       type(io_desc_t)       :: iodesc3d_ntslyr
       type(var_desc_t)      :: varid
 
-      real (kind=dbl_kind) :: tmp1d(1) 
-	
       type(block) :: this_block 
 
       ! construct path/file
@@ -426,101 +424,101 @@
       !-----------------------------------------------------------------
 
       status = pio_inq_varid(File,'aicen',varid)
-      call pio_write_darray(File, varid, iodesc3d_ncat, transfer(aicen(:,:,:,:),tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ncat, aicen(:,:,:,:), status)
       
       status = pio_inq_varid(File,'vicen',varid)
-      call pio_write_darray(File, varid, iodesc3d_ncat, transfer(vicen,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ncat, vicen, status)
       
       status = pio_inq_varid(File,'vsnon',varid)
-      call pio_write_darray(File, varid, iodesc3d_ncat, transfer(vsnon,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ncat, vsnon, status)
 
       status = pio_inq_varid(File,'Tsfcn',varid)
-      call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_Tsfc,:,:),tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_Tsfc,:,:), status)
 
       status = pio_inq_varid(File,'eicen',varid)
-      call pio_write_darray(File, varid, iodesc3d_ntilyr, transfer(eicen,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ntilyr, eicen, status)
 
       status = pio_inq_varid(File,'esnon',varid)
-      call pio_write_darray(File, varid, iodesc3d_ntslyr, transfer(esnon,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc3d_ntslyr, esnon, status)
 
       !-----------------------------------------------------------------
       ! velocity
       !-----------------------------------------------------------------
       status = pio_inq_varid(File,'uvel',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(uvel,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, uvel, status)
 
       status = pio_inq_varid(File,'vvel',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(vvel,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, vvel, status)
 
       !-----------------------------------------------------------------
       ! radiation fields
       !-----------------------------------------------------------------
       status = pio_inq_varid(File,'coszen',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(coszen,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, coszen, status)
 
       status = pio_inq_varid(File,'scale_factor',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(scale_factor,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, scale_factor, status)
 
       status = pio_inq_varid(File,'swvdr',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(swvdr,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, swvdr, status)
 
       status = pio_inq_varid(File,'swvdf',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(swvdf,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, swvdf, status)
 
       status = pio_inq_varid(File,'swidr',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(swidr,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, swidr, status)
 
       status = pio_inq_varid(File,'swidf',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(swidf,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, swidf, status)
 
       !-----------------------------------------------------------------
       ! ocean stress (for bottom heat flux in thermo)
       !-----------------------------------------------------------------
       status = pio_inq_varid(File,'strocnxT',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(strocnxT,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, strocnxT, status)
 
       status = pio_inq_varid(File,'strocnyT',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(strocnyT,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, strocnyT, status)
 
       !-----------------------------------------------------------------
       ! internal stress
       !-----------------------------------------------------------------
 
       status = pio_inq_varid(File,'stressp_1',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressp_1,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressp_1, status)
 
       status = pio_inq_varid(File,'stressp_2',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressp_2,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressp_2, status)
 
       status = pio_inq_varid(File,'stressp_3',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressp_3,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressp_3, status)
 
       status = pio_inq_varid(File,'stressp_4',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressp_4,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressp_4, status)
 
       status = pio_inq_varid(File,'stressm_1',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressm_1,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressm_1, status)
 
       status = pio_inq_varid(File,'stressm_2',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressm_2,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressm_2, status)
       
       status = pio_inq_varid(File,'stressm_3',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressm_3,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressm_3, status)
 
       status = pio_inq_varid(File,'stressm_4',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stressm_4,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stressm_4, status)
 
       status = pio_inq_varid(File,'stress12_1',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stress12_1,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stress12_1, status)
 
       status = pio_inq_varid(File,'stress12_2',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stress12_2,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stress12_2, status)
 
       status = pio_inq_varid(File,'stress12_3',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stress12_3,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stress12_3, status)
 
       status = pio_inq_varid(File,'stress12_4',varid)
-      call pio_write_darray(File, varid, iodesc2d, transfer(stress12_4,tmp1d), status)
+      call pio_write_darray(File, varid, iodesc2d, stress12_4, status)
 
       !-----------------------------------------------------------------
       ! ice mask for dynamics
@@ -537,40 +535,40 @@
       enddo
       !$OMP END PARALLEL DO
       status = pio_inq_varid(File,'iceumask',varid)
-         call pio_write_darray(File, varid, iodesc2d, transfer(work1,tmp1d), status)
+         call pio_write_darray(File, varid, iodesc2d, work1, status)
 
       if (tr_aero) then
          do k=1,n_aero
             write(nchar,'(i1.1)') k
 
             status = pio_inq_varid(File,'aerosnossl'//nchar,varid)
-            call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_aero+  (k-1)*4,:,:),tmp1d), status)
+            call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_aero+  (k-1)*4,:,:), status)
 
             status = pio_inq_varid(File,'aerosnoint'//nchar,varid)
-            call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_aero+1+(k-1)*4,:,:),tmp1d), status)
+            call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_aero+1+(k-1)*4,:,:), status)
 
             status = pio_inq_varid(File,'aeroicessl'//nchar,varid)
-            call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_aero+2+(k-1)*4,:,:),tmp1d), status)
+            call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_aero+2+(k-1)*4,:,:), status)
 
             status = pio_inq_varid(File,'aeroiceint'//nchar,varid)
-            call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_aero+3+(k-1)*4,:,:),tmp1d), status)
+            call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_aero+3+(k-1)*4,:,:), status)
          enddo
       endif
 
       if (tr_iage) then
          status = pio_inq_varid(File,'iage',varid)
-         call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_iage,:,:),tmp1d), status)
+         call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_iage,:,:), status)
       endif
 
       if (tr_pond) then
          status = pio_inq_varid(File,'volpn',varid)
-         call pio_write_darray(File, varid, iodesc3d_ncat, transfer(trcrn(:,:,nt_volpn,:,:),tmp1d), status)
+         call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_volpn,:,:), status)
 
          status = pio_inq_varid(File,'apondn',varid)
-         call pio_write_darray(File, varid, iodesc3d_ncat, transfer(apondn,tmp1d), status)
+         call pio_write_darray(File, varid, iodesc3d_ncat, apondn, status)
 
          status = pio_inq_varid(File,'hpondn',varid)
-         call pio_write_darray(File, varid, iodesc3d_ncat, transfer(hpondn,tmp1d), status)
+         call pio_write_darray(File, varid, iodesc3d_ncat, hpondn, status)
       endif
 
       call pio_closefile(File)
@@ -579,8 +577,6 @@
       call PIO_freeDecomp(File,iodesc3d_ncat)
       call PIO_freeDecomp(File,iodesc3d_ntilyr)
       call PIO_freeDecomp(File,iodesc3d_ntslyr)
-
-      call ice_pio_finalize
 
       if (my_task == master_task) then
          write(nu_diag,*) 'Restart written ',istep1,time,time_forc
@@ -997,7 +993,7 @@
                          esno (:,:,  iblk),  &
                          aice0(:,:,  iblk),  &
                          tmask(:,:,  iblk),  &
-                         trcr_depend)
+                         ntrcr, trcr_depend)
 
          aice_init(:,:,iblk) = aice(:,:,iblk)
 
@@ -1065,17 +1061,6 @@
       type(io_desc_t)       :: iodesc3d_ntslyr
       type(var_desc_t)      :: varid
 
-      real(kind=dbl_kind), pointer :: &
-	tmpfield2d(:),        &
-        tmpfield3d_ncat(:),   &
-        tmpfield3d_ntilyr(:), &
-        tmpfield3d_ntslyr(:)
-
-      real(kind	= dbl_kind) :: &
-	tmp1d(1)
-      real(kind	= dbl_kind), allocatable :: &
-	work1_trc(:,:,:,:,:)
-
       resttype = 'new'
 
       ! Initialize all tracer fields to zero and read in from
@@ -1130,11 +1115,6 @@
 
       diag = .true.     ! write min/max diagnostics for field
 	
-      allocate(tmpfield2d       (nx_block*ny_block       *max_blocks))
-      allocate(tmpfield3d_ncat  (nx_block*ny_block*ncat  *max_blocks))
-      allocate(tmpfield3d_ntilyr(nx_block*ny_block*ntilyr*max_blocks))
-      allocate(tmpfield3d_ntslyr(nx_block*ny_block*ntslyr*max_blocks))
-      
       !-----------------------------------------------------------------
       ! state variables
       !-----------------------------------------------------------------
@@ -1142,37 +1122,28 @@
          write(nu_diag,*) ' min/max area, vol ice, vol snow, Tsfc'
 
       status = pio_inq_varid(File,'aicen',varid)
-      call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-      aicen(:,:,:,:) = reshape(tmpfield3d_ncat,(/nx_block,ny_block,ncat,max_blocks/))
+      call pio_read_darray(File, varid, iodesc3d_ncat, aicen, status)
 
       status = pio_inq_varid(File,'vicen',varid)
-      call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-      vicen(:,:,:,:) = reshape(tmpfield3d_ncat,(/nx_block,ny_block,ncat,max_blocks/))
+      call pio_read_darray(File, varid, iodesc3d_ncat, vicen, status)
 
       status = pio_inq_varid(File,'vsnon',varid)
-      call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-      vsnon(:,:,:,:) = reshape(tmpfield3d_ncat,(/nx_block,ny_block,ncat,max_blocks/))
+      call pio_read_darray(File, varid, iodesc3d_ncat, vsnon, status)
 
       status = pio_inq_varid(File,'Tsfcn',varid)
-      allocate(work1_trc(nx_block,ny_block,1,ncat,max_blocks))
-      call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, status)
-      work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat,(/nx_block,ny_block,1,ncat,max_blocks/))
-      trcrn(:,:,nt_Tsfc,:,:) = work1_trc(:,:,1,:,:)
-      deallocate(work1_trc)
+      call pio_read_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_Tsfc,:,:), status)
 
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max eicen for each layer'
 
       status = pio_inq_varid(File,'eicen',varid)
-      call pio_read_darray(File, varid, iodesc3d_ntilyr, tmpfield3d_ntilyr, status)
-      eicen(:,:,:,:) = reshape(tmpfield3d_ntilyr,(/nx_block,ny_block,ntilyr,max_blocks/))
+      call pio_read_darray(File, varid, iodesc3d_ntilyr, eicen, status)
 
       if (my_task == master_task) &
            write(nu_diag,*) 'min/max esnon for each layer'
 
       status = pio_inq_varid(File,'esnon',varid)
-      call pio_read_darray(File, varid, iodesc3d_ntslyr, tmpfield3d_ntslyr, status)
-      esnon(:,:,:,:) = reshape(tmpfield3d_ntslyr,(/nx_block,ny_block,ntslyr,max_blocks/))
+      call pio_read_darray(File, varid, iodesc3d_ntslyr, esnon, status)
 
       !-----------------------------------------------------------------
       ! velocity
@@ -1181,14 +1152,12 @@
            write(nu_diag,*) 'min/max velocity components'
 
       status = pio_inq_varid(File,'uvel',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      uvel(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, uvel, status)
       call ice_HaloUpdate (uvel,               halo_info,     &
                            field_loc_NEcorner, field_type_vector)
 
       status = pio_inq_varid(File,'vvel',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      vvel(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, vvel, status)
       call ice_HaloUpdate (vvel,               halo_info,     &
                            field_loc_NEcorner, field_type_vector)
 
@@ -1200,38 +1169,32 @@
            write(nu_diag,*) 'radiation fields'
 
       status = pio_inq_varid(File,'coszen',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      coszen(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, coszen, status)
       call ice_HaloUpdate (coszen,               halo_info,     &
                            field_loc_center,    field_type_scalar)
 
       status = pio_inq_varid(File,'scale_factor',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      scale_factor(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, scale_factor, status)
       call ice_HaloUpdate (scale_factor,        halo_info,     &
                            field_loc_center,    field_type_scalar)
 
       status = pio_inq_varid(File,'swvdr',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      swvdr(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, swvdr, status)
       call ice_HaloUpdate (swvdr,               halo_info,     &
                            field_loc_center,    field_type_scalar)
 
       status = pio_inq_varid(File,'swvdf',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      swvdf(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, swvdf, status)
       call ice_HaloUpdate (swvdf,               halo_info,     &
                            field_loc_center,    field_type_scalar)
 
       status = pio_inq_varid(File,'swidr',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      swidr(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, swidr, status)
       call ice_HaloUpdate (swidr,               halo_info,     &
                            field_loc_center,    field_type_scalar)
 
       status = pio_inq_varid(File,'swidf',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      swidf(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, swidf, status)
       call ice_HaloUpdate (swidf,               halo_info,     &
                            field_loc_center,    field_type_scalar)
 
@@ -1242,12 +1205,10 @@
            write(nu_diag,*) 'min/max ocean stress components'
 
       status = pio_inq_varid(File,'strocnxT',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      strocnxT(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, strocnxT, status)
 
       status = pio_inq_varid(File,'strocnyT',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      strocnyT(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, strocnyT, status)
 
       !-----------------------------------------------------------------
       ! internal stress
@@ -1258,52 +1219,40 @@
            'internal stress components'
       
       status = pio_inq_varid(File,'stressp_1',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressp_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressp_1, status)
 
       status = pio_inq_varid(File,'stressp_3',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressp_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressp_3, status)
 
       status = pio_inq_varid(File,'stressp_2',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressp_2(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressp_2, status)
 
       status = pio_inq_varid(File,'stressp_4',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressp_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressp_4, status)
 
       status = pio_inq_varid(File,'stressm_1',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressm_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressm_1, status)
 
       status = pio_inq_varid(File,'stressm_3',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressm_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressm_3, status)
 
       status = pio_inq_varid(File,'stressm_2',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressm_2(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressm_2, status)
 
       status = pio_inq_varid(File,'stressm_4',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stressm_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stressm_4, status)
 
       status = pio_inq_varid(File,'stress12_1',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stress12_1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stress12_1, status)
 
       status = pio_inq_varid(File,'stress12_3',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stress12_3(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stress12_3, status)
 
       status = pio_inq_varid(File,'stress12_2',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stress12_2(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stress12_2, status)
 
       status = pio_inq_varid(File,'stress12_4',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      stress12_4(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, stress12_4, status)
 
       call ice_HaloUpdate(stressp_1, halo_info, &
                            field_loc_center,  field_type_scalar)
@@ -1372,8 +1321,7 @@
            write(nu_diag,*) 'ice mask for dynamics'
 
       status = pio_inq_varid(File,'iceumask',varid)
-      call pio_read_darray(File, varid, iodesc2d, tmpfield2d, status)
-      work1(:,:,:) = reshape(tmpfield2d,(/nx_block,ny_block,max_blocks/))
+      call pio_read_darray(File, varid, iodesc2d, work1, status)
       call ice_HaloUpdate (work1,             halo_info, &
                            field_loc_center,  field_type_scalar)
 
@@ -1386,69 +1334,44 @@
       enddo
       enddo
 
-      if (tr_aero .or. tr_iage .or. tr_pond .or. tr_FY) then
-         allocate(work1_trc(nx_block,ny_block,1,ncat,max_blocks))
-      end if
-
       if (tr_aero) then
          status = pio_inq_varid(File,'aerosnossl1',varid)
-
          if (status == PIO_noerr) then
-
             do k=1,n_aero
                write(nchar,'(i1.1)') k
 
                status = pio_inq_varid(File,'aerosnossl'//nchar,varid)
                call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                    tmpfield3d_ncat, status)
-               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                       (/nx_block,ny_block,1,ncat,max_blocks/))
-               trcrn(:,:,nt_aero+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+                                    trcrn(:,:,nt_aero+(k-1)*4,:,:), status)
 
                status = pio_inq_varid(File,'aerosnoint'//nchar,varid)
                call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                    tmpfield3d_ncat, status)
-               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                       (/nx_block,ny_block,1,ncat,max_blocks/))
-               trcrn(:,:,nt_aero+1+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+                                    trcrn(:,:,nt_aero+1+(k-1)*4,:,:), status)
    
                status = pio_inq_varid(File,'aeroicessl'//nchar,varid)
                call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                    tmpfield3d_ncat, status)
-               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                       (/nx_block,ny_block,1,ncat,max_blocks/))
-               trcrn(:,:,nt_aero+2+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+                                    trcrn(:,:,nt_aero+2+(k-1)*4,:,:), status)
 
                status = pio_inq_varid(File,'aeroiceint'//nchar,varid)
                call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                    tmpfield3d_ncat, status)
-               work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                    (/nx_block,ny_block,1,ncat,max_blocks/))
-               trcrn(:,:,nt_aero+3+(k-1)*4,:,:) = work1_trc(:,:,1,:,:)
+                                    trcrn(:,:,nt_aero+3+(k-1)*4,:,:), status)
             enddo
-
          endif
       endif
 
       if (tr_iage) then
          status = pio_inq_varid(File,'iage',varid)
          if (status == PIO_noerr) then
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, &
-                                 status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                    (/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_iage,:,:) = work1_trc(:,:,1,:,:)
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+	                         trcrn(:,:,nt_iage,:,:), status)
          endif
       endif
 
       if (tr_FY) then
          status = pio_inq_varid(File,'FY',varid)
          if (status == PIO_noerr) then
-            call pio_read_darray(File, varid, iodesc3d_ncat, tmpfield3d_ncat, &
-                                 status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                    (/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_FY,:,:) = work1_trc(:,:,1,:,:)
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 trcrn(:,:,nt_FY,:,:), status)
          endif
       endif
 
@@ -1456,33 +1379,17 @@
          status = pio_inq_varid(File,'volpn',varid)
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                 tmpfield3d_ncat, status)
-            work1_trc(:,:,:,:,:) =  reshape(tmpfield3d_ncat, &
-                                    (/nx_block,ny_block,1,ncat,max_blocks/))
-            trcrn(:,:,nt_volpn,:,:) = work1_trc(:,:,1,:,:)
+                                 trcrn(:,:,nt_volpn,:,:), status)
          
             status = pio_inq_varid(File,'apondn',varid)
             call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                 tmpfield3d_ncat, status)
-            apondn(:,:,:,:) = reshape(tmpfield3d_ncat, &
-                              (/nx_block,ny_block,ncat,max_blocks/))
+                                 apondn(:,:,:,:), status)
          
             status = pio_inq_varid(File,'hpondn',varid)
             call pio_read_darray(File, varid, iodesc3d_ncat, &
-                                 tmpfield3d_ncat, status)
-            hpondn(:,:,:,:) = reshape(tmpfield3d_ncat, &
-                              (/nx_block,ny_block,ncat,max_blocks/))
+                                 hpondn(:,:,:,:), status)
          endif
       endif
-
-      if (tr_aero .or. tr_iage .or. tr_pond .or. tr_FY) then
-         deallocate(work1_trc)
-      end if
-
-      deallocate(tmpfield2d       )
-      deallocate(tmpfield3d_ncat  )
-      deallocate(tmpfield3d_ntilyr)
-      deallocate(tmpfield3d_ntslyr)
 
       call pio_closefile(File)
 
@@ -1490,8 +1397,6 @@
       call PIO_freeDecomp(File,iodesc3d_ncat)
       call PIO_freeDecomp(File,iodesc3d_ntilyr)
       call PIO_freeDecomp(File,iodesc3d_ntslyr)
-
-      call ice_pio_finalize
 
       call bound_state (aicen, trcrn, &
                         vicen, vsnon, &
@@ -1590,7 +1495,7 @@
                          esno (:,:,  iblk),  &
                          aice0(:,:,  iblk),  &
                          tmask(:,:,  iblk),  &
-                         trcr_depend)
+                         ntrcr, trcr_depend)
 
          aice_init(:,:,iblk) = aice(:,:,iblk)
 

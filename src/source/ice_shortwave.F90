@@ -1285,7 +1285,7 @@
          rhosnw  , & ! density in snow layer (kg/m3)
          rsnw        ! grain radius in snow layer (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr), &
          intent(in) :: &
          trcr        ! aerosol tracers
 
@@ -1338,7 +1338,7 @@
          hi       , & ! ice thickness (all sea ice layers, m)
          fi           ! snow/bare ice fractional coverage (0 to 1)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr) :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,4*n_aeromx) :: &
          aero_mp      ! aerosol mass path in kg/m2
 
       integer (kind=int_kind), dimension(nx_block,ny_block) :: &
@@ -1734,7 +1734,7 @@
          hp      , & ! pond depth (m)
          fi          ! snow/bare ice fractional coverage (0 to 1)
  
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,4*n_aeromx), &
          intent(in) :: &
          aero_mp     ! aerosol mass path in kg/m2
 

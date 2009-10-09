@@ -1,4 +1,45 @@
 ===============================================================
+cice4_0_20091010
+Originator: dbailey
+Date: Fri Oct 10 2009
+Version: 4.0
+One-line Summary: Tracer counting and pio changes.
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+This tag includes a number of source changes, but these are needed
+to include the new tracer counting method as used in the LANL
+version of CICE. Tracers are now counted a run time based on the
+namelist tracer_nml, and one CPP setting of NTR_AERO. Also, the
+pio calls have been simplified and the pio_init call is only done
+once. The pio changes require pio55_prod. Finally, some cleanup
+has been made to the build/configure scripts. Everything is bfb
+with beta28.
+
+M      bld/configure
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_init.F90
+M      src/source/ice_domain.F90
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_itd.F90
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_shortwave.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_mechred.F90
+M      src/source/ice_therm_vertical.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_therm_itd.F90
+M      src/source/ice_state.F90
+M      src/source/ice_domain_size.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20091006
 Originator: dbailey
 Date: Tue Oct 6 2009

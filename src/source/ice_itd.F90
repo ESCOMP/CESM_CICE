@@ -283,8 +283,8 @@
                             aice,     trcr,     &
                             vice,     vsno,     &
                             eice,     esno,     &
-                            aice0,              &
-                            tmask,    trcr_depend)
+                            aice0,    tmask,    &
+                            ntrcr,    trcr_depend)
 !
 ! !DESCRIPTION:
 !
@@ -300,7 +300,8 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: &
-           nx_block, ny_block  ! block dimensions
+         nx_block, ny_block, & ! block dimensions
+         ntrcr                 ! number of tracers in use
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
          intent(in) :: &
@@ -308,7 +309,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(in) :: &
          trcrn     ! ice tracers
 
@@ -324,7 +325,7 @@
          intent(in) :: &
          tmask     ! land/boundary mask, thickness (T-cell)
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block),  &
@@ -336,7 +337,7 @@
          esno  , & ! energy of melt. of snow layer    (J/m^2)
          aice0     ! concentration of open water
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr),  &
          intent(out) :: &
          trcr      ! ice tracers
 !
@@ -474,7 +475,7 @@
 
       call compute_tracers (nx_block,     ny_block,   &
                             icells,   indxi,   indxj, &
-                            trcr_depend,              &
+                            ntrcr,    trcr_depend,    &
                             atrcr(:,:), aice(:,:),    &
                             vice (:,:),   vsno(:,:),  &
                             trcr(:,:,:))
@@ -555,7 +556,7 @@
 !
       subroutine rebin (nx_block, ny_block,        &
                         icells,   indxi,    indxj, &
-                        trcr_depend,               &
+                        ntrcr,    trcr_depend,     &
                         aicen,    trcrn,           &
                         vicen,    vsnon,           &
                         eicen,    esnon,           &
@@ -576,13 +577,14 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of grid cells with ice
+         icells            , & ! number of grid cells with ice
+         ntrcr                 ! number of tracers in use
 
        integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi, indxj      ! compressed i/j indices
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
@@ -591,7 +593,7 @@
          vicen , & ! volume per unit area of ice           (m)
          vsnon     ! volume per unit area of snow          (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
 
@@ -705,7 +707,8 @@
       !-----------------------------------------------------------------
             call shift_ice (nx_block, ny_block,    &
                             indxi,    indxj,       &
-                            icells,   trcr_depend, &
+                            icells,                &
+                            ntrcr,    trcr_depend, &
                             aicen,    trcrn,       &
                             vicen,    vsnon,       &
                             eicen,    esnon,       &
@@ -760,7 +763,8 @@
       !-----------------------------------------------------------------
             call shift_ice (nx_block, ny_block,    &
                             indxi,    indxj,       &
-                            icells,   trcr_depend, &
+                            icells,                &
+                            ntrcr,    trcr_depend, &
                             aicen,    trcrn,       &
                             vicen,    vsnon,       &
                             eicen,    esnon,       &
@@ -887,7 +891,8 @@
 !
       subroutine shift_ice (nx_block, ny_block,    &
                             indxi,    indxj,       &
-                            icells,   trcr_depend, &
+                            icells,                &
+                            ntrcr,    trcr_depend, &
                             aicen,    trcrn,       &
                             vicen,    vsnon,       &
                             eicen,    esnon,       &
@@ -912,14 +917,15 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of ocean/ice cells
+         icells            , & ! number of ocean/ice cells
+         ntrcr                 ! number of tracers in use
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi             , & ! compressed indices in i/j directions
          indxj
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
@@ -928,7 +934,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
 
@@ -969,7 +975,7 @@
          it            , & ! tracer index
          ilo,ihi,jlo,jhi   ! beginning and end of physical domain
 
-      real (kind=dbl_kind), dimension(icells,ntrcr,ncat) :: &
+      real (kind=dbl_kind), dimension(icells,max_ntrcr,ncat) :: &
          atrcrn            ! aicen*trcrn
 
       real (kind=dbl_kind) :: &
@@ -1330,7 +1336,7 @@
 
          call compute_tracers (nx_block,        ny_block,       &
                                icells,          indxi,   indxj, &
-                               trcr_depend,                     &
+                               ntrcr,           trcr_depend,    &
                                atrcrn(:,:,n),   aicen(:,:,  n), &
                                vicen (:,:,  n), vsnon(:,:,  n), &
                                trcrn(:,:,:,n))
@@ -1481,7 +1487,7 @@
 !
       subroutine compute_tracers (nx_block, ny_block,       &
                                   icells,   indxi,   indxj, &
-                                  trcr_depend,              &
+                                  ntrcr,    trcr_depend,    &
                                   atrcrn,   aicen,          &
                                   vicen,    vsnon,          &
                                   trcrn)
@@ -1503,16 +1509,17 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of ice/ocean grid cells
+         icells            , & ! number of ice/ocean grid cells
+         ntrcr                 ! number of tracers in use
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi,  indxj       ! compressed i/j indices
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
-      real (kind=dbl_kind), dimension (icells,ntrcr), &
+      real (kind=dbl_kind), dimension (icells,max_ntrcr), &
          intent(in) :: &
          atrcrn    ! aicen*trcrn or vicen*trcrn or vsnon*trcrn
 
@@ -1522,7 +1529,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr), &
          intent(out) :: &
          trcrn     ! ice tracers
 !
@@ -1598,7 +1605,7 @@
 !
       subroutine cleanup_itd (nx_block,    ny_block,   &
                               ilo, ihi,    jlo, jhi,   &
-                              dt,                      &
+                              dt,          ntrcr,      &
                               aicen,       trcrn,      &
                               vicen,       vsnon,      &
                               eicen,       esnon,      &
@@ -1629,7 +1636,8 @@
 !
       integer (kind=int_kind), intent(in) :: & 
          nx_block, ny_block, & ! block dimensions 
-         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
+         ilo,ihi,jlo,jhi   , & ! beginning and end of physical domain
+         ntrcr                 ! number of tracers in use
  
       real (kind=dbl_kind), intent(in) :: & 
          dt        ! time step 
@@ -1640,7 +1648,7 @@
          vicen , & ! volume per unit area of ice          (m) 
          vsnon     ! volume per unit area of snow         (m) 
  
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat),  &
          intent(inout) :: & 
          trcrn     ! ice tracers 
  
@@ -1657,7 +1665,7 @@
          aice  , & ! total ice concentration
          aice0     ! concentration of open water 
      
-      integer (kind=int_kind), dimension(ntrcr), intent(in) :: & 
+      integer (kind=int_kind), dimension(max_ntrcr), intent(in) :: & 
          trcr_depend  ! tracer dependency information
 
       logical (kind=log_kind), intent(in) :: &
@@ -1777,13 +1785,13 @@
       !       correctly (e.g., very fast ice growth).
       !-----------------------------------------------------------------
 
-      call rebin (nx_block,   ny_block, &
-                  icells,   indxi,    indxj, &
-                  trcr_depend, &
-                  aicen(:,:,:),      trcrn(:,:,:,:), &
-                  vicen(:,:,:),      vsnon(:,:,:),   &
-                  eicen(:,:,:),      esnon(:,:,:),   &
-                  l_stop, &
+      call rebin (nx_block,     ny_block,       &
+                  icells,       indxi, indxj,   &
+                  ntrcr,        trcr_depend,    &
+                  aicen(:,:,:), trcrn(:,:,:,:), &
+                  vicen(:,:,:), vsnon(:,:,:),   &
+                  eicen(:,:,:), esnon(:,:,:),   &
+                  l_stop,                       &
                   istop,      jstop)
 
       if (l_stop) return
@@ -1793,18 +1801,18 @@
       !-----------------------------------------------------------------
 
       if (limit_aice) then
-         call zap_small_areas (nx_block, ny_block, &
-                               ilo, ihi, jlo, jhi, &
-                               dt,              &
-                               aice,     aice0, &
-                               aicen(:,:,:),    trcrn(:,:,:,:), &
-                               vicen(:,:,:),    vsnon(:,:,:),   &
-                               eicen(:,:,:),    esnon(:,:,:),   &
-                               dfresh,   dfsalt, &
-                               dfhocn,   dfsoot, &
-                               tr_aero,          &
-                               l_stop,           &
-                               istop,    jstop)
+         call zap_small_areas (nx_block,     ny_block,       &
+                               ilo, ihi,     jlo, jhi,       &
+                               dt,           ntrcr,          &
+                               aice,         aice0,          &
+                               aicen(:,:,:), trcrn(:,:,:,:), &
+                               vicen(:,:,:), vsnon(:,:,:),   &
+                               eicen(:,:,:), esnon(:,:,:),   &
+                               dfresh,       dfsalt,         &
+                               dfhocn,       dfsoot,         &
+                               tr_aero,                      &
+                               l_stop,                       &
+                               istop,        jstop)
          if (l_stop) return
       endif   ! l_limit_aice
 
@@ -1849,7 +1857,7 @@
 !
       subroutine zap_small_areas (nx_block, ny_block, &
                                   ilo, ihi, jlo, jhi, &
-                                  dt,                 &
+                                  dt,       ntrcr,    &
                                   aice,     aice0,    &
                                   aicen,    trcrn,    &
                                   vicen,    vsnon,    &
@@ -1877,7 +1885,8 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         ilo,ihi,jlo,jhi       ! beginning and end of physical domain
+         ilo,ihi,jlo,jhi   , & ! beginning and end of physical domain
+         ntrcr                 ! number of tracers in use
 
       real (kind=dbl_kind), intent(in) :: &
          dt                    ! time step
@@ -1901,7 +1910,7 @@
          intent(inout) :: &
          esnon        ! energy of melting for each snow layer (J/m^2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn        ! ice tracers
 

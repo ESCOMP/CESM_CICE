@@ -117,7 +117,8 @@
 ! !INTERFACE:
 !
       subroutine ridge_ice (nx_block,    ny_block,   &
-                            dt_dyn, dt_thm, icells,  &
+                            dt_dyn,      dt_thm,     &
+                            ntrcr,       icells,     &
                             indxi,       indxj,      &
                             rdg_conv,    rdg_shear,  &
                             aicen,       trcrn,      &
@@ -137,7 +138,8 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of cells with ice present
+         icells            , & ! number of cells with ice present
+         ntrcr                 ! number of tracers in use
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
@@ -157,7 +159,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
  
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: & 
          trcrn     ! ice tracers 
  
@@ -173,7 +175,7 @@
          intent(inout) :: & 
          aice0     ! concentration of open water
 
-      integer (kind=int_kind), dimension(ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension(max_ntrcr), intent(in) :: &
          trcr_depend
 
       logical (kind=log_kind), intent(out) :: &
@@ -337,7 +339,7 @@
 
          call ridge_shift (nx_block,  ny_block,        &
                            icells,    indxi,    indxj, &
-                           dt_dyn,                     &
+                           ntrcr,     dt_dyn,          &
                            aicen,     trcrn,           &
                            vicen,     vsnon,           &
                            eicen,     esnon,           &
@@ -1101,7 +1103,7 @@
 !
       subroutine ridge_shift (nx_block,    ny_block,        &
                               icells,      indxi,    indxj, &
-                              dt,                           &
+                              ntrcr,       dt,              &
                               aicen,       trcrn,           &
                               vicen,       vsnon,           &
                               eicen,       esnon,           &
@@ -1125,7 +1127,8 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of cells with ice present
+         icells            , & ! number of cells with ice present
+         ntrcr                 ! number of tracers in use
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
@@ -1134,7 +1137,7 @@
       real (kind=dbl_kind), intent(in) :: &
          dt                  ! time step (s)
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
@@ -1147,7 +1150,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
 
@@ -1220,7 +1223,7 @@
       real (kind=dbl_kind), dimension (icells,ntslyr) :: &
          esnon_init        ! snow energy before ridging
 
-      real (kind=dbl_kind), dimension(icells,ntrcr,ncat) :: &
+      real (kind=dbl_kind), dimension(icells,max_ntrcr,ncat) :: &
          atrcrn            ! aicen*trcrn
 
       real (kind=dbl_kind), dimension (icells) :: &
@@ -1773,7 +1776,7 @@
       do n = 1, ncat
          call compute_tracers (nx_block,        ny_block,       &
                                icells,          indxi,   indxj, &
-                               trcr_depend,                     &
+                               ntrcr,           trcr_depend,    &
                                atrcrn(:,:,n),   aicen(:,:,  n), &
                                vicen (:,:,  n), vsnon(:,:,  n), &
                                trcrn(:,:,:,n))

@@ -53,14 +53,6 @@
       private
       public :: init_remap, horizontal_remap, make_masks
 
-! NOTE: It would be better to pass in ntrace as an argument, but this slows
-!       down the code considerably, at least on mauve.
-! NOTE: For remapping, hice, hsno, qice, and qsno are considered tracers.
-!       ntrace is not equal to ntrcr!
-
-      integer (kind=int_kind), parameter ::                      &
-         ntrace = 2+ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
-                          
       integer (kind=int_kind), parameter ::     &
          ngroups  = 6      ,&! number of groups of triangles that
                              ! contribute transports across each edge
@@ -336,7 +328,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine horizontal_remap (dt,                            &
+      subroutine horizontal_remap (dt,                ntrace,     &
                                    uvel,              vvel,       &
                                    mm,                tm,         &
                                    l_fixed_area,                  &
@@ -384,6 +376,9 @@
 !
       real (kind=dbl_kind), intent(in) ::     &
          dt      ! time step
+
+      integer (kind=int_kind), intent(in) :: &
+         ntrace       ! number of tracers in use
 
       real (kind=dbl_kind), intent(in),       &
                 dimension(nx_block,ny_block,max_blocks) ::           &
@@ -596,8 +591,8 @@
 
          call make_masks (nx_block,           ny_block,             &
                           ilo, ihi,           jlo, jhi,             &
-                          nghost,             has_dependents,       &
-                          icellsnc (:,iblk),                        &
+                          nghost,             ntrace,               &
+                          has_dependents,     icellsnc (:,iblk),    &
                           indxinc(:,:,iblk),  indxjnc  (:,:,iblk),  &
                           mm   (:,:,:,iblk),  mmask  (:,:,:,iblk),  &
                           tm (:,:,:,:,iblk),  tmask(:,:,:,:,iblk))
@@ -612,11 +607,11 @@
 
          call construct_fields(nx_block,           ny_block,           &
                                ilo, ihi,           jlo, jhi,           &
-                               nghost,                                 &
+                               nghost,             ntrace,             &
                                tracer_type,        depend,             &
                                has_dependents,     icellsnc (0,iblk),  &
                                indxinc(:,0,iblk),  indxjnc(:,0,iblk),  &
-!                               HTN     :,:,iblk),  HTE    (:,:,iblk),  &
+!                               HTN    (:,:,iblk),  HTE    (:,:,iblk),  &
                                worka       (:,:),  workb       (:,:),  &
                                hm     (:,:,iblk),  xav    (:,:,iblk),  &
                                yav    (:,:,iblk),  xxav   (:,:,iblk),  &
@@ -635,7 +630,7 @@
 
             call construct_fields(nx_block,             ny_block,           &
                                   ilo, ihi,             jlo, jhi,           &
-                                  nghost,                                   &
+                                  nghost,               ntrace,             &
                                   tracer_type,          depend,             &
                                   has_dependents,       icellsnc (n,iblk),  &
                                   indxinc  (:,n,iblk),  indxjnc(:,n,iblk),  &
@@ -810,7 +805,7 @@
          ! open water
 
          call transport_integrals(nx_block,           ny_block,             &
-                                  icellsng (:,iblk),                        &
+                                  ntrace,             icellsng (:,iblk),    &
                                   indxing(:,:,iblk),  indxjng  (:,:,iblk),  &
                                   tracer_type,        depend,               &
                                   integral_order,     triarea(:,:,:,iblk),  &
@@ -823,7 +818,7 @@
          do n = 1, ncat
             call transport_integrals                                       &
                                (nx_block,           ny_block,              &
-                                icellsng (:,iblk),                         &
+                                ntrace,             icellsng (:,iblk),     &
                                 indxing(:,:,iblk),  indxjng   (:,:,iblk),  &
                                 tracer_type,        depend,                &
                                 integral_order,     triarea (:,:,:,iblk),  &
@@ -860,7 +855,7 @@
 
          ! open water
          call transport_integrals(nx_block,           ny_block,             &
-                                  icellsng (:,iblk),                        &
+                                  ntrace,             icellsng (:,iblk),    &
                                   indxing(:,:,iblk),  indxjng(:,:,iblk),    &
                                   tracer_type,        depend,               &
                                   integral_order,     triarea(:,:,:,iblk),  &
@@ -873,7 +868,7 @@
          do n = 1, ncat
             call transport_integrals                                       &
                                (nx_block,           ny_block,              &
-                                icellsng (:,iblk),                         &
+                                ntrace,             icellsng (:,iblk),     &
                                 indxing(:,:,iblk),  indxjng   (:,:,iblk),  &
                                 tracer_type,        depend,                &
                                 integral_order,     triarea (:,:,:,iblk),  &
@@ -894,6 +889,7 @@
 
          call update_fields (nx_block,           ny_block,          &
                              ilo, ihi,           jlo, jhi,          &
+                             ntrace,                                &
                              tracer_type,        depend,            &
                              tarear(:,:,iblk),   l_stop(iblk),      &
                              istop(iblk),        jstop (iblk),      &
@@ -918,6 +914,7 @@
 
             call update_fields(nx_block,              ny_block,              &
                                ilo, ihi,              jlo, jhi,              &
+                               ntrace,                                       &
                                tracer_type,           depend,                &
                                tarear(:,:,iblk),      l_stop(iblk),          &
                                istop(iblk),           jstop(iblk),           &
@@ -956,7 +953,8 @@
 !
       subroutine make_masks (nx_block, ny_block,           &
                              ilo, ihi, jlo, jhi,           &
-                             nghost,   has_dependents,     &
+                             nghost,   ntrace,             &
+                             has_dependents,               &
                              icells,                       &
                              indxi,    indxj,              &
                              mm,       mmask,              &
@@ -987,7 +985,8 @@
       integer (kind=int_kind), intent(in) ::     &
            nx_block, ny_block  ,&! block dimensions
            ilo,ihi,jlo,jhi     ,&! beginning and end of physical domain
-           nghost                ! number of ghost cells
+           nghost              ,&! number of ghost cells
+           ntrace                ! number of tracers in use
 
       logical (kind=log_kind), dimension (ntrace), intent(in) ::     &
            has_dependents      ! true if a tracer has dependent tracers
@@ -1131,7 +1130,7 @@
 !
       subroutine construct_fields (nx_block,       ny_block,   &
                                    ilo, ihi,       jlo, jhi,   &
-                                   nghost,                     &
+                                   nghost,         ntrace,     &
                                    tracer_type,    depend,     &
                                    has_dependents, icells,     &
                                    indxi,          indxj,      &
@@ -1166,6 +1165,7 @@
          nx_block, ny_block  ,&! block dimensions
          ilo,ihi,jlo,jhi     ,&! beginning and end of physical domain
          nghost              ,&! number of ghost cells
+         ntrace              ,&! number of tracers in use
          icells                ! number of cells with mass
 
       integer (kind=int_kind), dimension (ntrace), intent(in) ::     &
@@ -3370,7 +3370,7 @@
 ! !INTERFACE:
 !
       subroutine transport_integrals (nx_block,       ny_block,    &
-                                      icells,                      &
+                                      ntrace,         icells,      &
                                       indxi,          indxj,       &
                                       tracer_type,    depend,      &
                                       integral_order, triarea,     &
@@ -3399,6 +3399,7 @@
 !
       integer (kind=int_kind), intent(in) ::   &
            nx_block, ny_block  ,&! block dimensions
+           ntrace              ,&! number of tracers in use
            integral_order   ! polynomial order for quadrature integrals 
 
       integer (kind=int_kind), dimension (ntrace), intent(in) ::     &
@@ -3705,6 +3706,7 @@
 !
       subroutine update_fields (nx_block,    ny_block,   &
                                 ilo, ihi,    jlo, jhi,   &
+                                ntrace,                  &
                                 tracer_type, depend,     &
                                 tarear,      l_stop,     &
                                 istop,       jstop,      &
@@ -3727,7 +3729,8 @@
 !
       integer (kind=int_kind), intent(in) ::   &
          nx_block, ny_block,&! block dimensions
-         ilo,ihi,jlo,jhi     ! beginning and end of physical domain
+         ilo,ihi,jlo,jhi   ,&! beginning and end of physical domain
+         ntrace              ! number of tracers in use
 
       integer (kind=int_kind), dimension (ntrace), intent(in) ::     &
          tracer_type       ,&! = 1, 2, or 3 (see comments above)

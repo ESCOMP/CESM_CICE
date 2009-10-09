@@ -142,6 +142,15 @@
 
 <advection>'remap'</advection>
 
+<!--------------------------->
+<!-- ice_nml settings ------->
+<!--------------------------->
+
+<tr_iage> .true. </tr_iage>
+<tr_FY>   .true. </tr_FY>
+<tr_pond> .true. </tr_pond>
+<tr_aero> .true. </tr_aero>
+
 <!--- history information --->
 
 <histfreq    >'m','x','x','x','x' </histfreq> 

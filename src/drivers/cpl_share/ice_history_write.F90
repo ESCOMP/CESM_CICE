@@ -95,7 +95,6 @@
       type(file_desc_t)     :: File
       type(io_desc_t)       :: iodesc2d, iodesc3d
       type(var_desc_t)      :: varid
-      real (kind=dbl_kind)  :: tmp1d(1) 
 
 ! Info for lat, lon and time invariant variables
       ! 4 coordinate variables: TLON, TLAT, ULON, ULAT
@@ -510,7 +509,7 @@
           
          status = pio_inq_varid(File, coord_var(i)%short_name, varid)
          call pio_write_darray(File, varid, iodesc2d, &
-              transfer(work1,tmp1d), status, fillval=spval_dbl)
+                               work1, status, fillval=spval_dbl)
       enddo
 
       !-----------------------------------------------------------------
@@ -521,7 +520,7 @@
          work1(:,:,:) = hm(:,:,:)
          status = pio_inq_varid(File, 'tmask', varid)
          call pio_write_darray(File, varid, iodesc2d, &
-              transfer(work1,tmp1d), status, fillval=spval_dbl)
+                               work1, status, fillval=spval_dbl)
       endif
 
       do i = 2,nvar
@@ -553,7 +552,7 @@
 
             status = pio_inq_varid(File, var(i)%req%short_name, varid)
             call pio_write_darray(File, varid, iodesc2d, &
-                 transfer(work1,tmp1d), status, fillval=spval_dbl)
+                                  work1, status, fillval=spval_dbl)
          endif
       enddo
 
@@ -586,7 +585,7 @@
             
             status = pio_inq_varid(File, var_nverts(i)%short_name, varid) 
             call pio_write_darray(File, varid, iodesc3d, &
-                 transfer(work3,tmp1d), status, fillval=spval_dbl)
+                                  work3, status, fillval=spval_dbl)
          enddo
       endif
 
@@ -602,7 +601,7 @@
             work1(:,:,:) = aa(:,:,n,:)
             call pio_setframe(varid, int(1,kind=PIO_OFFSET))
             call pio_write_darray(File, varid, iodesc2d,&
-                 transfer(work1,tmp1d), status, fillval=spval_dbl)
+                                  work1, status, fillval=spval_dbl)
          endif
       enddo ! num_avail_hist_fields
 
@@ -631,8 +630,6 @@
       ! -------------------------
       call pio_freedecomp(File,iodesc2d)
       call pio_freedecomp(File,iodesc3d)
-
-      call ice_pio_finalize
 
       !-------------------------
       !  Test memory usage

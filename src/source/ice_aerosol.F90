@@ -104,7 +104,7 @@
 !
 ! !USES:
 !
-      use ice_domain_size, only: ntrcr, nilyr, nslyr, n_aero, n_aeromx
+      use ice_domain_size, only: max_ntrcr, nilyr, nslyr, n_aero, n_aeromx
       use ice_state, only: nt_aero 
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -143,7 +143,7 @@
          intent(inout) :: &
          fsoot
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,ntrcr), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_ntrcr), &
          intent(inout) :: &
          trcrn
 

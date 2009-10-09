@@ -57,7 +57,7 @@
 !
       subroutine linear_itd (nx_block,    ny_block,    & 
                              icells, indxi, indxj,     & 
-                             trcr_depend,              & 
+                             ntrcr,       trcr_depend, & 
                              aicen_init,  vicen_init,  & 
                              aicen,       trcrn,       & 
                              vicen,       vsnon,       & 
@@ -98,13 +98,14 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
-         icells                ! number of grid cells with ice
+         icells            , & ! number of grid cells with ice
+         ntrcr                 ! number of tracers in use
 
        integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi, indxj      ! compressed i/j indices
 
-      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,ncat), &
@@ -118,7 +119,7 @@
          vicen  , & ! volume per unit area of ice      (m)
          vsnon      ! volume per unit area of snow     (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
 
@@ -597,7 +598,8 @@
 
       call shift_ice (nx_block, ny_block,    &
                       indxi,    indxj,       &
-                      icells,   trcr_depend, &
+                      icells,                &
+                      ntrcr,    trcr_depend, &
                       aicen,    trcrn,       &
                       vicen,    vsnon,       &
                       eicen,    esnon,       &
@@ -836,7 +838,7 @@
 ! !INTERFACE:
 !
       subroutine add_new_ice (nx_block,  ny_block, &
-                              icells,              &
+                              ntrcr,     icells,   &
                               indxi,     indxj,    &
                               tmask,     dt,       &
                               aicen,     trcrn,    &
@@ -860,6 +862,7 @@
 !
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
+         ntrcr             , & ! number of tracers in use
          icells                ! number of ice/ocean grid cells
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
@@ -883,7 +886,7 @@
          aicen , & ! concentration of ice
          vicen     ! volume per unit area of ice          (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
                    ! 1: surface temperature
@@ -1274,7 +1277,7 @@
          intent(inout) :: &
          esnon     ! energy of melting for each snow layer (J/m^2)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(in) :: &
          trcrn     ! energy of melting for each snow layer (J/m^2)
 

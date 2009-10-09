@@ -120,8 +120,8 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache     => "config_cache.xml",
 	    ntr_pond  => 1,
-	    ntr_iage  => 0,
-	    ntr_FY    => 0,
+	    ntr_iage  => 1,
+	    ntr_FY    => 1,
 	    ntr_aero  => 3,
 	    );
 GetOptions(
@@ -309,6 +309,20 @@ EOF
 }
 if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 
+# Tracers
+if (defined $opts{'ntr_iage'}) {
+    $cfg_ref->set('ntr_iage', $opts{'ntr_iage'});
+}
+if (defined $opts{'ntr_FY'}) {
+    $cfg_ref->set('ntr_FY', $opts{'ntr_FY'});
+}
+if (defined $opts{'ntr_pond'}) {
+    $cfg_ref->set('ntr_pond', $opts{'ntr_pond'});
+}
+if (defined $opts{'ntr_aero'}) {
+    $cfg_ref->set('ntr_aero', $opts{'ntr_aero'});
+}
+
 #-----------------------------------------------------------------------------------------------
 # Get the CICE grid
 my $hgrid = $cfg_ref->get('hgrid');
@@ -324,7 +338,7 @@ if ($print>=2) { print "cice : nlat         is $nlat      $eol";}
 
 my $ntr_aero = $cfg_ref->get('ntr_aero');
 if (defined $opts{'ntr_aero'}) {$ntr_aero = $opts{'ntr_aero'}};
-if ($ntr_aero > 6){ 
+if ($ntr_aero gt "6"){ 
     die <<"EOF";
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
 EOF
@@ -332,7 +346,7 @@ EOF
 
 my $ntr_iage = $cfg_ref->get('ntr_iage');
 if (defined $opts{'ntr_iage'}) {$ntr_iage = $opts{'ntr_iage'}};
-if ($ntr_iage > 1){ 
+if ($ntr_iage gt "1"){ 
     die <<"EOF";
 **  ERROR: ntr_iage value of $ntr_iage is invalid, only values of 0 and 1 are supported
 EOF
@@ -340,7 +354,7 @@ EOF
 
 my $ntr_FY = $cfg_ref->get('ntr_FY');
 if (defined $opts{'ntr_FY'}) {$ntr_FY = $opts{'ntr_FY'}};
-if ($ntr_FY > 1){ 
+if ($ntr_FY gt "1"){ 
     die <<"EOF";
 **  ERROR: ntr_FY value of $ntr_FY is invalid, only values of 0 and 1 are supported
 EOF
@@ -348,13 +362,13 @@ EOF
 
 my $ntr_pond = $cfg_ref->get('ntr_pond');
 if (defined $opts{'ntr_pond'}) {$ntr_pond = $opts{'ntr_pond'}};
-if ($ntr_pond > 1){ 
+if ($ntr_pond gt "1"){ 
     die <<"EOF";
 **  ERROR: ntr_pond value of $ntr_pond, is invalid, only values of 0 and 1 are supported
 EOF
 }
 
-my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTR_IAGE=$ntr_iage -DNTR_FY=$ntr_FY -DNTR_POND=$ntr_pond -DNTR_AERO=$ntr_aero";
+my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTR_AERO=$ntr_aero";
 
 #-----------------------------------------------------------------------------------------------
 # Determine if will set the cice decomposition

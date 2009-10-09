@@ -319,7 +319,7 @@
                          vice (:,:,  iblk), vsno (:,:,    iblk),  &
                          eice (:,:,  iblk), esno (:,:,    iblk),  &
                          aice0(:,:,  iblk), tmask(:,:,    iblk),  &
-                         trcr_depend) 
+                         ntrcr,             trcr_depend) 
 
 
       !-----------------------------------------------------------------
@@ -453,7 +453,7 @@
 
             call linear_itd (nx_block, ny_block,       &
                              icells, indxi, indxj,     &
-                             trcr_depend,              &
+                             ntrcr,  trcr_depend,      &
                              aicen_init(:,:,:,iblk),   &
                              vicen_init(:,:,:,iblk),   &
                              aicen     (:,:,:,iblk),   &
@@ -501,7 +501,7 @@
       enddo               ! j
 
       call add_new_ice (nx_block,              ny_block, &
-                        icells,                          &
+                        ntrcr,                 icells,   &
                         indxi,                 indxj,    &
                         tmask    (:,:,  iblk), dt,       &
                         aicen    (:,:,:,iblk),           &
@@ -572,7 +572,7 @@
 
       call cleanup_itd (nx_block,             ny_block,             &
                         ilo, ihi,             jlo, jhi,             &
-                        dt,                                         &
+                        dt,                   ntrcr,                &
                         aicen   (:,:,:,iblk), trcrn (:,:,:,:,iblk), &
                         vicen   (:,:,:,iblk), vsnon (:,:,  :,iblk), &
                         eicen   (:,:,:,iblk), esnon (:,:,  :,iblk), &
@@ -718,7 +718,8 @@
          if (icells > 0) then
 
          call ridge_ice (nx_block,             ny_block,                 &
-                         dt_dyn, dt_thm,       icells,                   &
+                         dt_dyn,               dt_thm,                   &
+                         ntrcr,                icells,                   &
                          indxi,                indxj,                    &
 !!                         Delt    (:,:,  iblk), divu      (:,:,  iblk), &
                          rdg_conv(:,:,  iblk), rdg_shear (:,:,  iblk),   &
@@ -771,7 +772,7 @@
 
          call cleanup_itd (nx_block,             ny_block,             &
                            ilo, ihi,             jlo, jhi,             &
-                           dt_thm,                                     &
+                           dt_thm,               ntrcr,                &
                            aicen   (:,:,:,iblk), trcrn (:,:,:,:,iblk), &
                            vicen   (:,:,:,iblk), vsnon (:,:,  :,iblk), &
                            eicen   (:,:,:,iblk), esnon (:,:,  :,iblk), &
@@ -830,7 +831,7 @@
                          vice (:,:,  iblk), vsno (:,:,    iblk),  &
                          eice (:,:,  iblk), esno (:,:,    iblk),  &
                          aice0(:,:,  iblk), tmask(:,:,    iblk),  &
-                         trcr_depend) 
+                         ntrcr,             trcr_depend) 
 
       !-----------------------------------------------------------------
       ! Compute dynamic area and volume tendencies.

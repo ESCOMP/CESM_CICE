@@ -31,6 +31,7 @@ module ice_pio
 
   implicit none
   private
+  save
 
   ! !PUBLIC TYPES:
 
@@ -114,6 +115,7 @@ contains
    integer :: status
    integer :: nmode
    character(*),parameter :: subName = '(ice_pio_wopen) '
+   logical, save :: first_call = .true.
 
    !  Input namelist
     
@@ -161,8 +163,11 @@ contains
    call broadcast_scalar(ice_pio_stride,  master_task)
    call broadcast_scalar(ice_pio_type,    master_task)
 
-   call pio_init(my_task, MPI_COMM_ICE, ice_num_iotasks, &
-	ice_pio_root, ice_pio_stride, PIO_REARR_BOX, ice_pio_subsystem)
+   if (first_call) then	
+      call pio_init(my_task, MPI_COMM_ICE, ice_num_iotasks, &
+           ice_pio_root, ice_pio_stride, PIO_REARR_BOX, ice_pio_subsystem)
+      first_call = .false.
+   end if
 
    if (trim(mode) == 'write') then
       lclobber = .false.

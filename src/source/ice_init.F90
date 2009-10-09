@@ -148,13 +148,11 @@
         ocn_data_dir,   oceanmixed_file, restore_sst,   trestore,       &
         restore_ice    
 
-#ifndef CCSMCOUPLED
       namelist /tracer_nml/    &
         tr_iage, restart_age,  &
         tr_FY,   restart_FY,   &
         tr_pond, restart_pond, &
         tr_aero, restart_aero         !MH for soot
-#endif
 
       !-----------------------------------------------------------------
       ! default values
@@ -273,13 +271,6 @@
 
       resttype = 'old'
 
-#ifdef CCSMCOUPLED
-      if (ntr_iage > 0) tr_iage  = .true. 
-      if (ntr_FY   > 0) tr_FY    = .true. 
-      if (ntr_pond > 0) tr_pond  = .true. 
-      if (ntr_aero > 0) tr_aero  = .true. 
-#endif
-
       !-----------------------------------------------------------------
       ! read from input file
       !-----------------------------------------------------------------
@@ -300,10 +291,8 @@
             read(nu_nml, nml=grid_nml,iostat=nml_error)
             print*,'Reading ice_nml'
             read(nu_nml, nml=ice_nml,iostat=nml_error)
-#ifndef CCSMCOUPLED
             print*,'Reading tracer_nml'
             read(nu_nml, nml=tracer_nml,iostat=nml_error)
-#endif
             if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
          end do
          if (nml_error == 0) close(nu_nml)
@@ -677,43 +666,33 @@
          write(nu_diag,1010) ' tr_aero                   = ', tr_aero      !MH
          write(nu_diag,1010) ' restart_aero              = ', restart_aero !MH
 
-         ntr = 1 ! count tracers, starting with Tsfc = 1
+         nt_Tsfc = 1           ! index tracers, starting with Tsfc = 1
+         ntrcr = 1             ! count tracers, starting with Tsfc = 1
 
          if (tr_iage) then
-            ntr = ntr + 1
-            nt_iage = nt_Tsfc + 1
-            write(nu_diag,1020) ' nt_iage                    = ', nt_iage
-         else
-            nt_iage = 1
-         endif
-         if (tr_FY) then
-            ntr = ntr + 1
-            nt_FY = nt_iage + 1
-            write(nu_diag,1020) ' nt_FY                      = ', nt_FY
-         else
-            nt_FY = nt_iage
-         endif
-         if (tr_pond) then
-            ntr = ntr + 1
-            nt_volpn = nt_FY + 1
-            write(nu_diag,1020) ' nt_volpn                   = ', nt_volpn
-         else
-            nt_volpn = nt_FY
-         endif
-         if (tr_aero) then
-            ntr = ntr + n_aero*4 !MH 2 for snow soot and 2 for ice
-                                 !MH for multiple (n_aero) aerosols
-            nt_aero = nt_volpn + 1
-            write(nu_diag,1020) ' nt_aero                    = ', nt_aero
-         else
-            nt_aero = nt_volpn
+             nt_iage = ntrcr + 1
+             ntrcr = ntrcr + 1
          endif
 
-         if (ntr /= ntrcr) &
-            write(nu_diag,*) 'WARNING: ntrcr > number of tracers requested'
-         if (ntr > ntrcr) then
-            write(nu_diag,*) 'ntrcr < number of namelist tracers'
-            call abort_ice('ntrcr < number of namelist tracers')
+         if (tr_FY) then
+             nt_FY = ntrcr + 1
+             ntrcr = ntrcr + 1
+         endif
+
+         if (tr_pond) then
+             nt_volpn = ntrcr + 1
+             ntrcr = ntrcr + 1
+         endif
+
+         if (tr_aero) then
+            nt_aero = ntrcr + 1
+            ntrcr = ntrcr + n_aero*4 !MH 2 for snow soot and 2 for ice
+                                     !MH for multiple (n_aero) aerosols
+         endif
+
+         if (ntrcr > max_ntrcr) then
+            write(nu_diag,*) 'max_ntrcr < number of namelist tracers'
+            call abort_ice('max_ntrcr < number of namelist tracers')
          endif                               
 
  1000    format (a30,2x,f9.2)  ! a30 to align formatted, unformatted statements
@@ -735,6 +714,8 @@
 
       endif                     ! my_task = master_task
 
+      call broadcast_scalar(ntrcr,              master_task)
+      call broadcast_scalar(nt_Tsfc,            master_task)
       call broadcast_scalar(nt_iage,            master_task)
       call broadcast_scalar(nt_FY,              master_task)
       call broadcast_scalar(nt_volpn,           master_task)
@@ -860,7 +841,7 @@
          vsno(:,:,iblk) = c0
          eice(:,:,iblk) = c0
          esno(:,:,iblk) = c0
-         do it = 1, ntrcr
+         do it = 1, max_ntrcr
             trcr(:,:,it,iblk) = c0
          enddo
 
@@ -879,6 +860,7 @@
                          esno (:,:,  iblk),   &
                          aice0(:,:,  iblk),   &
                          tmask(:,:,  iblk),   &
+                         ntrcr,               &
                          trcr_depend)
 
          aice_init(:,:,iblk) = aice(:,:,iblk)
@@ -947,7 +929,7 @@
          Tf      , & ! freezing temperature (C) 
          sst         ! sea surface temperature (C) 
 
-      integer (kind=int_kind), dimension (ntrcr), intent(inout) :: &
+      integer (kind=int_kind), dimension (max_ntrcr), intent(inout) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
@@ -956,7 +938,7 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
          intent(out) :: &
          trcrn     ! ice tracers
                    ! 1: surface temperature of ice/snow (C)
@@ -1006,8 +988,8 @@
             vicen(i,j,n) = c0
             vsnon(i,j,n) = c0
             trcrn(i,j,nt_Tsfc,n) = Tf(i,j)  ! surface temperature
-            if (ntrcr >= 2) then
-               do it = 2, ntrcr
+            if (max_ntrcr >= 2) then
+               do it = 2, max_ntrcr
                   trcrn(i,j,it,n) = c0
                enddo
             endif

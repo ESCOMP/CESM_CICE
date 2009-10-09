@@ -367,6 +367,23 @@ add_default($nl, 'advection');
 # namelist group: tracer_nml     #
 ##################################
 
+my $ntr_iage = $cfg->get('ntr_iage');
+my $ntr_FY   = $cfg->get('ntr_FY');
+my $ntr_pond = $cfg->get('ntr_pond');
+my $ntr_aero = $cfg->get('ntr_aero');
+
+if ($ntr_iage gt "0") {
+   add_default($nl, 'tr_iage');
+}
+if ($ntr_FY gt "0") {
+   add_default($nl, 'tr_FY');
+}
+if ($ntr_pond gt "0") {
+   add_default($nl, 'tr_pond');
+}
+if ($ntr_aero gt "0") {
+   add_default($nl, 'tr_aero');
+}
 
 ##################################
 # namelist group: domain_nml     #

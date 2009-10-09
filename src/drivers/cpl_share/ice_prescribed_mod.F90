@@ -968,15 +968,15 @@ subroutine ice_prescribed_phys
    !--------------------------------------------------------------------
    ! compute aggregate ice state and open water area
    !--------------------------------------------------------------------
-   call aggregate (nx_block, ny_block, &
-      &            aicen(:,:,:,iblk),  trcrn(:,:,:,:,iblk), &
-      &            vicen(:,:,:,iblk),  vsnon(:,:,:,iblk), &
-      &            eicen(:,:,:,iblk),  esnon(:,:,:,iblk), &
-      &            aice(:,:,iblk),     trcr(:,:,:,iblk), &
-      &            vice(:,:,iblk),     vsno(:,:,iblk), &
-      &            eice(:,:,iblk),     esno(:,:,iblk), &
-      &            aice0(:,:,iblk), &
-      &            tmask(:,:,iblk),    trcr_depend) 
+   call aggregate (nx_block, ny_block,                      &
+                   aicen(:,:,:,iblk),  trcrn(:,:,:,:,iblk), &
+                   vicen(:,:,:,iblk),  vsnon(:,:,:,iblk),   &
+                   eicen(:,:,:,iblk),  esnon(:,:,:,iblk),   &
+                   aice(:,:,iblk),     trcr(:,:,:,iblk),    &
+                   vice(:,:,iblk),     vsno(:,:,iblk),      &
+                   eice(:,:,iblk),     esno(:,:,iblk),      &
+                   aice0(:,:,iblk),    tmask(:,:,iblk),     &
+                   ntrcr,              trcr_depend) 
 
    enddo                 ! iblk
 

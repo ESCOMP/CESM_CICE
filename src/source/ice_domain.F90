@@ -75,13 +75,10 @@
 !-----------------------------------------------------------------------
 
     character (char_len), public  :: &
-       distribution_type,   &! method to use for distributing blocks
+       distribution_type     ! method to use for distributing blocks
                              ! 'cartesian'
                              ! 'rake' 
                              ! 'spacecurve'
-       distribution_wght     ! method for weighting work per block 
-                             ! 'block' = POP default configuration
-                             ! 'latitude' = no. ocean points * |lat|
 
     character (char_len), public :: &
        distribution_wght     ! method for weighting work per block 

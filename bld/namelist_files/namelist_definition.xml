@@ -75,12 +75,12 @@ Default: 1
 
 <!---History output     ---->
 
-<entry id="histfreq" type="char*1"  category="cice" group="setup_nml" valid_values="">
+<entry id="histfreq" type="char*1(5)"  category="cice" group="setup_nml" valid_values="">
 frequency of history output (once per 1,h,d,m,y)
-Default: m
+Default: 'mxxxx'
 </entry>
 
-<entry id="histfreq_n" type="integer"  category="cice" group="setup_nml" valid_values="">
+<entry id="histfreq_n" type="integer(5)"  category="cice" group="setup_nml" valid_values="">
 frequency of history output (10 = once per 10 h,d,m,y)
 Default: 1
 </entry>
@@ -177,12 +177,12 @@ snow grain radius tunable parameter for dEdd albedo
 
 <entry id="tr_iage" type="logical"  category="cice" group="tracer_nml" valid_values="">
 Ice age tracer.
-Default: FALSE
+Default: TRUE
 </entry>
 
 <entry id="tr_FY" type="logical"  category="cice" group="tracer_nml" valid_values="">
 FY area tracer.
-Default: FALSE
+Default: TRUE
 </entry>
 
 <entry id="tr_pond" type="logical"  category="cice" group="tracer_nml" valid_values="">
@@ -192,7 +192,7 @@ Default: TRUE
 
 <entry id="tr_aero" type="logical"  category="cice" group="tracer_nml" valid_values="">
 Aerosol tracers.
-Default: FALSE
+Default: TRUE
 </entry>
 
 <!----------------------------->
