@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20091013
+Originator: dbailey, mvertens
+Date: Tue Oct 13 2009
+Version: 4.0
+One-line Summary: ESMF build-configure changes.
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+M      bld/cice.cpl7.template
+M      bld/configure
+
+===============================================================
 cice4_0_20091010
 Originator: dbailey
 Date: Fri Oct 10 2009

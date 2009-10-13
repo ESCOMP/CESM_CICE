@@ -92,6 +92,10 @@ cat >! $CASEBUILD/cice.buildexe.csh << EOF2
 
 set objdir = \$OBJROOT/ice/obj; cd \$objdir
 
+set comp = "unknown"
+if ($COMP_INTERFACE == 'MCT' ) set comp = mct
+if ($COMP_INTERFACE == 'ESMF') set comp = esmf
+
 \cat >! .tmp << EOF; cmp -s .tmp Filepath || mv -f .tmp Filepath 
 EOF2
 

@@ -570,7 +570,7 @@ sub write_filepath
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
     print $fh "\$CASEROOT/SourceMods/src.cice\n";
-    print $fh "\$CODEROOT/ice/cice/src/drivers/cpl_mct\n";
+    print $fh "\$CODEROOT/ice/cice/src/drivers/cpl_\$comp\n";
     print $fh "\$CODEROOT/ice/cice/src/drivers/cpl_share\n";
     print $fh "\$CODEROOT/ice/cice/src/mpi\n";
     print $fh "\$CODEROOT/ice/cice/src/source\n";
