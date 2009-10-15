@@ -122,21 +122,25 @@
       !-----------------------------------------------------------------
 
       integer (kind=int_kind) :: &
-         nt_Tsfc      , & ! ice/snow surface temperature
-         nt_iage      , & ! volume-weighted ice age
-         nt_FY        , & ! area-weighted FY ice concentration
-         nt_volpn     , & ! melt pond volume - not used, for now
+         nt_Tsfc  , & ! ice/snow surface temperature
+         nt_iage  , & ! volume-weighted ice age
+         nt_FY    , & ! area-weighted FY ice concentration
+         nt_alvl  , & ! ridged ice area fraction
+         nt_vlvl  , & ! ridged ice volume fraction
+         nt_volpn , & ! melt pond volume - not used, for now
          nt_aero          ! starting index for aerosol within ice MH
 
       logical (kind=log_kind) :: &
-         tr_aero,         & ! if .true., use aerosol tracers
-         tr_iage,         & ! if .true., use age tracer
-         tr_FY,           & ! if .true., use FY tracer
-         tr_pond            ! if .true., use melt pond tracer
+         tr_aero,   & ! if .true., use aerosol tracers
+         tr_iage,   & ! if .true., use age tracer
+         tr_FY,     & ! if .true., use FY tracer
+         tr_lvl,    & ! if .true., use level ice tracer
+         tr_pond      ! if .true., use melt pond tracer
 
       character(len=char_len_long) :: &
          filename_iage,  & ! filenames of tracer restarts
          filename_FY,    &
+         filename_lvl,   &
          filename_volpn, &
          filename_aero
 

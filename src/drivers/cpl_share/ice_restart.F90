@@ -241,6 +241,7 @@
          write(nu_dump) filename_aero
          write(nu_dump) filename_iage
          write(nu_dump) filename_FY
+         write(nu_dump) filename_lvl
 
          close(nu_dump)
       endif
@@ -366,6 +367,15 @@
 
       if (tr_iage) then
          call define_rest_field(File,'iage',dims)
+      end if
+
+      if (tr_FY) then
+         call define_rest_field(File,'FY',dims)
+      end if
+
+      if (tr_lvl) then
+         call define_rest_field(File,'alvl',dims)
+         call define_rest_field(File,'vlvl',dims)
       end if
 
       if (tr_pond) then
@@ -560,6 +570,18 @@
          call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_iage,:,:), status)
       endif
 
+      if (tr_FY) then
+         status = pio_inq_varid(File,'FY',varid)
+         call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_FY,:,:), status)
+      endif
+
+      if (tr_lvl) then
+         status = pio_inq_varid(File,'alvl',varid)
+         call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_alvl,:,:), status)
+         status = pio_inq_varid(File,'vlvl',varid)
+         call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_vlvl,:,:), status)
+      endif
+
       if (tr_pond) then
          status = pio_inq_varid(File,'volpn',varid)
          call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_volpn,:,:), status)
@@ -686,6 +708,8 @@
       ! restart when available.
       if (tr_iage) trcrn(:,:,nt_iage, :,:) = c0
       if (tr_FY)   trcrn(:,:,nt_FY,   :,:) = c0
+      if (tr_lvl)  trcrn(:,:,nt_alvl, :,:) = c1
+      if (tr_lvl)  trcrn(:,:,nt_vlvl, :,:) = c1
       if (tr_aero) trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
 
       ! Need to initialize ponds in all cases.
@@ -882,6 +906,7 @@
          read(nu_restart, end=99) filename_aero
          read(nu_restart, end=99) filename_iage
          read(nu_restart, end=99) filename_FY
+         read(nu_restart, end=99) filename_lvl
 
    99    continue
       endif
@@ -891,6 +916,7 @@
          write(nu_diag,'(a,a)') 'filename_aero : ',filename_aero
          write(nu_diag,'(a,a)') 'filename_iage : ',filename_iage
          write(nu_diag,'(a,a)') 'filename_FY   : ',filename_FY
+         write(nu_diag,'(a,a)') 'filename_lvl  : ',filename_lvl
       endif
        
       if (my_task == master_task) close(nu_restart)
@@ -899,6 +925,7 @@
       call broadcast_scalar(filename_aero,  master_task)
       call broadcast_scalar(filename_iage,  master_task)
       call broadcast_scalar(filename_FY,    master_task)
+      call broadcast_scalar(filename_lvl,   master_task)
 
       !-----------------------------------------------------------------
       ! Ensure unused stress values in west and south ghost cells are 0
@@ -1067,6 +1094,8 @@
       ! restart when available.
       if (tr_iage) trcrn(:,:,nt_iage, :,:) = c0
       if (tr_FY)   trcrn(:,:,nt_FY,   :,:) = c0
+      if (tr_lvl)  trcrn(:,:,nt_alvl, :,:) = c1
+      if (tr_lvl)  trcrn(:,:,nt_vlvl, :,:) = c1
       if (tr_aero) trcrn(:,:,nt_aero:nt_aero+n_aero*4-1,:,:) = c0
 
       ! Need to initialize ponds in all cases.
@@ -1372,6 +1401,19 @@
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
                                  trcrn(:,:,nt_FY,:,:), status)
+         endif
+      endif
+
+      if (tr_lvl) then
+         status = pio_inq_varid(File,'alvl',varid)
+         if (status == PIO_noerr) then
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 trcrn(:,:,nt_alvl,:,:), status)
+         endif
+         status = pio_inq_varid(File,'vlvl',varid)
+         if (status == PIO_noerr) then
+            call pio_read_darray(File, varid, iodesc3d_ncat, &
+                                 trcrn(:,:,nt_vlvl,:,:), status)
          endif
       endif
 

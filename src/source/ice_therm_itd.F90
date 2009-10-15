@@ -855,7 +855,8 @@
       use ice_itd, only: hin_max, ilyr1, column_sum, &
                          column_conservation_check
       use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_aero, &
-                           tr_iage, tr_FY, tr_aero
+                           tr_iage, tr_FY, tr_aero, &
+                           nt_alvl, nt_vlvl, tr_lvl
       use ice_flux, only: update_ocn_f
 
 ! !INPUT/OUTPUT PARAMETERS:
@@ -1114,6 +1115,11 @@
                    = (trcrn(i,j,nt_iage,n)*vicen(i,j,n) + dt*vsurp) &
                    / vtmp
 
+            if (tr_lvl) &
+                trcrn(i,j,nt_vlvl,n) = &
+               (trcrn(i,j,nt_vlvl,n)*vicen(i,j,n) + &
+                trcrn(i,j,nt_alvl,n)*vsurp) / vtmp
+
             if (tr_aero) then
              do it=1,n_aero
                trcrn(i,j,nt_aero+2+4*(it-1),n)  &
@@ -1173,18 +1179,25 @@
 
          if (vicen(i,j,1) > puny) then
 
-         if (tr_iage) trcrn(i,j,nt_iage,1) = &
-            (trcrn(i,j,nt_iage,1)*vice1 + dt*vi0new(m))/vicen(i,j,1)
+           if (tr_iage) trcrn(i,j,nt_iage,1) = &
+              (trcrn(i,j,nt_iage,1)*vice1 + dt*vi0new(m))/vicen(i,j,1)
 
-          if (tr_aero) then
-           do it=1,n_aero
-             trcrn(i,j,nt_aero+2+4*(it-1),1) = &
-               trcrn(i,j,nt_aero+2+4*(it-1),1)*vice1/vicen(i,j,1)
-             trcrn(i,j,nt_aero+3+4*(it-1),1) = &
-               trcrn(i,j,nt_aero+3+4*(it-1),1)*vice1/vicen(i,j,1)
-           enddo
-          endif
+           if (tr_aero) then
+              do it=1,n_aero
+                trcrn(i,j,nt_aero+2+4*(it-1),1) = &
+                  trcrn(i,j,nt_aero+2+4*(it-1),1)*vice1/vicen(i,j,1)
+                trcrn(i,j,nt_aero+3+4*(it-1),1) = &
+                  trcrn(i,j,nt_aero+3+4*(it-1),1)*vice1/vicen(i,j,1)
+              enddo
+           endif
 
+         endif
+
+         if (tr_lvl .and. aicen(i,j,1) > puny) then
+             trcrn(i,j,nt_alvl,1) = &
+            (trcrn(i,j,nt_alvl,1)*area1 + ai0new(m))/aicen(i,j,1)
+             trcrn(i,j,nt_vlvl,1) = &
+            (trcrn(i,j,nt_vlvl,1)*vice1 + vi0new(m))/vicen(i,j,1)
          endif
 
          if (tr_FY) &

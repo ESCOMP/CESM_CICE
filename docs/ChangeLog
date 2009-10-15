@@ -1,4 +1,32 @@
 ===============================================================
+cice4_0_20091015
+Originator: dbailey
+Date: Thu Oct 15 2009
+Version: 4.0
+One-line Summary: Add level ice tracer (bfb).
+CCSM Version compatible with: ccsm4_0_beta28+
+Changes made:
+
+This includes a new level (and ridged) passive ice tracer. This tracer
+will not be on by default. A few little cleanup items as well.
+
+M      src/source/ice_init.F90
+M      src/source/ice_meltpond.F90
+M      src/source/ice_age.F90
+A      src/source/ice_lvl.F90
+M      src/source/ice_fileunits.F90
+M      src/source/ice_aerosol.F90
+M      src/source/ice_mechred.F90
+M      src/source/ice_FY.F90
+M      src/source/ice_therm_itd.F90
+M      src/source/ice_state.F90
+M      src/source/ice_domain_size.F90
+M      src/source/ice_history.F90
+M      src/drivers/cpl_share/ice_restart.F90
+M      src/drivers/cpl_share/CICE_InitMod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20091013
 Originator: dbailey, mvertens
 Date: Tue Oct 13 2009

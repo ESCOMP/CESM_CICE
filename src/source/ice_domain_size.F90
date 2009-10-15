@@ -41,7 +41,7 @@
         ntslyr    = ncat*nslyr, & ! number of snow layers in all categories
         n_aeromx  =   6       , & ! number of aerosols maximum
         n_aero    = NTR_AERO  , & ! number of aerosols in use
-        max_ntrcr =  17       , & ! number of tracers (defined in ice_state)
+        max_ntrcr =  18       , & ! number of tracers (defined in ice_state)
                                   ! 1 = surface temperature
         max_nstrm =   5           ! Number of output streams
 

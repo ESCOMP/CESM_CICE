@@ -55,10 +55,7 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_iage, trcrn, filename_iage
-
-      integer (kind = int_kind) :: n
-
+      use ice_state, only: filename_iage
 !
 !EOP
 !

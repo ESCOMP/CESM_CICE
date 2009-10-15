@@ -89,10 +89,12 @@
       use ice_atmo, only: atmbndy, calc_strair
       use ice_transport_driver, only: advection
       use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_volpn, nt_aero, &
-                           tr_aero, tr_iage, tr_FY, tr_pond
+                           tr_aero, tr_iage, tr_FY, tr_pond, &
+                           nt_alvl, nt_vlvl, tr_lvl
       use ice_aerosol, only: restart_aero
       use ice_age, only: restart_age
       use ice_FY, only: restart_FY
+      use ice_lvl, only: restart_lvl
       use ice_meltpond, only: restart_pond
       use ice_therm_vertical, only: calc_Tsfc, heat_capacity
       use ice_restoring
@@ -151,6 +153,7 @@
       namelist /tracer_nml/    &
         tr_iage, restart_age,  &
         tr_FY,   restart_FY,   &
+        tr_lvl,  restart_lvl,  &
         tr_pond, restart_pond, &
         tr_aero, restart_aero         !MH for soot
 
@@ -262,6 +265,9 @@
       tr_FY        = .false. ! FY ice area
       restart_FY   = .false. ! FY ice area restart
       filename_FY  = 'none'
+      tr_lvl       = .false. ! FY ice area
+      restart_lvl  = .false. ! FY ice area restart
+      filename_lvl = 'none'
       tr_pond      = .false. ! explicit melt ponds
       restart_pond = .false. ! melt ponds restart
       filename_volpn = 'none'
@@ -497,6 +503,8 @@
       call broadcast_scalar(restart_age,        master_task)
       call broadcast_scalar(tr_FY,              master_task)
       call broadcast_scalar(restart_FY,         master_task)
+      call broadcast_scalar(tr_lvl,             master_task)
+      call broadcast_scalar(restart_lvl,        master_task)
       call broadcast_scalar(tr_pond,            master_task)
       call broadcast_scalar(restart_pond,       master_task)
       call broadcast_scalar(tr_aero,            master_task)
@@ -661,6 +669,8 @@
          write(nu_diag,1010) ' restart_age               = ', restart_age
          write(nu_diag,1010) ' tr_FY                     = ', tr_FY
          write(nu_diag,1010) ' restart_FY                = ', restart_FY
+         write(nu_diag,1010) ' tr_lvl                    = ', tr_lvl
+         write(nu_diag,1010) ' restart_lvl               = ', restart_lvl
          write(nu_diag,1010) ' tr_pond                   = ', tr_pond
          write(nu_diag,1010) ' restart_pond              = ', restart_pond
          write(nu_diag,1010) ' tr_aero                   = ', tr_aero      !MH
@@ -676,6 +686,13 @@
 
          if (tr_FY) then
              nt_FY = ntrcr + 1
+             ntrcr = ntrcr + 1
+         endif
+
+         if (tr_lvl) then
+             nt_alvl = ntrcr + 1
+             ntrcr = ntrcr + 1
+             nt_vlvl = ntrcr + 1
              ntrcr = ntrcr + 1
          endif
 
@@ -714,12 +731,14 @@
 
       endif                     ! my_task = master_task
 
-      call broadcast_scalar(ntrcr,              master_task)
-      call broadcast_scalar(nt_Tsfc,            master_task)
-      call broadcast_scalar(nt_iage,            master_task)
-      call broadcast_scalar(nt_FY,              master_task)
-      call broadcast_scalar(nt_volpn,           master_task)
-      call broadcast_scalar(nt_aero,            master_task)
+      call broadcast_scalar(ntrcr,    master_task)
+      call broadcast_scalar(nt_Tsfc,  master_task)
+      call broadcast_scalar(nt_iage,  master_task)
+      call broadcast_scalar(nt_FY,    master_task)
+      call broadcast_scalar(nt_alvl,  master_task)
+      call broadcast_scalar(nt_vlvl,  master_task)
+      call broadcast_scalar(nt_volpn, master_task)
+      call broadcast_scalar(nt_aero,  master_task)
 
       end subroutine input_data
 
@@ -808,6 +827,8 @@
       trcr_depend(nt_Tsfc)  = 0   ! ice/snow surface temperature
       if (tr_iage) trcr_depend(nt_iage)  = 1   ! volume-weighted ice age
       if (tr_FY)   trcr_depend(nt_FY)    = 0   ! area-weighted FY conc
+      if (tr_lvl)  trcr_depend(nt_alvl)  = 0   ! level ice area
+      if (tr_lvl)  trcr_depend(nt_vlvl)  = 1   ! level ice volume
       if (tr_pond) trcr_depend(nt_volpn) = 0   ! melt pond volume
       if (tr_aero) then
         do n=1,n_aero

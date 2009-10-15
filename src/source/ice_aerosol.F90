@@ -54,11 +54,7 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_aero, trcrn, filename_aero 
-      use ice_domain_size, only: n_aero
-
-      integer (kind = int_kind) :: n
-
+      use ice_state, only: filename_aero 
 !
 !EOP
 !

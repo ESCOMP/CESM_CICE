@@ -41,11 +41,12 @@
       use ice_init
       use ice_itd
       use ice_kinds_mod
+      use ice_lvl
       use ice_mechred
       use ice_meltpond
       use ice_orbital
       use ice_shortwave
-      use ice_state, only: tr_aero, tr_iage, tr_FY, tr_pond
+      use ice_state, only: tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
       use ice_therm_itd
       use ice_therm_vertical
       use ice_timers
@@ -141,6 +142,7 @@
       ! tracers
       if (tr_iage) call init_age        ! ice age tracer
       if (tr_FY)   call init_FY         ! FY area tracer
+      if (tr_lvl)  call init_lvl        ! level ice tracer
       if (tr_pond) call init_meltponds  ! melt ponds
       if (tr_aero) call init_aerosol    ! ice aerosol MH
 

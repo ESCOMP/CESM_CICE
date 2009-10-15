@@ -92,6 +92,7 @@
            f_Tsfc      = 'mxxxx', f_aice       = 'mxxxx', &
            f_uvel      = 'mxxxx', f_vvel       = 'mxxxx', &
            f_transix   = 'mxxxx', f_transiy    = 'mxxxx', &
+           f_qi        = 'mxxxx', f_qs         = 'mxxxx', &
            f_fswdn     = 'mxxxx', f_fswup      = 'mxxxx',  &
            f_flwdn     = 'mxxxx', &
            f_snow      = 'mxxxx', f_snow_ai    = 'mxxxx', &
@@ -109,7 +110,6 @@
            f_fsens     = 'mxxxx', f_fsens_ai   = 'mxxxx', &
            f_flwup     = 'mxxxx', f_flwup_ai   = 'mxxxx', &
            f_evap      = 'mxxxx', f_evap_ai    = 'mxxxx', &
-           f_qi        = 'mxxxx', f_qs         = 'mxxxx', &
            f_Tair      = 'mxxxx', &
            f_Tref      = 'mxxxx', f_Qref       = 'mxxxx', &
            f_congel    = 'mxxxx', f_frazil     = 'mxxxx', &
@@ -133,7 +133,9 @@
            f_mlt_onset = 'mxxxx', f_frz_onset  = 'mxxxx', &
            f_dardg1dt  = 'mxxxx', f_dardg2dt   = 'mxxxx', &
            f_dvirdgdt  = 'mxxxx', f_iage       = 'mxxxx', &
-           f_FY        = 'mxxxx',                     &
+           f_ardg      = 'mxxxx', f_vrdg       = 'mxxxx', &
+           f_alvl      = 'mxxxx', f_vlvl       = 'mxxxx', &
+           f_FY        = 'mxxxx',                         &
            f_aeron     = 'xxxxx', f_aero       = 'xxxxx', &
            f_apond     = 'xxxxx', f_apondn     = 'xxxxx', &
            f_hisnap    = 'mxxxx', f_aisnap     = 'mxxxx', &
@@ -163,6 +165,7 @@
            f_Tsfc,      f_aice     , &
            f_uvel,      f_vvel     , &
            f_transix,   f_transiy  , &
+           f_qi,        f_qs       , &
            f_fswdn,     f_fswup    , &
            f_flwdn,                  &
            f_snow,      f_snow_ai  , &     
@@ -180,7 +183,6 @@
            f_fsens,     f_fsens_ai , &
            f_flwup,     f_flwup_ai , &
            f_evap,      f_evap_ai  , &
-           f_qi,        f_qs       , &
            f_Tair                  , &
            f_Tref,      f_Qref     , &
            f_congel,    f_frazil   , &
@@ -203,13 +205,14 @@
            f_daidtt,    f_daidtd   , &
            f_mlt_onset, f_frz_onset, &
            f_dardg1dt,  f_dardg2dt , &
-           f_dvirdgdt              , &
-           f_hisnap,    f_aisnap   , &
-           f_aicen,     f_vicen    , &
+           f_dvirdgdt,  f_iage     , &
+           f_ardg,      f_vrdg     , &
+           f_alvl,      f_vlvl     , &
            f_aeron,     f_aero     , &
-           f_iage                  , &
            f_FY                    , &
            f_apond,     f_apondn   , &
+           f_hisnap,    f_aisnap   , &
+           f_aicen,     f_vicen    , &
            f_trsig,     f_icepresent,&
            f_fsurf_ai,  f_fcondtop_ai,&
            f_fmeltt_ai,              &
@@ -249,7 +252,7 @@
                               histfreq_n, nstreams
       use ice_flux, only: mlt_onset, frz_onset
       use ice_restart, only: restart
-      use ice_state, only: tr_aero, tr_iage, tr_FY, tr_pond
+      use ice_state, only: tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
       use ice_exit
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -321,11 +324,17 @@
           f_apond  = 'xxxxx'
           f_apondn = 'xxxxx'
       endif
+      if (.not. tr_lvl) then
+          f_ardg = 'xxxxx'
+          f_vrdg = 'xxxxx'
+          f_alvl = 'xxxxx'
+          f_vlvl = 'xxxxx'
+      endif
       if (.not. tr_aero) then
          f_faero_atm = 'xxxxx'
          f_faero_ocn = 'xxxxx'
-         f_aero = 'xxxxx' 
-         f_aeron = 'xxxxx'
+         f_aero      = 'xxxxx' 
+         f_aeron     = 'xxxxx'
       endif
 
       ! these must be output at the same frequency because of 
@@ -458,6 +467,8 @@
       call broadcast_scalar (f_aeron, master_task)
       call broadcast_scalar (f_iage, master_task)
       call broadcast_scalar (f_FY, master_task)
+      call broadcast_scalar (f_alvl, master_task)
+      call broadcast_scalar (f_vlvl, master_task)
       call broadcast_scalar (f_apond, master_task)
       call broadcast_scalar (f_apondn, master_task)
 
@@ -1088,20 +1099,18 @@
       ! Tracers
 
       ! Ice Age
-      if (f_iage(1:1) /= 'x') then
+      if (f_iage(1:1) /= 'x') &
          call define_hist_field(n_iage,"iage","years",tstr, tcstr, &
              "sea ice age",                                        &
              "none", c1/(secday*days_per_year), c0,                &
               ns1, f_iage)
-      endif
 
       ! FY Ice Concentration
-      if (f_FY(1:1) /= 'x') then
+      if (f_FY(1:1) /= 'x') &
          call define_hist_field(n_FY,"FYarea"," ",tstr, tcstr, &
              "first-year ice area",                            &
              "weighted by ice area", c1, c0,                   &
               ns1, f_FY)
-      endif
 
       ! Aerosols
       if (f_aero(1:1) /= 'x') then
@@ -1146,13 +1155,34 @@
          enddo
       endif
 
+      ! Level and Ridged ice
+      if (f_alvl(1:1) /= 'x') &
+         call define_hist_field(n_alvl,"alvl","1",tstr, tcstr, &
+             "level ice area fraction",                            &
+             "none", c1, c0,                                       &
+             ns1, f_alvl)
+      if (f_vlvl(1:1) /= 'x') &
+         call define_hist_field(n_vlvl,"vlvl","m",tstr, tcstr, &
+             "level ice mean thickness",                           &
+             "none", c1, c0,                                       &
+             ns1, f_vlvl)
+      if (f_ardg(1:1) /= 'x') &
+         call define_hist_field(n_ardg,"ardg","1",tstr, tcstr, &
+             "ridged ice area fraction",                           &
+             "none", c1, c0,                                       &
+             ns1, f_ardg)
+      if (f_vrdg(1:1) /= 'x') &
+         call define_hist_field(n_vrdg,"vrdg","m",tstr, tcstr, &
+             "ridged ice mean thickness",                          &
+             "none", c1, c0,                                       &
+             ns1, f_vrdg)
+
       ! Melt ponds
-      if (f_apond(1:1) /= 'x') then
+      if (f_apond(1:1) /= 'x') &
          call define_hist_field(n_apond,"apond","%",tstr, tcstr, &
              "melt pond concentration",                          &
              "none", c100, c0,                                   &
              ns1, f_apond)
-      endif
 
       if (f_apondn(1:1) /= 'x') then
          do n=1,ncat_hist
@@ -1518,6 +1548,19 @@
             call accum_hist_field(n_dardg2dt, iblk, dardg2dt(:,:,iblk))
          if (f_dvirdgdt(1:1) /= 'x') &
             call accum_hist_field(n_dvirdgdt, iblk, dvirdgdt(:,:,iblk))
+
+         if (f_alvl(1:1)/= 'x') &
+             call accum_hist_field(n_alvl,   iblk, &
+                                   aice(:,:,iblk) * trcr(:,:,nt_alvl,iblk))
+         if (f_vlvl(1:1)/= 'x') &
+             call accum_hist_field(n_vlvl,   iblk, &
+                                   vice(:,:,iblk) * trcr(:,:,nt_vlvl,iblk))
+         if (f_ardg(1:1)/= 'x') &
+             call accum_hist_field(n_ardg,   iblk, &
+                             aice(:,:,iblk) * (c1 - trcr(:,:,nt_alvl,iblk)))
+         if (f_vrdg(1:1)/= 'x') &
+             call accum_hist_field(n_vrdg,   iblk, &
+                             vice(:,:,iblk) * (c1 - trcr(:,:,nt_vlvl,iblk)))
 
          if (f_fsurf_ai(1:1) /= 'x') &
             call accum_hist_field(n_fsurf_ai, iblk, fsurf(:,:,iblk)*workb(:,:))

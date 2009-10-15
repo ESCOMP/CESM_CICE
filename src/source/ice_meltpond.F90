@@ -55,26 +55,13 @@
 !
 ! !USES:
 !
-      use ice_domain_size
-      use ice_blocks
-      use ice_domain
-      use ice_flux
-      use ice_state
+      use ice_state, only: filename_volpn
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
 !EOP
 !
-!     local temporary variables
 
-      integer (kind=int_kind) :: &
-         icells          ! number of cells with aicen > puny
-
-      integer (kind=int_kind), dimension(nx_block*ny_block) :: &
-         indxi, indxj    ! indirect indices for cells with aicen > puny
-
-      integer (kind=int_kind) :: i, j, ij, n, iblk
-      
       if (trim(filename_volpn) /= 'none') restart_pond = .true.
 
       if (restart_pond) then

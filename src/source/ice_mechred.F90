@@ -1121,7 +1121,8 @@
 !
 ! !USES:
 !
-      use ice_state, only: nt_aero
+      use ice_state, only: nt_aero, &
+                           nt_alvl, nt_vlvl, tr_lvl
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1477,6 +1478,20 @@
             ardg1(m) = ardg1(m) + ardg1n(ij)
             ardg2(m) = ardg2(m) + ardg2n(ij)
             virdg(m) = virdg(m) + virdgn(ij)
+
+      !-----------------------------------------------------------------
+      ! Decrement level ice area and volume tracers
+      !-----------------------------------------------------------------
+
+            if (tr_lvl) then
+
+               ! Assume level and ridged ice both ridge, proportionally.
+               ! Subtract the level ice portion of the ridging ice from
+               ! the level ice tracers.
+               atrcrn(m,nt_alvl,n) = atrcrn(m,nt_alvl,n) * (c1 - afrac(ij))
+               atrcrn(m,nt_vlvl,n) = atrcrn(m,nt_vlvl,n) * (c1 - afrac(ij))
+
+            endif
 
       !-----------------------------------------------------------------
       !  Place part of the snow lost by ridging into the ocean.

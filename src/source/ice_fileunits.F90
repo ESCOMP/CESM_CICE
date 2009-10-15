@@ -58,6 +58,8 @@
          nu_restart_age, &  ! restart input file for ice age tracer
          nu_dump_FY    , &  ! dump file for restarting FY ice tracer
          nu_restart_FY , &  ! restart input file for FY ice tracer
+         nu_dump_lvl   , &  ! dump file for restarting level ice tracer
+         nu_restart_lvl, &  ! restart input file for level ice tracer
          nu_dump_pond  , &  ! dump file for restarting melt pond tracer
          nu_restart_pond,&  ! restart input file for melt pond tracer
          nu_rst_pointer, &  ! pointer to latest restart file
@@ -122,6 +124,8 @@ contains
          nu_restart_age = shr_file_getUnit()
          nu_dump_FY     = shr_file_getUnit()
          nu_restart_FY  = shr_file_getUnit()
+         nu_dump_lvl    = shr_file_getUnit()
+         nu_restart_lvl = shr_file_getUnit()
          nu_dump_pond   = shr_file_getUnit()
          nu_restart_pond = shr_file_getUnit()
          nu_rst_pointer = shr_file_getUnit()
@@ -140,6 +144,8 @@ contains
          call get_fileunit(nu_restart_age)
          call get_fileunit(nu_dump_FY)
          call get_fileunit(nu_restart_FY)
+         call get_fileunit(nu_dump_lvl)
+         call get_fileunit(nu_restart_lvl)
          call get_fileunit(nu_dump_pond)
          call get_fileunit(nu_restart_pond)
          call get_fileunit(nu_rst_pointer)
@@ -226,6 +232,8 @@ contains
       call release_fileunit(nu_restart_age)
       call release_fileunit(nu_dump_FY)
       call release_fileunit(nu_restart_FY)
+      call release_fileunit(nu_dump_lvl)
+      call release_fileunit(nu_restart_lvl)
       call release_fileunit(nu_dump_pond)
       call release_fileunit(nu_restart_pond)
       call release_fileunit(nu_rst_pointer)

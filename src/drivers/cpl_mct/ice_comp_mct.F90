@@ -39,8 +39,8 @@ module ice_comp_mct
 		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
                               faero
   use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
-                              filename_volpn, filename_FY, &
-                              tr_aero, tr_iage, tr_FY, tr_pond
+                              filename_volpn, filename_FY, filename_lvl, &
+                              tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
   use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info, profile_barrier
   use ice_blocks,      only : block, get_block, nx_block, ny_block
@@ -355,6 +355,7 @@ contains
     use ice_age, only: write_restart_age
     use ice_meltpond, only: write_restart_pond
     use ice_FY, only: write_restart_FY
+    use ice_lvl, only: write_restart_lvl
     use ice_restoring, only: restore_ice, ice_HaloRestore
     use ice_shortwave, only: init_shortwave
 
@@ -592,6 +593,14 @@ contains
                   string1(1:lenstr(string1)),'.FY', &
                   string2(1:lenstr(string2))
           endif
+          if (tr_lvl) then
+               n = index(fname,'cice.r') + 6
+               string1 = trim(fname(1:n-1))
+               string2 = trim(fname(n:lenstr(fname)))
+               write(filename_lvl,'(a,a,a,a)') &
+                  string1(1:lenstr(string1)),'.lvl', &
+                  string2(1:lenstr(string2))
+          endif
 
        endif ! restart_format
 
@@ -604,8 +613,9 @@ contains
        if (restart_format /= 'nc') then
           if (tr_aero) call write_restart_aero(filename_aero)
           if (tr_iage) call write_restart_age(filename_iage)
-          if (tr_pond) call write_restart_pond(filename_volpn)
           if (tr_FY)   call write_restart_FY(filename_FY)
+          if (tr_lvl)  call write_restart_lvl(filename_lvl)
+          if (tr_pond) call write_restart_pond(filename_volpn)
        endif
        call ice_timer_stop(timer_readwrite)
 #endif
