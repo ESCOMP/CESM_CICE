@@ -24,25 +24,30 @@ module ice_prescribed_mod
 
 ! !USES:
 
+   use shr_strdata_mod
+   use shr_dmodel_mod
+   use shr_string_mod
    use shr_stream_mod
-   use shr_map_mod
    use shr_ncread_mod
    use shr_sys_mod
 
+   use mct_mod
+   use pio
+
+   use ice_pio
    use ice_broadcast
    use ice_communicate, only : my_task, master_task
    use ice_kinds_mod
    use ice_fileunits
-   use ice_exit,       only : abort_ice
+   use ice_exit,        only : abort_ice
    use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, nslyr, &
                                max_blocks
    use ice_constants
    use ice_blocks,     only : nx_block, ny_block
-   use ice_domain,     only : nblocks, distrb_info
+   use ice_domain,     only : nblocks, distrb_info, blocks_ice
    use ice_grid,       only : TLAT,TLON,hm,tmask
    use ice_calendar,   only : idate, sec
    use ice_itd,        only : ilyr1, slyr1, hin_max
-   use ice_work,       only : work_g1, work_g2
    use shr_scam_mod,   only : shr_scam_getCloseLatLon
    use ice_scam,       only : scmlat, scmlon, single_column
    use ice_read_write
@@ -58,8 +63,8 @@ module ice_prescribed_mod
 ! !PUBLIC MEMBER FUNCTIONS:
 
    public :: ice_prescribed_init      ! initialize input data stream
+   public :: ice_prescribed_init2     ! second phase of initialization
    public :: ice_prescribed_run       ! get time slices and time interp
-   public :: ice_prescribed_readField ! reads field from input data file
    public :: ice_prescribed_phys      ! set prescribed ice state and fluxes
 
 ! !PUBLIC DATA MEMBERS:
@@ -78,51 +83,18 @@ module ice_prescribed_mod
    character(len=char_len_long), public :: stream_domMaskName
    character(len=char_len_long), public :: stream_domFileName
    logical(kind=log_kind)      , public :: prescribed_ice_fill ! true if data fill required
+
    real(kind=dbl_kind)    :: closelat,closelon ! closest lat/lon in dataset to scmlat
    integer(kind=int_kind) :: latidx,lonidx     ! index of closest lat/lon in dataset to scmlat
-   integer(kind=int_kind) :: ncid              ! netcdf file index
 
 !EOP
 
-   real(kind=dbl_kind),    allocatable :: dataXCoord(:,:)  ! input data longitudes 
-   real(kind=dbl_kind),    allocatable :: dataYCoord(:,:)  ! input data latitudes
-   integer(kind=int_kind), allocatable :: dataMask(:,:)    ! input data mask
-   real(kind=dbl_kind),    allocatable :: dataUB(:,:)      ! upper bound on model domain
-   real(kind=dbl_kind),    allocatable :: dataLB(:,:)      ! lower bound on model domain
-
-   type(shr_stream_streamType), save  :: csim_stream        ! csim data stream
-   type(shr_map_mapType)        :: csim_map           ! used by shr_map_mapSet 
-   type(shr_map_mapType)        :: csim_fill          ! used by shr_map_mapSet
-
-   real(kind=dbl_kind), allocatable :: dataInLB(:,:,:)  ! input data LB
-   real(kind=dbl_kind), allocatable :: dataInUB(:,:,:)  ! input data UB
-   real(kind=dbl_kind), allocatable :: dataSrcLB(:,:)   ! reformed data for mapping
-   real(kind=dbl_kind), allocatable :: dataSrcUB(:,:)   ! reformed data for mapping
-   real(kind=dbl_kind), allocatable :: dataDstLB(:,:)   ! output from mapping
-   real(kind=dbl_kind), allocatable :: dataDstUB(:,:)   ! output from mapping
-   real(kind=dbl_kind), allocatable :: dataOutLB(:,:,:) ! output for model use
-   real(kind=dbl_kind), allocatable :: dataOutUB(:,:,:) ! output for model use
-
-   real(kind=dbl_kind), allocatable :: ice_cov_global(:,:)      ! ice cover for model
-   real(kind=dbl_kind)              :: ice_cov_lb(nx_block,ny_block,max_blocks) ! scattered ice cover 
-   real(kind=dbl_kind)              :: ice_cov_ub(nx_block,ny_block,max_blocks) ! scattered ice cover 
-   real(kind=dbl_kind)              :: ice_cov(nx_block,ny_block,max_blocks)    ! scattered ice cover 
-
-   logical(kind=log_kind) :: regrid                      ! true if remapping required
-
-   integer(kind=int_kind) :: dateUB, dateLB, secUB, secLB
-   integer(kind=int_kind) :: nlon           ! longitudes in netCDF data file
-   integer(kind=int_kind) :: nlat           ! latitudes  in netCDF data file
-   integer(kind=int_kind) :: nflds          ! number of fields in list
-
+   type(shr_strdata_type)       :: sdat         ! prescribed data stream
    character(len=char_len_long) :: fldList      ! list of fields in data stream
-   character(len=char_len)      :: fldName      ! name of field in stream
+   real(kind=dbl_kind)          :: ice_cov(nx_block,ny_block,max_blocks) ! ice cover 
 
-   logical :: read_data     ! must read in new ice coverage data slice
-
-! ech moved from ice_constants.F
     real (kind=dbl_kind), parameter :: &
-       cp_sno = 0.0_dbl_kind & ! specific heat of snow               (J/kg/K)
+       cp_sno = 0.0_dbl_kind & ! specific heat of snow                (J/kg/K)
     ,  rLfi = Lfresh*rhoi & ! latent heat of fusion ice               (J/m^3)
     ,  rLfs = Lfresh*rhos & ! latent heat of fusion snow              (J/m^3)
     ,  rLvi = Lvap*rhoi   & ! latent heat of vapor*rhoice             (J/m^3)
@@ -154,39 +126,18 @@ contains
 subroutine ice_prescribed_init
 
 ! !USES:
-
-   use shr_string_mod
-   use ice_gather_scatter, only : gather_global
-
    implicit none
 
 ! !INPUT/OUTPUT PARAMETERS:
 
 !EOP
    !----- Local ------
-   real(kind=dbl_kind), allocatable :: work4d(:,:,:,:) ! 4D work array
-   integer(kind=int_kind), allocatable :: csim_mask_g(:,:) ! global csim land mask
-   real(kind=dbl_kind)     :: aice_max                 ! maximun ice concentration
-   character(len=char_len_long) :: first_data_file     ! first data file in stream
-   character(len=char_len_long) :: domain_info_fn      ! file with domain info
-   character(len=char_len_long) :: data_path           ! path/location of stream data files
-   integer(kind=int_kind)  :: ndims                    ! # dimensions in domain info
-   character(len=char_len) :: timeName                 ! domain time var name
-   character(len=char_len) :: latName                  ! domain latitude var name
-   character(len=char_len) :: lonName                  ! domain longitude var name
-   character(len=char_len) :: maskName                 ! domain mask var name
-   character(len=char_len) :: areaName                 ! domain area var name
-   logical(kind=log_kind)  :: check                    ! true if field is found
-
-   integer(kind=int_kind)  :: nml_error ! namelist i/o error flag
-
-   !----- formats -----
+   integer(kind=int_kind) :: nml_error ! namelist i/o error flag
    character(*),parameter :: subName = "('ice_prescribed_init')"
    character(*),parameter :: F00 = "('(ice_prescribed_init) ',4a)"
    character(*),parameter :: F01 = "('(ice_prescribed_init) ',a,2i6)"
    character(*),parameter :: F02 = "('(ice_prescribed_init) ',a,2g20.13)"
 
-! ech moved from ice_init.F
    namelist /ice_prescribed_nml/  prescribed_ice, prescribed_ice_fill, &
 	stream_year_first , stream_year_last  , model_year_align, &
         stream_fldVarName , stream_fldFileName,  &
@@ -246,206 +197,206 @@ subroutine ice_prescribed_init
    call broadcast_scalar(stream_domFileName,master_task)
    call broadcast_scalar(prescribed_ice_fill,master_task)
 
-   if (.not.prescribed_ice) return
+ end subroutine ice_prescribed_init
 
+!===============================================================================
+!BOP
+!
+! !IROUTINE: ice_prescribed_init2 - second phase 
+!
+! !INTERFACE: 
+ subroutine ice_prescribed_init2(compid, mpicom, gsmap, dom)
+ 
+! !DESCRIPTION:
+!    Second phase of ice prescribed initialization - needed to 
+!    work with new shr_strdata module derived type 
+!
+! !REVISION HISTORY:
+!    2009-Oct-12 - M. Vertenstein
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+    integer(kind=int_kind), intent(in)   :: compid
+    integer(kind=int_kind), intent(in)   :: mpicom
+    type(mct_gsMap), intent(in), pointer :: gsmap
+    type(mct_gGrid), intent(in), pointer :: dom
+
+!EOP
+   !----- Local ------
+   character(*),parameter :: subName = "('ice_prescribed_init2')"
+   character(*),parameter :: F00 = "('(ice_prescribed_init) ',4a)"
+   character(*),parameter :: F01 = "('(ice_prescribed_init) ',a,2i6)"
+   character(*),parameter :: F02 = "('(ice_prescribed_init) ',a,2g20.13)"
+
+   integer(kind=int_kind), pointer :: dof(:)
+
+   character(len=char_len_long) :: first_data_file     ! first data file in stream
+   character(len=char_len_long) :: domain_info_fn      ! file with domain info
+   character(len=char_len_long) :: data_path           ! path/location of stream data files
+
+   integer(kind=int_kind) :: ncid        ! netcdf file index
+   character(char_len)    :: timeName    ! domain file: time variable name
+   character(char_len)    ::  lonName    ! domain file: lon  variable name
+   character(char_len)    ::  latName    ! domain file: lat  variable name
+   character(char_len)    :: maskName    ! domain file: mask variable name
+   character(char_len)    :: areaName    ! domain file: area variable name
+   logical(kind=log_kind) :: check       ! true if field is found
+
+   !---------------------------------------------------------------------
+   ! Write diagnostic output
+   !---------------------------------------------------------------------
    if (my_task == master_task) then
       write(nu_diag,*) ' prescribed_ice            = ', prescribed_ice
       write(nu_diag,*) ' stream_year_first         = ', stream_year_first
       write(nu_diag,*) ' stream_year_last          = ', stream_year_last
       write(nu_diag,*) ' model_year_align          = ', model_year_align
       write(nu_diag,*) ' prescribed_ice_fill       = ', prescribed_ice_fill
-      !TODO: add above variables
-
-! ech moved from ice_diagnostics.F
-! set print_global to .false. in ice_in to prevent global diagnostics
-      write (nu_diag,*)   'This is the prescribed ice option.'
-      write (nu_diag,*)   'Heat and water will not be conserved.'   
+      write(nu_diag,*) ' This is the prescribed ice option.'
+      write(nu_diag,*) ' Heat and water will not be conserved.'   
    endif
 
-! end ech changes
+   !---------------------------------------------------------------------
+   ! Initialize pio subsystem
+   !---------------------------------------------------------------------
+   call ice_pio_init()
+   call pio_init(my_task, mpicom, ice_num_iotasks, &
+	ice_pio_root, ice_pio_stride, PIO_REARR_BOX, sdat%pio_subsystem)
 
-   !------------------------------------------------------------------
-   ! Create integer CSIM mask with global dimensions
-   !------------------------------------------------------------------
-   if (my_task == master_task) then
+   !---------------------------------------------------------------------
+   ! Parse info file, initialize sdat datatype and load with info
+   ! Need gsmap and dom to finish initialization
+   !---------------------------------------------------------------------
+   sdat%nstreams               = 1  
+   sdat%streams(:)             = shr_strdata_nullstr
+   sdat%streams(1)             = 'ice coverage'
+   sdat%vectors(:)             = shr_strdata_nullstr
+   sdat%fillalgo(:)            = 'nn'
+   sdat%fillmask(:)            = 'nomask'
+   sdat%mapalgo(:)             = 'bilinear'
+   sdat%mapmask(:)             = 'dstmask'
+   sdat%tintalgo(:)            = 'linear'
+   sdat%nvectors               = 0
+   sdat%io_type                = ice_pio_type
+   sdat%io_stride              = ice_pio_stride
+   sdat%num_iotasks            = ice_num_iotasks
+   sdat%num_agg                = 0
+   sdat%gsmap                  = gsmap  
+   sdat%lsize                  = mct_gsmap_lsize(gsmap,mpicom)
+   sdat%nxg                    = nx_global
+   sdat%nyg                    = ny_global
+   sdat%domainfile             = shr_strdata_nullstr
 
-      allocate (work_g1(nx_global,ny_global),work_g2(nx_global,ny_global),&
-      &  csim_mask_g(nx_global,ny_global))
+   sdat%stream(1)%init         = .true.
+   sdat%stream(1)%nFiles       = 1
+   sdat%stream(1)%dataSource   = 'cice ifrac/sst file'
+   sdat%stream(1)%fldListFile  = stream_fldVarName
+   sdat%stream(1)%fldListModel = stream_fldVarName
+   sdat%stream(1)%FilePath     = ' '
+   sdat%stream(1)%domFilePath  = ' '
+   sdat%stream(1)%file(1)%name = stream_fldFileName
+   sdat%stream(1)%yearFirst    = stream_year_first 
+   sdat%stream(1)%yearLast     = stream_year_last
+   sdat%stream(1)%yearAlign    = model_year_align
+   sdat%stream(1)%fldListModel = stream_fldVarName
+   sdat%stream(1)%fldListFile  = stream_fldVarName
+   sdat%stream(1)%domTvarName  = stream_domTvarName
+   sdat%stream(1)%domXvarName  = stream_domXvarName
+   sdat%stream(1)%domYvarName  = stream_domYvarName
+   sdat%stream(1)%domAreaName  = stream_domAreaName
+   sdat%stream(1)%domMaskName  = stream_domMaskName
+   sdat%stream(1)%domFileName  = stream_domFileName
 
-   else
+   !---------------------------------------------------------------------
+   ! Initialize model gsmap and model general grid 
+   ! This sets sdat%gsmap and sdat%grid
+   !---------------------------------------------------------------------
+   call mct_gsmap_OrderedPoints( gsmap, my_task, dof )
+   call mct_gsMap_init( sdat%gsmap, dof, mpicom, compid, sdat%lsize, nx_global*ny_global )
+   call mct_ggrid_init( sdat%grid, dom, sdat%lsize)    
+   call mct_aVect_copy( dom%data, sdat%grid%data)
+   deallocate(dof)
 
-      allocate (work_g1(1,1),work_g2(1,1),&
-      &  csim_mask_g(1,1))
+   !---------------------------------------------------------------------
+   ! Check that ice cover forcing data exists
+   ! Assumes that stream has one field, ice fraction
+   !---------------------------------------------------------------------
+   call shr_stream_getDomainInfo(sdat%stream(1), data_path,domain_info_fn, timeName, &
+        lonName, latName, maskName, areaName)
+   call shr_dmodel_readgrid(sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
+        domain_info_fn, compid, mpicom, '1d', lonName, latName, maskName, areaName)
 
+   !---------------------------------------------------------------------
+   ! Initialize pio decomp
+   !---------------------------------------------------------------------
+   sdat%lsizeR(1) = mct_gsmap_lsize(sdat%gsmapR(1),mpicom)
+   call mct_gsmap_OrderedPoints(sdat%gsmapR(1), my_task, dof) 
+   call pio_initdecomp(sdat%pio_subsystem, pio_double, &
+        (/sdat%strnxg(1),sdat%strnyg(1)/), dof, sdat%pio_iodesc(1))
+   deallocate(dof)
+  
+   !---------------------------------------------------------------------
+   ! Initialize single column
+   !---------------------------------------------------------------------
+   if (single_column) then
+      call ice_open_nc (domain_info_fn, ncid)
+      call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+      call ice_close_nc (ncid)
    end if
 
-   call gather_global(work_g1, hm, master_task, distrb_info)
-
-   if (my_task == master_task) then
-
-      csim_mask_g = work_g1     ! Convert to integer array
-
-   endif
-
-   call gather_global(work_g1, TLAT, master_task, distrb_info)
-   call gather_global(work_g2, TLON, master_task, distrb_info)
-
-   if (my_task == master_task) then
-
-      work_g1(:,:) = work_g1(:,:)*rad_to_deg
-      work_g2(:,:) = work_g2(:,:)*rad_to_deg
-
-      !---------------------------------------------------------------------
-      ! Parse info file, initialize csim_stream datatype and load with info
-      !---------------------------------------------------------------------
-      csim_stream%nFiles           = 0  
-      csim_stream%file(:)%name     = 'not_set' 
-      csim_stream%file(:)%nt       = 0
-      csim_stream%file(:)%haveData = .false.
-      csim_stream%yearFirst        = stream_year_first
-      csim_stream%yearLast         = stream_year_last
-      csim_stream%yearAlign        = model_year_align
-      csim_stream%fldListFile      = ' '
-      csim_stream%fldListModel     = ' '
-      csim_stream%FilePath         = ' '
-      csim_stream%domFilePath      = ' '
-      csim_stream%k_lvd            = -1 
-      csim_stream%n_lvd            = -1 
-      csim_stream%found_lvd        = .false.
-      csim_stream%k_gvd            = -1 
-      csim_stream%n_gvd            = -1 
-      csim_stream%found_gvd        = .false.
-      
-      csim_stream%dataSource   = 'cice ifrac/sst file'
-      csim_stream%fldListFile  =  stream_fldVarName
-      csim_stream%fldListModel = 'ice_cov'
-
-      !build logic hear to determine how many names are on the input file
-      csim_stream%File(1)%name =  stream_fldFileName
-      csim_stream%nFiles       =  1 
-
-      csim_stream%domTvarName  =  stream_domTvarName
-      csim_stream%domXvarName  =  stream_domXvarName
-      csim_stream%domYvarName  =  stream_domYvarName
-      csim_stream%domAreaName  =  stream_domAreaName
-      csim_stream%domMaskName  =  stream_domMaskName
-      csim_stream%domFileName  =  stream_domFileName
-      csim_stream%init         =  .true.
-
-      !---------------------------------------------------------------------
-      ! Check that ice cover data exists
-      ! Assumes that stream has one field, ice fraction
-      !---------------------------------------------------------------------
-      call shr_stream_getFileFieldList(csim_stream,fldList)
-      nflds = shr_string_listGetNum(fldList)                ! How many fields?
-
-      if (nflds == 1) then
-         call shr_string_listGetName(fldList,nflds,fldName) ! Get name of 1st field
-      else
-         write(nu_diag,F00) "ERROR: Only one field can exist in stream"
-         write(nu_diag,F01)  trim(fldList)//' has ',nflds
-         call abort_ice(subName)
-      end if
-
-      call shr_stream_getFirstFileName(csim_stream,first_data_file,data_path)
-      call shr_stream_getFile         (data_path,first_data_file)
-      check = shr_ncread_varExists(first_data_file,fldName) 
-
-      if (.not.check) then
-         write(nu_diag,F00) "ERROR: ice concentration field does not exist"
-         call abort_ice(subName)
-      end if
-
-      !---------------------------------------------------------------------
-      ! Get size of the input data domain and allocate arrays
-      !---------------------------------------------------------------------
-      call shr_stream_getDomainInfo(csim_stream,data_path,domain_info_fn, timeName, &
-      &                             lonName, latName, maskName, areaName)
-
-      call shr_ncread_varDimSizes(domain_info_fn,lonName,nlon)
-      call shr_ncread_varDimSizes(domain_info_fn,latName,nlat)
-      call shr_stream_getFile(data_path,domain_info_fn)
-      call shr_sys_flush(nu_diag)
-
-      allocate(dataXCoord(nlon,nlat)) 
-      allocate(dataYCoord(nlon,nlat))
-
-      !------------------------------------------------------------------
-      ! Read in lat-lon grid info from input data file, ALL output is 2D
-      !------------------------------------------------------------------
-      call shr_ncread_domain(domain_info_fn, lonName, dataXCoord, latName, dataYCoord)
-
-      write (nu_diag,F02) 'min/max dataXCoord  = ',minval(dataXCoord) ,maxval(dataXCoord)
-      write (nu_diag,F02) 'min/max dataYCoord  = ',minval(dataYCoord) ,maxval(dataYCoord)
-      write (nu_diag,F02) 'min/max TLON        = ',minval(work_g2)    ,maxval(work_g2)
-      write (nu_diag,F02) 'min/max TLAT        = ',minval(work_g1)    ,maxval(work_g1)
-      write (nu_diag,F01) 'min/max csim_mask_g = ',minval(csim_mask_g),maxval(csim_mask_g)
-
-      !------------------------------------------------------------------
-      ! Determine if need to regrid
-      !------------------------------------------------------------------
-      if (single_column) then 
-         call ice_open_nc (domain_info_fn, ncid)
-         call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-         call ice_close_nc (ncid)
-         regrid=( abs(dataYCoord(lonidx,latidx) - work_g1(1,1))>1.e-12 .or. abs(dataXCoord(lonidx,latidx)- work_g2(1,1))>1.0e-12)
-      else
-         call ice_prescribed_checkDomain(work_g2, work_g1, dataXCoord, dataYCoord, regrid)
-
-      end if
-
-      !------------------------------------------------------------------
-      ! If regrid, read in domain again, obtain mask array and initialize mapping
-      !------------------------------------------------------------------
-      if (regrid) then
-         allocate(dataMask(nlon,nlat))
-         call shr_ncread_domain(domain_info_fn, lonName, dataXCoord, &
-      &                         latName, dataYCoord, maskName, dataMask)
-         write (nu_diag,F01) 'min/max dataMask = ',minval(dataMask), maxval(dataMask)
-
-         if (prescribed_ice_fill) then
-            call shr_map_mapSet(csim_fill, work_g2, work_g1, csim_mask_g, &
-            &                              work_g2, work_g1, csim_mask_g, &
-            &                   name='csim_map',type='fill',algo='nnoni', &
-            &                   mask='nomask')
-         end if
-
-         write (nu_diag,F00) 'Computing mapping weights'
-
-         call shr_map_mapSet(csim_map, dataXCoord, dataYCoord, dataMask, &
-         &                             work_g2,   work_g1,  csim_mask_g, &
-         &                   name='csim_map',type='remap',algo='bilinear', &
-         &                   mask='dstmask',vect='scalar')
-         deallocate(dataMask)
-
-      end if
-
-      allocate(dataOutLB(nx_global,ny_global,nflds))  ! output for model use
-      allocate(dataOutUB(nx_global,ny_global,nflds))
-
-      !--------------------------------------------------------------------
-      ! Check to see that ice concentration is in fraction, not percent
-      !--------------------------------------------------------------------
-      allocate(work4d(nlon,nlat,1,1))
-      call shr_ncread_field4dG(first_data_file, fldName, rfld=work4d, dim3i=1)
-      aice_max = maxval(work4d)
-      deallocate(work4d)
-
-      if (aice_max > c2) then
-         write(nu_diag,F02) "ERROR: Ice conc data must be in fraction, aice_max= ",aice_max
-         call abort_ice(subName)
-      end if
-
-      deallocate(dataXCoord,dataYCoord)
-      deallocate(work_g1,work_g2)
-      deallocate(csim_mask_g)
-
+   !---------------------------------------------------------------------
+   ! Initialize mapping 
+   !---------------------------------------------------------------------
+   if (prescribed_ice_fill) then
+      sdat%dofill(1) = .true.
    else
+      sdat%dofill(1) = .false.
+   end if
+   if (shr_dmodel_gGridCompare(sdat%gridR(1),sdat%gsmapR(1),sdat%grid,sdat%gsmap, &
+                               shr_dmodel_gGridCompareXYabs,mpicom,0.01_dbl_kind)) then
+      sdat%domaps(1) = .false.
+   else
+      sdat%domaps(1) = .true.
+   end if
 
-      deallocate(work_g1,work_g2)
-      deallocate(csim_mask_g)
-
-   end if           ! master_task
+   if (single_column) then
+      if (sdat%dofill(1)) then
+         call abort_ice ('ice_prescribed_init2: dofill not supported for single column')
+      end if
+      if (sdat%domaps(1)) then
+         call abort_ice ('ice_prescribed_init2: mapping not supported for single column')
+      end if
+   end if
+   
+   if (sdat%dofill(1)) then
+      call shr_dmodel_mapSet(sdat%sMatPf(1), &
+           sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
+           sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
+           name='mapFill', type='cfill', &
+           algo=trim(sdat%fillalgo(1)),mask=trim(sdat%fillmask(1)),vect='scalar', &
+           compid=compid,mpicom=mpicom)
+   end if
+   if (sdat%domaps(1)) then
+      call shr_dmodel_mapSet(sdat%sMatPs(1), &
+           sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
+           sdat%grid    ,sdat%gsmap    ,sdat%nxg      ,sdat%nyg      , &
+           name='mapScalar', type='remap', &
+           algo=trim(sdat%mapalgo(1)),mask=trim(sdat%mapmask(1)), vect='scalar', &
+           compid=compid,mpicom=mpicom)
+   else
+      call mct_rearr_init(SDAT%gsmapR(1), SDAT%gsmap, mpicom, SDAT%rearrR(1))
+   end if
+   
+   ! --- setup datatypes ---
+   ! TODO check that fldlist only has 1 element - 
+   if (my_task == master_task) then
+      call shr_stream_getModelFieldList(sdat%stream(1),fldList)
+   endif
+   call shr_mpi_bcast(fldList,mpicom)
+   call mct_aVect_init(sdat%avs(1)  ,rlist=fldList,lsize=sdat%lsize)
+   call mct_aVect_init(sdat%avFLB(1),rlist=fldList,lsize=sdat%lsize)
+   call mct_aVect_init(sdat%avFUB(1),rlist=fldList,lsize=sdat%lsize)
+   call mct_aVect_init(sdat%avRLB(1),rlist=fldList,lsize=sdat%lsizeR(1))
+   call mct_aVect_init(sdat%avRUB(1),rlist=fldList,lsize=sdat%lsizeR(1))
 
    !-----------------------------------------------------------------
    ! For one ice category, set hin_max(1) to something big
@@ -453,192 +404,103 @@ subroutine ice_prescribed_init
    if (ncat == 1) then
       hin_max(1) = 999._dbl_kind
    end if
-    
-end subroutine ice_prescribed_init
+   
+end subroutine ice_prescribed_init2
   
 !=======================================================================
 !BOP ===================================================================
 !
-! !IROUTINE: ice_prescribed_run -- Obtain two time slices of data for 
-!                                  current time
+! !IROUTINE: ice_prescribed_run -- Update ice coverage
 !
 ! !DESCRIPTION:
-! 
+!
 !  Finds two time slices bounding current model time, remaps if necessary
 !
 ! !REVISION HISTORY:
 !     2005-May-19 - J. Schramm - first version
+!     2009-Oct-15 - M. Vertenstein - update to new data model changes
 !
 ! !INTERFACE: -----------------------------------------------------------
 
-subroutine ice_prescribed_run(mDateIn, secIn)
+subroutine ice_prescribed_run(mDateIn, secIn, mpicom)
 
 ! !USES:
 
-   use shr_tInterp_mod
-   use ice_constants, only: field_loc_center, field_type_scalar
-   use ice_gather_scatter, only : scatter_global
-
+   use shr_tInterp_mod    ! for single column only
    implicit none
 
 ! !INPUT/OUTPUT PARAMETERS:
 
    integer(kind=int_kind), intent(in) :: mDateIn  ! Current model date (yyyymmdd)
    integer(kind=int_kind), intent(in) :: secIn    ! Elapsed seconds on model date
+   integer(kind=int_kind), intent(in) :: mpicom   ! ICE MPI communicator
 
 !EOP
 
-   real(kind=dbl_kind)    :: fLB         ! weight for lower bound
-   real(kind=dbl_kind)    :: fUB         ! weight for upper bound
-   integer(kind=int_kind) :: mDateLB     ! model date    of lower bound
-   integer(kind=int_kind) :: mDateUB     ! model date    of upper bound
-   integer(kind=int_kind) :: dDateLB     ! data  date    of lower bound
-   integer(kind=int_kind) :: dDateUB     ! data  date    of upper bound
-   integer(kind=int_kind) ::   secUB     ! elap sec      of upper bound
-   integer(kind=int_kind) ::   secLB     ! elap sec      of lower bound
-   integer(kind=int_kind) ::    n_lb     ! t-coord index of lower bound
-   integer(kind=int_kind) ::    n_ub     ! t-coord index of upper bound
-   character(len=char_len_long) ::  fileLB     ! file containing  lower bound
-   character(len=char_len_long) ::  fileUB     ! file containing  upper bound
-
-   integer(kind=int_kind) :: mDateLB_old = -999
-   integer(kind=int_kind) :: secLB_old = -999
    integer(kind=int_kind) :: i,j,n,icnt,iblk  ! loop indices and counter
-
+   integer(kind=int_kind) :: ilo,ihi,jlo,jhi  ! beginning and end of physical domain
+   type (block)           :: this_block
+   real(kind=dbl_kind)    :: aice_max         ! maximun ice concentration
+   logical, save          :: first_time = .true.
+   character(*),parameter :: subName = "('ice_prescribed_run')"
+   character(*),parameter :: F00 = "('(ice_prescribed_run) ',a,2g20.13)"
+   logical                :: newdata
+   integer(kind=int_kind) :: nidx	
+   real(kind=dbl_kind)    :: flb,fub          ! factor for lb and ub
+ 
    !------------------------------------------------------------------------
-   ! get two time slices of monthly ice coverage data
-   ! check that upper and lower time bounds have not changed
+   ! Interpolate to new ice coverage
    !------------------------------------------------------------------------
 
-   if (my_task ==  master_task) then
+   if (single_column) then
 
-      call shr_stream_findBounds(csim_stream, mDateIn,secIn,             &
-      &                          mDateLB, dDateLB, secLB, n_lb, fileLB, &
-      &                          mDateUB, dDateUB, secUB, n_ub, fileUB)
-
-      read_data = .false.
-      if (mDateLB_old /= mDateLB .or. secLB_old /= secLB) then
-         allocate(dataInLB(nlon,nlat,nflds))      ! netCDF input data size
-         allocate(dataInUB(nlon,nlat,nflds))
-         read_data = .true.
-         call ice_prescribed_readField(fileLB, fldName, n_lb, dataInLB)
-         call ice_prescribed_readField(fileUB, fldName, n_ub, dataInUB)
-
-         if (regrid) then
-
-            allocate(dataSrcLB(nflds,nlon*nlat))     ! reformed data for mapping
-            allocate(dataSrcUB(nflds,nlon*nlat))
-            allocate(dataDstLB(nflds,nx_global*ny_global)) ! output from mapping
-            allocate(dataDstUB(nflds,nx_global*ny_global))
-
-            !-------------------------------------------------
-            ! copy input data to arrays ordered for mapping
-            !-------------------------------------------------
-            do n=1,nflds
-              icnt = 0
-              do j=1,nlat
-              do i=1,nlon
-                 icnt = icnt + 1
-                 dataSrcLB(n,icnt) = dataInLB(i,j,n)
-                 dataSrcUB(n,icnt) = dataInUB(i,j,n)
-              enddo
-              enddo
-            enddo
-
-            !-------------------------------------------------
-            ! map the ordered arrays
-            !-------------------------------------------------
-            if (prescribed_ice_fill) then
-               call shr_map_mapData(dataSrcLB, dataDstLB, csim_fill)
-               call shr_map_mapData(dataSrcUB, dataDstUB, csim_fill)
-            end if
-            call shr_map_mapData(dataSrcLB, dataDstLB, csim_map)
-            call shr_map_mapData(dataSrcUB, dataDstUB, csim_map)
-
-            !-------------------------------------------------
-            ! copy mapped fields back to general 3d arrays
-            !-------------------------------------------------
-            do n=1,nflds
-               icnt = 0
-               do j=1,ny_global
-               do i=1,nx_global
-                  icnt = icnt + 1
-                  dataOutLB(i,j,n) = dataDstLB(n,icnt)
-                  dataOutUB(i,j,n) = dataDstUB(n,icnt)
-               enddo
-               enddo
-            enddo
-            deallocate(dataSrcLB)
-            deallocate(dataSrcUB)
-            deallocate(dataDstLB)
-            deallocate(dataDstUB)
-         else       ! no regrid
-            if (single_column) then 
-               call ice_open_nc (fileLB, ncid)
-               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-               call ice_close_nc (ncid)
-               dataOutLB(1,1,:) = dataInLB(lonidx,latidx,:)
-               call ice_open_nc (fileUB, ncid)
-               call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-               call ice_close_nc (ncid)
-               dataOutUB(1,1,:) = dataInUB(lonidx,latidx,:)
-	    else
-               dataOutLB = dataInLB
-               dataOutUB = dataInUB
-            end if    ! single_column
-         end if    ! regrid
-
-         mDateLB_old = mDateLB
-         secLB_old = secLB
-
-         deallocate(dataInUB)
-         deallocate(dataInLB)
-      end if       ! mDate
-    
-      call shr_tInterp_getFactors(mDateLB, secLB, mDateUB, secUB, &
-      &                           mDateIn, secIN, fLB, fUB)
-
-   end if    ! master_task
-   call broadcast_scalar(fLB, master_task)
-   call broadcast_scalar(fUB, master_task)
-
-   !-----------------------------------------------------------------
-   ! Scatter ice concentration to all processors if read data
-   !-----------------------------------------------------------------
-
-   call broadcast_scalar(read_data, master_task)
-   if (read_data) then
-      if (my_task ==  master_task) then
-         allocate(ice_cov_global(nx_global,ny_global))   ! Assumes 1 field
-         ice_cov_global(:,:) = dataOutLB(:,:,1) 
-      else
-         allocate(ice_cov_global(1,1))
-      end if
-      call scatter_global(ice_cov_lb,   ice_cov_global, &
-           &              master_task,  distrb_info, & 
-           &              field_loc_center, field_type_scalar)
-
-      if (my_task ==  master_task) then
-         ice_cov_global(:,:) = dataOutUB(:,:,1)
-      end if
-      call scatter_global(ice_cov_ub,   ice_cov_global, &
-           &              master_task,  distrb_info, & 
-           &              field_loc_center, field_type_scalar)
-
-      deallocate(ice_cov_global)
+      call shr_dmodel_readLBUB(&
+           SDAT%stream(1),SDAT%pio_subsystem,SDAT%io_type,SDAT%pio_iodesc(1), &
+           mDatein,SecIn,mpicom,SDAT%gsmapR(1),&
+           SDAT%avRLB(1),SDAT%ymdLB(1),SDAT%todLB(1), &
+           SDAT%avRUB(1),SDAT%ymdUB(1),SDAT%todUB(1), &
+           newData, istr='_readLBUB')
+      call shr_tInterp_getFactors(SDAT%ymdlb(1),SDAT%todlb(1),SDAT%ymdub(1),SDAT%todub(1),&
+           SDAT%ymd,SDAT%tod,flb,fub,algo=trim(SDAT%tintalgo(1)))
+      nidx = (latidx-1)*sdat%strnxg(1) + lonidx
+      SDAT%avs(1)%rAttr(1,nidx) = SDAT%avRLB(1)%rAttr(1,nidx)*flb + SDAT%avRUB(1)%rAttr(1,nidx)*fub
+      
+   else
+      
+      call shr_strdata_advance(sdat,mDateIn,SecIn,mpicom,'cice_pice')
+      
    end if
+   
+   ice_cov(:,:,:) = c0  ! This initializes ghost cells as well 
 
-   !-----------------------------------------------------------------
-   ! Time interpolate ice concentration data
-   !-----------------------------------------------------------------
+   n=0
+   do iblk = 1, nblocks
+      this_block = get_block(blocks_ice(iblk),iblk)         
+      ilo = this_block%ilo
+      ihi = this_block%ihi
+      jlo = this_block%jlo
+      jhi = this_block%jhi
+      
+      do j = jlo, jhi
+      do i = ilo, ihi
+         n = n+1
+         ice_cov(i,j,iblk) = sdat%avs(1)%rAttr(1,n)
+      end do
+      end do
+   end do
 
-   do iblk = 1,nblocks
-   do j = 1,ny_block
-   do i = 1,nx_block
-      ice_cov(i,j,iblk) = fLB*ice_cov_lb(i,j,iblk) + fUB*ice_cov_ub(i,j,iblk)
-   enddo
-   enddo
-   enddo
+   !--------------------------------------------------------------------
+   ! Check to see that ice concentration is in fraction, not percent
+   !--------------------------------------------------------------------
+   if (first_time) then
+      aice_max = maxval(ice_cov)
+
+      if (aice_max > c2) then
+         write(nu_diag,F00) "ERROR: Ice conc data must be in fraction, aice_max= ",aice_max
+         call abort_ice(subName)
+      end if
+      first_time = .false.
+   end if
 
    !-----------------------------------------------------------------
    ! Set prescribed ice state and fluxes
@@ -647,128 +509,6 @@ subroutine ice_prescribed_run(mDateIn, secIn)
    call ice_prescribed_phys()
 
 end subroutine ice_prescribed_run
-
-!===============================================================================
-!BOP ===========================================================================
-!
-! !IROUTINE: ice_prescribed_readField -- Read a field from input data
-!
-! !DESCRIPTION:
-!     Read a field from input data, assumes prescribed ice uses only one field
-!
-! !REVISION HISTORY:
-!     2005-May-23 - J. Schramm - first version
-!
-! !INTERFACE: ------------------------------------------------------------------
-
-subroutine ice_prescribed_readField(fileName, fldName, nTime, fldRead)
-
-! !USES:
-
-   implicit none
-
-! !INPUT/OUTPUT PARAMETERS:
-
-   character(*), intent(in)  :: fileName     ! netCDF input file
-   character(*), intent(in)  :: fldName      ! name of field in stream
-   integer(kind=int_kind), intent(in)  :: nTime          ! index of time slice to read
-   real   (kind=dbl_kind), intent(out) :: fldRead(:,:,:) ! field read in
-
-!EOP
-
-   real(kind=dbl_kind), allocatable :: A4d(:,:,:,:)    ! 4D field array
-   integer(kind=int_kind)           :: ni, nj          ! size of field to read
-
-   ni = size(fldRead,1)
-   nj = size(fldRead,2)
-
-   allocate(A4d(ni,nj,1,1))
-
-   call shr_ncread_field4dG(fileName, fldName, rfld=A4d, dim3i=nTime)
-   fldRead(:,:,1) = A4d(:,:,1,1)
-
-   deallocate(A4d)
-
-end subroutine ice_prescribed_readField
-
-!===============================================================================
-!BOP ===========================================================================
-!
-! !IROUTINE: ice_prescribed_checkDomain -- Compare input data domain and ice domain 
-!
-! !DESCRIPTION:
-!     Check that input data domain matches that of ice model domain
-!
-! !REVISION HISTORY:
-!     2005-May-16 - J. Schramm - first version
-!
-! !INTERFACE: ------------------------------------------------------------------
-
-subroutine ice_prescribed_checkDomain(csimXCoord, csimYCoord, dataXCoord, dataYCoord, regrid)
-
-! !USES:
-
-   implicit none
-
-! !INPUT/OUTPUT PARAMETERS:
-
-   real(kind=dbl_kind),    intent(in) :: csimXCoord(:,:) ! csim longitudes (degrees)
-   real(kind=dbl_kind),    intent(in) :: csimYCoord(:,:) ! csim latitudes  (degrees)
-   real(kind=dbl_kind),    intent(in) :: dataXCoord(:,:) ! data longitudes (degrees)
-   real(kind=dbl_kind),    intent(in) :: dataYCoord(:,:) ! data latitudes  (degrees)
-   logical(kind=log_kind), intent(out):: regrid          ! true if remapping required
-
-!EOP
-
-   integer(kind=int_kind)           :: ni_csim, nj_csim     ! size of csim domain
-   integer(kind=int_kind)           :: ni_data, nj_data     ! size of data domain
-   real(kind=dbl_kind)              :: max_XDiff, max_YDiff ! max x,y grid diffs
-   real(kind=dbl_kind), allocatable :: csimXTemp(:,:)       ! csim grid 0 to 360
-
-   !----- formats -----
-   character(*),parameter :: F00 = "('(ice_prescribed_checkDomain) ',a)"
-   character(*),parameter :: F01 = "('(ice_prescribed_checkDomain) ',a,2i6)"
-   character(*),parameter :: F02 = "('(ice_prescribed_checkDomain) ',a,g20.13)"
-
-   regrid = .false.
-   !------------------------------------------------------------------------
-   ! Check domain size
-   !------------------------------------------------------------------------
-   ni_csim = size(csimXCoord,1)
-   nj_csim = size(csimXCoord,2)
-   ni_data = size(dataXCoord,1)
-   nj_data = size(dataXCoord,2)
-
-   !------------------------------------------------------------------------
-   ! Convert T grid longitude from -180 -> 180 to 0 to 360
-   !------------------------------------------------------------------------
-   allocate(csimXTemp(ni_csim,nj_csim)) 
-   csimXTemp = csimXCoord
-   where (csimXTemp >= c360) csimXTemp = csimXTemp - c360
-   where (csimXTemp < c0 )   csimXTemp = csimXTemp + c360
-
-   if (ni_data == ni_csim .and. nj_data == nj_csim) then
-      max_XDiff = maxval(abs(csimXTemp  - dataXCoord))
-      max_YDiff = maxval(abs(csimYCoord - dataYCoord))
-      if (max_XDiff > eps04) regrid = .true.
-      if (max_YDiff > eps04) regrid = .true.
-
-      write(nu_diag,F02) 'Maximum X difference = ', max_XDiff
-      write(nu_diag,F02) 'Maximum Y difference = ', max_YDiff
-      write(nu_diag,F00) 'CSIM and input data domain sizes match'
-      write(nu_diag,F01) 'CSIM and data grids are', ni_csim,nj_csim
-   else
-      regrid = .true.
-   end if
-   deallocate(csimXTemp) 
-
-   if (regrid) then
-      write(nu_diag,F00) 'Ice concentration will be interpolated to CSIM grid'
-   else
-      write(nu_diag,F00) 'Ice concentration grid and CSIM grid the same'
-   end if
-
-end subroutine ice_prescribed_checkDomain
 
 !===============================================================================
 !BOP ===========================================================================
@@ -828,14 +568,16 @@ subroutine ice_prescribed_phys
    ! Initialize ice state
    !-----------------------------------------------------------------
 
-!  aicen(:,:,:,:) = c0
-!  vicen(:,:,:,:) = c0
-!  eicen(:,:,:,:) = c0
+   ! TODO  - can we now get rid of the following???
 
-!  do nc=1,ncat
-!     trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
-!  enddo
-
+   !  aicen(:,:,:,:) = c0
+   !  vicen(:,:,:,:) = c0
+   !  eicen(:,:,:,:) = c0
+   
+   !  do nc=1,ncat
+   !     trcrn(:,:,nt_Tsfc,nc,:) = Tf(:,:,:)
+   !  enddo
+   
    !-----------------------------------------------------------------
    ! Set ice cover over land to zero, not sure if this should be
    ! be done earier, before time/spatial interp??????
@@ -894,7 +636,7 @@ subroutine ice_prescribed_phys
                      do k=1,nilyr
                         qin_save(k) = eicen(i,j,ilyr1(nc)+k-1,iblk)         &
                                     * real(nilyr,kind=dbl_kind)             &
-                                    / vicen(i,j,nc,iblk)
+                                    / Vicen(i,j,nc,iblk)
                      enddo
                   endif
 

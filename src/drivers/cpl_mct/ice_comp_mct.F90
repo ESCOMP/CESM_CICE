@@ -62,8 +62,8 @@ module ice_comp_mct
   use ice_boundary,    only : ice_HaloUpdate 
   use ice_scam,        only : scmlat, scmlon, single_column
   use ice_fileunits,   only : nu_diag
-  use ice_dyn_evp,     only:  kdyn
-  use ice_prescribed_mod, only : prescribed_ice, ice_prescribed_run
+  use ice_dyn_evp,     only :  kdyn
+  use ice_prescribed_mod
   use ice_prescaero_mod
   use ice_step_mod
   use CICE_RunMod
@@ -92,6 +92,10 @@ module ice_comp_mct
 
 !
 ! !PRIVATE VARIABLES
+
+  integer :: mpicom_ice
+  integer :: ICEID       
+
 
 !=======================================================================
 
@@ -123,8 +127,6 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-    integer                               :: ICEID	
-    integer                               :: mpicom_ice
     type(mct_gsMap)             , pointer :: gsMap_ice
     type(mct_gGrid)             , pointer :: dom_i
     type(seq_infodata_type)     , pointer :: infodata   ! Input init object
@@ -302,6 +304,14 @@ contains
     call mct_aVect_zero(i2x_i)
 
     !-----------------------------------------------------------------
+    ! Second phase of prescribed ice initialization
+    !-----------------------------------------------------------------
+
+    if (prescribed_ice) then
+       call ice_prescribed_init2(ICEID, mpicom_ice, gsmap_ice, dom_i)
+    end if
+
+    !-----------------------------------------------------------------
     ! get ready for coupling
     !-----------------------------------------------------------------
 
@@ -379,13 +389,17 @@ contains
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
     integer :: n
-    type(mct_gGrid)             , pointer :: dom_i
-    type(seq_infodata_type)     , pointer :: infodata   ! Input init object
+    type(mct_gGrid)        , pointer :: dom_i
+    type(seq_infodata_type), pointer :: infodata   
+    type(mct_gsMap)        , pointer :: gsMap_i
+    integer :: mpicom_ice
+    integer :: iceid    
     character(len=char_len_long) :: fname
     character(len=char_len_long) :: string1, string2
     character(len=*), parameter  :: SubName = "ice_run_mct"
 
     real(r8) :: mrss, mrss0,msize,msize0
+    logical, save :: first_time = .true.
 
 !
 ! !REVISION HISTORY:
@@ -406,7 +420,8 @@ contains
    
     ! Determine time of next atmospheric shortwave calculation
 
-    call seq_cdata_setptrs(cdata_i, infodata=infodata, dom=dom_i)
+    call seq_cdata_setptrs(cdata_i, infodata=infodata, dom=dom_i, &
+         gsMap=gsMap_i, id=iceid, mpicom=mpicom_ice)
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
     !-------------------------------------------------------------------
@@ -445,12 +460,20 @@ contains
 
     if(prescribed_ice) then  ! read prescribed ice
        call t_startf ('cice_presc')
-       call ice_prescribed_run(idate, sec)
+       call ice_prescribed_run(idate, sec, mpicom_ice)
        call t_stopf ('cice_presc')
     endif
     
     if(prescribed_aero) then  ! read prescribed ice
-       call ice_prescaero_run(idate, sec)
+       if (first_time) then
+          call t_startf ('cice_presai2')
+          call ice_prescaero_init2(iceid, mpicom_ice, gsmap_i, dom_i)
+          call t_stopf ('cice_presai2')
+          first_time = .false.
+       end if
+       call t_startf ('cice_presa')
+       call ice_prescaero_run(idate, sec, mpicom_ice)
+       call t_stopf ('cice_presa')
     endif
 
     call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
@@ -1118,8 +1141,7 @@ contains
         if (abs(maxwork) < c100) then
            prescribed_aero = .false.
         else
-           prescribed_aero_tmp = .true.
-           call ice_prescaero_init(prescribed_aero_tmp)
+           call ice_prescaero_init(prescribed_aero_in = .true.)
         end if
         deallocate(work)
         first_call = .false.

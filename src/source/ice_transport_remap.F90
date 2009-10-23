@@ -53,6 +53,9 @@
       private
       public :: init_remap, horizontal_remap, make_masks
 
+      integer (kind=int_kind), parameter ::                      &
+         max_ntrace = 2+max_ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
+
       integer (kind=int_kind), parameter ::     &
          ngroups  = 6      ,&! number of groups of triangles that
                              ! contribute transports across each edge
@@ -149,8 +152,8 @@
 ! needs to know the tracers types and relationships.  This is done 
 ! as follows: 
 ! 
-! Each field in the "tm" array is assigned an index, 1:ntrace. 
-! (Note: ntrace is not the same as ntrcr, the number of tracers 
+! Each field in the "tm" array is assigned an index, 1:max_ntrace. 
+! (Note: max_ntrace is not the same as max_ntrcr, the number of tracers 
 ! in the trcrn state variable array.  For remapping purposes we 
 ! have additional tracers hi, hs, qi and qs.) 
 ! For standard CICE with ntrcr = 1, nilyr = 4, and nslyr = 1, the 
@@ -390,7 +393,7 @@
          mm           ! mean mass values in each grid cell
 
       real (kind=dbl_kind), intent(inout),     &
-         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
+         dimension (nx_block,ny_block,max_ntrace,ncat,max_blocks) ::     &
          tm           ! mean tracer values in each grid cell
 
     !-------------------------------------------------------------------
@@ -470,7 +473,7 @@
          mmask            ! = 1. if mass is present, = 0. otherwise
 
       real (kind=dbl_kind),      &
-         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
+         dimension (nx_block,ny_block,max_ntrace,ncat,max_blocks) ::     &
          tc             ,&! tracer values at geometric center of cell
          tx, ty         ,&! limited derivative of tracer wrt x and y
          tmask            ! = 1. if tracer is present, = 0. otherwise
@@ -478,7 +481,7 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,0:ncat,max_blocks) ::     &
          mflxe, mflxn     ! mass transports across E and N cell edges
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace,ncat,max_blocks) ::     &
          mtflxe, mtflxn   ! mass*tracer transports across E and N cell edges
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ngroups,max_blocks) ::     &
@@ -1007,11 +1010,11 @@
            intent(out) ::     &
            mmask         ! = 1. if ice is present, else = 0.
 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ntrace, ncat),  &
+      real (kind=dbl_kind), dimension (nx_block, ny_block, max_ntrace, ncat),  &
            intent(in), optional ::     &
            tm            ! mean tracer values in each grid cell
 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ntrace, ncat),  &
+      real (kind=dbl_kind), dimension (nx_block, ny_block, max_ntrace, ncat),  &
            intent(out), optional ::     &
            tmask         ! = 1. if tracer is present, else = 0.
 !
@@ -1195,7 +1198,7 @@
          mm            ,&! mean value of mass field
          mmask           ! = 1. if ice is present, = 0. otherwise
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace),   &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace),   &
          intent(in), optional ::   &
          tm             ,&! mean tracer
          tmask            ! = 1. if tracer is present, = 0. otherwise
@@ -1205,7 +1208,7 @@
          mc             ,&! mass value at geometric center of cell
          mx, my           ! limited derivative of mass wrt x and y
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace),   &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace),   &
          intent(out), optional ::   &
          tc             ,&! tracer at geometric center of cell
          tx, ty           ! limited derivative of tracer wrt x and y
@@ -1221,7 +1224,7 @@
          mxav           ,&! x coordinate of center of mass
          myav             ! y coordinate of center of mass
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace) ::  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace) ::  &
          mtxav          ,&! x coordinate of center of mass*tracer
          mtyav            ! y coordinate of center of mass*tracer
 
@@ -3436,11 +3439,11 @@
            mflx
 
       real (kind=dbl_kind), intent(in),   &
-           dimension (nx_block, ny_block, ntrace), optional ::   &
+           dimension (nx_block, ny_block, max_ntrace), optional ::   &
            tc, tx, ty
 
       real (kind=dbl_kind), intent(out),   &
-           dimension (nx_block, ny_block, ntrace), optional ::   &
+           dimension (nx_block, ny_block, max_ntrace), optional ::   &
            mtflx
 !
 !EOP
@@ -3460,7 +3463,7 @@
            msum, mxsum, mysum     ,&! sum of mass, mass*x, and mass*y
            mxxsum, mxysum, myysum   ! sum of mass*x*x, mass*x*y, mass*y*y
 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ntrace) ::   &
+      real (kind=dbl_kind), dimension (nx_block, ny_block, max_ntrace) ::   &
            mtsum            ,&! sum of mass*tracer
            mtxsum           ,&! sum of mass*tracer*x
            mtysum             ! sum of mass*tracer*y
@@ -3745,11 +3748,11 @@
          intent(inout) ::   &
          mm               ! mass field (mean)
 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ntrace),   &
+      real (kind=dbl_kind), dimension (nx_block, ny_block, max_ntrace),   &
          intent(in), optional ::   &
          mtflxe, mtflxn   ! mass*tracer transport across E and N cell edges
 
-      real (kind=dbl_kind), dimension (nx_block, ny_block, ntrace),   &
+      real (kind=dbl_kind), dimension (nx_block, ny_block, max_ntrace),   &
          intent(inout), optional ::   &
          tm               ! tracer fields
 
@@ -3766,7 +3769,7 @@
          i, j           ,&! horizontal indices
          nt, nt1, nt2     ! tracer indices
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,ntrace) ::   &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_ntrace) ::   &
          mtold            ! old mass*tracer
 
       real (kind=dbl_kind) ::   &

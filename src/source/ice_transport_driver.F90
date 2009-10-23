@@ -41,6 +41,13 @@
       logical, parameter :: & ! if true, prescribe area flux across each edge  
          l_fixed_area = .false.
 
+! NOTE: For remapping, hice, hsno, qice, and qsno are considered tracers.
+!       max_ntrace is not equal to max_ntrcr!
+!       ntrace is not equal to ntrcr!
+
+      integer (kind=int_kind), parameter ::                      &
+         max_ntrace = 2+max_ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
+
       integer (kind=int_kind) ::                      &
          ntrace              ! number of tracers in use
                           
@@ -221,7 +228,7 @@
          aimask           ! = 1. if ice is present, = 0. otherwise
 
       real (kind=dbl_kind),      &
-         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
+         dimension (nx_block,ny_block,max_ntrace,ncat,max_blocks) ::     &
          trm            ,&! mean tracer values in each grid cell
          trmask           ! = 1. if tracer is present, = 0. otherwise
 
@@ -263,7 +270,7 @@
          asum_init      ,&! initial global ice area
          asum_final       ! final global ice area
 
-      real (kind=dbl_kind), dimension(ntrace,ncat) ::     &
+      real (kind=dbl_kind), dimension(max_ntrace,ncat) ::     &
          atsum_init     ,&! initial global ice area*tracer
          atsum_final      ! final global ice area*tracer
 
@@ -944,7 +951,7 @@
             intent(out)::     &
            aim       ! mean ice area in each grid cell
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace,ncat),  &
            intent(out) ::     &
            trm       ! mean tracer values in each grid cell
 
@@ -1087,7 +1094,7 @@
            intent(in) ::     &
            aim       ! fractional ice area
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace,ncat),  &
            intent(in) ::     &
            trm       ! mean tracer values in each grid cell
 
@@ -1212,7 +1219,7 @@
          asum_init   ,&! initial global ice area
          asum_final    ! final global ice area
 
-      real (kind=dbl_kind), dimension(ntrace), intent(in), optional :: &
+      real (kind=dbl_kind), dimension(max_ntrace), intent(in), optional :: &
          atsum_init  ,&! initial global ice area*tracer
          atsum_final   ! final global ice area*tracer
 
@@ -1303,12 +1310,12 @@
            aimask         ! ice area mask
 
       real (kind=dbl_kind), intent(in),               &
-           dimension (nx_block,ny_block,ntrace) ::    &
+           dimension (nx_block,ny_block,max_ntrace) ::    &
            trm          ,&! tracer fields
            trmask         ! tracer mask
 
       real (kind=dbl_kind), intent(out),              &
-           dimension (nx_block,ny_block,ntrace) ::    &
+           dimension (nx_block,ny_block,max_ntrace) ::    &
            tmin         ,&! local min tracer
            tmax           ! local max tracer
 !
@@ -1491,7 +1498,7 @@
            aim            ! new ice area
 
       real (kind=dbl_kind), intent(in),                &
-           dimension (nx_block,ny_block,ntrace) ::     &
+           dimension (nx_block,ny_block,max_ntrace) ::     &
            trm            ! new tracers
 
       real (kind=dbl_kind), intent(in),                &

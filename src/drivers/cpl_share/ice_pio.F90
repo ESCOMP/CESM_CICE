@@ -51,14 +51,13 @@ module ice_pio
 
   ! !PUBLIC DATA MEMBERS
 
+  integer, public :: ice_pio_stride, ice_num_iotasks, ice_pio_root, ice_pio_type
+
   !EOP
 
   !----------------------------------------------------------------------------
   ! Local data
   !----------------------------------------------------------------------------
-
-  integer, private      :: ice_pio_stride, ice_num_iotasks, &
-	                    ice_pio_root,ice_pio_type
 
   type(iosystem_desc_t) :: ice_pio_subsystem
 
@@ -96,11 +95,11 @@ contains
 ! !INPUT/OUTPUT PARAMETERS:
 !
    implicit none
-   character(len=*)     , intent(in)    :: mode
-   character(len=*)     , intent(in)    :: filename
-   type(file_desc_t)    , intent(inout) :: File
-   logical,optional     , intent(in)    :: clobber
-   logical,optional     , intent(in)    :: cdf64
+   character(len=*)     , intent(in),    optional :: mode
+   character(len=*)     , intent(in),    optional :: filename
+   type(file_desc_t)    , intent(inout), optional :: File
+   logical              , intent(in),    optional :: clobber
+   logical              , intent(in),    optional :: cdf64
 !
 !EOP
 !
@@ -169,59 +168,61 @@ contains
       first_call = .false.
    end if
 
-   if (trim(mode) == 'write') then
-      lclobber = .false.
-      if (present(clobber)) lclobber=clobber
-   
-      lcdf64 = .false.
-      if (present(cdf64)) lcdf64=cdf64
+   if (present(mode) .and. present(filename) .and. present(File)) then
 
-      if (File%fh<0) then
-         ! filename not open
-         inquire(file=trim(filename),exist=exists)
-         if (exists) then
-            if (lclobber) then
-               nmode = pio_clobber
+      if (trim(mode) == 'write') then
+         lclobber = .false.
+         if (present(clobber)) lclobber=clobber
+         
+         lcdf64 = .false.
+         if (present(cdf64)) lcdf64=cdf64
+         
+         if (File%fh<0) then
+            ! filename not open
+            inquire(file=trim(filename),exist=exists)
+            if (exists) then
+               if (lclobber) then
+                  nmode = pio_clobber
+                  if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
+                  status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
+                  if (my_task == master_task) then
+                     write(nu_diag,*) subname,' create file ',trim(filename)
+                  end if
+               else
+                  status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_write)
+                  if (my_task == master_task) then
+                     write(nu_diag,*) subname,' open file ',trim(filename)
+                  end if
+               endif
+            else
+               nmode = pio_noclobber
                if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
                status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
                if (my_task == master_task) then
                   write(nu_diag,*) subname,' create file ',trim(filename)
                end if
-            else
-               status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_write)
-               if (my_task == master_task) then
-                  write(nu_diag,*) subname,' open file ',trim(filename)
-               end if
             endif
          else
-            nmode = pio_noclobber
-            if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
-            status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
-            if (my_task == master_task) then
-               write(nu_diag,*) subname,' create file ',trim(filename)
-            end if
+            ! filename is already open, just return
          endif
-      else
-         ! filename is already open, just return
-      endif
-   end if
-
-   if (trim(mode) == 'read') then
-      inquire(file=trim(filename),exist=exists)
-      if (exists) then
-         status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_nowrite)
-         call pio_seterrorhandling(File,PIO_RETURN_ERROR)
-      else
-         if(my_task==master_task) then
-            write(nu_diag,*) 'ice_pio_ropen ERROR: file invalid ',trim(filename)
-         end if
-         call abort_ice('aborting in ice-pio_ropen with invalid file')
-      endif
-   end if
+      end if
       
-  end subroutine ice_pio_init
+      if (trim(mode) == 'read') then
+         inquire(file=trim(filename),exist=exists)
+         if (exists) then
+            status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_nowrite)
+            call pio_seterrorhandling(File,PIO_RETURN_ERROR)
+         else
+            if(my_task==master_task) then
+               write(nu_diag,*) 'ice_pio_ropen ERROR: file invalid ',trim(filename)
+            end if
+            call abort_ice('aborting in ice-pio_ropen with invalid file')
+         endif
+      end if
 
-   
+   end if
+
+ end subroutine ice_pio_init
 
 !===============================================================================
 !BOP

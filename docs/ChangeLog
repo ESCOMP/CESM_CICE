@@ -1,4 +1,24 @@
 ===============================================================
+cice4_0_20091023
+Originator: dbailey
+Date: Fri Oct 23 2009
+Version: 4.0
+One-line Summary: Parallel prescribed ice and aerosols.
+CCSM Version compatible with: ccsm4_0_beta32+
+Changes made:
+
+Mariana has modified the prescribed ice and aerosols to use the
+new csm_share parallel utilities. Also, modify some things in the
+transport which caused a slowdown.
+
+M      src/source/ice_transport_driver.F90
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_prescaero_mod.F90
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20091015
 Originator: dbailey
 Date: Thu Oct 15 2009
