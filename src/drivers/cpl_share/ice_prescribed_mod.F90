@@ -495,7 +495,7 @@ subroutine ice_prescribed_run(mDateIn, secIn, mpicom)
    if (first_time) then
       aice_max = maxval(ice_cov)
 
-      if (aice_max > c2) then
+      if (aice_max > c10) then
          write(nu_diag,F00) "ERROR: Ice conc data must be in fraction, aice_max= ",aice_max
          call abort_ice(subName)
       end if

@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20091102
+Originator: mvertens
+Date: Fri Nov 02 2009
+Version: 4.0
+One-line Summary: added transfer of snowh from ice->cpl->atm
+CCSM Version compatible with: ccsm4_0_beta33
+Changes made:
+
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+	
+===============================================================
 cice4_0_20091023
 Originator: dbailey
 Date: Fri Oct 23 2009

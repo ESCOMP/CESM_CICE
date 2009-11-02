@@ -38,7 +38,7 @@ module ice_comp_mct
 		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
 		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
                               faero
-  use ice_state,       only : vice, aice, trcr, filename_aero, filename_iage, &
+  use ice_state,       only : vice, vsno, aice, trcr, filename_aero, filename_iage, &
                               filename_volpn, filename_FY, filename_lvl, &
                               tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
@@ -933,8 +933,8 @@ contains
                i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
-!              i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
-!                                                    / ailohi(i,j,iblk)
+               i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
+                                                     / ailohi(i,j,iblk)
             
                !--- a/i fluxes computed by ice
                i2x_i%rAttr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    
