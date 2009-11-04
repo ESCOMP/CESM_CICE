@@ -96,7 +96,7 @@ contains
 ! !REVISION HISTORY:
 !     2008-Sep-24 - D.A. Bailey - first version
 !
-! !INTERFACE: -----------------------------------------------------------
+o! !INTERFACE: -----------------------------------------------------------
 
 subroutine ice_prescaero_init(prescribed_aero_in)
 
@@ -205,8 +205,8 @@ subroutine ice_prescaero_init2(compid, mpicom, gsmap, dom)
 
    integer(kind=int_kind), intent(in)   :: compid
    integer(kind=int_kind), intent(in)   :: mpicom
-   type(mct_gsMap), intent(in), pointer :: gsmap
-   type(mct_gGrid), intent(in), pointer :: dom
+   type(mct_gsMap), pointer :: gsmap
+   type(mct_gGrid), pointer :: dom
    
 !EOP
    !----- Local ------

@@ -1,7 +1,21 @@
 ===============================================================
+cice4_0_20091103
+Originator: mvertens
+Date: Tue Nov 03 2009
+Version: 4.0
+One-line Summary: changed argument attributes to work with Lahey
+CCSM Version compatible with: ccsm4_0_beta33
+Changes made:
+	
+Removed intent(in) from input pointer arguments
+	
+M      src/source/ice_prescaero_mod.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+	
+===============================================================
 cice4_0_20091102
 Originator: mvertens
-Date: Fri Nov 02 2009
+Date: Mon Nov 02 2009
 Version: 4.0
 One-line Summary: added transfer of snowh from ice->cpl->atm
 CCSM Version compatible with: ccsm4_0_beta33
