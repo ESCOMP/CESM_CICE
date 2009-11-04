@@ -96,7 +96,7 @@ contains
 ! !REVISION HISTORY:
 !     2008-Sep-24 - D.A. Bailey - first version
 !
-o! !INTERFACE: -----------------------------------------------------------
+! !INTERFACE: -----------------------------------------------------------
 
 subroutine ice_prescaero_init(prescribed_aero_in)
 
