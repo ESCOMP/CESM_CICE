@@ -40,16 +40,13 @@ module ice_prescribed_mod
    use ice_kinds_mod
    use ice_fileunits
    use ice_exit,        only : abort_ice
-   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, nslyr, &
-                               max_blocks
+   use ice_domain_size, only : nx_global, ny_global, ncat, nilyr, nslyr, max_blocks
    use ice_constants
    use ice_blocks,     only : nx_block, ny_block
    use ice_domain,     only : nblocks, distrb_info, blocks_ice
    use ice_grid,       only : TLAT,TLON,hm,tmask
    use ice_calendar,   only : idate, sec
    use ice_itd,        only : ilyr1, slyr1, hin_max
-   use shr_scam_mod,   only : shr_scam_getCloseLatLon
-   use ice_scam,       only : scmlat, scmlon, single_column
    use ice_read_write
 
    implicit none
@@ -83,9 +80,6 @@ module ice_prescribed_mod
    character(len=char_len_long), public :: stream_domMaskName
    character(len=char_len_long), public :: stream_domFileName
    logical(kind=log_kind)      , public :: prescribed_ice_fill ! true if data fill required
-
-   real(kind=dbl_kind)    :: closelat,closelon ! closest lat/lon in dataset to scmlat
-   integer(kind=int_kind) :: latidx,lonidx     ! index of closest lat/lon in dataset to scmlat
 
 !EOP
 
@@ -144,7 +138,6 @@ subroutine ice_prescribed_init
         stream_domTvarName, stream_domXvarName, stream_domYvarName, &
         stream_domAreaName, stream_domMaskName, stream_domFileName
         
-
    ! default values for namelist
    prescribed_ice         = .false.          ! if true, prescribe ice
    stream_year_first      = 1                ! first year in  pice stream to use
@@ -307,8 +300,8 @@ subroutine ice_prescribed_init
    sdat%stream(1)%domFileName  = stream_domFileName
 
    !---------------------------------------------------------------------
-   ! Initialize model gsmap and model general grid 
-   ! This sets sdat%gsmap and sdat%grid
+   ! Initialize model decomp
+   ! Initialize gsmap and model general grid (sdat%gsmap and sdat%grid)
    !---------------------------------------------------------------------
    call mct_gsmap_OrderedPoints( gsmap, my_task, dof )
    call mct_gsMap_init( sdat%gsmap, dof, mpicom, compid, sdat%lsize, nx_global*ny_global )
@@ -318,7 +311,8 @@ subroutine ice_prescribed_init
 
    !---------------------------------------------------------------------
    ! Check that ice cover forcing data exists
-   ! Assumes that stream has one field, ice fraction
+   ! Assumes that one stream that also has one field, ice fraction
+   ! Note: 1 index below refers to the fact that we have only 1 stream
    !---------------------------------------------------------------------
    call shr_stream_getDomainInfo(sdat%stream(1), data_path,domain_info_fn, timeName, &
         lonName, latName, maskName, areaName)
@@ -326,6 +320,7 @@ subroutine ice_prescribed_init
         domain_info_fn, compid, mpicom, '1d', lonName, latName, maskName, areaName)
 
    !---------------------------------------------------------------------
+   ! Initialize forcing data decomp 
    ! Initialize pio decomp
    !---------------------------------------------------------------------
    sdat%lsizeR(1) = mct_gsmap_lsize(sdat%gsmapR(1),mpicom)
@@ -334,15 +329,6 @@ subroutine ice_prescribed_init
         (/sdat%strnxg(1),sdat%strnyg(1)/), dof, sdat%pio_iodesc(1))
    deallocate(dof)
   
-   !---------------------------------------------------------------------
-   ! Initialize single column
-   !---------------------------------------------------------------------
-   if (single_column) then
-      call ice_open_nc (domain_info_fn, ncid)
-      call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-      call ice_close_nc (ncid)
-   end if
-
    !---------------------------------------------------------------------
    ! Initialize mapping 
    !---------------------------------------------------------------------
@@ -357,16 +343,6 @@ subroutine ice_prescribed_init
    else
       sdat%domaps(1) = .true.
    end if
-
-   if (single_column) then
-      if (sdat%dofill(1)) then
-         call abort_ice ('ice_prescribed_init2: dofill not supported for single column')
-      end if
-      if (sdat%domaps(1)) then
-         call abort_ice ('ice_prescribed_init2: mapping not supported for single column')
-      end if
-   end if
-   
    if (sdat%dofill(1)) then
       call shr_dmodel_mapSet(sdat%sMatPf(1), &
            sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
@@ -426,7 +402,6 @@ subroutine ice_prescribed_run(mDateIn, secIn, mpicom)
 
 ! !USES:
 
-   use shr_tInterp_mod    ! for single column only
    implicit none
 
 ! !INPUT/OUTPUT PARAMETERS:
@@ -452,24 +427,7 @@ subroutine ice_prescribed_run(mDateIn, secIn, mpicom)
    ! Interpolate to new ice coverage
    !------------------------------------------------------------------------
 
-   if (single_column) then
-
-      call shr_dmodel_readLBUB(&
-           SDAT%stream(1),SDAT%pio_subsystem,SDAT%io_type,SDAT%pio_iodesc(1), &
-           mDatein,SecIn,mpicom,SDAT%gsmapR(1),&
-           SDAT%avRLB(1),SDAT%ymdLB(1),SDAT%todLB(1), &
-           SDAT%avRUB(1),SDAT%ymdUB(1),SDAT%todUB(1), &
-           newData, istr='_readLBUB')
-      call shr_tInterp_getFactors(SDAT%ymdlb(1),SDAT%todlb(1),SDAT%ymdub(1),SDAT%todub(1),&
-           SDAT%ymd,SDAT%tod,flb,fub,algo=trim(SDAT%tintalgo(1)))
-      nidx = (latidx-1)*sdat%strnxg(1) + lonidx
-      SDAT%avs(1)%rAttr(1,nidx) = SDAT%avRLB(1)%rAttr(1,nidx)*flb + SDAT%avRUB(1)%rAttr(1,nidx)*fub
-      
-   else
-      
-      call shr_strdata_advance(sdat,mDateIn,SecIn,mpicom,'cice_pice')
-      
-   end if
+   call shr_strdata_advance(sdat,mDateIn,SecIn,mpicom,'cice_pice')
    
    ice_cov(:,:,:) = c0  ! This initializes ghost cells as well 
 

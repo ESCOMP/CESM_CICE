@@ -46,7 +46,7 @@
 <grid_format hgrid="0.23x0.31" >'nc' </grid_format> 
 <grid_format hgrid="tx0.1v2"   >'bin'</grid_format> 
 <grid_format hgrid="tx1v1"     >'bin'</grid_format> 
-<grid_format                       >'bin'</grid_format> 
+<grid_format                   >'bin'</grid_format> 
 
 <grid_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </grid_file> 
 <grid_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </grid_file> 
@@ -59,6 +59,7 @@
 <grid_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </grid_file> 
 <grid_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</grid_file> 
 <grid_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</grid_file> 
+
 <grid_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20010402.grid'</grid_file> 
 <grid_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20010402.grid'</grid_file> 
 <grid_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'</grid_file> 
@@ -78,6 +79,7 @@
 <kmt_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </kmt_file> 
 <kmt_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</kmt_file> 
 <kmt_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</kmt_file> 
+
 <kmt_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20090204.kmt'</kmt_file> 
 <kmt_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20061229.kmt'</kmt_file> 
 <kmt_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'</kmt_file> 
@@ -195,102 +197,88 @@
 
 <ns_boundary_type hgrid ='tx0.1v2' >'tripole'</ns_boundary_type>
 <ns_boundary_type hgrid ='tx1v1'   >'tripole'</ns_boundary_type>
-<ns_boundary_type                     >'open' </ns_boundary_type>
+<ns_boundary_type                  >'open'   </ns_boundary_type>
 
 <!--------------------------->
 <!-- Prescribed namelist- --->
 <!--------------------------->
 
-<stream_domfilename hgrid="8x16"  >'atm/cam/sst/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="8x16"  >'atm/cam/sst/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_fldfilename>
+<stream_domfilename hgrid="8x16"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_domfilename>
+<stream_fldfilename hgrid="8x16"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="8x16"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="8x16"  > 0 </stream_year_first>
 <stream_year_last   hgrid="8x16"  > 0 </stream_year_last>
 <model_year_align   hgrid="8x16"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="48x96"  >'atm/cam/sst/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="48x96"  >'atm/cam/sst/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_fldfilename>
+<stream_domfilename hgrid="48x96"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_domfilename>
+<stream_fldfilename hgrid="48x96"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_48x96_clim_c050526.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="48x96"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="48x96"  > 0 </stream_year_first>
 <stream_year_last   hgrid="48x96"  > 0 </stream_year_last>
 <model_year_align   hgrid="48x96"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="64x128"  > 'atm/cam/sst/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="64x128"  > 'atm/cam/sst/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_fldfilename>
+<stream_domfilename hgrid="64x128"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_domfilename>
+<stream_fldfilename hgrid="64x128"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_64x128_clim_c050526.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="64x128"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="64x128"  > 0 </stream_year_first>
 <stream_year_last   hgrid="64x128"  > 0 </stream_year_last>
 <model_year_align   hgrid="64x128"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="128x256"  > 'atm/cam/sst/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="128x256"  > 'atm/cam/sst/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_fldfilename>
+<stream_domfilename hgrid="128x256"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_domfilename>
+<stream_fldfilename hgrid="128x256"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_128x256_clim_c050526.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="128x256"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="128x256"  > 0 </stream_year_first>
 <stream_year_last   hgrid="128x256"  > 0 </stream_year_last>
 <model_year_align   hgrid="128x256"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="4x5"  > 'atm/cam/sst/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_domfilename>
-<stream_fldfilename hgrid="4x5"  > 'atm/cam/sst/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_fldfilename>
-<stream_fldvarname  hgrid="4x5"  > 'ice_cov' </stream_fldvarname>
-<stream_year_first  hgrid="4x5"  > 0 </stream_year_first>
-<stream_year_last   hgrid="4x5"  > 0 </stream_year_last>
-<model_year_align   hgrid="4x5"  > 1 </model_year_align>
-
-<stream_domfilename hgrid="10x15"  > 'atm/cam/sst/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="10x15"  > 'atm/cam/sst/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_fldfilename>
+<stream_domfilename hgrid="10x15"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_domfilename>
+<stream_fldfilename hgrid="10x15"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="10x15"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="10x15"  > 0 </stream_year_first>
 <stream_year_last   hgrid="10x15"  > 0 </stream_year_last>
 <model_year_align   hgrid="10x15"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="1.9x2.5"  > 'atm/cam/sst/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_domfilename>
-<stream_fldfilename hgrid="1.9x2.5"  > 'atm/cam/sst/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_fldfilename>
+<stream_domfilename hgrid="4x5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_domfilename>
+<stream_fldfilename hgrid="4x5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_4x5_clim_c061031.nc'</stream_fldfilename>
+<stream_fldvarname  hgrid="4x5"  > 'ice_cov' </stream_fldvarname>
+<stream_year_first  hgrid="4x5"  > 0 </stream_year_first>
+<stream_year_last   hgrid="4x5"  > 0 </stream_year_last>
+<model_year_align   hgrid="4x5"  > 1 </model_year_align>
+
+<stream_domfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_domfilename>
+<stream_fldfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="1.9x2.5"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="1.9x2.5"  > 0 </stream_year_first>
 <stream_year_last   hgrid="1.9x2.5"  > 0 </stream_year_last>
 <model_year_align   hgrid="1.9x2.5"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="2x2.5"  > 'atm/cam/sst/sst_HadOIBl_bc_2x2.5_clim_c050526.nc'</stream_domfilename>
-<stream_fldfilename hgrid="2x2.5"  > 'atm/cam/sst/sst_HadOIBl_bc_2x2.5_clim_c050526.nc'</stream_fldfilename>
-<stream_fldvarname  hgrid="2x2.5"  > 'ice_cov' </stream_fldvarname>
-<stream_year_first  hgrid="2x2.5"  > 0 </stream_year_first>
-<stream_year_last   hgrid="2x2.5"  > 0 </stream_year_last>
-<model_year_align   hgrid="2x2.5"  > 1 </model_year_align>
-
-<stream_domfilename hgrid="0.9x1.25"  > 'atm/cam/sst/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_domfilename>
-<stream_fldfilename hgrid="0.9x1.25"  > 'atm/cam/sst/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_fldfilename>
+<stream_domfilename hgrid="0.9x1.25"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_domfilename>
+<stream_fldfilename hgrid="0.9x1.25"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.9x1.25_clim_c040926.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="0.9x1.25"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="0.9x1.25"  > 0 </stream_year_first>
 <stream_year_last   hgrid="0.9x1.25"  > 0 </stream_year_last>
 <model_year_align   hgrid="0.9x1.25"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="0.47x0.63"  > 'atm/cam/sst/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_domfilename>
-<stream_fldfilename hgrid="0.47x0.63"  > 'atm/cam/sst/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_fldfilename>
+<stream_domfilename hgrid="0.47x0.63"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_domfilename>
+<stream_fldfilename hgrid="0.47x0.63"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.47x0.63_clim_c061106.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="0.47x0.63"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="0.47x0.63"  > 0 </stream_year_first>
 <stream_year_last   hgrid="0.47x0.63"  > 0 </stream_year_last>
 <model_year_align   hgrid="0.47x0.63"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="0.23x0.31"  > 'atm/cam/sst/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_domfilename>
-<stream_fldfilename hgrid="0.23x0.31"  > 'atm/cam/sst/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_fldfilename>
+<stream_domfilename hgrid="0.23x0.31"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_domfilename>
+<stream_fldfilename hgrid="0.23x0.31"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_0.23x0.31_clim_c061106.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="0.23x0.31"  > 'ice_cov' </stream_fldvarname>
 <stream_year_first  hgrid="0.23x0.31"  > 0 </stream_year_first>
 <stream_year_last   hgrid="0.23x0.31"  > 0 </stream_year_last>
 <model_year_align   hgrid="0.23x0.31"  > 1 </model_year_align>
 
-<stream_domfilename > 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_domfilename>
-<stream_fldfilename > 'ice/cice/hurrell_sst_ifrac.1x1.050606.nc'</stream_fldfilename>
+<stream_domfilename > 'ocn/docn7/SSTDATA/hurrell_sst_ifrac.1x1.050606.nc'</stream_domfilename>
+<stream_fldfilename > 'ocn/docn7/SSTDATA/hurrell_sst_ifrac.1x1.050606.nc'</stream_fldfilename>
 <stream_fldvarname  > 'ifrac' </stream_fldvarname>
 <stream_year_first  > 1  </stream_year_first>
 <stream_year_last   > 1  </stream_year_last>
 <model_year_align   > 1  </model_year_align>
-
-<stream_domfilename cice_prestype="data_clim_1870" > 'ice/cice/hadley.sst_ifrac.1870-2003.1x1.070608.nc'</stream_domfilename>
-<stream_fldfilename cice_prestype="data_clim_1870" > 'ice/cice/hadley.sst_ifrac.1870-2003.1x1.070608.nc'</stream_fldfilename>
-<stream_fldvarname  cice_prestype="data_clim_1870" > 'ice_cov' </stream_fldvarname>
-<stream_year_first  cice_prestype="data_clim_1870" > 1870 </stream_year_first>
-<stream_year_last   cice_prestype="data_clim_1870" > 1870 </stream_year_last>
-<model_year_align   cice_prestype="data_clim_1870" > 1    </model_year_align>
 
 <stream_domfilename  > "unset"</stream_domfilename>
 <stream_fldfilename  > "unset"</stream_fldfilename>

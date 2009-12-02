@@ -42,17 +42,40 @@ EOF1
 # Invoke build-namelist
 #----------------------------
 
-set cice_prestype = " "
-if ($CICE_MODE == 'prescribed') set cice_prestype = "-cice_prestype $CICE_PRESTYPE "
-
 set presaero_type = "-presaero_type $CICE_PRESAERO_TYPE "
 
 if ($ICE_CDF64 == "TRUE") then
     setenv CICE_NAMELIST_OPTS "$CICE_NAMELIST_OPTS lcdf64=.true."
 endif
 
-$CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $cice_prestype $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-                                      -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
+set SSTDATA = "FALSE"
+set CCSMSSTFN = $CCSM_SSTDATA_FILENAME
+if ($CICE_MODE == "prescribed") then
+  if ($CCSM_SSTDATA_FILENAME != 'UNSET' && $CCSM_SSTDATA_YEAR_START != '-999' && $CCSM_SSTDATA_YEAR_END != '-999' ) then
+     set SSTDATA = "TRUE"
+     if ($CCSM_SSTDATA_FILENAME =~ $DIN_LOC_ROOT*) then
+        set num = `echo $DIN_LOC_ROOT | wc -c `
+        set dd = `echo $CCSM_SSTDATA_FILENAME | cut -c $num-`
+        if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
+        set CCSMSSTFN = '$DIN_LOC_ROOT'"/$dd"
+     endif
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS stream_fldfilename='\$CCSM_SSTDATA_FILENAME'"
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS stream_domfilename=\$CCSM_SSTDATA_FILENAME" 
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS stream_year_first='\$CCSM_SSTDATA_YEAR_START'" 
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS stream_year_last='\$CCSM_SSTDATA_YEAR_END'"
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS model_year_align='\$CCSM_SSTDATA_YEAR_START'"
+#    set CICE_NAMELIST_OPTS = "$CICE_NAMELIST_OPTS stream_fldvarname='ice_cov'"
+  endif
+endif
+
+##  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS stream_fldfilename='"\$CCSM_SSTDATA_FILENAME"' stream_domfilename='"\$CCSM_SSTDATA_FILENAME"' stream_year_first='"\$CCSM_SSTDATA_YEAR_START"' stream_year_last='"\$CCSM_SSTDATA_YEAR_END"' model_year_align='"\$CCSM_SSTDATA_YEAR_START"' stream_fldvarname='ice_cov' /"  || exit -1
+
+
+if ($SSTDATA == "TRUE") then
+  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS stream_fldfilename='$CCSMSSTFN' stream_domfilename='$CCSMSSTFN' stream_year_first=$CCSM_SSTDATA_YEAR_START stream_year_last=$CCSM_SSTDATA_YEAR_END model_year_align=$CCSM_SSTDATA_YEAR_START stream_fldvarname='ice_cov' /"  || exit -1
+else
+  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist -inputdata $CASEBUILD/cice.input_data_list -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
+endif
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
 mv ice_in.tmp ice_in
@@ -93,8 +116,8 @@ cat >! $CASEBUILD/cice.buildexe.csh << EOF2
 set objdir = \$OBJROOT/ice/obj; cd \$objdir
 
 set comp = "unknown"
-if ($COMP_INTERFACE == 'MCT' ) set comp = mct
-if ($COMP_INTERFACE == 'ESMF') set comp = esmf
+if (\$COMP_INTERFACE == 'MCT' ) set comp = mct
+if (\$COMP_INTERFACE == 'ESMF') set comp = esmf
 
 \cat >! .tmp << EOF; cmp -s .tmp Filepath || mv -f .tmp Filepath 
 EOF2

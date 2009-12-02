@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20091202
+Originator: mvertens
+Date: Wed Dec 2 2009
+Version: 4.0
+One-line Summary: Update prescribed mode
+CCSM Version compatible with: ccsm4_0_beta35
+Changes made:
+	
+M      bld/cice.cpl7.template
+M      bld/build-namelist
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20091111
 Originator: mvertens
 Date: Wed Nov 11 2009
