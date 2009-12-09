@@ -16,7 +16,11 @@ module ice_comp_mct
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
 		           shr_file_setloglevel, shr_file_setlogunit
   use mct_mod
-  use esmf_mod, only : ESMF_Clock
+#ifdef USE_ESMF_LIB
+  use esmf_mod
+#else
+  use esmf_mod, only: ESMF_clock
+#endif
 
   use seq_flds_mod
   use seq_flds_indices

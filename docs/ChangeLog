@@ -1,4 +1,20 @@
 ===============================================================
+cice4_0_20091209
+Originator: dbailey
+Date: Wed Dec 9 2009
+Version: 4.0
+One-line Summary: Tracer indexing issue.
+CCSM Version compatible with: ccsm4_0_beta35
+Changes made:
+	
+This tag fixes a tracer index problem which caused out of
+bounds errors in certain cases. This also adds a fix for
+the ESMF libraries.
+
+M      src/source/ice_init.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20091202
 Originator: mvertens
 Date: Wed Dec 2 2009

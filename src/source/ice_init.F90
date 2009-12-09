@@ -680,31 +680,42 @@
          ntrcr = 1             ! count tracers, starting with Tsfc = 1
 
          if (tr_iage) then
-             nt_iage = ntrcr + 1
-             ntrcr = ntrcr + 1
+            nt_iage = ntrcr + 1
+            ntrcr = ntrcr + 1
+         else
+            nt_iage = max_ntrcr
          endif
 
          if (tr_FY) then
-             nt_FY = ntrcr + 1
-             ntrcr = ntrcr + 1
+            nt_FY = ntrcr + 1
+            ntrcr = ntrcr + 1
+         else
+            nt_FY = max_ntrcr
          endif
 
          if (tr_lvl) then
-             nt_alvl = ntrcr + 1
-             ntrcr = ntrcr + 1
-             nt_vlvl = ntrcr + 1
-             ntrcr = ntrcr + 1
+            nt_alvl = ntrcr + 1
+            ntrcr = ntrcr + 1
+            nt_vlvl = ntrcr + 1
+            ntrcr = ntrcr + 1
+         else
+            nt_alvl = max_ntrcr
+            nt_vlvl = max_ntrcr
          endif
 
          if (tr_pond) then
-             nt_volpn = ntrcr + 1
-             ntrcr = ntrcr + 1
+            nt_volpn = ntrcr + 1
+            ntrcr = ntrcr + 1
+         else
+            nt_volpn = max_ntrcr
          endif
 
          if (tr_aero) then
             nt_aero = ntrcr + 1
             ntrcr = ntrcr + n_aero*4 !MH 2 for snow soot and 2 for ice
                                      !MH for multiple (n_aero) aerosols
+         else
+            nt_aero = max_ntrcr
          endif
 
          if (ntrcr > max_ntrcr) then
