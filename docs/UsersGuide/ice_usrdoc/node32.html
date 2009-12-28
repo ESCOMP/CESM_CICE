@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Negative Ice Area in Horizontal Remapping</TITLE>
-<META NAME="description" CONTENT="Negative Ice Area in Horizontal Remapping">
+<TITLE>Code does not Compile or Run </TITLE>
+<META NAME="description" CONTENT="Code does not Compile or Run ">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -20,79 +20,73 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node33.html">
 <LINK REL="previous" HREF="node31.html">
-<LINK REL="up" HREF="node30.html">
+<LINK REL="up" HREF="node31.html">
 <LINK REL="next" HREF="node33.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html482"
+<A NAME="tex2html486"
   HREF="node33.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html478"
-  HREF="node30.html">
+<A NAME="tex2html482"
+  HREF="node31.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html472"
+<A NAME="tex2html476"
   HREF="node31.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html480"
+<A NAME="tex2html484"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html483"
-  HREF="node33.html">Conservation Error</A>
-<B> Up:</B> <A NAME="tex2html479"
-  HREF="node30.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html473"
-  HREF="node31.html">Code does not Compile</A>
- &nbsp; <B>  <A NAME="tex2html481"
+<B> Next:</B> <A NAME="tex2html487"
+  HREF="node33.html">Negative Ice Area in</A>
+<B> Up:</B> <A NAME="tex2html483"
+  HREF="node31.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html477"
+  HREF="node31.html">Troubleshooting</A>
+ &nbsp; <B>  <A NAME="tex2html485"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00092000000000000000">
-Negative Ice Area in Horizontal Remapping</A>
+<H2><A NAME="SECTION00091000000000000000">
+Code does not Compile or Run </A>
 </H2>
 
 <P>
-This error is written from <B>ice_transport_remap.F</B> when the ice model
-is checking for negative ice areas. If it happens well into a model integration,
-it can be indicative of a CFL violation.  The output looks like:
+Check the <B>ice.log.*</B> or <B>ice.bldlog.*</B> files in the executable 
+directory, or the standard output and error files for information.  Also,
+try the following:
 
 <P>
-<PRE>
-  60: New area &lt; 0, istep = 119588
-  60: (my_task,i,j,n) = 4 21 380 1
-  60: Old area = 0.960675000975677174E-05
-  60: New area = -0.161808948357841311E-06
-  60: Net flux = -0.976855895811461324E-05
-  60:(shr_sys_abort) ERROR: remap transport: negative area
-  60:(shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
-  60:(shr_mpi_abort):remap transport: negative area 0
-</PRE>
+
+<UL>
+<LI>Delete the executable directory and rebuild the model.
+</LI>
+<LI>Make sure that there is a <B>Macros.OS</B> file for your
+        platform.  Modify the directory paths for the libraries.
+</LI>
+<LI>Make sure all paths and file names are set correctly in the scripts.
+</LI>
+<LI>If changes were made to the <B>ice_model_size.F90</B> file in the
+        source code directory, they will be overwritten by the file
+        in <B>input_templates</B>.  
 
 <P>
-The dynamics timestep should be reduced to integrate past this problem.  Set
-
-<P>
-<PRE>
- , ndyn_dt       = 2
-</PRE>
-
-<P>
-in the namelist and restart the model.  When the job completes set the value
-back to 1.
+</LI>
+</UL>
 
 <P>
 <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

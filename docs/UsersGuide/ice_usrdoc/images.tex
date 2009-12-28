@@ -1,9 +1,10 @@
 \batchmode
+
+
 \documentclass{article}
 \RequirePackage{ifthen}
 
 
-\usepackage{html}
 \usepackage{natbib}
 \usepackage{supertabular}
 \setcounter{tocdepth}{7}
@@ -25,6 +26,7 @@
    \pdfcompresslevel=9
 \else
    \usepackage{graphicx}
+   \usepackage{html}
 \fi
 
 
@@ -36,6 +38,24 @@
 \topmargin=0.0in
 \headheight=0.0in
 \headsep = 0.0in
+
+
+%
+\renewcommand{\topfraction}{0.9}	% max fraction of floats at top
+    %
+\renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    %
+\renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+    %
+\renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+    %
+\renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+	%
+\renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
 
 
 
@@ -169,6 +189,10 @@
 
 \setcounter{tocdepth}{7}
 \setcounter{secnumdepth}{10}
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\setcounter{dbltopnumber}{2}
 
 
 \newedenvironment{Ventry}[1]{\begin{list}{}{\renewcommand {\makelabel}[1]{\textsf{##1:}\hfil}%
@@ -187,14 +211,14 @@
 \stepcounter{subsubsection}
 \stepcounter{section}
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline503}%
+\lthtmlinlinemathA{tex2html_wrap_inline618}%
 $>$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
 
 \stepcounter{subsection}
 {\newpage\clearpage
-\lthtmldisplayA{displaymath293}%
+\lthtmldisplayA{displaymath382}%
 \begin{displaymath}
   \Delta t < \frac{min(\Delta x, \Delta y)}{4 max(u, v)} .
 \end{displaymath}%
@@ -202,19 +226,19 @@ $>$%
 \lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline509}%
+\lthtmlinlinemathA{tex2html_wrap_inline624}%
 $max(u,v) = 0.5 m/s$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline511}%
+\lthtmlinlinemathA{tex2html_wrap_inline626}%
 $min(\Delta x, \Delta y)$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline513}%
+\lthtmlinlinemathA{tex2html_wrap_inline628}%
 $max \Delta t$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
@@ -222,7 +246,7 @@ $max \Delta t$%
 \stepcounter{subsection}
 \stepcounter{subsection}
 {\newpage\clearpage
-\lthtmldisplayA{displaymath378}%
+\lthtmldisplayA{displaymath472}%
 \begin{displaymath}
  dte < T < dt
 \end{displaymath}%
@@ -234,6 +258,7 @@ $max \Delta t$%
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
+\stepcounter{subsection}
 \stepcounter{subsubsection}
 \stepcounter{subsubsection}
 \stepcounter{section}
@@ -245,7 +270,7 @@ $max \Delta t$%
 \stepcounter{subsection}
 \stepcounter{subsubsection}
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline1423}%
+\lthtmlinlinemathA{tex2html_wrap_inline1598}%
 $\sigma T_f^4$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
@@ -253,19 +278,19 @@ $\sigma T_f^4$%
 \stepcounter{subsubsection}
 \stepcounter{subsubsection}
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline1425}%
+\lthtmlinlinemathA{tex2html_wrap_inline1600}%
 $^{2}$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline1429}%
+\lthtmlinlinemathA{tex2html_wrap_inline1604}%
 $^{-1}$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline1433}%
+\lthtmlinlinemathA{tex2html_wrap_inline1608}%
 $^{-2}$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}
@@ -273,7 +298,7 @@ $^{-2}$%
 \stepcounter{section}
 \stepcounter{subsection}
 {\newpage\clearpage
-\lthtmlinlinemathA{tex2html_wrap_inline1714}%
+\lthtmlinlinemathA{tex2html_wrap_inline1889}%
 $<$%
 \lthtmlinlinemathZ
 \lthtmlcheckvsize\clearpage}

@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Stdout Output</TITLE>
-<META NAME="description" CONTENT="Stdout Output">
+<TITLE>Output Data</TITLE>
+<META NAME="description" CONTENT="Output Data">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -18,65 +18,85 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="next" HREF="node24.html">
+<LINK REL="next" HREF="node31.html">
 <LINK REL="previous" HREF="node22.html">
-<LINK REL="up" HREF="node22.html">
+<LINK REL="up" HREF="ice_usrdoc.html">
 <LINK REL="next" HREF="node24.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html370"
+<A NAME="tex2html367"
   HREF="node24.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html366"
-  HREF="node22.html">
+<A NAME="tex2html363"
+  HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html360"
+<A NAME="tex2html357"
   HREF="node22.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html368"
+<A NAME="tex2html365"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html371"
-  HREF="node24.html">Restart Files</A>
-<B> Up:</B> <A NAME="tex2html367"
-  HREF="node22.html">Output Data</A>
-<B> Previous:</B> <A NAME="tex2html361"
-  HREF="node22.html">Output Data</A>
- &nbsp; <B>  <A NAME="tex2html369"
+<B> Next:</B> <A NAME="tex2html368"
+  HREF="node24.html">Stdout Output</A>
+<B> Up:</B> <A NAME="tex2html364"
+  HREF="ice_usrdoc.html">ice_usrdoc</A>
+<B> Previous:</B> <A NAME="tex2html358"
+  HREF="node22.html">Changing the Number of</A>
+ &nbsp; <B>  <A NAME="tex2html366"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00081000000000000000"></A>
-<A NAME="stdout"></A>
-<BR>
-Stdout Output
-</H2>
+<H1><A NAME="SECTION00080000000000000000">
+Output Data</A>
+</H1>
+  
+<P>
+The ice model produces three types of output data.  A file containing
+ASCII text, also known as a log file, is created for each run that
+contains information about how the run was set up and how it progressed.
+A series of binary restart files necessary to continue the run are created.
+A series of netCDF history files containing gridded instantaneous or
+time-averaged output are also generated during a run.  These are described below. 
 
 <P>
-Diagnostics from the ice model are written to an ASCII file that contains
-information from the compilation, a record
-of the input parameters, and how hemispherically averaged, maximum and minimum
-values are evolving with the integration.  Certain error conditions detected
-within the ice setup script or the ice model will also appear in this file.
-Upon the completion of the simulation, some timing information will appear
-at the bottom of the file.
-The file name is of the form <B>ice.log.$LID</B>, where <TT>$LID</TT> is
-a timestamp for the file ID. It resides in the executable directory.
-The frequency of the diagnostics is determined by the namelist parameter
-<TT>diagfreq</TT>.
-    <BR><HR>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html369"
+  HREF="node24.html">Stdout Output</A>
+<LI><A NAME="tex2html370"
+  HREF="node25.html">Restart Files</A>
+<UL>
+<LI><A NAME="tex2html371"
+  HREF="node26.html">Restart Pointer Files</A>
+</UL>
+<BR>
+<LI><A NAME="tex2html372"
+  HREF="node27.html">History Files</A>
+<UL>
+<LI><A NAME="tex2html373"
+  HREF="node28.html">Caveats Regarding Averaged Fields</A>
+<LI><A NAME="tex2html374"
+  HREF="node29.html">Changing Frequency and Averaging</A>
+<LI><A NAME="tex2html375"
+  HREF="node30.html">Changing Content</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

@@ -1,7 +1,9 @@
 \begin{thebibliography}{}
 
 \bibitem[Bitz et~al.(2001)]{bitz01}
-Bitz, C.~M., M.~Holland, M.~Eby and A.~J. Weaver, 2001: Simulating the ice-thickness distribution in a coupled climate model. {\em J. Geophys. Res.}, {\bf 106}, 2441--2463.
+Bitz, C.~M., M.~Holland, M.~Eby and A.~J. Weaver, 2001: Simulating the
+  ice-thickness distribution in a coupled climate model. {\em J. Geophys.
+  Res.}, {\bf 106}, 2441--2463.
 
 \bibitem[Bitz and Lipscomb(1999)]{bitz99}
 Bitz, C.~M. and W.~H. Lipscomb, 1999: An energy-conserving thermodynamic model
@@ -24,11 +26,6 @@ Hunke, E.~C., 2001: Viscous-plastic sea ice dynamics with the evp model:
 \bibitem[Hunke and Dukowicz(1997)]{hunk97}
 Hunke, E.~C. and J.~K. Dukowicz, 1997: An elastic-viscous-plastic model for sea
   ice dynamics. {\em J. Phys. Oceanogr.}, {\bf 27}, 1849--1867.
-
-\bibitem[Hunke and Lipscomb(2002)]{cice02}
-Hunke, E.~C. and W.~H. Lipscomb, 2002: {\em CICE: the Los Alamos sea ice model,
-  documentation and software User's Manual}. T-3 Fluid Dynamics Group, Los
-  Alamos National Laboratory, Tech. Rep. LACC-98-16 v.3.
 
 \bibitem[Hunke and Lipscomb(2008)]{cice08}
 Hunke, E.~C. and W.~H. Lipscomb, 2008: {\em CICE: The Los Alamos Sea Ice Model.

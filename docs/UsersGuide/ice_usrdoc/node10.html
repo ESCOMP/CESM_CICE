@@ -26,30 +26,30 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html209"
+<A NAME="tex2html213"
   HREF="node11.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html205"
+<A NAME="tex2html209"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html199"
+<A NAME="tex2html203"
   HREF="node9.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html207"
+<A NAME="tex2html211"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html210"
+<B> Next:</B> <A NAME="tex2html214"
   HREF="node11.html">Model Physics</A>
-<B> Up:</B> <A NAME="tex2html206"
+<B> Up:</B> <A NAME="tex2html210"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html200"
+<B> Previous:</B> <A NAME="tex2html204"
   HREF="node9.html">Changing the timestep</A>
- &nbsp; <B>  <A NAME="tex2html208"
+ &nbsp; <B>  <A NAME="tex2html212"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
@@ -63,20 +63,20 @@ Writing Output</A>
 The namelist variables that control the frequency of the model diagnostics, 
 netCDF history, and restart files are shown in Table <A HREF="node8.html#table:setup_nml">1</A>.  By 
 default, diagnostics are written out once every 48 timesteps to the ascii file
-<B>ice.log.$LID</B> (see section <A HREF="node23.html#stdout">7.1</A>). <TT>$LID</TT> is a time stamp 
+<B>ice.log.$LID</B> (see section <A HREF="node24.html#stdout">7.1</A>). <TT>$LID</TT> is a time stamp 
 that is set in the main script.   
 
 <P>
 The namelist variable <TT>histfreq</TT> controls the output frequency of the 
 netCDF history files; writing monthly averages is the default.  The content of 
-the history files is described in section <A HREF="node26.html#history">7.3</A>.  The value of 
+the history files is described in section <A HREF="node27.html#history">7.3</A>.  The value of 
 <TT>hist_avg</TT> determines if instantaneous or averaged variables are written 
 at the frequency set by <TT>histfreq</TT>.  If <TT>histfreq</TT> is set to '1' for 
 instantaneous output, <TT>hist_avg</TT> is set to <TT>.false.</TT> within the source 
 code to avoid conflicts.  The latest version of CICE allows for multiple
 history streams, currently set to a maximum of 5.  The namelist variables, 
 <TT>histfreq</TT> and <TT>histfreq_n</TT> are now arrays which allow for different
-frequency history file sets.  More detail on this is available in <A HREF="node26.html#history">7.3</A>.
+frequency history file sets.  More detail on this is available in <A HREF="node27.html#history">7.3</A>.
 
 <P>
 The namelist variable <TT>pointer_file</TT> is set to the name of the pointer file
@@ -85,10 +85,10 @@ begins.  The pointer file resides in the scripts directory and is created
 initially by the ice setup script but is overwritten every time a new restart 
 file is created.  It will contain the name of the latest restart file.  The 
 default filename <I>ice.restart_file</I> shown in Table 
-<A HREF="node15.html#table:grid_nml">7</A> will not work unless some modifications are made to 
+<A HREF="node8.html#table:setup_nml">1</A> will not work unless some modifications are made to 
 the ice setup script and a file is created with this name and contains the name 
 of a valid restart file; this variable must be set in the namelist.  More 
-information on restart pointer files can be found in section <A HREF="node25.html#pointer_files">7.2</A>.
+information on restart pointer files can be found in section <A HREF="node26.html#pointer_files">7.2</A>.
 
 <P>
 The variables <TT>dumpfreq</TT> and <TT>dumpfreq_n</TT> control the 
@@ -117,12 +117,12 @@ files will be written to the executable directory.
 filenames for the initial condition file, the restart files and the history 
 files, respectively.  These strings have been determined by the requirements 
 of the CCSM filenaming convention, so the default values are set by the CCSM
-driver.  See <A HREF="node24.html#restart_files">7.2</A> and <A HREF="node26.html#history_files">7.3</A> for an explanation 
+driver.  See <A HREF="node25.html#restart_files">7.2</A> and <A HREF="node27.html#history_files">7.3</A> for an explanation 
 of how the rest of the filename is created.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="ice_nml"></A>  <A NAME="345"></A>
+  <A NAME="ice_nml"></A>  <A NAME="434"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 3:</STRONG>
 Namelist Variables for Model Physics</CAPTION>
@@ -134,7 +134,7 @@ Namelist Variables for Model Physics</CAPTION>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>ndte</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Number of subcycles in dynamics.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Number of sub-cycles in EVP dynamics.</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>kcolumn</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
@@ -190,13 +190,13 @@ Namelist Variables for Model Physics</CAPTION>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0 = (<A
- HREF="node37.html#hibl79">Hibler(1979)</A>) parameterization</TD>
+ HREF="node38.html#hibl79">Hibler(1979)</A>) parameterization</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1 = (<A
- HREF="node37.html#roth75b">Rothrock(1975)</A>) parameterization</TD>
+ HREF="node38.html#roth75b">Rothrock(1975)</A>) parameterization</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>evp_damping</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
@@ -238,22 +238,47 @@ Namelist Variables for Model Physics</CAPTION>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicev</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.73</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible ice albedo</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible ice albedo (CCSM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicei</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.33</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared ice albedo</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared ice albedo (CCSM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowv</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.96</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible snow albedo</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible snow albedo (CCSM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowi</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.68</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared snow albedo</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared snow albedo (CCSM3)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_ice</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base ice grain radius tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_pnd</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1.5</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base snow grain radius tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_snw</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base pond grain radius tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>dT_mlt_in</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1.5</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Snow melt onset temperature parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>rsnw_mlt_in</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1500.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Snow melt maximum radius (dEdd)</TD>
 </TR>
 </TABLE>
 </DIV>
@@ -262,35 +287,35 @@ Namelist Variables for Model Physics</CAPTION>
 <P>
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html209"
+<A NAME="tex2html213"
   HREF="node11.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html205"
+<A NAME="tex2html209"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html199"
+<A NAME="tex2html203"
   HREF="node9.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html207"
+<A NAME="tex2html211"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html210"
+<B> Next:</B> <A NAME="tex2html214"
   HREF="node11.html">Model Physics</A>
-<B> Up:</B> <A NAME="tex2html206"
+<B> Up:</B> <A NAME="tex2html210"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html200"
+<B> Previous:</B> <A NAME="tex2html204"
   HREF="node9.html">Changing the timestep</A>
- &nbsp; <B>  <A NAME="tex2html208"
+ &nbsp; <B>  <A NAME="tex2html212"
   HREF="node1.html">Contents</A></B> 
 <!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

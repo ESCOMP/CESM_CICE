@@ -26,30 +26,30 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html127"
+<A NAME="tex2html130"
   HREF="node5.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html123"
+<A NAME="tex2html126"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html117"
+<A NAME="tex2html120"
   HREF="node3.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html125"
+<A NAME="tex2html128"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html128"
+<B> Next:</B> <A NAME="tex2html131"
   HREF="node5.html">Coupled Model Scripts</A>
-<B> Up:</B> <A NAME="tex2html124"
+<B> Up:</B> <A NAME="tex2html127"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html118"
+<B> Previous:</B> <A NAME="tex2html121"
   HREF="node3.html">What's new in CICE4?</A>
- &nbsp; <B>  <A NAME="tex2html126"
+ &nbsp; <B>  <A NAME="tex2html129"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
@@ -84,8 +84,11 @@ within CCSM is shown below.
                   documentation)            |
                                             |
                                             |                  
-    drivers ------------   mpi          ----+---- source ------
-       |                    |                       |
+                         drivers --- mpi ---+--- serial --- source
+                            | 
+                            |
+                            |
+      cice4 ---- cpl_esmf --+-- cpl_mct ---- cpl_share
 </PRE>
 
 <P>
@@ -94,19 +97,19 @@ within CCSM is shown below.
 <A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
 <UL>
-<LI><A NAME="tex2html129"
+<LI><A NAME="tex2html132"
   HREF="node5.html">Coupled Model Scripts</A>
-<LI><A NAME="tex2html130"
+<LI><A NAME="tex2html133"
   HREF="node6.html">The Build Environment</A>
 <UL>
-<LI><A NAME="tex2html131"
+<LI><A NAME="tex2html134"
   HREF="node7.html">CICE Preprocessor Flags</A>
 </UL></UL>
 <!--End of Table of Child-Links-->
 <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Example Namelists</TITLE>
-<META NAME="description" CONTENT="Example Namelists">
+<TITLE>Domain Namelist</TITLE>
+<META NAME="description" CONTENT="Domain Namelist">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -18,6 +18,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
+<LINK REL="next" HREF="node17.html">
 <LINK REL="previous" HREF="node15.html">
 <LINK REL="up" HREF="node8.html">
 <LINK REL="next" HREF="node17.html">
@@ -25,67 +26,135 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html279"
+<A NAME="tex2html285"
   HREF="node17.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html275"
+<A NAME="tex2html281"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html271"
+<A NAME="tex2html275"
   HREF="node15.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html277"
+<A NAME="tex2html283"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html280"
-  HREF="node17.html">Example 1: CCSM Fully</A>
-<B> Up:</B> <A NAME="tex2html276"
+<B> Next:</B> <A NAME="tex2html286"
+  HREF="node17.html">Example Namelists</A>
+<B> Up:</B> <A NAME="tex2html282"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html272"
+<B> Previous:</B> <A NAME="tex2html276"
   HREF="node15.html">Grid Namelist</A>
- &nbsp; <B>  <A NAME="tex2html278"
+ &nbsp; <B>  <A NAME="tex2html284"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00048000000000000000">
-Example Namelists</A>
+Domain Namelist</A>
 </H2>
-    
-<P>
-This section shows several examples of namelists from the coupled
-ice model.  These examples are taken directly from <B>cice.buildnml.csh</B>
-for the coupled model.  
-Most of the variables in the namelist are determined from environment variables
-set elsewhere in the scripts. Since the namelists from the coupled model are
-"resolved" by the scripts, meaning that the values of most of the shell script
-variables are put directly into the namelist, examples are shown for the most
-commonly used configurations.  Variables that are commonly changed directly in
-the namelist are the timestep <TT>dt</TT> and the number of subcycles per timestep
-in the ice dynamics <TT>ndte</TT>. 
 
 <P>
-<BR><HR>
-<!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+The namelist parameters listed in Table <A HREF="#table:domain_nml">8</A> are for
+computational domain decomposition information. These are generally set in
+the build configure scripts based on the number of processors. See the CCSM
+scripts documentation.
 
-<UL>
-<LI><A NAME="tex2html281"
-  HREF="node17.html">Example 1: CCSM Fully Coupled</A>
-<LI><A NAME="tex2html282"
-  HREF="node18.html">Example 2: History File Namelist</A>
-</UL>
-<!--End of Table of Child-Links-->
-<BR><HR>
+<P>
+<BR>  <DIV ALIGN="CENTER">
+  <A NAME="table:domain_nml"></A>  <A NAME="591"></A>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
+<CAPTION><STRONG>Table 8:</STRONG>
+Namelist Variables for Domain Decomposition Information</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Default Value</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>processor_shape</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'square-pop'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Approximate block shapes</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ew_boundary_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cyclic'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in E-W direction</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ns_boundary_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'open'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in N-S direction</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cartesian'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are split onto processors</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'cartesian'</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'spacecurve'</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'rake'</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'erfc'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are weighted when using space-filling curves (erfc or file)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght_file</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>''</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>File containing space-filling curve weights when not using erfc weighting</TD>
+</TR>
+</TABLE>
+</DIV>
+<BR>
+    <HR>
+<!--Navigation Panel-->
+<A NAME="tex2html285"
+  HREF="node17.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html281"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html275"
+  HREF="node15.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html283"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html286"
+  HREF="node17.html">Example Namelists</A>
+<B> Up:</B> <A NAME="tex2html282"
+  HREF="node8.html">Namelist Variables</A>
+<B> Previous:</B> <A NAME="tex2html276"
+  HREF="node15.html">Grid Namelist</A>
+ &nbsp; <B>  <A NAME="tex2html284"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

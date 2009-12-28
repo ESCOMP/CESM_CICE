@@ -25,30 +25,30 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html163"
+<A NAME="tex2html166"
   HREF="node8.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html159"
+<A NAME="tex2html162"
   HREF="node6.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html155"
+<A NAME="tex2html158"
   HREF="node6.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html161"
+<A NAME="tex2html164"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html164"
+<B> Next:</B> <A NAME="tex2html167"
   HREF="node8.html">Namelist Variables</A>
-<B> Up:</B> <A NAME="tex2html160"
+<B> Up:</B> <A NAME="tex2html163"
   HREF="node6.html">The Build Environment</A>
-<B> Previous:</B> <A NAME="tex2html156"
+<B> Previous:</B> <A NAME="tex2html159"
   HREF="node6.html">The Build Environment</A>
- &nbsp; <B>  <A NAME="tex2html162"
+ &nbsp; <B>  <A NAME="tex2html165"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
@@ -78,50 +78,61 @@ in CICE to get the correct fluxes.
 <P>
 The options <TT>-DBLCKX=$(NX)</TT> and <TT>-DBLCKY=$(NY)</TT> set the number of
 processors used in each grid direction.  These values are set automatically
-in the scripts for the coupled model.
-<TT>NX</TT> and <TT>NY</TT> must divide evenly into the grid, and
-are used only for MPI grid decomposition.  If <TT>NX</TT> or <TT>NY</TT> do not 
-divide evenly into the grid, the model setup will exit from the setup script
-and print an error message to the <B>ice.log*</B> (standard out) file.
+in the scripts for the coupled model.  Note that <TT>NX</TT> and <TT>NY</TT> must 
+divide evenly into the grid, and are used only for MPI grid decomposition.  
+If <TT>NX</TT> or <TT>NY</TT> do not divide evenly into the grid, the model setup 
+will exit from the setup script and print an error message to the 
+<B>ice.log*</B> (standard out) file.
+
+<P>
+The flag <TT>-DMXBLCKS</TT> is essentially the threading option. This controls
+the number of "blocks" per processor. This can describe the number of OpenMP
+threads on an MPI task, or can simply be that a single MPI task handles
+a number of blocks.
+
+<P>
+The flat <TT>-DNTR_AERO=n</TT> flag turns on the aerosol deposition physics in
+the sea ice where <TT>n</TT> is the number of tracer species and <TT>0</TT> turns
+off the tracers. More details on this are in the section on tracers. 
 
 <P>
 The flag <TT>-D_MPI</TT> sets up the message passing interface.  This must be set
 for runs using a parallel environment.  To get a better idea of what code
 is included or excluded at compile time, grep for <TT>ifdef</TT> and <TT>ifndef</TT>
-in the source code or look at the <B>*.f</B> files in the /<B>obj</B> directory.
+in the source code or look at the <B>*.f90</B> files in the /<B>obj</B> directory.
 
 <P>
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html163"
+<A NAME="tex2html166"
   HREF="node8.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html159"
+<A NAME="tex2html162"
   HREF="node6.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html155"
+<A NAME="tex2html158"
   HREF="node6.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html161"
+<A NAME="tex2html164"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html164"
+<B> Next:</B> <A NAME="tex2html167"
   HREF="node8.html">Namelist Variables</A>
-<B> Up:</B> <A NAME="tex2html160"
+<B> Up:</B> <A NAME="tex2html163"
   HREF="node6.html">The Build Environment</A>
-<B> Previous:</B> <A NAME="tex2html156"
+<B> Previous:</B> <A NAME="tex2html159"
   HREF="node6.html">The Build Environment</A>
- &nbsp; <B>  <A NAME="tex2html162"
+ &nbsp; <B>  <A NAME="tex2html165"
   HREF="node1.html">Contents</A></B> 
 <!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

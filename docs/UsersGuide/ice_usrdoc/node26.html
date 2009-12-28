@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>History Files</TITLE>
-<META NAME="description" CONTENT="History Files">
+<TITLE>Restart Pointer Files</TITLE>
+<META NAME="description" CONTENT="Restart Pointer Files">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -18,130 +18,62 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="previous" HREF="node24.html">
-<LINK REL="up" HREF="node22.html">
+<LINK REL="previous" HREF="node25.html">
+<LINK REL="up" HREF="node25.html">
 <LINK REL="next" HREF="node27.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html403"
+<A NAME="tex2html409"
   HREF="node27.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html399"
-  HREF="node22.html">
+<A NAME="tex2html405"
+  HREF="node25.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html395"
+<A NAME="tex2html401"
   HREF="node25.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html401"
+<A NAME="tex2html407"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html404"
-  HREF="node27.html">Caveats Regarding Averaged Fields</A>
-<B> Up:</B> <A NAME="tex2html400"
-  HREF="node22.html">Output Data</A>
-<B> Previous:</B> <A NAME="tex2html396"
-  HREF="node25.html">Restart Pointer Files</A>
- &nbsp; <B>  <A NAME="tex2html402"
+<B> Next:</B> <A NAME="tex2html410"
+  HREF="node27.html">History Files</A>
+<B> Up:</B> <A NAME="tex2html406"
+  HREF="node25.html">Restart Files</A>
+<B> Previous:</B> <A NAME="tex2html402"
+  HREF="node25.html">Restart Files</A>
+ &nbsp; <B>  <A NAME="tex2html408"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00083000000000000000"></A>
-      <A NAME="history_files"></A>      <A NAME="history"></A>
+<H3><A NAME="SECTION00082100000000000000"></A>
+<A NAME="pointer_files"></A>
 <BR>
-History Files
-</H2>
-      
-<P>
-History files contain gridded data values written at specified times
-during a model run.  By default, the history files will be written to
-the directory <TT>history_dir</TT> defined in the namelist. 
-The netCDF file names are prepended by the character
-string given by <TT>history_file</TT> in the <TT>ice_nml</TT> namelist.
-This character string has been set according to CCSM Output Filename Requirements.
-If <TT>history_file</TT> is not set in the namelist, the default character string
-<TT>'iceh'</TT> is used. The user can specify the frequency at which the data
-are written. Options are also available to record averaged or instantaneous data.
-The form of the history file names are as follows: 
-<BR>
-<P>
-Yearly averaged:  <B>$CASE.cice.h.yyyy.nc</B> 
-<BR>
-Monthly averaged: <B>$CASE.cice.h.yyyy-mm.nc</B> 
-<BR>
-Weekly averaged: <B>$CASE.cice.hw.yyyy-mm-dd-sssss.nc</B> 
-<BR>
-Daily averaged: <B>$CASE.cice.h.yyyy-mm-dd.nc</B> 
-<BR>
-Instantaneous (<TT>histfreq</TT> = 'y', 'm', 'w' or 'd'): <B>$CASE.cice.h.yyyy-mm-dd-sssss.nc</B> 
-<BR>
-Instantaneous (written every dt, <TT>histfreq</TT> = 1): <B>$CASE.cice.h.yyyy-mm-dd-sssss.nc</B> 
-<BR>
-<P>
-<TT>$CASE</TT> is set in the main setup script. All history files are written
-to <B>/hist</B> in the executable directory.  Changes to the frequency and
-averaging will affect all output fields.  The best description
-of the history data comes from the file itself using the netCDF command
-<TT>ncdump -h filename.nc</TT>.  Variables containing grid information are
-written to every file and are listed in Table <A HREF="node29.html#table:time_grid_hist">8</A>.
-In addition to the history files, a netCDF file containing a snapshot
-of the initial ice state is created at the start of each run.  The file
-name is <B>$CASE.cice.i.yyyy-mm-dd-sssss.nc</B> and is written to 
-<B>/init</B> in the executable directory.
+Restart Pointer Files
+</H3>
 
 <P>
-<BR><HR>
-<!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
-
-<UL>
-<LI><A NAME="tex2html405"
-  HREF="node27.html">Caveats Regarding Averaged Fields</A>
-<LI><A NAME="tex2html406"
-  HREF="node28.html">Changing Frequency and Averaging</A>
-<LI><A NAME="tex2html407"
-  HREF="node29.html">Changing Content</A>
-</UL>
-<!--End of Table of Child-Links-->
-<HR>
-<!--Navigation Panel-->
-<A NAME="tex2html403"
-  HREF="node27.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html399"
-  HREF="node22.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html395"
-  HREF="node25.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html401"
-  HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html404"
-  HREF="node27.html">Caveats Regarding Averaged Fields</A>
-<B> Up:</B> <A NAME="tex2html400"
-  HREF="node22.html">Output Data</A>
-<B> Previous:</B> <A NAME="tex2html396"
-  HREF="node25.html">Restart Pointer Files</A>
- &nbsp; <B>  <A NAME="tex2html402"
-  HREF="node1.html">Contents</A></B> 
-<!--End of Navigation Panel-->
+A pointer file is an ascii file named <B>rpointer.ice</B> that contains the
+path and filename of the latest restart file. The model uses this information to find
+a restart file from which initialization data is read.  The pointer files are
+written to and then read from the executable directory. For 
+<TT>startup</TT> runs, a pointer is created by the ice setup script 
+Whenever a restart file is written, the existing restart pointer file 
+is overwritten.  The namelist variable <TT>pointer_file</TT> contains the
+name of the pointer file. Pointer files seldom need editing.  The contents
+are usually maintained by the setup script and the component model. 
+    <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

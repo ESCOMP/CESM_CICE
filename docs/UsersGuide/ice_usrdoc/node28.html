@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Changing Frequency and Averaging</TITLE>
-<META NAME="description" CONTENT="Changing Frequency and Averaging">
+<TITLE>Caveats Regarding Averaged Fields</TITLE>
+<META NAME="description" CONTENT="Caveats Regarding Averaged Fields">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -20,61 +20,156 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node29.html">
 <LINK REL="previous" HREF="node27.html">
-<LINK REL="up" HREF="node26.html">
+<LINK REL="up" HREF="node27.html">
 <LINK REL="next" HREF="node29.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html430"
+<A NAME="tex2html434"
   HREF="node29.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html426"
-  HREF="node26.html">
+<A NAME="tex2html430"
+  HREF="node27.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html420"
+<A NAME="tex2html424"
   HREF="node27.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html428"
+<A NAME="tex2html432"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html431"
-  HREF="node29.html">Changing Content</A>
-<B> Up:</B> <A NAME="tex2html427"
-  HREF="node26.html">History Files</A>
-<B> Previous:</B> <A NAME="tex2html421"
-  HREF="node27.html">Caveats Regarding Averaged Fields</A>
- &nbsp; <B>  <A NAME="tex2html429"
+<B> Next:</B> <A NAME="tex2html435"
+  HREF="node29.html">Changing Frequency and Averaging</A>
+<B> Up:</B> <A NAME="tex2html431"
+  HREF="node27.html">History Files</A>
+<B> Previous:</B> <A NAME="tex2html425"
+  HREF="node27.html">History Files</A>
+ &nbsp; <B>  <A NAME="tex2html433"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H3><A NAME="SECTION00083200000000000000">
-Changing Frequency and Averaging</A>
-</H3> 
+<H3><A NAME="SECTION00083100000000000000"></A> 
+<A NAME="avg_fields"></A>
+<BR>
+Caveats Regarding Averaged Fields
+</H3>
 
 <P>
-The frequency at which data are written to a history file as well as the
-interval over which the time average is to be performed is controlled
-by the namelist variable <TT>histfreq</TT>.  Data averaging is invoked
-by the namelist variable <TT>hist_avg</TT>.  The averages are constructed
-by accumulating the running sums of all variables in memory at each timestep.
-The options for both of these variables are described in Table 
-<A HREF="node8.html#table:setup_nml">1</A>.  If <TT>hist_avg</TT> is true, and <TT>histfreq</TT>
-is set to monthly, for example, monthly averaged data is written out on
-the last day of the month.
+In computing the monthly averages for output to the history files,
+most arrays are zeroed out before being filled with data. These
+zeros are included in the monthly averages where there is no ice.
+For some fileds, this is not a problem, for example, ice thickness
+and ice area.  For other fields, this will result in values that
+are not representative of the field when ice is present.
+Some of the fields affected are:
 
 <P>
-<BR><HR>
+
+<UL>
+<LI>Flat, Fsens - latent and sensible heat fluxes
+</LI>
+<LI>evap - evaporative water flux
+</LI>
+<LI>Fhnet - ice/ocn net heat flux
+</LI>
+<LI>Fswabs - snow/ice/ocn absorbed solar flux
+</LI>
+<LI>strairx, strairy - zonal and meridional atm/ice stress
+</LI>
+<LI>strcorx, strcory - zonal and meridional coriolis stress
+</LI>
+</UL>
+
+<P>
+For some fields, a non-zero value is set where there is no ice.
+For example, Tsfc has the freezing point averaged in, and Flwout
+has  averaged in.  At lower latitudes, these values
+can be erroneous. 
+
+<P>
+To aid in the interpretation of the fields, a field called 
+<I>ice_present</I> is written to the history file.  It contains
+information on the fraction of the time-averaging interval when any
+ice was present in the grid cell during the time-averaging interval
+in the history file.  This will give an idea of how many
+zeros were included in the average.
+
+<P>
+The second caveat results from the coupler multiplying fluxes it receives
+from the ice model by the ice area.  Before sending fluxes to the coupler,
+they are divided by the ice area in the ice model.  These are the fluxes
+that are written to the history files, they are not what affects the ice,
+ocean or atmosphere, nor are they useful for calculating budgets.  The
+division by the ice area also creates large values of the fluxes at the
+ice edge. The affected fields are:
+
+<P>
+
+<UL>
+<LI>Flat, Fsens - latent and sensible heat fluxes
+</LI>
+<LI>Flwout - outgoing longwave
+</LI>
+<LI>evap - evaporative water flux
+</LI>
+<LI>Fresh - ice/ocn fresh water flux
+</LI>
+<LI>Fhnet - ice/ocn net heat flux
+</LI>
+<LI>Fswabs - snow/ice/ocn absorbed solar flux
+</LI>
+</UL>
+
+<P>
+When applicable, two of the above fields will be written to the
+history file:  the value of the field that is sent to the coupler
+(divided by ice area) and a value of the flux that has been multiplied by
+ice area (what affects the ice). Fluxes multiplied by ice area will have
+the suffix <TT>_aice</TT> appended to the variable names in the history files.
+Fluxes sent to the coupler will have "sent to coupler" appended to the
+long_name.  Fields of rainfall and snowfall multiplied by ice area are
+written to the history file, since the values are valid everywhere and
+represent the precipitation rate on the ice cover.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html434"
+  HREF="node29.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html430"
+  HREF="node27.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html424"
+  HREF="node27.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html432"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html435"
+  HREF="node29.html">Changing Frequency and Averaging</A>
+<B> Up:</B> <A NAME="tex2html431"
+  HREF="node27.html">History Files</A>
+<B> Previous:</B> <A NAME="tex2html425"
+  HREF="node27.html">History Files</A>
+ &nbsp; <B>  <A NAME="tex2html433"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

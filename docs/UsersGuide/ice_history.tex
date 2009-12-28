@@ -14,23 +14,24 @@ If {\tt history\_file} is not set in the namelist, the default character string
 are written. Options are also available to record averaged or instantaneous data.
 The form of the history file names are as follows: \\
 
-\noindent Yearly averaged:  {\bf \$CASE.cice.h.yyyy.nc} \\
-Monthly averaged: {\bf \$CASE.cice.h.yyyy-mm.nc} \\
-Weekly averaged: {\bf \$CASE.cice.hw.yyyy-mm-dd-sssss.nc} \\
-Daily averaged: {\bf \$CASE.cice.h.yyyy-mm-dd.nc} \\
-Instantaneous ({\tt histfreq} = 'y', 'm', 'w' or 'd'): {\bf \$CASE.cice.h.yyyy-mm-dd-sssss.nc} \\
-Instantaneous (written every dt, {\tt histfreq} = 1): {\bf \$CASE.cice.h.yyyy-mm-dd-sssss.nc} \\
+\noindent Yearly averaged:  {\bf \$CASE.cice.h?.yyyy.nc} \\
+Monthly averaged: {\bf \$CASE.cice.h?.yyyy-mm.nc} \\
+Daily averaged: {\bf \$CASE.cice.h?.yyyy-mm-dd.nc} \\
+Instantaneous ({\tt histfreq} = 'y', 'm', or 'd'): {\bf \$CASE.cice.h?.yyyy-mm-dd-sssss.nc} \\
+Instantaneous (written every dt, {\tt histfreq} = 1): {\bf \$CASE.cice.h?.yyyy-mm-dd-sssss.nc} \\
 
-{\tt \$CASE} is set in the main setup script. All history files are written
-to {\bf /hist} in the executable directory.  Changes to the frequency and
+{\tt \$CASE} is set in the main setup script. Note that the {\tt ?} denotes the
+multiple stream option where the first stream is just {\tt .h.} and subsequent
+streams are {\tt h1, h2, etc}. All history files are written
+in the executable directory.  Changes to the frequency and
 averaging will affect all output fields.  The best description
 of the history data comes from the file itself using the netCDF command
 {\tt ncdump -h filename.nc}.  Variables containing grid information are
 written to every file and are listed in Table \ref{table:time_grid_hist}.
 In addition to the history files, a netCDF file containing a snapshot
-of the initial ice state is created at the start of each run.  The file
-name is {\bf \$CASE.cice.i.yyyy-mm-dd-sssss.nc} and is written to 
-{\bf /init} in the executable directory.
+of the initial ice state can be created at the start of each run.  The file
+name is {\bf \$CASE.cice.i.yyyy-mm-dd-sssss.nc} and is written
+in the executable directory.
 
 \subsubsection{Caveats Regarding Averaged Fields} 
 \label{avg_fields}
@@ -45,7 +46,6 @@ Some of the fields affected are:
 
 \begin{itemize}
 \item Flat, Fsens - latent and sensible heat fluxes
-\item albsni - snow/ice broadband albedo
 \item evap - evaporative water flux
 \item Fhnet - ice/ocn net heat flux
 \item Fswabs - snow/ice/ocn absorbed solar flux
@@ -112,15 +112,15 @@ the last day of the month.
 
 The second namelist in the setup script controls what variables are written
 to the history file. To remove a field from this list, add the name of the
-logical variable associated with that field to the {\tt \&icefields\_nml}
+character variable associated with that field to the {\tt \&icefields\_nml}
 namelist in {\bf cice.buildnml.csh}
-and assign it a value of {\tt .false.}.  For example, to remove
+and assign it a value of {\tt 'xxxxx'}.  For example, to remove
 ice thickness and snow cover from the history file, add
 
 \begin{verbatim}
 &icefields_nml
-    f_hi   =  .false.
-  , f_hs   =  .false.
+    f_hi   =  'xxxxx'
+  , f_hs   =  'xxxxx'
 /
 \end{verbatim}
 to the namelist.  
@@ -169,6 +169,7 @@ Logical Variable          & Description                          & Units        
 \hline \hline
 \texttt{f\_hi}      & grid box mean ice thickness          & m             \\
 \texttt{f\_hs}      & grid box mean snow thickness         & m             \\
+\texttt{f\_fs}      & grid box mean snow fraction          & \%            \\
 \texttt{f\_Tsfc}    & snow/ice surface temperature         & C             \\
 \texttt{f\_aice}    & ice concentration (aggregate)        & \%            \\
 \texttt{f\_aice1}   & ice concentration (category 1)       & \%            \\
@@ -206,7 +207,6 @@ Logical Variable          & Description                          & Units        
 \texttt{f\_frzmlt}  & freeze/melt potential                & W m$^{-2}$   \\
 \texttt{f\_fswabs}  & absorbed solar flux sent to coupler  & W m$^{-2}$     \\
 \texttt{f\_fswabs\_ai} & absorbed solar flux in snow/ocn/ice & W m$^{-2}$     \\
-\texttt{f\_albsni}  & snow/ice broad band albedo           & \%             \\
 \texttt{f\_aldvr}   & visible direct albedo                & \%             \\
 \texttt{f\_aldvi}   & near-infrared direct albedo          & \%             \\
 \texttt{f\_flat}    & latent heat flux sent to coupler     & W m$^{-2}$     \\

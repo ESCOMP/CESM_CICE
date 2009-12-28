@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Enabling the Debugger</TITLE>
-<META NAME="description" CONTENT="Enabling the Debugger">
+<TITLE>Conservation Error</TITLE>
+<META NAME="description" CONTENT="Conservation Error">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -20,59 +20,73 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node36.html">
 <LINK REL="previous" HREF="node34.html">
-<LINK REL="up" HREF="node30.html">
+<LINK REL="up" HREF="node31.html">
 <LINK REL="next" HREF="node36.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html518"
+<A NAME="tex2html522"
   HREF="node36.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html514"
-  HREF="node30.html">
+<A NAME="tex2html518"
+  HREF="node31.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html508"
+<A NAME="tex2html512"
   HREF="node34.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html516"
+<A NAME="tex2html520"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html519"
-  HREF="node36.html">Unit 50 Error</A>
-<B> Up:</B> <A NAME="tex2html515"
-  HREF="node30.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html509"
-  HREF="node34.html">NX does not divide</A>
- &nbsp; <B>  <A NAME="tex2html517"
+<B> Next:</B> <A NAME="tex2html523"
+  HREF="node36.html">NX does not divide</A>
+<B> Up:</B> <A NAME="tex2html519"
+  HREF="node31.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html513"
+  HREF="node34.html">Thermodynamic Iteration Error</A>
+ &nbsp; <B>  <A NAME="tex2html521"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00095000000000000000">
-Enabling the Debugger</A>
+<H2><A NAME="SECTION00094000000000000000">
+Conservation Error</A>
 </H2>
 
 <P>
-This section explains how to set some compiler options for debugging. For
-the coupled model, set <TT>DEBUG</TT> to <TT>TRUE</TT> in the <B>env_run</B> script.
-Before running the model, be sure to delete the
-object files so that the source code will be recompiled.  If a core file
-is created, it will be in the executable directory.  Use dbx to look at
-the core file. Useful information may also appear in the standard error
-and output files.
+This error is written from <B>ice_itd.F</B> when the ice model is checking
+that initial and final values of a conserved field are equal to within
+a small value. The output looks like:
+
+<P>
+<PRE>
+  Conservation error: vice, add_new_ice
+  11  :  14  185
+  Initial value =  1362442.600400560
+  Final value =  1362442.600400561
+  Difference =  2.328306436538696D-10
+  (shr_sys_abort) ERROR: ice: Conservation error
+  (shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+  (shr_mpi_abort):ice: Conservation error  0
+</PRE>
+
+<P>
+Non-conservation can occur if the ice model is receiving
+very bad forcing, and is not able to deal with it.  This has occurred
+after a CFL violation in the ocean.  The timestep in the ocean may
+be decreased to get around the problem.
 
 <P>
 <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

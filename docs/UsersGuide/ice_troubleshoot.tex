@@ -5,8 +5,8 @@
 
 \subsection{Code does not Compile or Run }
 
-Check the {\bf ice.log.*} file in the executable directory, or
-the standard output and error files for information.  Also,
+Check the {\bf ice.log.*} or {\bf ice.bldlog.*} files in the executable 
+directory, or the standard output and error files for information.  Also,
 try the following:
 
 \begin{itemize}
@@ -14,7 +14,7 @@ try the following:
   \item Make sure that there is a {\bf Macros.$<$OS$>$} file for your
         platform.  Modify the directory paths for the libraries.
   \item Make sure all paths and file names are set correctly in the scripts.
-  \item If changes were made to the {\bf ice\_model\_size.F} file in the
+  \item If changes were made to the {\bf ice\_model\_size.F90} file in the
         source code directory, they will be overwritten by the file
         in {\bf input\_templates}.  
          
@@ -22,7 +22,7 @@ try the following:
 
 \subsection{Negative Ice Area in Horizontal Remapping}
 
-This error is written from {\bf ice\_transport\_remap.F} when the ice model
+This error is written from {\bf ice\_transport\_remap.F90} when the ice model
 is checking for negative ice areas. If it happens well into a model integration,
 it can be indicative of a CFL violation.  The output looks like:
 
@@ -40,11 +40,23 @@ it can be indicative of a CFL violation.  The output looks like:
 The dynamics timestep should be reduced to integrate past this problem.  Set
 
 \begin{verbatim}
- , ndyn_dt       = 2
+ , xndt_dyn = 2
 \end{verbatim}
 
 in the namelist and restart the model.  When the job completes set the value
 back to 1.
+
+\subsection{Thermodynamic Iteration Error}
+
+This error is written from {\bf ice\_therm\_vertical.F90} when the ice model 
+temperature iteration is not converging in the thermodynamics.  This is usually
+a problem with the forcing, but sometimes can be indicative of a timestep
+problem in the ice.
+
+\begin{verbatim}
+  Thermo iteration does not converge
+  istep1, my_task, i, j:
+\end{verbatim}
 
 \subsection{Conservation Error}
 
@@ -63,7 +75,7 @@ a small value. The output looks like:
   (shr_mpi_abort):ice: Conservation error  0
 \end{verbatim}
 
-Non-conservation can ocur if the ice model is receiving
+Non-conservation can occur if the ice model is receiving
 very bad forcing, and is not able to deal with it.  This has occurred
 after a CFL violation in the ocean.  The timestep in the ocean may
 be decreased to get around the problem.
@@ -76,35 +88,19 @@ with this error written to the log file:
 'ERROR: NX must divide evenly into grid,100,8'
 \end{verbatim}
 
-The number of MPI processors used by the ice model must divide evenly into the grid
-dimensions.  For example, running the ice model with 8 tasks on the gx3v5
-grid will result in an error, since 8 does not divide evenly into the
-100 longitude points.  To fix this error, change the value of {\tt \$NTASKS} for the
-uncoupled ice model in the main script.  In this case, a value of 4 would work, and
-the task geometry would also have to be changed.
+The number of MPI processors used by the ice model must divide evenly into 
+the grid dimensions.  For example, running the ice model with 8 tasks on the 
+gx3v7 grid will result in an error, since 8 does not divide evenly into the
+100 longitude points.  To fix this error, change the value of {\tt \$NTASKS} 
+for the uncoupled ice model in the main script.  In this case, a value of 4 
+would work, and the task geometry would also have to be changed.
 
 \subsection{Enabling the Debugger}
 
 This section explains how to set some compiler options for debugging. For
-the coupled model, set {\tt DEBUG} to {\tt TRUE} in the {\bf env\_run} script.
-Before running the model, be sure to delete the
+the coupled model, set {\tt DEBUG} to {\tt TRUE} in the {\bf env\_run.xml} 
+script.  Before running the model, be sure to delete the
 object files so that the source code will be recompiled.  If a core file
 is created, it will be in the executable directory.  Use dbx to look at
 the core file. Useful information may also appear in the standard error
 and output files.
-
-\subsection{Unit 50 Error}
-
-Unit 50 is the restart file.  If the path or file name in the {\bf rpointer.ice}
-file is incorrect, or the restart file does not exist in the {\bf /rest} directory
-below the executable directory, the model will stop with this message:
-
-\begin{verbatim}
-8:1525-014 The I/O operation on unit 50 cannot be completed because an errno value
-           of 2 (A file or directory in the path name does not exist.) was received
-           while opening the file.  The program will stop.
-\end{verbatim}
-
-Verify that the path and file name in the rpointer are correct and that the restart
-file exists in the correct location.
-

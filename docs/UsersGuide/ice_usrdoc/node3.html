@@ -25,30 +25,30 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html115"
+<A NAME="tex2html118"
   HREF="node4.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html111"
+<A NAME="tex2html114"
   HREF="node2.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html107"
+<A NAME="tex2html110"
   HREF="node2.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html113"
+<A NAME="tex2html116"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html116"
+<B> Next:</B> <A NAME="tex2html119"
   HREF="node4.html">The CICE Scripts</A>
-<B> Up:</B> <A NAME="tex2html112"
+<B> Up:</B> <A NAME="tex2html115"
   HREF="node2.html">Introduction</A>
-<B> Previous:</B> <A NAME="tex2html108"
+<B> Previous:</B> <A NAME="tex2html111"
   HREF="node2.html">Introduction</A>
- &nbsp; <B>  <A NAME="tex2html114"
+ &nbsp; <B>  <A NAME="tex2html117"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
@@ -60,9 +60,7 @@ What's new in CICE4?</A>
 
 <P>
 CICE4 is an upgraded version of the Community Sea Ice Model, CSIM5, which was
- based on CICE3, and was released in October 2002.  
-The model physics are similar to that of CSIM5, but it was decided to move to
-CICE, the LANL sea ice model for practical reasons.  The major changes are:
+ based on CICE3, and was released in June 2004.  The model physics are similar to that of CSIM5, but it was decided to move to CICE, the LANL sea ice model for practical reasons.  The major changes are:
 
 <P>
 
@@ -81,52 +79,80 @@ CICE, the LANL sea ice model for practical reasons.  The major changes are:
 
 <P>
 </LI>
+<LI>Several physics options have been shifted around into other or new
+      modules. For example, most of <B>ice_albedo.F90</B> is now in 
+      <B>ice_shortwave.F90</B>. The new module contains all of the shortwave
+      radiative transfer plus the basic albedo calculations.
+
+<P>
+</LI>
+<LI>The mechanical redistribution scheme has been changed significantly and
+      is available in <B>ice_mechred.F90</B>.
+
+<P>
+</LI>
+<LI>A new drivers area has been created for modules that are specific
+      to the CCSM as opposed to the standalone CICE model. The new CCSM
+      drivers are contained in the cpl_mct and cpl_share subdirectories.
+      The ESMF driver (cpl_esmf) is still under development. The source
+      subdirectory now contains driver independent source code for the
+      most part.
+
+<P>
+</LI>
+<LI>A new bld subdirectory has been introduced which contains CCSM
+      specific build and configure scripts. These scripts handle the
+      namelist generation, defaults, and configuration details.
+
+<P>
+</LI>
 </UL>
 
 <P>
-The CICE source code is based on the Los Alamos sea ice model CICE model.
-After a code merger with CICE was carried out to take advantage of the vector-
-friendly code, the models are very similar.  If there are some topics that
-are not covered in the CICE documentation, users are encouraged to look
-at the CICE documentation (<A
- HREF="node37.html#cice08">Hunke and Lipscomb(2008)</A>).  It is available at Los Alamos
-National Laboratory at: 
+The CICE source code is based on the Los Alamos sea ice model CICE model version 4.  The main source code is very similar in both versions, but the drivers are significantly different.  If there are some topics that are not covered in the CICE documentation, users are encouraged to look at the CICE documentation (<A
+ HREF="node38.html#cice08">Hunke and Lipscomb(2008)</A>).  It is available at Los Alamos National Laboratory at: 
 <BR>
-<BR><A NAME="tex2html2"
+<BR>
+<P>
+
+                    <TT>http://oceans11.lanl.gov/trac/CICE</TT>.
+
+<A NAME="tex2html2"
   HREF="http://oceans11.lanl.gov/trac/CICE">http://oceans11.lanl.gov/trac/CICE</A>.
+
 
 <P>
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html115"
+<A NAME="tex2html118"
   HREF="node4.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html111"
+<A NAME="tex2html114"
   HREF="node2.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html107"
+<A NAME="tex2html110"
   HREF="node2.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html113"
+<A NAME="tex2html116"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html116"
+<B> Next:</B> <A NAME="tex2html119"
   HREF="node4.html">The CICE Scripts</A>
-<B> Up:</B> <A NAME="tex2html112"
+<B> Up:</B> <A NAME="tex2html115"
   HREF="node2.html">Introduction</A>
-<B> Previous:</B> <A NAME="tex2html108"
+<B> Previous:</B> <A NAME="tex2html111"
   HREF="node2.html">Introduction</A>
- &nbsp; <B>  <A NAME="tex2html114"
+ &nbsp; <B>  <A NAME="tex2html117"
   HREF="node1.html">Contents</A></B> 
 <!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

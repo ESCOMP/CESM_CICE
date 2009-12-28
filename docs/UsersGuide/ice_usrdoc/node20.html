@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Run Types</TITLE>
-<META NAME="description" CONTENT="Run Types">
+<TITLE>Model Input Datasets</TITLE>
+<META NAME="description" CONTENT="Model Input Datasets">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -19,57 +19,79 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
 <LINK REL="next" HREF="node21.html">
-<LINK REL="previous" HREF="node19.html">
+<LINK REL="previous" HREF="node8.html">
 <LINK REL="up" HREF="ice_usrdoc.html">
 <LINK REL="next" HREF="node21.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html327"
+<A NAME="tex2html331"
   HREF="node21.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html323"
+<A NAME="tex2html327"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html317"
+<A NAME="tex2html321"
   HREF="node19.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html325"
+<A NAME="tex2html329"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html328"
-  HREF="node21.html">Changing the Number of</A>
-<B> Up:</B> <A NAME="tex2html324"
+<B> Next:</B> <A NAME="tex2html332"
+  HREF="node21.html">Run Types</A>
+<B> Up:</B> <A NAME="tex2html328"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html318"
-  HREF="node19.html">Model Input Datasets</A>
- &nbsp; <B>  <A NAME="tex2html326"
+<B> Previous:</B> <A NAME="tex2html322"
+  HREF="node19.html">Example 2: History File</A>
+ &nbsp; <B>  <A NAME="tex2html330"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H1><A NAME="SECTION00060000000000000000"></A>
-  <A NAME="runtypes"></A>
-<BR>
-Run Types
+<H1><A NAME="SECTION00050000000000000000">
+Model Input Datasets</A>
 </H1>
   
 <P>
-The run types available for the coupled model are described in the CCSM
-User's Guide. 
+The coupled CICE model requires a minimum of three files to run:
 
+<P>
+
+<UL>
+<LI><B>global_${ICE_GRID}.grid</B> is a binary file containing
+        grid information
+</LI>
+<LI><B>global_${ICE_GRID}.kmt</B> is a binary file containing
+        land mask information
+</LI>
+<LI><B>iced.0001-01-01.${ICE_GRID}.20lay</B>
+         are binary files containing initial condition information 
+         for the gx1v6 and gx3v7 grids, respectively. The thickness 
+         distribution in this restart file contains 5 categories, each 
+         with 4 layers.
+</LI>
+</UL>
+
+<P>
+Depending on the grid selected in the scripts, the appropriate <B>global*</B>
+and <B>iced*</B> files will be used in the executable directory. These files
+are read directory from the system input data directory and not copied
+to the executable directory.  Currently, only gx3v7, gx1v6, tx1v1, and tx0.1v2 
+grids are supported for the ice and ocean models.  Note that these files can
+now be used in netCDF format. 
+<BR>
 <P>
 <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>NX does not divide evenly into grid</TITLE>
-<META NAME="description" CONTENT="NX does not divide evenly into grid">
+<TITLE>Thermodynamic Iteration Error</TITLE>
+<META NAME="description" CONTENT="Thermodynamic Iteration Error">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -20,65 +20,62 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node35.html">
 <LINK REL="previous" HREF="node33.html">
-<LINK REL="up" HREF="node30.html">
+<LINK REL="up" HREF="node31.html">
 <LINK REL="next" HREF="node35.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html506"
+<A NAME="tex2html510"
   HREF="node35.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html502"
-  HREF="node30.html">
+<A NAME="tex2html506"
+  HREF="node31.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html496"
+<A NAME="tex2html500"
   HREF="node33.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html504"
+<A NAME="tex2html508"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html507"
-  HREF="node35.html">Enabling the Debugger</A>
-<B> Up:</B> <A NAME="tex2html503"
-  HREF="node30.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html497"
-  HREF="node33.html">Conservation Error</A>
- &nbsp; <B>  <A NAME="tex2html505"
+<B> Next:</B> <A NAME="tex2html511"
+  HREF="node35.html">Conservation Error</A>
+<B> Up:</B> <A NAME="tex2html507"
+  HREF="node31.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html501"
+  HREF="node33.html">Negative Ice Area in</A>
+ &nbsp; <B>  <A NAME="tex2html509"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00094000000000000000">
-NX does not divide evenly into grid</A>
+<H2><A NAME="SECTION00093000000000000000">
+Thermodynamic Iteration Error</A>
 </H2>
 
 <P>
-If you modify the number of tasks used by the ice model, the model may stop
-with this error written to the log file:
-<PRE>
-'ERROR: NX must divide evenly into grid,100,8'
-</PRE>
+This error is written from <B>ice_therm_vertical.F90</B> when the ice model 
+temperature iteration is not converging in the thermodynamics.  This is usually
+a problem with the forcing, but sometimes can be indicative of a timestep
+problem in the ice.
 
 <P>
-The number of MPI processors used by the ice model must divide evenly into the grid
-dimensions.  For example, running the ice model with 8 tasks on the gx3v5
-grid will result in an error, since 8 does not divide evenly into the
-100 longitude points.  To fix this error, change the value of <TT>$NTASKS</TT> for the
-uncoupled ice model in the main script.  In this case, a value of 4 would work, and
-the task geometry would also have to be changed.
+<PRE>
+  Thermo iteration does not converge
+  istep1, my_task, i, j:
+</PRE>
 
 <P>
 <BR><HR>
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>

@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Output Data</TITLE>
-<META NAME="description" CONTENT="Output Data">
+<TITLE>Changing the Number of Ice Thickness Categories</TITLE>
+<META NAME="description" CONTENT="Changing the Number of Ice Thickness Categories">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -18,7 +18,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="next" HREF="node30.html">
+<LINK REL="next" HREF="node23.html">
 <LINK REL="previous" HREF="node21.html">
 <LINK REL="up" HREF="ice_usrdoc.html">
 <LINK REL="next" HREF="node23.html">
@@ -26,77 +26,157 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 <!--Navigation Panel-->
-<A NAME="tex2html351"
+<A NAME="tex2html355"
   HREF="node23.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html347"
+<A NAME="tex2html351"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html341"
+<A NAME="tex2html345"
   HREF="node21.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html349"
+<A NAME="tex2html353"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
  SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
 <BR>
-<B> Next:</B> <A NAME="tex2html352"
-  HREF="node23.html">Stdout Output</A>
-<B> Up:</B> <A NAME="tex2html348"
+<B> Next:</B> <A NAME="tex2html356"
+  HREF="node23.html">Output Data</A>
+<B> Up:</B> <A NAME="tex2html352"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html342"
-  HREF="node21.html">Changing the Number of</A>
- &nbsp; <B>  <A NAME="tex2html350"
+<B> Previous:</B> <A NAME="tex2html346"
+  HREF="node21.html">Run Types</A>
+ &nbsp; <B>  <A NAME="tex2html354"
   HREF="node1.html">Contents</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 
-<H1><A NAME="SECTION00080000000000000000">
-Output Data</A>
+<H1><A NAME="SECTION00070000000000000000"></A>
+  <A NAME="ncat"></A>
+<BR>
+Changing the Number of Ice Thickness Categories
 </H1>
   
 <P>
-The ice model produces three types of output data.  A file containing
-ASCII text, also known as a log file, is created for each run that
-contains information about how the run was set up and how it progressed.
-A series of binary restart files necessary to continue the run are created.
-A series of netCDF history files containing gridded instantaneous or
-time-averaged output are also generated during a run.  These are described below. 
+The number of ice thickness categories affects ice model input files in three
+places:
+  
+<UL>
+<LI><TT>$NCAT</TT> in the run script
+</LI>
+<LI>The source code module <B>ice_model_size.F90</B>
+</LI>
+<LI>The initial condition (restart) file in the input file directory
+  
+</LI>
+</UL>
 
 <P>
-<BR><HR>
-<!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+The number of ice thickness categories is set in 
+<B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B> using the variable 
+called <TT>$NCAT</TT>.  The default value is 5 categories. <TT>$NCAT</TT> is 
+used to determine the CPP variable setting (NCAT) in 
+<B>ice_model_size.F90</B>. <TT>$RES</TT> is the resolution of the grid, 
+100x116 (gx3v7) and 320x384 (gx1v6) for low and medium resolution grids, 
+respectively.
+
+<P>
+
+<DL COMPACT>
+<DT>NOTE
+<DD>To use one ice thickness category, the following changes will need to be
+made in the namelist: 
+<BR>
+<P>
+<PRE>
+  , kitd          = 0
+  , kstrength     = 0
+</PRE>
+
+<P>
+With these settings, the model will use the delta scheme instead of linear
+remapping and a strength parameterization based on open water area and
+mean ice thickness.
+
+<P>
+</DD>
+</DL>
+<P>
+The information in the initial restart file is dependent on the number of
+ice thickness categories and the total number of layers in the ice distribution.
+An initial condition file exists only for the default case of 5 ice thickness
+categories, with four layers in each category. To create an initial condition
+file for a different number of categories or layers, these steps should be 
+followed:
+
+<P>
 
 <UL>
-<LI><A NAME="tex2html353"
-  HREF="node23.html">Stdout Output</A>
-<LI><A NAME="tex2html354"
-  HREF="node24.html">Restart Files</A>
-<UL>
-<LI><A NAME="tex2html355"
-  HREF="node25.html">Restart Pointer Files</A>
-</UL>
+<LI>Set <TT>$NCAT</TT> to the desired number of categories in 
+<BR>        <B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B>.
+</LI>
+<LI>Set the namelist variable <TT>dumpfreq = 'm'</TT> in 
+<BR>        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
 <BR>
-<LI><A NAME="tex2html356"
-  HREF="node26.html">History Files</A>
-<UL>
-<LI><A NAME="tex2html357"
-  HREF="node27.html">Caveats Regarding Averaged Fields</A>
-<LI><A NAME="tex2html358"
-  HREF="node28.html">Changing Frequency and Averaging</A>
-<LI><A NAME="tex2html359"
-  HREF="node29.html">Changing Content</A>
-</UL></UL>
-<!--End of Table of Child-Links-->
-<BR><HR>
+to print out restart files monthly.
+</LI>
+<LI>Set the namelist variable <TT>restart = .false.</TT> in 
+        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
+<BR>
+to use the initial conditions within the ice model.
+</LI>
+<LI>Run the model to equilibrium. 
+</LI>
+<LI>The last restart file can be used as an initial condition file.
+</LI>
+<LI>Change the name of the last restart file to <I>iced.0001-01-01.$GRID</I>.
+</LI>
+<LI>Copy the file into the input data directory or directly into the 
+        the executable directory.
+</LI>
+</UL>
+
+<P>
+Note that the date printed inside the binary restart file will not be the 
+same as 0001-01-01.  For coupled runs, <TT>$BASEDATE</TT> will be the starting o
+date and the date inside the file will not be used.  
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html355"
+  HREF="node23.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html351"
+  HREF="ice_usrdoc.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html345"
+  HREF="node21.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html353"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html356"
+  HREF="node23.html">Output Data</A>
+<B> Up:</B> <A NAME="tex2html352"
+  HREF="ice_usrdoc.html">ice_usrdoc</A>
+<B> Previous:</B> <A NAME="tex2html346"
+  HREF="node21.html">Run Types</A>
+ &nbsp; <B>  <A NAME="tex2html354"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
 <ADDRESS>
 David Bailey
-2009-11-06
+2009-12-28
 </ADDRESS>
 </BODY>
 </HTML>
