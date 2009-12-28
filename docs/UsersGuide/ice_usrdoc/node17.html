@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Example 1: CCSM Fully Coupled</TITLE>
+<META NAME="description" CONTENT="Example 1: CCSM Fully Coupled">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node18.html">
+<LINK REL="previous" HREF="node16.html">
+<LINK REL="up" HREF="node16.html">
+<LINK REL="next" HREF="node18.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html293"
+  HREF="node18.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html289"
+  HREF="node16.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html283"
+  HREF="node16.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html291"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html294"
+  HREF="node18.html">Example 2: History File</A>
+<B> Up:</B> <A NAME="tex2html290"
+  HREF="node16.html">Example Namelists</A>
+<B> Previous:</B> <A NAME="tex2html284"
+  HREF="node16.html">Example Namelists</A>
+ &nbsp; <B>  <A NAME="tex2html292"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00048100000000000000"></A>
+<A NAME="example1_nml"></A>
+<BR>
+Example 1: CCSM Fully Coupled
+</H3>
+
+<P>
+The following example is the namelist used for CCSM fully coupled, or
+the B configuration.  The variables that are still set to shell script
+variables have been set at the top of <B>cice.buildnml.csh</B>
+or in other scripts.  A completely resolved version of the namelist will
+be written to <B>ice_in</B> in the executable directory.
+
+<P>
+<PRE>
+&amp;setup_nml
+ diagfreq               =  24   
+ hist_avg               = .true.  
+ histfreq               = 'm','x','x','x','x'
+ histfreq_n             = 1,1,1,1,1           
+ ice_ic         = 'b40.1850.track1.1deg.006.cice.r.0301-01-01-00000.nc'
+ lcdf64         = .false. 
+ pointer_file           = 'rpointer.ice'
+ xndt_dyn               =  1.0 
+/
+&amp;grid_nml
+ grid_file              = '/fis/cgd/cseg/csm/inputdata/ice/cice/global_gx1v6_200
+10402.grid'
+ grid_format            = 'bin'
+ grid_type              = 'displaced_pole'
+ kcatbound              =  0 
+ kmt_file               = '/fis/cgd/cseg/csm/inputdata/ice/cice/global_gx1v6_200
+90204.kmt'
+/
+&amp;ice_nml
+ advection              = 'remap'
+ albedo_type            = 'default'
+ albicei                = 0.45
+ albicev                = 0.75
+ albsnowi               = 0.73
+ albsnowv               = 0.98
+ evp_damping            = .false.
+ kdyn           =  1 
+ kitd           =  1 
+ krdg_partic            = 1
+ krdg_redist            = 1
+ kstrength              =  1 
+ ndte           =  120 
+ r_snw          =  1.5 
+ shortwave              = 'dEdd'
+/
+&amp;tracer_nml
+/
+&amp;domain_nml
+ distribution_type              = 'cartesian'
+ ew_boundary_type               = 'cyclic'
+ ns_boundary_type               = 'open'
+ processor_shape                = 'square-pop'
+/
+&amp;ice_prescribed_nml
+ prescribed_ice         = .false.
+/
+&amp;ice_prescaero_nml
+ model_year_align_aero          =  1  
+ prescribed_aero_fill           = .true. 
+ stream_domareaname_aero                = "area"
+ stream_domfilename_aero                = '/fis/cgd/cseg/csm/inputdata/ice/cice/
+aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'
+ stream_dommaskname_aero                = "mask"
+ stream_domtvarname_aero                = "time"
+ stream_domxvarname_aero                = "lon"
+ stream_domyvarname_aero                = "lat"
+ stream_fldfilename_aero                = '/fis/cgd/cseg/csm/inputdata/ice/cice/
+aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'
+ stream_fldvarname_aero         = 'BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:
+DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD:DSTX04WD:DSTX04DD'
+ stream_year_first_aero         =  1  
+ stream_year_last_aero          =  1  
+/
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

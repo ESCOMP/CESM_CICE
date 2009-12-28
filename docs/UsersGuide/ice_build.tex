@@ -1,78 +1,47 @@
 %=======================================================================
-% CVS: $Id: ice_build.tex 5 2005-12-12 17:41:05Z mvr $
-% CVS: $Source$
-% CVS: $Name$
+% SVN: $Id: ice_build.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
 
 \subsection{The Build Environment}
 
-The coupled and uncoupled ice models use the Makefile and make environment.
-These files are located in the {\bf models/ice/cice/src/drivers/ccsm_sequential}
-directory for the coupled model and in {\bf models/ice/cice/src/drivers/cice4}
-for the uncoupled model. These directories contain the following files:
-
-\begin{itemize}
-\item  {\bf Macros.AIX} contains build settings specific to AIX (IBM SP3).
-\item  {\bf Macros.IRIX64} contains build settings specific to IRIX64 (SGI Origin).
-\item  {\bf makdep.c} evaluates the code dependencies for the source code
-\item  {\bf Makefile} is a generic gnumakefile
-\end{itemize}
-
-There is a {\bf Macros.$<$OS$>$} file for each supported platform. These files contain
-machine dependent preprocessor, compiler and library information for building the model.
-The {\bf Macros.$<$OS$>$} files for the uncoupled model have been simplified, since most of
-the libraries used by the coupled model are not used by the uncoupled ice model. 
-If you are running the model on a platform other than those tested, you
-will need to create a new {\bf Macros.$<$OS$>$} file and modify the paths and settings
-for your system.  In some cases, CICE has a set of options that are different from
-the default values at the top of the file.  These are after the line
-{\tt ifeq (\$(MODEL),cice)} in the {\bf Macros.$<$OS$>$} files and are described below.
+The build and configure environment has changed significantly from previous
+versions of CCSM. See the CCSM documentation.
 
 \subsubsection{CICE Preprocessor Flags}
 
-Preprocessor flags are activated in the form {\tt -Doption} in the {\bf Macros.$<$OS$>$}
-files.  The flags specific to the ice model are
+Preprocessor flags are activated in the form {\tt -Doption} in the 
+{\bf cice.buildexe.csh} script.  The flags specific to the ice model are
 
 \begin{verbatim}
-CPPDEFS :=  $(CPPDEFS) -Dcoupled -DNPROC_X=$(NX) -DNPROC_Y=$(NY) -D_MPI
+CPPDEFS :=  $(CPPDEFS) -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
+-DNYGLOB=$() -DNTR_AERO=3 -DBLCKX=$() -DBLCKY=$() -DMXBLCKS=$()
 \end{verbatim}
 
-The option {\tt -Dcoupled} is set to activate the coupling interface.  This 
-will include the source code in {\bf ice\_coupling.F}, for example.  For uncoupled
-runs, it has been removed.
-If a coupler other than the CCSM coupler is used, there is a flag called
-{\tt -Dfcd\_coupled} that will keep the fluxes from being divided by the ice area.
-In coupled runs, the CCSM coupler multiplies the fluxes by the ice area, so
-they are divided by the ice area in CICE to get the correct fluxes.
+The options {\tt -DCCSMCOUPLED} and  {\tt -Dcoupled} are set to activate the 
+coupling interface.  This will include the source code in 
+{\bf ice\_comp\_mct.F90}, for example.  In coupled runs, the CCSM coupler 
+multiplies the fluxes by the ice area, so they are divided by the ice area 
+in CICE to get the correct fluxes.
 
-The options {\tt -DNPROC\_X=\$(NX)} and {\tt -DNPROC\_Y=\$(NY)} set the number of
+The options {\tt -DBLCKX=\$(NX)} and {\tt -DBLCKY=\$(NY)} set the number of
 processors used in each grid direction.  These values are set automatically
-in the scripts for the coupled model, and in {\bf cice\_run} by the user for
-uncoupled runs.  {\tt NX} and {\tt NY} must divide evenly into the grid, and
-are used only for MPI grid decomposition.  If {\tt NX} or {\tt NY} do not divide evenly
-into the grid, the model setup will exit from the setup script
-and print an error message to the {\bf ice.log*} (standard out) file.
+in the scripts for the coupled model.  Note that {\tt NX} and {\tt NY} must 
+divide evenly into the grid, and are used only for MPI grid decomposition.  
+If {\tt NX} or {\tt NY} do not divide evenly into the grid, the model setup 
+will exit from the setup script and print an error message to the 
+{\bf ice.log*} (standard out) file.
+
+The flag {\tt -DMXBLCKS} is essentially the threading option. This controls
+the number of "blocks" per processor. This can describe the number of OpenMP
+threads on an MPI task, or can simply be that a single MPI task handles
+a number of blocks.
+
+The flat {\tt -DNTR\_AERO=n} flag turns on the aerosol deposition physics in
+the sea ice where {\tt n} is the number of tracer species and {\tt 0} turns
+off the tracers. More details on this are in the section on tracers. 
 
 The flag {\tt -D\_MPI} sets up the message passing interface.  This must be set
 for runs using a parallel environment.  To get a better idea of what code
 is included or excluded at compile time, grep for {\tt ifdef} and {\tt ifndef}
-in the source code or look at the {\bf *.f} files in the /{\bf obj} directory.
-
-\subsubsection{CICE Compiler Options}
-
-The name of the Fortran compiler is set by the variable {\tt FC} in the
-{\bf Macros.$<$OS$>$} files.  The default name of the compiler is {\tt f90}
-on the SGI and {\tt mpxlf90\_r} on the IBM SP.  CICE uses the following compiler
-options on the SGI platform:
-
-\begin{verbatim}
-   FFLAGS     := -c -64 -mips4 -O2 -r8 -i4 -show -extend_source
-\end{verbatim}
-
-On the IBM, the following compiler options are set in {\bf Macros.AIX}:
-
-\begin{verbatim}
-   FFLAGS  := -c -O2 -qstrict -Q -qmaxmem=-1 -qrealsize=8  \
-              -qarch=auto -qtune=auto
-\end{verbatim}
+in the source code or look at the {\bf *.f90} files in the /{\bf obj} directory.
 

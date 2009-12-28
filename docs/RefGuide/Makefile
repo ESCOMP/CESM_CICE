@@ -15,6 +15,10 @@
 # JLS SRC_PATH := ../../src/source
 # JLS SRC_CODE  := $(wildcard $(addsuffix /*.F , $(SRC_PATH)))
 
+PRO_DOC := ice_protex
+SRC_PATH := ../../src
+SRC_CODE  := $(wildcard $(addsuffix */*.F90 , $(SRC_PATH)))
+
 #--------------------------------------------------------
 # Info for creating the code reference documentation
 #--------------------------------------------------------
@@ -46,6 +50,9 @@ ps: $(DOC).ps
 
 # JLS $(PRO_DOC).tex: $(SRC_CODE) 
 # JLS add tab here protex -b $(SRC_CODE) > $(PRO_DOC).tex
+
+$(PRO_DOC).tex: $(SRC_CODE) 
+	./protex -b $(SRC_CODE) > $(PRO_DOC).tex
 
 $(DOC).dvi: $(TEX)
 	latex $(DOC).tex

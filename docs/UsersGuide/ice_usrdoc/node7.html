@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>CICE Preprocessor Flags</TITLE>
+<META NAME="description" CONTENT="CICE Preprocessor Flags">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="previous" HREF="node6.html">
+<LINK REL="up" HREF="node6.html">
+<LINK REL="next" HREF="node8.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html163"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html159"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html155"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html161"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html164"
+  HREF="node8.html">Namelist Variables</A>
+<B> Up:</B> <A NAME="tex2html160"
+  HREF="node6.html">The Build Environment</A>
+<B> Previous:</B> <A NAME="tex2html156"
+  HREF="node6.html">The Build Environment</A>
+ &nbsp; <B>  <A NAME="tex2html162"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00032100000000000000">
+CICE Preprocessor Flags</A>
+</H3>
+
+<P>
+Preprocessor flags are activated in the form <TT>-Doption</TT> in the 
+<B>cice.buildexe.csh</B> script.  The flags specific to the ice model are
+
+<P>
+<PRE>
+CPPDEFS :=  $(CPPDEFS) -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
+-DNYGLOB=$() -DNTR_AERO=3 -DBLCKX=$() -DBLCKY=$() -DMXBLCKS=$()
+</PRE>
+
+<P>
+The options <TT>-DCCSMCOUPLED</TT> and  <TT>-Dcoupled</TT> are set to activate the 
+coupling interface.  This will include the source code in 
+<B>ice_comp_mct.F90</B>, for example.  In coupled runs, the CCSM coupler 
+multiplies the fluxes by the ice area, so they are divided by the ice area 
+in CICE to get the correct fluxes.
+
+<P>
+The options <TT>-DBLCKX=$(NX)</TT> and <TT>-DBLCKY=$(NY)</TT> set the number of
+processors used in each grid direction.  These values are set automatically
+in the scripts for the coupled model.
+<TT>NX</TT> and <TT>NY</TT> must divide evenly into the grid, and
+are used only for MPI grid decomposition.  If <TT>NX</TT> or <TT>NY</TT> do not 
+divide evenly into the grid, the model setup will exit from the setup script
+and print an error message to the <B>ice.log*</B> (standard out) file.
+
+<P>
+The flag <TT>-D_MPI</TT> sets up the message passing interface.  This must be set
+for runs using a parallel environment.  To get a better idea of what code
+is included or excluded at compile time, grep for <TT>ifdef</TT> and <TT>ifndef</TT>
+in the source code or look at the <B>*.f</B> files in the /<B>obj</B> directory.
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html163"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html159"
+  HREF="node6.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html155"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html161"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html164"
+  HREF="node8.html">Namelist Variables</A>
+<B> Up:</B> <A NAME="tex2html160"
+  HREF="node6.html">The Build Environment</A>
+<B> Previous:</B> <A NAME="tex2html156"
+  HREF="node6.html">The Build Environment</A>
+ &nbsp; <B>  <A NAME="tex2html162"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

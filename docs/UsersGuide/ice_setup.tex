@@ -1,7 +1,5 @@
 %=======================================================================
-% CVS: $Id: ice_setup.tex 5 2005-12-12 17:41:05Z mvr $
-% CVS: $Source$
-% CVS: $Name$
+% SVN: $Id: ice_setup.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
 
 The setup scripts for the coupled model are 
@@ -27,21 +25,25 @@ within CCSM is shown below.
                   documentation)            |
                                             |
                                             |                  
-    drivers ------------   mpi          ----+---- source ------
-       |                    |                       |          
+                         drivers --- mpi ---+--- serial --- source
+                            | 
+                            |
+                            |
+      cice4 ---- cpl_esmf --+-- cpl_mct ---- cpl_share
+
 \end{verbatim}
 
 \subsection{Coupled Model Scripts}
-\label{uncoupled_scripts}
+\label{coupled_scripts}
 
 The CCSM4 scripts have been significantly upgraded from CCSM3 and are
 based on a completely different design philosophy.  The new scripts will
 generate a set of "resolved scripts" for a specific configuration determined
 by the user. The configuration includes components, resolution, run type, and
 machine. The run and setup scripts that were previously in the {\bf /scripts}
-directory for CCSM3 are now generated automatically.  See the CCSM4 User's Guide for
-information on how to use the new scripts.  The file that contains the ice model
-namelist is now located in {\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage}. The
+directory for CCSM3 are now generated automatically.  See the CCSM4 User's 
+Guide for information on how to use the new scripts.  The file that contains 
+the ice model namelist is now located in {\bf \$CASE/Buildconf}. The
 script containing the environment variables used for building the executable
-file for the ice model is in {\bf ccsm3/scripts/\$CASE/Buildexe}.
+file for the ice model is also in {\bf \$CASE/Buildconf}.
 The contents of the ice model namelist are described in section \ref{namelist}.

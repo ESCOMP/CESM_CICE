@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Restart Pointer Files</TITLE>
+<META NAME="description" CONTENT="Restart Pointer Files">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="previous" HREF="node24.html">
+<LINK REL="up" HREF="node24.html">
+<LINK REL="next" HREF="node26.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html393"
+  HREF="node26.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html389"
+  HREF="node24.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html385"
+  HREF="node24.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html391"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html394"
+  HREF="node26.html">History Files</A>
+<B> Up:</B> <A NAME="tex2html390"
+  HREF="node24.html">Restart Files</A>
+<B> Previous:</B> <A NAME="tex2html386"
+  HREF="node24.html">Restart Files</A>
+ &nbsp; <B>  <A NAME="tex2html392"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00082100000000000000"></A>
+<A NAME="pointer_files"></A>
+<BR>
+Restart Pointer Files
+</H3>
+
+<P>
+A pointer file is an ascii file named <B>rpointer.ice</B> that contains the
+path and filename of the latest restart file. The model uses this information to find
+a restart file from which initialization data is read.  The pointer files are
+written to and then read from the executable directory. For 
+<TT>startup</TT> runs, a pointer is created by the ice setup script 
+Whenever a restart file is written, the existing restart pointer file 
+is overwritten.  The namelist variable <TT>pointer_file</TT> contains the
+name of the pointer file. Pointer files seldom need editing.  The contents
+are usually maintained by the setup script and the component model. 
+    <BR><HR>
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

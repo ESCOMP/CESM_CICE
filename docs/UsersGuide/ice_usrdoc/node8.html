@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Namelist Variables</TITLE>
+<META NAME="description" CONTENT="Namelist Variables">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node19.html">
+<LINK REL="previous" HREF="node4.html">
+<LINK REL="up" HREF="ice_usrdoc.html">
+<LINK REL="next" HREF="node9.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html175"
+  HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html171"
+  HREF="ice_usrdoc.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html165"
+  HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html173"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html176"
+  HREF="node9.html">Changing the timestep</A>
+<B> Up:</B> <A NAME="tex2html172"
+  HREF="ice_usrdoc.html">ice_usrdoc</A>
+<B> Previous:</B> <A NAME="tex2html166"
+  HREF="node7.html">CICE Preprocessor Flags</A>
+ &nbsp; <B>  <A NAME="tex2html174"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00040000000000000000"></A>
+  <A NAME="namelist"></A>
+<BR>
+Namelist Variables
+</H1>
+  
+<P>
+CICE uses the same namelists for both the coupled and uncoupled models.
+This section describes the namelist variables in the namelist <TT>ice_nml</TT>,
+which determine time management, output frequency, model physics, filenames,
+and options for the mixed layer ocean model. 
+The ice namelists for the coupled model are now located in
+<B>$CASE/Buildconf</B>.  
+
+<P>
+A script reads the input namelist at runtime, and writes the namelist
+information to the file <B>ice_in</B> in the directory where the model 
+executable is located.  Therefore, the namelist will be updated even if the 
+ice model is not recompiled.  The default values of the ice namelist are set in 
+<B>ice_init.F90</B>.  If they are not set in the namelist in the script, they 
+will assume the default values listed in 
+Tables <A HREF="#table:setup_nml">1</A>-<A HREF="node15.html#table:grid_nml">7</A>,
+which list all available namelist parameters.  The default values shown here are
+for the coupled model, which is set up for a production run. Only a few of 
+these variables are required to be set in the namelist; these values are 
+noted in the paragraphs below.  An example of the default namelist is shown in 
+Section <A HREF="node17.html#example1_nml">3.8.1</A>.
+
+<P>
+<BR>  <DIV ALIGN="CENTER">
+  <A NAME="table:setup_nml"></A>   <A NAME="260"></A>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
+<CAPTION><STRONG>Table 1:</STRONG>
+Namelist Variables for Run Management</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Default Value</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><P>
+<TT>ice_ic</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>default</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Filename for initial and branch runs</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'default' uses default initialization</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'none' initializes with no ice</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>xndt_dyn</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Times to loop through ice dynamics</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>diagfreq</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>24</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Frequency of diagnostics written
+                     (min, max, hemispheric sums) to standard output</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>24  = writes once every 24 timesteps</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1  = diagnostics written each timestep</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0  = no diagnostics written</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>histfreq</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character Array</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>'m','x','x','x','x'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Frequency of output written to history files</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'D' or 'd' writes daily data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'W' or 'w' writes weekly data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'M' or 'm' writes monthly data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'Y' or 'y' writes yearly data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'1' writes every timestep</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'x' no history data is written</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>histfreq_n</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Frequency history data is written to files</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>hist_avg</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>.true.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>If true, averaged history
+                       information is written out at a frequency
+                       determined by histfreq.  If false, instantaneous
+                       values rather than time-averages are written.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>pointer_file</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>'rpointer.ice'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Pointer file that
+                                   contains the name of the restart file.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57><TT>lcdf64</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Use 64-bit offset in netcdf files</TD>
+</TR>
+</TABLE>
+</DIV>
+<BR>
+
+<P>
+The main run management namelist options are shown in Table 
+<A HREF="#table:setup_nml">1</A>. While additional namelist variables are available in
+the uncoupled version, they are set by the driver in CCSM. Variables set by
+the driver include: <TT>dt</TT>, <TT>runid</TT>, <TT>runtype</TT>, <TT>istep0</TT>, 
+<TT>days_per_year</TT>, <TT>restart</TT> and <TT>dumpfreq</TT>. These should be 
+changed in the configuration files (see ).
+
+<P>
+The length of a coupled run should be set in:
+<BR>
+<BR><A NAME="tex2html4"
+  HREF="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm">CCSM scripts</A>.
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html177"
+  HREF="node9.html">Changing the timestep</A>
+<LI><A NAME="tex2html178"
+  HREF="node10.html">Writing Output</A>
+<LI><A NAME="tex2html179"
+  HREF="node11.html">Model Physics</A>
+<LI><A NAME="tex2html180"
+  HREF="node12.html">Tracer Namelist</A>
+<LI><A NAME="tex2html181"
+  HREF="node13.html">Prescribed Ice Namelist</A>
+<LI><A NAME="tex2html182"
+  HREF="node14.html">Prescribed Aerosol Namelist</A>
+<LI><A NAME="tex2html183"
+  HREF="node15.html">Grid Namelist</A>
+<LI><A NAME="tex2html184"
+  HREF="node16.html">Example Namelists</A>
+<UL>
+<LI><A NAME="tex2html185"
+  HREF="node17.html">Example 1: CCSM Fully Coupled</A>
+<LI><A NAME="tex2html186"
+  HREF="node18.html">Example 2: History File Namelist</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html175"
+  HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html171"
+  HREF="ice_usrdoc.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html165"
+  HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html173"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html176"
+  HREF="node9.html">Changing the timestep</A>
+<B> Up:</B> <A NAME="tex2html172"
+  HREF="ice_usrdoc.html">ice_usrdoc</A>
+<B> Previous:</B> <A NAME="tex2html166"
+  HREF="node7.html">CICE Preprocessor Flags</A>
+ &nbsp; <B>  <A NAME="tex2html174"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

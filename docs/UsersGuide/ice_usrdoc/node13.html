@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Prescribed Ice Namelist</TITLE>
+<META NAME="description" CONTENT="Prescribed Ice Namelist">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node14.html">
+<LINK REL="previous" HREF="node12.html">
+<LINK REL="up" HREF="node8.html">
+<LINK REL="next" HREF="node14.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html245"
+  HREF="node14.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html241"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html235"
+  HREF="node12.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html243"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html246"
+  HREF="node14.html">Prescribed Aerosol Namelist</A>
+<B> Up:</B> <A NAME="tex2html242"
+  HREF="node8.html">Namelist Variables</A>
+<B> Previous:</B> <A NAME="tex2html236"
+  HREF="node12.html">Tracer Namelist</A>
+ &nbsp; <B>  <A NAME="tex2html244"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00045000000000000000">
+Prescribed Ice Namelist</A>
+</H2>
+
+<P>
+The namelist parameters listed in Table <A HREF="#table:ice_prescribed_nml">5</A> are for
+the prescribed ice option as used in AMIP and F compset (standalone CAM) runs.
+
+<P>
+<BR>  <DIV ALIGN="CENTER">
+  <A NAME="table:ice_prescribed_nml"></A>  <A NAME="429"></A>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
+<CAPTION><STRONG>Table 5:</STRONG>
+Namelist Variables for Prescribed Ice Option</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Default Value</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_ice</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn on prescribed ice</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_ice_fill </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn fill option</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_first </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>First year of prescribed ice data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_last </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Last year of prescribed ice data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>model_year_align </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Year in model run that aligns with stream_year_first</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_domfilename </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed ice stream data file</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldfilename </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed ice stream data file</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldvarname </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>ice_cov</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Ice fraction field name</TD>
+</TR>
+</TABLE>
+</DIV>
+<BR>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html245"
+  HREF="node14.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html241"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html235"
+  HREF="node12.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html243"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html246"
+  HREF="node14.html">Prescribed Aerosol Namelist</A>
+<B> Up:</B> <A NAME="tex2html242"
+  HREF="node8.html">Namelist Variables</A>
+<B> Previous:</B> <A NAME="tex2html236"
+  HREF="node12.html">Tracer Namelist</A>
+ &nbsp; <B>  <A NAME="tex2html244"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Prescribed Aerosol Namelist</TITLE>
+<META NAME="description" CONTENT="Prescribed Aerosol Namelist">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node15.html">
+<LINK REL="previous" HREF="node13.html">
+<LINK REL="up" HREF="node8.html">
+<LINK REL="next" HREF="node15.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html257"
+  HREF="node15.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html253"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html247"
+  HREF="node13.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html255"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html258"
+  HREF="node15.html">Grid Namelist</A>
+<B> Up:</B> <A NAME="tex2html254"
+  HREF="node8.html">Namelist Variables</A>
+<B> Previous:</B> <A NAME="tex2html248"
+  HREF="node13.html">Prescribed Ice Namelist</A>
+ &nbsp; <B>  <A NAME="tex2html256"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00046000000000000000">
+Prescribed Aerosol Namelist</A>
+</H2>
+
+<P>
+The namelist parameters listed in Table <A HREF="#table:ice_prescraero_nml">6</A> are for
+the prescribed aerosol option. See section on the aerosol tracer.
+
+<P>
+<BR>  <DIV ALIGN="CENTER">
+  <A NAME="table:ice_prescraero_nml"></A>  <A NAME="451"></A>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
+<CAPTION><STRONG>Table 6:</STRONG>
+Namelist Variables for Prescribed Aerosol Option</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Default Value</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_aero</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn on prescribed ice</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_aero_fill </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn fill option</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_first_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>First year of aerosol deposition data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_last_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Last year of aerosol deposition data</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>model_year_align_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Year in model run that aligns with stream_year_first</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_domfilename_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed aerosol stream data file</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldfilename_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed aerosol stream data file</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldvarname_aero </TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD:DSTX04WD:DSTX04DD</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>&nbsp;</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Aerosol field names</TD>
+</TR>
+</TABLE>
+</DIV>
+<BR>
+
+<P>
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html257"
+  HREF="node15.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html253"
+  HREF="node8.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html247"
+  HREF="node13.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html255"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html258"
+  HREF="node15.html">Grid Namelist</A>
+<B> Up:</B> <A NAME="tex2html254"
+  HREF="node8.html">Namelist Variables</A>
+<B> Previous:</B> <A NAME="tex2html248"
+  HREF="node13.html">Prescribed Ice Namelist</A>
+ &nbsp; <B>  <A NAME="tex2html256"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

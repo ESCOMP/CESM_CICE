@@ -1,10 +1,8 @@
 %=======================================================================
-% CVS: $Id: ice_usrdoc.tex 5 2005-12-12 17:41:05Z mvr $
-% CVS: $Source$
-% CVS: $Name$
+% SVN: $Id: ice_usrdoc.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
+
 \documentclass[]{article}
-\usepackage{html}
 \usepackage{natbib}
 \usepackage{supertabular}
 \setcounter{tocdepth}{7}
@@ -25,6 +23,7 @@
    \pdfcompresslevel=9
 \else
    \usepackage{graphicx}
+   \usepackage{html}
 \fi
 
 \textheight=9.0in
@@ -36,8 +35,31 @@
 \headheight=0.0in
 \headsep = 0.0in
 
+% Alter some LaTeX defaults for better treatment of figures:
+    % See p.105 of "TeX Unbound" for suggested values.
+    % See pp. 199-200 of Lamport's "LaTeX" book for details.
+    %   General parameters, for ALL pages:
+    \renewcommand{\topfraction}{0.9}	% max fraction of floats at top
+    \renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+    %   Parameters for TEXT pages (not float pages):
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    \renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+    \renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+    %   Parameters for FLOAT pages (not text pages):
+    \renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+	% N.B.: floatpagefraction MUST be less than topfraction !!
+    \renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
+
+	% remember to use [htp] or [htpb] for placement
+
 \begin{document}
+\ifpdf
+\else
 \bodytext{BGCOLOR=white LINK=BLUE VLINK=PURPLE}
+\fi
 
 % This is a modified definition of Ventry from The Latex Companion, p. 64
  \newenvironment{Ventry}[1]%
@@ -54,7 +76,6 @@
 \noindent {\bf Community Climate System Model} \\
 \noindent National Center for Atmospheric Research, Boulder, CO \\
 \noindent http://www.ccsm.ucar.edu/models \\
-\noindent CVS tag \verb+ $Name$  +  Build date: \today \\
 \vspace{2in}
 
 \begin{center}
@@ -65,9 +86,9 @@
   {Released with CCSM4.0} \\
   \vspace{0.5in}
   David Bailey \\
+  Marika Holland \\
   Elizabeth Hunke \\
   Bill Lipscomb \\
-  Marika Holland \\
   Bruce Briegleb \\
   Cecilia Bitz  \\
   Julie Schramm \\

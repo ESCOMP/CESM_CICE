@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Conservation Error</TITLE>
+<META NAME="description" CONTENT="Conservation Error">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node34.html">
+<LINK REL="previous" HREF="node32.html">
+<LINK REL="up" HREF="node30.html">
+<LINK REL="next" HREF="node34.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html494"
+  HREF="node34.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html490"
+  HREF="node30.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html484"
+  HREF="node32.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html492"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html495"
+  HREF="node34.html">NX does not divide</A>
+<B> Up:</B> <A NAME="tex2html491"
+  HREF="node30.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html485"
+  HREF="node32.html">Negative Ice Area in</A>
+ &nbsp; <B>  <A NAME="tex2html493"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00093000000000000000">
+Conservation Error</A>
+</H2>
+
+<P>
+This error is written from <B>ice_itd.F</B> when the ice model is checking
+that initial and final values of a conserved field are equal to within
+a small value. The output looks like:
+
+<P>
+<PRE>
+  Conservation error: vice, add_new_ice
+  11  :  14  185
+  Initial value =  1362442.600400560
+  Final value =  1362442.600400561
+  Difference =  2.328306436538696D-10
+  (shr_sys_abort) ERROR: ice: Conservation error
+  (shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+  (shr_mpi_abort):ice: Conservation error  0
+</PRE>
+
+<P>
+Non-conservation can ocur if the ice model is receiving
+very bad forcing, and is not able to deal with it.  This has occurred
+after a CFL violation in the ocean.  The timestep in the ocean may
+be decreased to get around the problem.
+
+<P>
+<BR><HR>
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>

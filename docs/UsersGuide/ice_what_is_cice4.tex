@@ -1,11 +1,9 @@
 %=======================================================================
-% CVS: $Id: ice_what_is_cice4.tex 5 2005-12-12 17:41:05Z mvr $
-% CVS: $Source$
-% CVS: $Name$
+% SVN: $Id: ice_what_is_cice4.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
 
 This User's Guide accompanies the CCSM4 User's Guide, and is intended
-for those who would like to run CICE coupled or uncoupled, on a supported
+for those who would like to run CICE coupled, on a supported
 platform, and "out of the box".  Users running CICE fully coupled should first
 look at the CCSM4 User's Guide.  It includes a quick start guide for downloading
 the CCSM4 source code and input datasets, and information on how to configure,
@@ -25,23 +23,33 @@ Climate System Model (CCSM), a fully-coupled global climate model that
 provides simulations of the earths past, present and future climate states.
 CICE4 is supported on high- and low-resolution Greenland Pole
 and tripole grids, which are identical to those used by the Parallel Ocean 
-Program (POP)
-ocean model.  The high resolution version is best suited for simulating 
-present-day and future climate scenarios while the low resolution option is
-used for paleoclimate simulations and debugging.
+Program (POP) ocean model.  The high resolution version is best suited for 
+simulating present-day and future climate scenarios while the low resolution 
+option is used for paleoclimate simulations and debugging.  An uncoupled 
+version of CICE is available separately from Los Alamos National Laboratory:\\
 
-An uncoupled version of CICE is available separately from Los Alamos National
-Laboratory (http://oceans11.lanl.gov/trac/CICE).  It provides a means of running
-the sea ice model independent of the other CCSM components.  It reads in
-atmospheric and ocean forcing, which eliminates the need for the flux coupler,
-and the atmosphere, land and ocean data models.  It can be run on a reduced
-number of processors, or without MPI (Message Passing Interface) for researchers
-without access to these computer resources.
+\ifpdf
+                    {\tt http://oceans11.lanl.gov/trac/CICE}.\\
+\else
+\begin{htmlonly}
+  \htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
+                    {http://oceans11.lanl.gov/trac/CICE}.
+\end{htmlonly}
+\begin{latexonly}
+                    {\tt http://oceans11.lanl.gov/trac/CICE}.
+\end{latexonly}
+\fi
+
+It provides a means of running the sea ice model independent of the other CCSM 
+components.  It reads in atmospheric and ocean forcing, which eliminates the 
+need for the flux coupler, and the atmosphere, land and ocean data models.  It 
+can be run on a reduced number of processors, or without MPI (Message Passing 
+Interface) for researchers without access to these computer resources.
 
 The physics in the uncoupled ice model are identical to those in the
 ice model used in the fully coupled system.  CICE is a dynamic-thermodynamic
-model that includes a subgrid-scale ice thickness distribution
-(\cite{bitz01};\cite{lips01}).  It uses the energy conserving thermodynamics
+model that includes a subgrid-scale ice thickness distribution (\cite{bitz01};
+\cite{lips01}).  It uses the energy conserving thermodynamics 
 of \cite{bitz99}, has multiple layers in each thickness category, and accounts
 for the influences of brine pockets within the ice cover.  The ice dynamics
 utilizes the elastic-viscous-plastic (EVP) rheology of \cite{hunk97}.  Sea ice
@@ -56,86 +64,52 @@ Subroutine names are given in {\it italic}, and file names are in {\bf boldface}
 \subsection{What's new in CICE4?}
 
 CICE4 is an upgraded version of the Community Sea Ice Model, CSIM5, which was
- based on CICE3, and was released in October 2002.  
-The model physics are similar to that of CSIM5, but it was decided to move to
-CICE, the LANL sea ice model for practical reasons.  The major changes are:
+ based on CICE3, and was released in June 2004.  The model physics are similar to that of CSIM5, but it was decided to move to CICE, the LANL sea ice model for practical reasons.  The major changes are:
 
 \begin{itemize}
 
-\item A module for a new incremental remapping transport scheme was added
-      called {\bf ice\_transport\_remap.F}.  The MPDATA transport scheme,
-      formerly in {\bf ice\_transport.F},  was moved to {\bf ice\_transport\_mpdata.F}.
-      Open water advection was added to the incremental remapping.
+\item The incremental remapping transport scheme is now the default and is
+      available in the modules called {\bf ice\_transport\_driver.F90} and 
+      {\bf ice\_transport\_remap.F90}.  The MPDATA transport scheme,
+      is no longer supported in CICE4. The upwind advection scheme is the
+      only additional option and is contained in 
+      {\bf ice\_transport\_driver.F90}.
 
-\item A bug in {\bf ice\_albedo.F} was fixed to avoid negative albedos for thin,
-      bare, melting ice.
+\item The standalone ice model is now only available through Los Alamos National
+      Laboratory.
 
-\item A bug in {\bf ice\_ocean.F} was fixed to include {\tt fswthru} in the calculation
-      of sea surface temperature.
+\item Several physics options have been shifted around into other or new
+      modules. For example, most of {\bf ice\_albedo.F90} is now in 
+      {\bf ice\_shortwave.F90}. The new module contains all of the shortwave
+      radiative transfer plus the basic albedo calculations.
 
-\item A salt flux calculation was added so the ice reference salinity could
-      be changed to a non-zero value.
+\item The mechanical redistribution scheme has been changed significantly and
+      is available in {\bf ice\_mechred.F90}.
 
-\item The sea ice momentum equation modified for the free drift regime.  The
-      dynamics scheme treats areas with lower ice concentrations more accurately.
-      See \cite{hunk03}.
+\item A new drivers area has been created for modules that are specific
+      to the CCSM as opposed to the standalone CICE model. The new CCSM
+      drivers are contained in the cpl\_mct and cpl\_share subdirectories.
+      The ESMF driver (cpl\_esmf) is still under development. The source
+      subdirectory now contains driver independent source code for the
+      most part.
 
-\item {\bf ice\_coupling.F} has been rewritten to be compatible with the latest
-      version of the CCSM coupler.
-
-\item An additional field {\tt Qref} is calculated in {\it atmo\_boundary\_layer}
-      and passed to the coupler.
-
-\item Each ice thickness category has 4 thickness layers. Previously, the two thinnest
-      categories had two layers.
-
-\item A sub-cycling timestep {\tt ndyn\_dt} was added to the dynamics to get around
-      a model instability that would manifest itself in MPDATA.
-
-\item The snow and ice albedos, used for coupled model tuning, were moved to the
-      namelist to make modification easier.
-
-\item It is now possible to run CICE as an uncoupled model.  The module
-      {\bf ice\_flux\_in.F} has been added to read in forcing data.
-
-\item Most modules have been modified to run efficiently on vector platforms.
-      Grid indices {\tt i}, {\tt j} are no longer passed into subroutines.  Shorter
-      loops over ice categories and vertical layers have been moved outside
-      the longer loops over {\tt i} and {\tt j}.  Directives have been placed
-      before certain loops to enforce vectorization.
-
-\item The thermodynamics modules from CICE4, {\bf ice\_tstm.F}, {\bf ice\_vthermo.F},
-      {\bf ice\_therm\_driver.F}, and {\bf ice\_dh.F}, have been replaced by two new
-      modules {\bf ice\_therm\_vertical.F} and {\bf ice\_therm\_itd.F}.  The caclulations
-      in {\bf ice\_therm\_vertical.F} are done before the {\it to\_coupler} call,
-      and those in {\bf ice\_therm\_itd.F} are done after this call.
-
-\item New modules {\bf ice\_exit.F} and {\bf ice\_work.F} have been added that
-      contain code for aborting the model and globally accessible work arrays.
-
-\item The gx3v4 grid had been replaced by a new gx3v5 grid. The coupled model
-      produced a poor meridional overturning circulation (MOC) with the gx3v4 grid.
-      The new grid has points in different locations and has higher resolution
-      in the North Atlantic than gx3v4.  The simulation with gx3v5 gives a better ice
-      thickness distribution and produces a better MOC.
-
-\item The prescribed ice model is not supported in this release.
-
-\item Most CICE and CICE modules are very similar, except for the mechanical
-      redistribution modules.
+\item A new bld subdirectory has been introduced which contains CCSM
+      specific build and configure scripts. These scripts handle the
+      namelist generation, defaults, and configuration details.
 
 \end{itemize}
 
-The CICE source code is based on the LOS Alamos sea ice model CICE model.
-After a code merger with CICE was carried out to take advantage of the vector-
-friendly code, the models are very similar.  If there are some topics that
-are not covered in the CICE documentation, users are encouraged to look
-at the CICE documentation \cite{cice04}.  It is available at \\
+The CICE source code is based on the Los Alamos sea ice model CICE model version 4.  The main source code is very similar in both versions, but the drivers are significantly different.  If there are some topics that are not covered in the CICE documentation, users are encouraged to look at the CICE documentation \cite{cice08}.  It is available at Los Alamos National Laboratory at: \\
+\\
+
+\ifpdf
+                    {\tt http://oceans11.lanl.gov/trac/CICE}.
+\else
 \begin{htmlonly}
-  \htmladdnormallink{http://climate.lanl.gov/Models/CICE/index.htm}
-                    {http://climate.lanl.gov/Models/CICE/index.htm}.
+  \htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
+                    {http://oceans11.lanl.gov/trac/CICE}.
 \end{htmlonly}
 \begin{latexonly}
-                    {\tt http://climate.lanl.gov/Models/CICE/index.htm}.
+                    {\tt http://oceans11.lanl.gov/trac/CICE}.
 \end{latexonly}
-
+\fi

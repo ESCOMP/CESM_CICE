@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2002-2-1 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Restart Files</TITLE>
+<META NAME="description" CONTENT="Restart Files">
+<META NAME="keywords" CONTENT="ice_usrdoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
+
+<LINK REL="next" HREF="node26.html">
+<LINK REL="previous" HREF="node23.html">
+<LINK REL="up" HREF="node22.html">
+<LINK REL="next" HREF="node25.html">
+</HEAD>
+
+<BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
+<!--Navigation Panel-->
+<A NAME="tex2html382"
+  HREF="node25.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html378"
+  HREF="node22.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html372"
+  HREF="node23.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html380"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html383"
+  HREF="node25.html">Restart Pointer Files</A>
+<B> Up:</B> <A NAME="tex2html379"
+  HREF="node22.html">Output Data</A>
+<B> Previous:</B> <A NAME="tex2html373"
+  HREF="node23.html">Stdout Output</A>
+ &nbsp; <B>  <A NAME="tex2html381"
+  HREF="node1.html">Contents</A></B> 
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00082000000000000000"></A>
+      <A NAME="restart_files"></A>
+<BR>
+Restart Files
+</H2>
+      
+<P>
+Restart files contain all of the initial condition information
+necessary to restart from a previous simulation.  These files are in a
+standard netCDF 64-bit binary format. A restart file is not necessary for
+an initial run, but is highly recommended.  The initial conditions
+that are internal to the ice model produce an unrealistic ice cover
+that an uncoupled ice model will correct in several years.  The initial
+conditions from a restart file are created from an equilibrium solution,
+and provide more realistic information that is necessary if coupling
+to an active ocean model.  The frequency at which restart files are created
+is controlled by the namelist parameter <TT>dumpfreq</TT>. 
+The names of these files are proceeded by the namelist parameter 
+<TT>dump_file</TT> and, by default are written out yearly to the <B>/rest</B>
+directory under the executable directory.  To change the directory where these files are
+located, modify the variable <TT>$RSTDIR</TT> at the top of the setup script.
+The names of the restart files follow the CCSM Output Filename Requirements.
+The form of the restart file names are as follows: 
+<BR>
+<P>
+<B>$CASE.cice.r.yyyy-mm-dd-sssss.nc</B> 
+<BR>
+<P>
+For example, the file <B>$CASE.cice.r.0002-01-01-00000.nc</B> would be written
+out at the end of year 1, month 12.  A file containing the name of a restart
+file is called a restart pointer file. This filename information allows the
+model simulation to continue from the correct point in time, and hence the
+correct restart file.
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL>
+<LI><A NAME="tex2html384"
+  HREF="node25.html">Restart Pointer Files</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html382"
+  HREF="node25.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/share/latex2html/icons/next.png"></A> 
+<A NAME="tex2html378"
+  HREF="node22.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/share/latex2html/icons/up.png"></A> 
+<A NAME="tex2html372"
+  HREF="node23.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<A NAME="tex2html380"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
+ SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
+<BR>
+<B> Next:</B> <A NAME="tex2html383"
+  HREF="node25.html">Restart Pointer Files</A>
+<B> Up:</B> <A NAME="tex2html379"
+  HREF="node22.html">Output Data</A>
+<B> Previous:</B> <A NAME="tex2html373"
+  HREF="node23.html">Stdout Output</A>
+ &nbsp; <B>  <A NAME="tex2html381"
+  HREF="node1.html">Contents</A></B> 
+<!--End of Navigation Panel-->
+<ADDRESS>
+David Bailey
+2009-11-06
+</ADDRESS>
+</BODY>
+</HTML>
