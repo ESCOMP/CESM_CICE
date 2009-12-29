@@ -222,7 +222,7 @@
 !
       call ice_HaloUpdate (aicen,            halo_info, &
                            field_loc_center, field_type_scalar)
-      call ice_HaloUpdate (trcrn,            halo_info, &
+      call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info, &
                            field_loc_center, field_type_scalar)
       call ice_HaloUpdate (vicen,            halo_info, &
                            field_loc_center, field_type_scalar)

@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20091229
+Originator: dbailey
+Date: Mon Dec 28 2009
+Version: 4.0
+One-line Summary: Fix problem with NaNs in halo updates
+CCSM Version compatible with: ccsm4_0_beta38+
+Changes made:
+	
+Make sure the halo updates are only called for actual tracers
+(i.e. ntrcr or ntrace, instead of max_ntrcr or max_ntrace).
+
+M      src/source/ice_transport_remap.F90
+M      src/source/ice_state.F90
+
+===============================================================
 cice4_0_20091228
 Originator: dbailey
 Date: Mon Dec 28 2009

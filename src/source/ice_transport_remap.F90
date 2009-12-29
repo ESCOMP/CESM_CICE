@@ -747,11 +747,11 @@
 !        call t_startf ('cice_dyn_remap_update2')
 
          ! tracer fields
-         call ice_HaloUpdate (tc,               halo_info, &
+         call ice_HaloUpdate (tc(:,:,1:ntrace,:,:), halo_info, &
                               field_loc_center, field_type_scalar)
-         call ice_HaloUpdate (tx,               halo_info, &
+         call ice_HaloUpdate (tx(:,:,1:ntrace,:,:), halo_info, &
                               field_loc_center, field_type_vector)
-         call ice_HaloUpdate (ty,               halo_info, &
+         call ice_HaloUpdate (ty(:,:,1:ntrace,:,:), halo_info, &
                               field_loc_center, field_type_vector)
          call ice_timer_stop(timer_bound)
 !        call t_stopf ('cice_dyn_remap_update2')
