@@ -419,29 +419,46 @@ if ($cice_mode eq 'prescribed') {
     add_default($nl, 'stream_fldfilename');
     add_default($nl, 'stream_year_first' );
     add_default($nl, 'stream_year_last'  );
+    add_default($nl, 'stream_num_iotasks');
+    add_default($nl, 'stream_io_root');
+    add_default($nl, 'stream_io_type');
+    add_default($nl, 'stream_fillwrite');
+    add_default($nl, 'stream_fillread');
+    add_default($nl, 'stream_mapwrite');
+    add_default($nl, 'stream_mapread');
 }
 
 ######################################
 # namelist group: ice_prescaero_nml #
 ######################################
 
- add_default($nl, 'prescribed_aero_fill');
- add_default($nl, 'stream_domtvarname_aero');
- add_default($nl, 'stream_domxvarname_aero');
- add_default($nl, 'stream_domyvarname_aero');
- add_default($nl, 'stream_domareaname_aero'); 
- add_default($nl, 'stream_dommaskname_aero');
- add_default($nl, 'stream_fldvarname_aero' );
- add_default($nl, 'stream_domfilename_aero','presaero_type'=>$presaero_type);
- add_default($nl, 'stream_fldfilename_aero','presaero_type'=>$presaero_type);
- add_default($nl, 'model_year_align_aero'  ,'presaero_type'=>$presaero_type);
- add_default($nl, 'stream_year_first_aero' ,'presaero_type'=>$presaero_type);
- add_default($nl, 'stream_year_last_aero'  ,'presaero_type'=>$presaero_type);
+add_default($nl, 'prescribed_aero_fill');
+add_default($nl, 'stream_domtvarname_aero');
+add_default($nl, 'stream_domxvarname_aero');
+add_default($nl, 'stream_domyvarname_aero');
+add_default($nl, 'stream_domareaname_aero'); 
+add_default($nl, 'stream_dommaskname_aero');
+add_default($nl, 'stream_fldvarname_aero' );
+add_default($nl, 'stream_domfilename_aero','presaero_type'=>$presaero_type);
+add_default($nl, 'stream_fldfilename_aero','presaero_type'=>$presaero_type);
+add_default($nl, 'model_year_align_aero'  ,'presaero_type'=>$presaero_type);
+add_default($nl, 'stream_year_first_aero' ,'presaero_type'=>$presaero_type);
+add_default($nl, 'stream_year_last_aero'  ,'presaero_type'=>$presaero_type);
+add_default($nl, 'stream_num_iotasks_aero');
+add_default($nl, 'stream_io_root_aero');
+add_default($nl, 'stream_io_type_aero');
+add_default($nl, 'stream_fillwrite_aero');
+add_default($nl, 'stream_fillread_aero');
+add_default($nl, 'stream_mapwrite_aero');
+add_default($nl, 'stream_mapread_aero');
 
 ##################################
 # namelist group: ice_pio_nml    #
 ##################################
 
+add_default($nl, 'ice_num_iotasks');
+add_default($nl, 'ice_pio_stride');
+add_default($nl, 'ice_pio_type_name');
 
 ######################################
 # namelist group: ice_fields_nml     #

@@ -1,41 +1,35 @@
-module ice_comp_mct
+module ice_comp_esmf
 
 !---------------------------------------------------------------------------
 !BOP
 !
-! !MODULE: ice_comp_mct
+! !MODULE: ice_comp_esmf
 !
 ! !DESCRIPTION:
-! CICE interface routine for the ccsm cpl7 mct system
+! CICE interface routine for the ccsm cpl7 esmf system
 !
 ! !USES:
 
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod,  only : shr_sys_abort, shr_sys_flush
-! use shr_mem_mod,  only : shr_get_memusage, shr_init_memusage
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
 		           shr_file_setloglevel, shr_file_setlogunit
-  use mct_mod
-#ifdef USE_ESMF_LIB
   use esmf_mod
-#else
-  use esmf_mod, only: ESMF_clock
-#endif
 
   use seq_flds_mod
   use seq_flds_indices
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
-  use seq_infodata_mod,only : seq_infodata_type, seq_infodata_getdata,       &
-		              seq_infodata_putdata, seq_infodata_start_type_cont, &
-		              seq_infodata_start_type_brnch, seq_infodata_start_type_start
+  use seq_comm_mct,    only : ICEID
   use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
                               seq_timemgr_restartalarmison, &
 		              seq_timemgr_eclockdateinsync, &
                               seq_timemgr_stopalarmison
+  use seq_infodata_mod,only : seq_infodata_start_type_cont, &
+                              seq_infodata_start_type_brnch, seq_infodata_start_type_start
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-			      alvdr, alidr, alvdf, alidf, tref, qref, flat,    &
+    	                      alvdr, alidr, alvdf, alidf, tref, qref, flat,    &
 			      fsens, flwout, evap, fswabs, fhocn, fswthru,     &
 		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
 		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
@@ -49,9 +43,9 @@ module ice_comp_mct
   use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info, profile_barrier
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
- 		              grid_type, t2ugrid_vector
+                      grid_type, t2ugrid_vector
   use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-		              field_loc_center, field_type_scalar, field_type_vector, c100
+                     field_loc_center, field_type_scalar, field_type_vector, c100
   use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
@@ -59,14 +53,14 @@ module ice_comp_mct
                               get_daycal, leap_year_count
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
- 			      write_numIceCells, accum_numIceCells2
+                             write_numIceCells, accum_numIceCells2
 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
 !  use ice_init
   use ice_boundary,    only : ice_HaloUpdate 
   use ice_scam,        only : scmlat, scmlon, single_column
   use ice_fileunits,   only : nu_diag
-  use ice_dyn_evp,     only :  kdyn
+  use ice_dyn_evp,     only : kdyn
   use ice_prescribed_mod
   use ice_prescaero_mod
   use ice_step_mod
@@ -74,43 +68,69 @@ module ice_comp_mct
   use ice_global_reductions
   use ice_broadcast
 
+  use esmfshr_mod
+
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
-  public :: ice_init_mct
-  public :: ice_run_mct
-  public :: ice_final_mct
+  public :: ice_register_esmf
+  public :: ice_init_esmf
+  public :: ice_run_esmf
+  public :: ice_final_esmf
   SAVE
   private                              ! By default make data private
 !
 ! ! PUBLIC DATA:
 !
 ! !REVISION HISTORY:
-! Author: Jacob Sewall, Mariana Vertenstein
+! Author: Jacob Sewall, Mariana Vertenstein, Fei Liu
 !
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ice_export_mct
-  private :: ice_import_mct
-  private :: ice_SetGSMap_mct
-  private :: ice_domain_mct
+  private :: ice_export_esmf
+  private :: ice_import_esmf
+  private :: ice_DistGrid_esmf
+  private :: ice_domain_esmf
 
 !
 ! !PRIVATE VARIABLES
 
-  integer :: ICEID       
-
-
+  type(mct_gsmap),save :: gsmap_i
+  type(mct_ggrid),save :: dom_i
+ 
 !=======================================================================
 
 contains
 
 !=======================================================================
+subroutine ice_register_esmf(comp, rc)
+    implicit none
+    type(ESMF_GridComp)  :: comp
+    integer, intent(out) :: rc
+
+    rc = ESMF_SUCCESS
+    print *, "In ice register routine"
+    ! Register the callback routines.
+
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETINIT, &
+      ice_init_esmf, ESMF_SINGLEPHASE, rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETRUN, &
+      ice_run_esmf, ESMF_SINGLEPHASE, rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETFINAL, &
+      ice_final_esmf, ESMF_SINGLEPHASE, rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+end subroutine
+
+!=======================================================================
 !BOP
 !
-! !IROUTINE: ice_init_mct
+! !IROUTINE: ice_init_esmf
 !
 ! !INTERFACE:
-  subroutine ice_init_mct( EClock, cdata_i, x2i_i, i2x_i, NLFilename )
+  subroutine ice_init_esmf(comp, import_state, export_state, EClock, rc)
+   !----------------------------------------------------------
 !
 ! !DESCRIPTION:
 ! Initialize thermodynamic ice model and obtain relevant atmospheric model
@@ -121,21 +141,25 @@ contains
     use CICE_InitMod
     use ice_restart, only: runid, runtype, restart_dir, restart_format
     use ice_history, only: history_dir, history_file
+    implicit none
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock)         , intent(in)    :: EClock
-    type(seq_cdata)          , intent(inout) :: cdata_i
-    type(mct_aVect)          , intent(inout) :: x2i_i, i2x_i
-    character(len=*), optional  , intent(in) :: NLFilename ! Namelist filename
+!
+    !----- arguments -----
+   type(ESMF_GridComp)          :: comp
+   type(ESMF_State)             :: import_state
+   type(ESMF_State)             :: export_state
+   type(ESMF_Clock)             :: EClock
+   integer, intent(out)         :: rc
+   
 !
 ! !LOCAL VARIABLES:
 !
-    type(mct_gsMap)             , pointer :: gsMap_ice
-    type(mct_gGrid)             , pointer :: dom_i
-    type(seq_infodata_type)     , pointer :: infodata   ! Input init object
-    integer                               :: lsize
+    !----- local -----
+    type(ESMF_DistGrid)                   :: distgrid
+    type(ESMF_Array)                      :: d2x, x2d, dom
+    type(ESMF_VM)                         :: vm
 
-    character(len=256) :: drvarchdir         ! driver archive directory
     character(len=32)  :: starttype          ! infodata start type
     integer            :: start_ymd          ! Start date (YYYYMMDD)
     integer            :: start_tod          ! start time of day (s)
@@ -148,30 +172,30 @@ contains
     integer            :: lbnum
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
-    integer            :: mpicom_loc  ! temporary mpicom
-
-    real(r8) :: mrss, mrss0,msize,msize0
-
+    integer            :: mpicom_loc, mpicom_vm
 ! !REVISION HISTORY:
-! Author: Jacob Sewall
+! Author: Jacob Sewall, Fei Liu
 !EOP
 !-----------------------------------------------------------------------
 
-    !---------------------------------------------------------------------------
-    ! Set cdata pointers
-    !---------------------------------------------------------------------------
+   rc = ESMF_SUCCESS
 
-    call seq_cdata_setptrs(cdata_i, ID=ICEID, mpicom=mpicom_loc, &
-         gsMap=gsMap_ice, dom=dom_i, infodata=infodata)
+   ! duplicate the mpi communicator from the current VM 
+   call ESMF_VMGetCurrent(vm, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_VMGet(vm, mpiCommunicator=mpicom_vm, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call MPI_Comm_dup(mpicom_vm, mpicom_loc, rc)
+   if(rc /= 0) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    ! Determine time of next atmospheric shortwave calculation
-    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+   ! Determine time of next atmospheric shortwave calculation
+   call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-!   call shr_init_memusage()
 
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
     ! use infodata to determine type of run
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
 
     ! Preset single column values
 
@@ -179,9 +203,16 @@ contains
     scmlat = -999.
     scmlon = -999.
 
-    call seq_infodata_GetData( infodata, case_name=runid   ,  &  
-       single_column=single_column ,scmlat=scmlat,scmlon=scmlon)
-    call seq_infodata_GetData( infodata, start_type=starttype)
+    call ESMF_AttributeGet(export_state, name="case_name", value=runid, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="single_column", value=single_column, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="scmlat", value=scmlat, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="scmlon", value=scmlon, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="start_type", value=starttype, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        runtype = "initial"
@@ -190,12 +221,11 @@ contains
     else if (trim(starttype) == trim(seq_infodata_start_type_brnch)) then
        runtype = "branch"
     else
-       write(nu_diag,*) 'ice_comp_mct ERROR: unknown starttype'
+       write(nu_diag,*) 'ice_comp_esmf ERROR: unknown starttype'
        call shr_sys_abort()
     end if
 
     ! Set nextsw_cday to -1 for continue and branch runs.
-
     if (trim(runtype) /= 'initial') nextsw_cday = -1
 
     !=============================================================
@@ -215,17 +245,17 @@ contains
     call t_stopf ('cice_init')
     call init_numIceCells
 
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (nu_diag)
    
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
     ! use EClock to reset calendar information on initial start
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
 
     ! - the following logic duplicates the logic for the concurrent system - 
     ! cice_init is called then init_cpl is called where the start date is received
@@ -249,21 +279,21 @@ contains
 
        if (ref_ymd /= start_ymd .or. ref_tod /= start_tod) then
           if (my_task == master_task) then
-             write(nu_diag,*) 'ice_comp_mct: ref_ymd ',ref_ymd, &
+             write(nu_diag,*) 'ice_comp_esmf: ref_ymd ',ref_ymd, &
                   ' must equal start_ymd ',start_ymd
-             write(nu_diag,*) 'ice_comp_mct: ref_ymd ',ref_tod, &
+             write(nu_diag,*) 'ice_comp_esmf: ref_ymd ',ref_tod, &
                   ' must equal start_ymd ',start_tod
           end if
           call shr_sys_abort()
        end if
 
        if (my_task == master_task) then
-          write(nu_diag,*) '(ice_init_mct) idate from sync clock = ', &
+          write(nu_diag,*) '(ice_init_esmf) idate from sync clock = ', &
                start_ymd
-          write(nu_diag,*) '(ice_init_mct)   tod from sync clock = ', &
+          write(nu_diag,*) '(ice_init_esmf)   tod from sync clock = ', &
                start_tod
           write(nu_diag,*) &
-               '(ice_init_mct) resetting idate to match sync clock'
+               '(ice_init_esmf) resetting idate to match sync clock'
        end if
 
        idate = start_ymd
@@ -281,38 +311,56 @@ contains
 
        call shr_sys_flush(nu_diag)
     end if
-
     call calendar(time)     ! update calendar info
  
-    !---------------------------------------------------------------------------
-    ! Initialize MCT attribute vectors and indices
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
+    ! Initialize distgrids, domains, and arrays
+    !----------------------------------------------------------------------------
 
-    call t_startf ('cice_mct_init')
+    call t_startf ('cice_esmf_init')
 
-    ! Initialize ice gsMap
+    ! Initialize ice distgrid
 
-    call ice_SetGSMap_mct( MPI_COMM_ICE, ICEID, GSMap_ice ) 	
-    lsize = mct_gsMap_lsize(gsMap_ice, MPI_COMM_ICE)
+    distgrid = ice_DistGrid_esmf(rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    ! Initialize mct ice domain (needs ice initialization info)
+    ! Initialize ice domain (needs ice initialization info)
 
-    call ice_domain_mct( lsize, gsMap_ice, dom_i )
+    dom = mct2esmf_init(distgrid, attname=seq_flds_dom_fields, name="domain", rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ice_domain_esmf(dom, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    ! Inialize mct attribute vectors
+    ! Inialize input/output arrays
+    d2x = mct2esmf_init(distgrid, attname=seq_flds_i2x_fields, name="d2x", rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+ 
+    x2d = mct2esmf_init(distgrid, attname=seq_flds_x2i_fields, name="x2d", rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+ 
+    call ESMF_StateAdd(export_state, dom, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call mct_aVect_init(x2i_i, rList=seq_flds_x2i_fields, lsize=lsize)
-    call mct_aVect_zero(x2i_i)
+    call ESMF_StateAdd(export_state, d2x, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+ 
+    call ESMF_StateAdd(import_state, x2d, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call mct_aVect_init(i2x_i, rList=seq_flds_i2x_fields, lsize=lsize) 
-    call mct_aVect_zero(i2x_i)
+    call esmf2mct_init(distgrid,ICEID,gsmap_i,MPI_COMM_ICE,rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call esmf2mct_init(dom,dom_i,rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call esmf2mct_copy(dom, dom_i%data, rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     !-----------------------------------------------------------------
     ! Second phase of prescribed ice initialization
     !-----------------------------------------------------------------
 
     if (prescribed_ice) then
-       call ice_prescribed_init2(ICEID, gsmap_ice, dom_i)
+       call ice_prescribed_init2(ICEID, gsmap_i, dom_i)
     end if
 
     !-----------------------------------------------------------------
@@ -325,38 +373,36 @@ contains
     ! send initial state to driver
     !---------------------------------------------------------------------------
 
-    call ice_export_mct (i2x_i)  !Send initial state to driver
-    call seq_infodata_PutData( infodata, ice_prognostic=.true., &
-      ice_nx = nx_global, ice_ny = ny_global )
-    call t_stopf ('cice_mct_init')
+    call ice_export_esmf (d2x, rc=rc)  !Send initial state to driver
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    !---------------------------------------------------------------------------
+    call ESMF_AttributeSet(export_state, name="ice_prognostic", value=.true., rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeSet(export_state, name="ice_nx", value=nx_global, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeSet(export_state, name="ice_ny", value=ny_global, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call t_stopf ('cice_esmf_init')
+
+    !----------------------------------------------------------------------------
     ! Reset shr logging to original values
-    !---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
 
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
     call ice_timer_stop(timer_total) ! time entire run
-!   call shr_get_memusage(msize,mrss)
-!   call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
-!   call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
-!   if(my_task == 0) then
-!     write(shrlogunit,105) 'ice_init_mct: memory_write: model date = ',start_ymd,start_tod, &
-!           ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
-!   endif
- 
-  105  format( A, 2i8, A, f10.2, A, f10.2, A)
 
-  end subroutine ice_init_mct
+end subroutine ice_init_esmf
 
 !---------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: ice_run_mct
+! !IROUTINE: ice_run_esmf
 !
 ! !INTERFACE:
-  subroutine ice_run_mct( EClock, cdata_i, x2i_i, i2x_i )
+subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !DESCRIPTION:
 ! Run thermodynamic CICE
@@ -372,12 +418,14 @@ contains
     use ice_lvl, only: write_restart_lvl
     use ice_restoring, only: restore_ice, ice_HaloRestore
     use ice_shortwave, only: init_shortwave
+    implicit none
 
 ! !ARGUMENTS:
-    type(ESMF_Clock),intent(in)    :: EClock
-    type(seq_cdata), intent(inout) :: cdata_i
-    type(mct_aVect), intent(inout) :: x2i_i
-    type(mct_aVect), intent(inout) :: i2x_i
+    type(ESMF_GridComp)          :: comp
+    type(ESMF_State)             :: import_state
+    type(ESMF_State)             :: export_state
+    type(ESMF_Clock)             :: EClock
+    integer, intent(out)         :: rc
 
 ! !LOCAL VARIABLES:
     integer :: k             ! index
@@ -393,22 +441,19 @@ contains
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
     integer :: n
-    type(mct_gGrid)        , pointer :: dom_i
-    type(seq_infodata_type), pointer :: infodata   
-    type(mct_gsMap)        , pointer :: gsMap_i
-    character(len=char_len_long) :: fname
     character(len=char_len_long) :: string1, string2
-    character(len=*), parameter  :: SubName = "ice_run_mct"
-
-    real(r8) :: mrss, mrss0,msize,msize0
+    character(len=char_len_long) :: fname
+    character(len=*), parameter  :: SubName = "ice_run_esmf"
+    type(ESMF_Array) :: d2x, x2d
     logical, save :: first_time = .true.
-
 !
 ! !REVISION HISTORY:
-! Author: Jacob Sewall, Mariana Vertenstein
+! Author: Jacob Sewall, Mariana Vertenstein, Fei Liu
 !
 !EOP
 !---------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
 
     call ice_timer_start(timer_total) ! time entire run
 
@@ -422,9 +467,8 @@ contains
    
     ! Determine time of next atmospheric shortwave calculation
 
-    call seq_cdata_setptrs(cdata_i, infodata=infodata, dom=dom_i, &
-         gsMap=gsMap_i)
-    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+    call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     !-------------------------------------------------------------------
     ! get import state
@@ -432,7 +476,13 @@ contains
     
     call t_startf ('cice_import')
     call ice_timer_start(timer_cplrecv)
-    call ice_import_mct( x2i_i )
+
+    call ESMF_StateGet(import_state, itemName="x2d", array=x2d, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call ice_import_esmf(x2d, rc=rc )
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
     call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_import')
  
@@ -567,7 +617,7 @@ contains
 #endif
     call ice_timer_stop(timer_hist)
     call t_stopf ('cice_hist')
- 
+
     !--------------------------------------------
     ! Accumualate the number of active ice cells
     !--------------------------------------------
@@ -652,7 +702,13 @@ contains
     
     call t_startf ('cice_export')
     call ice_timer_start(timer_cplsend)
-    call ice_export_mct ( i2x_i )
+
+    call ESMF_StateGet(export_state, itemName="d2x", array=d2x, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call ice_export_esmf (d2x, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
     call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_export')
     
@@ -695,27 +751,15 @@ contains
        call release_all_fileunits
     end if
     
-!   if(tod == 0) then
-!      call shr_get_memusage(msize,mrss)
-!      call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_run_mct mrss0')
-!      call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_run_mct msize0')
-!      if(my_task == 0 ) then
-!          write(shrlogunit,105) 'ice_run_mct: memory_write: model date = ',ymd,tod, &
-!               ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
-!      endif
-!   endif
- 
-  105  format( A, 2i8, A, f10.2, A, f10.2, A)
-
-  end subroutine ice_run_mct
+end subroutine ice_run_esmf
 
 !---------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: ice_final_mct
+! !IROUTINE: ice_final_esmf
 !
 ! !INTERFACE:
-  subroutine ice_final_mct( )
+subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !DESCRIPTION:
 ! Finalize CICE
@@ -727,25 +771,48 @@ contains
 !
 ! !ARGUMENTS:
 !
+   implicit none
+   type(ESMF_GridComp)          :: comp
+   type(ESMF_State)             :: import_state
+   type(ESMF_State)             :: export_state
+   type(ESMF_Clock)             :: EClock
+   integer, intent(out)         :: rc
+!
 ! !REVISION HISTORY:
+! Author: Fei Liu
 !
 !EOP
 !---------------------------------------------------------------------------
 
-  end subroutine ice_final_mct
+  !----------------------------------------------------------------------------
+  ! Finalize routine 
+  !----------------------------------------------------------------------------
+  
+  ! Note that restart for final timestep was written in run phase.
+    rc = ESMF_SUCCESS
 
-!===============================================================================
+    ! Destroy ESMF objects
 
-  subroutine ice_SetGSMap_mct( mpicom, ID, gsMap_ice )
+    call esmfshr_util_StateArrayDestroy(export_state,"d2x",rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call esmfshr_util_StateArrayDestroy(export_state,"domain",rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call esmfshr_util_StateArrayDestroy(import_state,"x2d",rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
+end subroutine ice_final_esmf
+
+!=================================================================================
+function ice_DistGrid_esmf(rc)
+
+    implicit none
     !-------------------------------------------------------------------
     !
     ! Arguments
     !
-    implicit none
-    integer        , intent(in)    :: mpicom
-    integer        , intent(in)    :: ID
-    type(mct_gsMap), intent(inout) :: gsMap_ice
+    integer, intent(out)    :: rc
+    ! Return
+    type(ESMF_DistGrid)     :: ice_DistGrid_esmf
     !
     ! Local variables
     !
@@ -759,7 +826,9 @@ contains
     type(block) :: this_block         ! block information for current block
     !-------------------------------------------------------------------
 
-    ! Build the CICE grid numbering for MCT
+    rc = ESMF_SUCCESS
+
+    ! Build the CICE grid numbering for distgrid
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used
     ! in SCRIP
@@ -805,26 +874,26 @@ contains
           enddo !i
        enddo    !j
     enddo        !iblk
-    
-    call mct_gsMap_init( gsMap_ice, gindex, mpicom, ID, lsize, gsize )
+   
+    ice_DistGrid_esmf = mct2esmf_init(gindex, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     deallocate(gindex)
 
-  end subroutine ice_SetGSMap_mct
+  end function ice_DistGrid_esmf
 
 
-!===============================================================================
+!====================================================================================
 
-  subroutine ice_export_mct( i2x_i )   
+subroutine ice_export_esmf(array, rc )   
 
+    implicit none
     !-----------------------------------------------------
-    type(mct_aVect)   , intent(inout) :: i2x_i
+    type(ESMF_Array), intent(inout)     :: array
+    integer, intent(out)                :: rc
 
-    integer :: i, j, iblk, n, ij 
+    integer :: i, j, iblk, n
     integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
-    integer (kind=int_kind)                                :: icells ! number of ocean/ice cells
-    integer (kind=int_kind), dimension (nx_block*ny_block) :: indxi  ! compressed indices in i
-    integer (kind=int_kind), dimension (nx_block*ny_block) :: indxj  ! compressed indices in i
 
     real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
         Tsrf  &      ! surface temperature
@@ -835,12 +904,17 @@ contains
      ,  sicthk &     ! needed for cam/som only 
      ,  ailohi       ! fractional ice area
 
-    real (kind=dbl_kind) :: &
-       gsum, workx, worky           ! tmps for converting grid
+    real (kind=dbl_kind) :: workx, worky           ! tmps for converting grid
 
-    type(block)        :: this_block                           ! block information for current block
+    type(block)        :: this_block               ! block information for current block
     logical :: flag
+    real(R8), pointer   :: fptr(:,:)
     !-----------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     flag=.false.
 
@@ -907,7 +981,7 @@ contains
 
     ! Fill export state i2x_i
 
-     i2x_i%rAttr(:,:) = spval_dbl
+     fptr(:,:) = spval_dbl
 
      n=0
      do iblk = 1, nblocks
@@ -923,56 +997,58 @@ contains
             n = n+1
 
             !-------states-------------------- 
-            i2x_i%rAttr(index_i2x_Si_sicthk,n)    = sicthk(i,j,iblk) ! (needed by CAM/SOM only)
-            i2x_i%rAttr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
+            fptr(index_i2x_Si_sicthk,n)    = sicthk(i,j,iblk) ! (needed by CAM/SOM only)
+            fptr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
 
             if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then
                !-------states-------------------- 
-               i2x_i%rAttr(index_i2x_Si_t     ,n)    = Tsrf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_avsdr ,n)    = alvdr(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
-                                                     / ailohi(i,j,iblk)
+               fptr(index_i2x_Si_t     ,n)    = Tsrf(i,j,iblk)
+               fptr(index_i2x_Si_avsdr ,n)    = alvdr(i,j,iblk)
+               fptr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
+               fptr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
+               fptr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
+               fptr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
+               fptr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
+               fptr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
+                                              / ailohi(i,j,iblk)
             
                !--- a/i fluxes computed by ice
-               i2x_i%rAttr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_tauy ,n)   = tauya(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_lat  ,n)   = flat(i,j,iblk)     
-               i2x_i%rAttr(index_i2x_Faii_sen  ,n)   = fsens(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_lwup ,n)   = flwout(i,j,iblk)   
-               i2x_i%rAttr(index_i2x_Faii_evap ,n)   = evap(i,j,iblk)     
-               i2x_i%rAttr(index_i2x_Faii_swnet,n)   = fswabs(i,j,iblk)
+               fptr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    
+               fptr(index_i2x_Faii_tauy ,n)   = tauya(i,j,iblk)    
+               fptr(index_i2x_Faii_lat  ,n)   = flat(i,j,iblk)     
+               fptr(index_i2x_Faii_sen  ,n)   = fsens(i,j,iblk)    
+               fptr(index_i2x_Faii_lwup ,n)   = flwout(i,j,iblk)   
+               fptr(index_i2x_Faii_evap ,n)   = evap(i,j,iblk)     
+               fptr(index_i2x_Faii_swnet,n)   = fswabs(i,j,iblk)
             
                !--- i/o fluxes computed by ice
-               i2x_i%rAttr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Fioi_swpen,n)   = fswthru(i,j,iblk) ! hf from melting          
-               i2x_i%rAttr(index_i2x_Fioi_meltw,n)   = fresh(i,j,iblk)   ! h2o flux from melting    ???
-               i2x_i%rAttr(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
-               i2x_i%rAttr(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???
-               i2x_i%rAttr(index_i2x_Fioi_tauy ,n)   = tauyo(i,j,iblk)   ! stress : i/o meridional  ???
+               fptr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)
+               fptr(index_i2x_Fioi_swpen,n)   = fswthru(i,j,iblk) ! hf from melting          
+               fptr(index_i2x_Fioi_meltw,n)   = fresh(i,j,iblk)   ! h2o flux from melting    ???
+               fptr(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
+               fptr(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???
+               fptr(index_i2x_Fioi_tauy ,n)   = tauyo(i,j,iblk)   ! stress : i/o meridional  ???
             end if
          enddo    !i
          enddo    !j
      enddo        !iblk
 
-  end subroutine ice_export_mct
+end subroutine ice_export_esmf
 
-!==============================================================================
+!====================================================================================
 
-  subroutine ice_import_mct( x2i_i )
+subroutine ice_import_esmf(array, rc)
 
     !-----------------------------------------------------
 
     implicit none
-    type(mct_aVect)   , intent(inout) :: x2i_i
+    type(ESMF_Array), intent(inout) :: array
+    integer, intent(out)            :: rc
 
     integer :: i, j, iblk, n
     integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
     type(block) :: this_block      ! block information for current block
+    real(R8), pointer   :: fptr(:,:)
 
     integer,parameter :: nflds=15,nfldv=6
     real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
@@ -997,6 +1073,15 @@ contains
     ! the initilized value (see ice_flux.F init_coupler_flux) of
     ! 34 ppt
 
+    !-----------------------------------------------------------------
+    ! Zero stuff while waiting, only filling in active cells.
+    !-----------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+    
+    call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
     ! Use aflds to gather the halo updates of multiple fields
     ! Need to separate the scalar from the vector halo updates
 
@@ -1015,21 +1100,21 @@ contains
        do i = ilo, ihi
 
           n = n+1
-          aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_t,n)
-          aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_s,n)
-          aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_z,n)
-          aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_ptem,n)
-          aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_Sa_tbot,n)
-          aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_Sa_shum,n)
-          aflds(i,j, 7,iblk)   = x2i_i%rAttr(index_x2i_Sa_dens,n)
-          aflds(i,j, 8,iblk)   = x2i_i%rAttr(index_x2i_Fioo_q,n)
-          aflds(i,j, 9,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdr,n)
-          aflds(i,j,10,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndr,n)
-          aflds(i,j,11,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdf,n)
-          aflds(i,j,12,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndf,n)
-          aflds(i,j,13,iblk)   = x2i_i%rAttr(index_x2i_Faxa_lwdn,n)
-          aflds(i,j,14,iblk)   = x2i_i%rAttr(index_x2i_Faxa_rain,n)
-          aflds(i,j,15,iblk)   = x2i_i%rAttr(index_x2i_Faxa_snow,n)
+          aflds(i,j, 1,iblk)   = fptr(index_x2i_So_t,n)
+          aflds(i,j, 2,iblk)   = fptr(index_x2i_So_s,n)
+          aflds(i,j, 3,iblk)   = fptr(index_x2i_Sa_z,n)
+          aflds(i,j, 4,iblk)   = fptr(index_x2i_Sa_ptem,n)
+          aflds(i,j, 5,iblk)   = fptr(index_x2i_Sa_tbot,n)
+          aflds(i,j, 6,iblk)   = fptr(index_x2i_Sa_shum,n)
+          aflds(i,j, 7,iblk)   = fptr(index_x2i_Sa_dens,n)
+          aflds(i,j, 8,iblk)   = fptr(index_x2i_Fioo_q,n)
+          aflds(i,j, 9,iblk)   = fptr(index_x2i_Faxa_swvdr,n)
+          aflds(i,j,10,iblk)   = fptr(index_x2i_Faxa_swndr,n)
+          aflds(i,j,11,iblk)   = fptr(index_x2i_Faxa_swvdf,n)
+          aflds(i,j,12,iblk)   = fptr(index_x2i_Faxa_swndf,n)
+          aflds(i,j,13,iblk)   = fptr(index_x2i_Faxa_lwdn,n)
+          aflds(i,j,14,iblk)   = fptr(index_x2i_Faxa_rain,n)
+          aflds(i,j,15,iblk)   = fptr(index_x2i_Faxa_snow,n)
 
          enddo    !i
          enddo    !j
@@ -1082,12 +1167,12 @@ contains
         do j = jlo, jhi
         do i = ilo, ihi
            n = n+1
-           aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_u,n)
-           aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_v,n)
-           aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_u,n)
-           aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_v,n)
-           aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_So_dhdx,n)
-           aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_So_dhdy,n)
+           aflds(i,j, 1,iblk)   = fptr(index_x2i_So_u,n)
+           aflds(i,j, 2,iblk)   = fptr(index_x2i_So_v,n)
+           aflds(i,j, 3,iblk)   = fptr(index_x2i_Sa_u,n)
+           aflds(i,j, 4,iblk)   = fptr(index_x2i_Sa_v,n)
+           aflds(i,j, 5,iblk)   = fptr(index_x2i_So_dhdx,n)
+           aflds(i,j, 6,iblk)   = fptr(index_x2i_So_dhdy,n)
         enddo
         enddo
      enddo
@@ -1134,7 +1219,7 @@ contains
            do j = jlo, jhi
               do i = ilo, ihi
                  n = n+1
-                 work(i,j,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
+                 work(i,j,iblk) = fptr(index_x2i_Faxa_bcphodry,n)
               end do
            end do
         end do
@@ -1163,19 +1248,19 @@ contains
          do i = ilo, ihi
 
             n = n+1
-            faero(i,j,1,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
+            faero(i,j,1,iblk) = fptr(index_x2i_Faxa_bcphodry,n)
 
-            faero(i,j,2,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphidry,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_bcphiwet,n)
+            faero(i,j,2,iblk) = fptr(index_x2i_Faxa_bcphidry,n) &
+                              + fptr(index_x2i_Faxa_bcphiwet,n)
          ! Combine all of the dust into one category
-            faero(i,j,3,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet1,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry1,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet2,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry2,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet3,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry3,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet4,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry4,n)
+            faero(i,j,3,iblk) = fptr(index_x2i_Faxa_dstwet1,n) &
+                              + fptr(index_x2i_Faxa_dstdry1,n) &
+                              + fptr(index_x2i_Faxa_dstwet2,n) &
+                              + fptr(index_x2i_Faxa_dstdry2,n) &
+                              + fptr(index_x2i_Faxa_dstwet3,n) &
+                              + fptr(index_x2i_Faxa_dstdry3,n) &
+                              + fptr(index_x2i_Faxa_dstwet4,n) &
+                              + fptr(index_x2i_Faxa_dstdry4,n)
 
          enddo    !i
          enddo    !j
@@ -1267,61 +1352,48 @@ contains
       !$OMP END PARALLEL DO
       call t_stopf ('cice_imp_atm')
 
-   end subroutine ice_import_mct
+end subroutine ice_import_esmf
 
 !=======================================================================
 
-  subroutine ice_domain_mct( lsize, gsMap_i, dom_i )
+subroutine ice_domain_esmf( dom, rc )
 
+    implicit none
     !-------------------------------------------------------------------
     !
     ! Arguments
     !
-    integer        , intent(in)    :: lsize
-    type(mct_gsMap), intent(in)    :: gsMap_i
-    type(mct_ggrid), intent(inout) :: dom_i     
+    type(ESMF_Array), intent(inout)     :: dom
+    integer, intent(out)                :: rc
     !
     ! Local Variables
     !
-    integer :: i, j, iblk, n, gi           ! indices
+    integer :: i, j, iblk, n               ! indices
     integer :: ilo, ihi, jlo, jhi          ! beginning and end of physical domain
-    real(dbl_kind), pointer :: work_dom(:) ! temporary
-    real(dbl_kind), pointer :: data(:)     ! temporary
-    integer       , pointer :: idata(:)    ! temporary
+    integer :: klon,klat,karea,kmask,kfrac ! domain fields
     type(block)             :: this_block  ! block information for current block
-    !-------------------------------------------------------------------
-    !
-    ! Initialize mct domain type
-    ! lat/lon in degrees,  area in radians^2, mask is 1 (ocean), 0 (non-ocean)
-    !
-    call mct_gGrid_init( GGrid=dom_i, CoordChars=trim(seq_flds_dom_coord), &
-       OtherChars=trim(seq_flds_dom_other), lsize=lsize )
-    call mct_aVect_zero(dom_i%data)
-    !  
-    allocate(data(lsize))
-    !
-    ! Determine global gridpoint number attribute, GlobGridNum, which is set automatically by MCT
-    !
-    call mct_gsMap_orderedPoints(gsMap_i, my_task, idata)
-    call mct_gGrid_importIAttr(dom_i,'GlobGridNum',idata,lsize)
-    !
-    ! Determine domain (numbering scheme is: West to East and South to North to South pole)
-    ! Initialize attribute vector with special value
-    !
-    data(:) = -9999.0_R8 
-    call mct_gGrid_importRAttr(dom_i,"lat"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_i,"lon"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_i,"area" ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_i,"aream",data,lsize) 
-    data(:) = 0.0_R8     
-    call mct_gGrid_importRAttr(dom_i,"mask",data,lsize) 
-    call mct_gGrid_importRAttr(dom_i,"frac",data,lsize) 
-    !
-    ! Fill in correct values for domain components
-    !
-    allocate(work_dom(lsize)) 
-    work_dom(:) = 0.0_dbl_kind
 
+    real(R8),    pointer    :: fptr (:,:)
+    !-------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call ESMF_ArrayGet(dom, localDe=0, farrayPtr=fptr, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    ! Fill in correct values for domain components
+    klon  = esmfshr_util_ArrayGetIndex(dom,'lon ',rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    klat  = esmfshr_util_ArrayGetIndex(dom,'lat ',rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    karea = esmfshr_util_ArrayGetIndex(dom,'area',rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    kmask = esmfshr_util_ArrayGetIndex(dom,'mask',rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    kfrac = esmfshr_util_ArrayGetIndex(dom,'frac',rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    fptr(:,:) = -9999.0_R8
     n=0
     do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)         
@@ -1333,89 +1405,20 @@ contains
        do j = jlo, jhi
        do i = ilo, ihi
           n = n+1
-          data(n) = TLON(i,j,iblk)*rad_to_deg 
+          fptr(klon, n) = TLON(i,j,iblk)*rad_to_deg 
+          fptr(klat, n) = TLAT(i,j,iblk)*rad_to_deg 
+          fptr(karea, n) = tarea(i,j,iblk)/(radius*radius)
+          fptr(kmask, n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
+          if (trim(grid_type) == 'latlon') then
+             fptr(kfrac, n) = ocn_gridcell_frac(i,j,iblk)
+          else
+             fptr(kfrac, n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
+          end if
        enddo    !i
        enddo    !j
     enddo       !iblk
-    call mct_gGrid_importRattr(dom_i,"lon",data,lsize) 
 
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-       
-       do j = jlo, jhi
-       do i = ilo, ihi
-          n = n+1
-          data(n) = TLAT(i,j,iblk)*rad_to_deg 
-       enddo   !i
-       enddo   !j
-    enddo      !iblk
-    call mct_gGrid_importRattr(dom_i,"lat",data,lsize) 
-
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-       
-       do j = jlo, jhi
-       do i = ilo, ihi
-          n = n+1
-          data(n) = tarea(i,j,iblk)/(radius*radius)
-       enddo   !i
-       enddo   !j
-    enddo      !iblk
-    call mct_gGrid_importRattr(dom_i,"area",data,lsize) 
-
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-       
-       do j = jlo, jhi
-       do i = ilo, ihi
-          n = n+1
-          data(n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
-       enddo   !i
-       enddo   !j
-    enddo      !iblk
-    call mct_gGrid_importRattr(dom_i,"mask",data,lsize) 
-
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-       
-       do j = jlo, jhi
-       do i = ilo, ihi
-          n = n+1
-	  if (trim(grid_type) == 'latlon') then
-             data(n) = ocn_gridcell_frac(i,j,iblk)
-          else
-             data(n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
-          end if
-       enddo   !i
-       enddo   !j
-    enddo      !iblk
-    call mct_gGrid_importRattr(dom_i,"frac",data,lsize) 
-
-    deallocate(data)
-    deallocate(idata)
-    deallocate(work_dom)
-
-  end subroutine ice_domain_mct
+end subroutine ice_domain_esmf
 
 !=======================================================================
 ! BOP
@@ -1438,7 +1441,8 @@ contains
 ! of the resulting filename.
 !
 ! !USES:
-    use ice_restart, only: runid
+  use ice_restart, only: runid
+  implicit none
 !
 ! !INPUT/OUTPUT PARAMETERS:
   integer         , intent(in)  :: yr_spec         ! Simulation year
@@ -1526,5 +1530,5 @@ contains
 
 end function restart_filename
 
-end module ice_comp_mct
+end module ice_comp_esmf
 

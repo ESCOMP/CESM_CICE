@@ -172,6 +172,25 @@ snow grain radius tunable parameter for dEdd albedo
 </entry>
 
 <!----------------------------->
+<!---PIO information       ---->
+<!----------------------------->
+
+<entry id="ice_num_iotasks" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
+number of io tasks (set based on io_stride value when initialized < 0)
+Default: -1
+</entry>
+
+<entry id="ice_pio_stride" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
+stride of io tasks (set based on num_iotasks value when initialized < 0)
+Default: -1
+</entry>
+
+<entry id="ice_pio_type_name" type="character*8"  category="cice" group="ice_pio_nml" valid_values="netcdf,pnetcdf">
+pio type 
+Default: 'netcdf'
+</entry>
+
+<!----------------------------->
 <!---Tracer information    ---->
 <!----------------------------->
 
@@ -297,6 +316,46 @@ true => pice data fill required
 Default: FALSE
 </entry>
 
+<entry id="stream_num_iotasks" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
+number of io tasks for stream input/output
+Default: 1
+</entry>
+
+<entry id="stream_io_root" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
+pio root task for stream input/output
+Default: 0
+</entry>
+
+<entry id="stream_io_stride" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
+pio stride for io tasks
+Default: 4
+</entry>
+
+<entry id="stream_io_type" type="character*16"  category="cice" group="ice_prescribed_nml" valid_values="netcdf,pio_netcdf,pio_pnetcdf">
+io type
+Default: pio_netcdf
+</entry>
+
+<entry id="stream_mapwrite" type="character*16"  category="cice" group="ice_prescribed_nml" valid_values=" ">
+if NOT_SET then aero mapping file will not be written out
+Default: NOT_SET
+</entry>
+
+<entry id="stream_mapread" type="character*16"  category="cice" group="ice_prescribed_nml" valid_values=" ">
+if NOT_SET then aero mapping file will not be read in
+Default: NOT_SET
+</entry>
+
+<entry id="stream_fillwrite" type="character*16"  category="cice" group="ice_prescribed_nml" valid_values=" ">
+if NOT_SET then aero fill file will not be written out
+Default: NOT_SET
+</entry>
+
+<entry id="stream_fillread" type="character*16"  category="cice" group="ice_prescribed_nml" valid_values=" ">
+if NOT_SET then aero fill file will not be read in
+Default: NOT_SET
+</entry>
+
 <!--------------------------------->
 <!-- Prescribed aerosol namelist -->
 <!--------------------------------->
@@ -358,6 +417,46 @@ Default: 1
 <entry id="model_year_align_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
 Align stream_year_first with this model year
 Default: 1
+</entry>
+
+<entry id="stream_num_iotasks_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+number of io tasks for stream input/output
+Default: 1
+</entry>
+
+<entry id="stream_io_root_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+pio root task for stream input/output
+Default: 0
+</entry>
+
+<entry id="stream_io_stride_aero" type="integer"  category="cice" group="ice_prescaero_nml" valid_values="">
+pio stride for io tasks
+Default: 4
+</entry>
+
+<entry id="stream_io_type_aero" type="character*16"  category="cice" group="ice_prescaero_nml" valid_values="netcdf,pio_netcdf,pio_pnetcdf">
+io type
+Default: pio_netcdf
+</entry>
+
+<entry id="stream_mapwrite_aero" type="character*16"  category="cice" group="ice_prescaero_nml" valid_values=" ">
+if NOT_SET then aero mapping file will not be written out
+Default: NOT_SET
+</entry>
+
+<entry id="stream_mapread_aero" type="character*16"  category="cice" group="ice_prescaero_nml" valid_values=" ">
+if NOT_SET then aero mapping file will not be read in
+Default: NOT_SET
+</entry>
+
+<entry id="stream_fillwrite_aero" type="character*16"  category="cice" group="ice_prescaero_nml" valid_values=" ">
+if NOT_SET then aero fill file will not be written out
+Default: NOT_SET
+</entry>
+
+<entry id="stream_fillread_aero" type="character*16"  category="cice" group="ice_prescaero_nml" valid_values=" ">
+if NOT_SET then aero fill file will not be read in
+Default: NOT_SET
 </entry>
 
 <!----------------------------->

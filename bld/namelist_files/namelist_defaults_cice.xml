@@ -170,6 +170,13 @@
 <lcdf64>.false. </lcdf64>
 
 <!--------------------------->
+<!-- PIO namelist-        --->
+<!--------------------------->
+<ice_num_iotasks   > -1       </ice_num_iotasks>
+<ice_pio_stride    > -1       </ice_pio_stride >
+<ice_pio_type_name > 'netcdf' </ice_pio_type_name>
+
+<!--------------------------->
 <!-- Tracer namelist- --->
 <!--------------------------->
 
@@ -202,6 +209,14 @@
 <!--------------------------->
 <!-- Prescribed namelist- --->
 <!--------------------------->
+
+<stream_io_root     > 0          </stream_io_root    >
+<stream_num_iotasks > 1          </stream_num_iotasks>
+<stream_io_type     >'pio_netcdf'</stream_io_type    >
+<stream_fillwrite   >'NOT_SET'   </stream_fillwrite  >
+<stream_fillread    >'NOT_SET'   </stream_fillread   >
+<stream_mapwrite    >'NOT_SET'   </stream_mapwrite   >
+<stream_mapread     >'NOT_SET'   </stream_mapread    >
 
 <stream_domfilename hgrid="8x16"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_domfilename>
 <stream_fldfilename hgrid="8x16"  >'ocn/docn7/SSTDATA/sst_HadOIBl_bc_8x16_clim_c050526.nc'</stream_fldfilename>
@@ -297,7 +312,14 @@
 <!-- Prescribed aerosol namelist --->
 <!---------------------------------->
 
-<prescribed_aero_fill >.true. </prescribed_aero_fill>
+<prescribed_aero_fill    >.true.      </prescribed_aero_fill   >
+<stream_io_root_aero     > 0          </stream_io_root_aero    >
+<stream_num_iotasks_aero > 1          </stream_num_iotasks_aero>
+<stream_io_type_aero     >'pio_netcdf'</stream_io_type_aero    >
+<stream_fillwrite_aero   >'NOT_SET'   </stream_fillwrite_aero  >
+<stream_fillread_aero    >'NOT_SET'   </stream_fillread_aero   >
+<stream_mapwrite_aero    >'NOT_SET'   </stream_mapwrite_aero   >
+<stream_mapread_aero     >'NOT_SET'   </stream_mapread_aero    >
 
 <stream_domfilename_aero presaero_type='data_clim_1990'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_domfilename_aero>
 <stream_fldfilename_aero presaero_type='data_clim_1990'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_fldfilename_aero>

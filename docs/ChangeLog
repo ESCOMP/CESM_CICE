@@ -1,4 +1,22 @@
 ===============================================================
+cice4_0_20091231
+Originator: dbailey, mvertens, tcraig
+Date: Thu Dec 31 2009
+Version: 4.0
+One-line Summary: Merge aerosol/ESMF branch onto trunk.
+CCSM Version compatible with: ccsm4_0_beta38+
+Changes made:
+	
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_prescaero_mod.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+A  +   src/drivers/cpl_esmf/ice_comp_esmf.F90
+A  +   src/drivers/cpl_esmf/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20091229
 Originator: dbailey
 Date: Mon Dec 28 2009
