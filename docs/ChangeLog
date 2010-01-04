@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100103b
+Originator: mvertens
+Date: Sun Jan  3 2010
+Version: 4.0
+One-line Summary: bug fix associated with B and E compset creation
+CCSM Version compatible with: ccsm4_0_beta39
+Changes made:
+
+M      bld/cice.cpl7.template
+	
+===============================================================
 cice4_0_20100103
 Originator: mvertens
 Date: Sun Jan  3 2010

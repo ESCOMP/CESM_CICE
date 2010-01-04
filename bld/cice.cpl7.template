@@ -49,23 +49,25 @@ if ($ICE_CDF64 == "TRUE") then
 endif
 
 set SSTDATA = "FALSE"
-if ($DOCN_SSTDATA_FILENAME   != 'UNSET' && \
-    $DOCN_SSTDATA_YEAR_START != '-999'  && \
-    $DOCN_SSTDATA_YEAR_END   != '-999' ) then
-  set SSTDATA = "TRUE"
-endif
-
-set CCSMSSTFN = $DOCN_SSTDATA_FILENAME
 if ($CICE_MODE == "prescribed") then
-     if ($SSTDATA == 'TRUE') then
-        if ($DOCN_SSTDATA_FILENAME =~ $DIN_LOC_ROOT*) then
-           set num = `echo $DIN_LOC_ROOT | wc -c `
-           set dd = `echo $DOCN_SSTDATA_FILENAME | cut -c $num-`
-           if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
-           set CCSMSSTFN = '$DIN_LOC_ROOT'"/$dd"
-        endif
-     endif
-  endif
+   if (! $?DOCN_SSTDATA_FILENAME) then
+      echo "DOCN_SSTDATA_FILENAME must be defined for cice prescribed mode"
+      exit -1
+   endif  
+   if ($DOCN_SSTDATA_FILENAME   != 'UNSET' && \
+       $DOCN_SSTDATA_YEAR_START != '-999'  && \
+       $DOCN_SSTDATA_YEAR_END   != '-999' ) then
+       set SSTDATA = "TRUE"
+   endif
+   set CCSMSSTFN = $DOCN_SSTDATA_FILENAME
+   if ($SSTDATA == 'TRUE') then
+      if ($DOCN_SSTDATA_FILENAME =~ $DIN_LOC_ROOT*) then
+         set num = `echo $DIN_LOC_ROOT | wc -c `
+         set dd = `echo $DOCN_SSTDATA_FILENAME | cut -c $num-`
+         if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
+         set CCSMSSTFN = '$DIN_LOC_ROOT'"/$dd"
+      endif
+   endif
 endif
 
 if ($SSTDATA == "TRUE") then
