@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20100103
+Originator: mvertens
+Date: Sun Jan  3 2010
+Version: 4.0
+One-line Summary: changed variables CCSM_SSTDATA_ to DOCN_SSTDATA_
+CCSM Version compatible with: ccsm4_0_beta39
+Changes made:
+
+M      bld/cice.cpl7.template
+       This change only effects setting up AMIP runs	
+	
+===============================================================
 cice4_0_20091231
 Originator: dbailey, mvertens, tcraig
 Date: Thu Dec 31 2009
