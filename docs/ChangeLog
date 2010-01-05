@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100105
+Originator: mvertens
+Date: Tue Jan 5 2010
+Version: 4.0
+One-line Summary: New decomp for gx3.
+CCSM Version compatible with: ccsm4_0_beta39
+Changes made:
+
+M      bld/cice_decomp.xml
+
+===============================================================
 cice4_0_20100103b
 Originator: mvertens
 Date: Sun Jan  3 2010

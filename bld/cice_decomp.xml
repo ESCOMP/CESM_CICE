@@ -359,4 +359,11 @@
     <decomptype>cartesian</decomptype>
   </decomp>
 
+  <decomp nproc="50" res="gx3v[567]" model="cice">
+    <maxblocks >1</maxblocks>
+    <bsize_x   >4</bsize_x>
+    <bsize_y   >58</bsize_y>
+    <decomptype>cartesian</decomptype>
+  </decomp>
+
 </configInfo>
