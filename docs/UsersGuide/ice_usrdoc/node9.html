@@ -13,6 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -25,34 +26,27 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html201"
+
+<A NAME="tex2html208"
   HREF="node10.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html197"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html204"
   HREF="node8.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html191"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html198"
   HREF="node8.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html199"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html206"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html202"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html209"
   HREF="node10.html">Writing Output</A>
-<B> Up:</B> <A NAME="tex2html198"
+<B>Up:</B> <A NAME="tex2html205"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html192"
+<B> Previous:</B> <A NAME="tex2html199"
   HREF="node8.html">Namelist Variables</A>
- &nbsp; <B>  <A NAME="tex2html200"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00041000000000000000"></A>
@@ -69,31 +63,37 @@ of the transport and the grid resolution.  A conservative estimate of <TT>dt</TT
 for the transport using the upwind advection scheme is:
 
 <P>
-<BR>
-<DIV ALIGN="RIGHT">
 
+<P></P>
+<DIV ALIGN="CENTER">
 <!-- MATH
  \begin{equation}
 \Delta t < \frac{min(\Delta x, \Delta y)}{4 max(u, v)} .
 \end{equation}
  -->
 <TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD></TD>
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP>
+<I>&#916;t</I> &lt; <IMG
+ ALIGN="MIDDLE" BORDER="0" SRC="img1.png"
+ ALT="$\displaystyle {\frac{{min(\Delta x, \Delta y)}}{{4 max(u, v)}}}$">.
+</TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (1)</TD></TR>
 </TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
+<tex2html_verbatim_mark>
+</DIV>
 Maximum values for <TT>dt</TT> for the two standard CCSM POP grids, assuming 
 <!-- MATH
  $max(u,v) = 0.5 m/s$
  -->
-, are shown in Table <A HREF="#table:max_dt">2</A>.  The default
+<I>max</I>(<I>u</I>, <I>v</I>) = 0.5<I>m</I>/<I>s</I>
+<tex2html_verbatim_mark>, are shown in Table <A HREF="#table:max_dt">2</A>.  The default
 timestep for CICE is 30 minutes, which must be equal to the coupling interval
 set in the CCSM configuration files.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="table:max_dt"></A>  <A NAME="609"></A>
+  <A NAME="table:max_dt"></A>  <A NAME="648"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 2:</STRONG>
 Maximum values for ice model timestep <TT>dt</TT></CAPTION>
@@ -101,8 +101,13 @@ Maximum values for ice model timestep <TT>dt</TT></CAPTION>
 <TD ALIGN="LEFT"><!-- MATH
  $min(\Delta x, \Delta y)$
  -->
-</TD>
-<TD></TD>
+<I>min</I>(<I>&#916;x</I>, <I>&#916;y</I>)
+<tex2html_verbatim_mark></TD>
+<TD ALIGN="LEFT"><!-- MATH
+ $max \Delta t$
+ -->
+<I>max&#916;t</I>
+<tex2html_verbatim_mark></TD>
 </TR>
 <TR><TD ALIGN="LEFT">gx3v5</TD>
 <TD ALIGN="LEFT">28845.9 m</TD>
@@ -128,36 +133,29 @@ model integrates past that point.
 
 <P>
 <HR>
-<!--Navigation Panel-->
-<A NAME="tex2html201"
+<A NAME="tex2html208"
   HREF="node10.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html197"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html204"
   HREF="node8.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html191"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html198"
   HREF="node8.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html199"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html206"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html202"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html209"
   HREF="node10.html">Writing Output</A>
-<B> Up:</B> <A NAME="tex2html198"
+<B>Up:</B> <A NAME="tex2html205"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html192"
+<B> Previous:</B> <A NAME="tex2html199"
   HREF="node8.html">Namelist Variables</A>
- &nbsp; <B>  <A NAME="tex2html200"
-  HREF="node1.html">Contents</A></B> 
+
 <!--End of Navigation Panel-->
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

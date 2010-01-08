@@ -1,4 +1,4 @@
-This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2007.11.29)  28 DEC 2009 15:11
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2007.11.29)  7 JAN 2010 16:34
 entering extended mode
 **./images.tex
 (./images.tex
@@ -85,18 +85,18 @@ Package: inputenc 2004/02/05 v1.0d Input encoding file
 (./images.aux)
 \openout1 = `images.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 168.
-LaTeX Font Info:    ... okay on input line 168.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 183.
+LaTeX Font Info:    ... okay on input line 183.
 (/usr/share/texmf/tex/context/base/supp-pdf.tex (/usr/share/texmf/tex/context/b
 ase/supp-mis.tex
 loading : Context Support Macros / Miscellaneous (2004.10.26)
@@ -132,9 +132,9 @@ loading : Context Support Macros / PDF (2004.03.26)
 \everyMPtoPDFconversion=\toks18
 )
 
-latex2htmlLength hsize=349.0pt
+latex2htmlLength hsize=468.0pt
 
-latex2htmlLength vsize=679.33754pt
+latex2htmlLength vsize=504.0pt
 
 latex2htmlLength hoffset=0.0pt
 
@@ -155,10 +155,10 @@ latex2htmlLength oddsidemargin=0.0pt
 latex2htmlLength evensidemargin=0.0pt
 
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 215.
+(Font)              <7> on input line 231.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 215.
-l2hSize :tex2html_wrap_inline618:6.95831pt::6.95831pt::8.27783pt.
+(Font)              <5> on input line 231.
+l2hSize :tex2html_wrap_indisplay2580:14.76508pt::14.76508pt::60.99344pt.
 [1
 Non-PDF special ignored!
 Non-PDF special ignored!
@@ -168,101 +168,19 @@ Non-PDF special ignored!
 
 {/usr/share/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :displaymath382:24.62459pt::0.0pt::349.0pt.
-[2
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline624:8.0pt::8.0pt::88.01282pt.
-[3
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline626:8.0pt::8.0pt::58.59344pt.
-[4
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline628:6.83331pt::0.0pt::32.2258pt.
-[5
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :displaymath472:12.39098pt::0.0pt::349.0pt.
-[6
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline1598:8.64003pt::8.64003pt::18.29172pt.
-[7
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline1600:8.14003pt::0.0pt::4.98616pt.
-[8
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline1604:8.14003pt::0.0pt::11.23618pt.
-[9
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline1608:8.14003pt::0.0pt::11.23618pt.
-[10
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
-Non-PDF special ignored!]
-l2hSize :tex2html_wrap_inline1889:6.95831pt::6.95831pt::8.27783pt.
-[11
-Non-PDF special ignored!
-Non-PDF special ignored!
-
-
-Non-PDF special ignored!
 Non-PDF special ignored!] (./images.aux) ) 
 Here is how much of TeX's memory you used:
- 1418 strings out of 94501
- 17931 string characters out of 1173691
- 64385 words of memory out of 1000000
- 4622 multiletter control sequences out of 10000+50000
+ 1434 strings out of 94501
+ 18014 string characters out of 1173691
+ 64483 words of memory out of 1000000
+ 4638 multiletter control sequences out of 10000+50000
  3640 words of font info for 14 fonts, out of 500000 for 2000
  580 hyphenation exceptions out of 1000
  25i,5n,21p,224b,147s stack positions out of 1500i,500n,5000p,200000b,5000s
 PDF statistics:
- 50 PDF objects out of 300000
+ 10 PDF objects out of 300000
  0 named destinations out of 131072
  1 words of extra memory for PDF output out of 65536
 </usr/share/texmf/fonts/type1/bluesky
-/cm/cmsy7.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi7.pfb></usr/share/te
-xmf/fonts/type1/bluesky/cm/cmr7.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cm
-r10.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi10.pfb>
-Output written on images.pdf (11 pages, 23048 bytes).
+/cm/cmr10.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi10.pfb>
+Output written on images.pdf (1 page, 8720 bytes).

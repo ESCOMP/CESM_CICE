@@ -7,12 +7,13 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>NX does not divide evenly into grid</TITLE>
-<META NAME="description" CONTENT="NX does not divide evenly into grid">
+<TITLE>Thermodynamic Iteration Error</TITLE>
+<META NAME="description" CONTENT="Thermodynamic Iteration Error">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -20,65 +21,55 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node37.html">
 <LINK REL="previous" HREF="node35.html">
-<LINK REL="up" HREF="node31.html">
+<LINK REL="up" HREF="node33.html">
 <LINK REL="next" HREF="node37.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html534"
+
+<A NAME="tex2html541"
   HREF="node37.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html530"
-  HREF="node31.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html524"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html537"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html531"
   HREF="node35.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html532"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html539"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html535"
-  HREF="node37.html">Enabling the Debugger</A>
-<B> Up:</B> <A NAME="tex2html531"
-  HREF="node31.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html525"
-  HREF="node35.html">Conservation Error</A>
- &nbsp; <B>  <A NAME="tex2html533"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html542"
+  HREF="node37.html">Conservation Error</A>
+<B>Up:</B> <A NAME="tex2html538"
+  HREF="node33.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html532"
+  HREF="node35.html">Negative Ice Area in</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00095000000000000000">
-NX does not divide evenly into grid</A>
+<H2><A NAME="SECTION000113000000000000000">
+Thermodynamic Iteration Error</A>
 </H2>
 
 <P>
-If you modify the number of tasks used by the ice model, the model may stop
-with this error written to the log file:
+This error is written from <B>ice_therm_vertical.F90</B> when the ice model 
+temperature iteration is not converging in the thermodynamics.  This is usually
+a problem with the forcing, but sometimes can be indicative of a timestep
+problem in the ice.
+
+<P>
 <PRE>
-'ERROR: NX must divide evenly into grid,100,8'
+  Thermo iteration does not converge
+  istep1, my_task, i, j:
 </PRE>
 
 <P>
-The number of MPI processors used by the ice model must divide evenly into 
-the grid dimensions.  For example, running the ice model with 8 tasks on the 
-gx3v7 grid will result in an error, since 8 does not divide evenly into the
-100 longitude points.  To fix this error, change the value of <TT>$NTASKS</TT> 
-for the uncoupled ice model in the main script.  In this case, a value of 4 
-would work, and the task geometry would also have to be changed.
-
-<P>
-<BR><HR>
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

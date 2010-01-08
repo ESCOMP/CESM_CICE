@@ -7,96 +7,83 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Output Data</TITLE>
-<META NAME="description" CONTENT="Output Data">
+<TITLE>Prescribed Aerosol Mode</TITLE>
+<META NAME="description" CONTENT="Prescribed Aerosol Mode">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="next" HREF="node31.html">
+<LINK REL="next" HREF="node24.html">
 <LINK REL="previous" HREF="node22.html">
 <LINK REL="up" HREF="ice_usrdoc.html">
 <LINK REL="next" HREF="node24.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html367"
+
+<A NAME="tex2html374"
   HREF="node24.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html363"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html370"
   HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html357"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html364"
   HREF="node22.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html365"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html372"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html368"
-  HREF="node24.html">Stdout Output</A>
-<B> Up:</B> <A NAME="tex2html364"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html375"
+  HREF="node24.html">Changing the Number of</A>
+<B>Up:</B> <A NAME="tex2html371"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html358"
-  HREF="node22.html">Changing the Number of</A>
- &nbsp; <B>  <A NAME="tex2html366"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<B> Previous:</B> <A NAME="tex2html365"
+  HREF="node22.html">Prescribed Ice Mode</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H1><A NAME="SECTION00080000000000000000">
-Output Data</A>
+<H1><A NAME="SECTION00080000000000000000"></A>
+  <A NAME="prescraero"></A>
+<BR>
+Prescribed Aerosol Mode
 </H1>
   
 <P>
-The ice model produces three types of output data.  A file containing
-ASCII text, also known as a log file, is created for each run that
-contains information about how the run was set up and how it progressed.
-A series of binary restart files necessary to continue the run are created.
-A series of netCDF history files containing gridded instantaneous or
-time-averaged output are also generated during a run.  These are described below. 
+The prescribed aerosol mode is a functionality feature that is needed to
+handle prescribed aerosol deposition on the sea ice. This functionality
+will eventually be handled within CAM or datm. For more information on the 
+aerosols themselves, see the scientific reference guide.
 
 <P>
-<BR><HR>
-<!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+The input netCDF file name required for this prescribed aerosol mode is set 
+in the CCSM scripts or via the CICE build-namelist as follows:
 
-<UL>
-<LI><A NAME="tex2html369"
-  HREF="node24.html">Stdout Output</A>
-<LI><A NAME="tex2html370"
-  HREF="node25.html">Restart Files</A>
-<UL>
-<LI><A NAME="tex2html371"
-  HREF="node26.html">Restart Pointer Files</A>
-</UL>
-<BR>
-<LI><A NAME="tex2html372"
-  HREF="node27.html">History Files</A>
-<UL>
-<LI><A NAME="tex2html373"
-  HREF="node28.html">Caveats Regarding Averaged Fields</A>
-<LI><A NAME="tex2html374"
-  HREF="node29.html">Changing Frequency and Averaging</A>
-<LI><A NAME="tex2html375"
-  HREF="node30.html">Changing Content</A>
-</UL></UL>
-<!--End of Table of Child-Links-->
-<BR><HR>
+<P>
+<PRE>
+  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
+         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+         -inputdata $CASEBUILD/cice.input_data_list \
+         -namelist "&amp;cice $CICE_NAMELIST_OPTS /" || exit -1
+</PRE>
+
+<P>
+The flag "presaero_type" determines whether the dataset represents
+climatological aerosol deposition for 2000 (data_clim_2000), 1850
+(data_clim_1850) or a transient aerosol deposition dataset say for
+the 20th century.
+
+<P>
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

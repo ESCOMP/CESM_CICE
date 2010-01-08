@@ -7,12 +7,13 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Changing the Number of Ice Thickness Categories</TITLE>
-<META NAME="description" CONTENT="Changing the Number of Ice Thickness Categories">
+<TITLE>Prescribed Ice Mode</TITLE>
+<META NAME="description" CONTENT="Prescribed Ice Mode">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -25,158 +26,97 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html355"
+
+<A NAME="tex2html362"
   HREF="node23.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html351"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html358"
   HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html345"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html352"
   HREF="node21.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html353"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html360"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html356"
-  HREF="node23.html">Output Data</A>
-<B> Up:</B> <A NAME="tex2html352"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html363"
+  HREF="node23.html">Prescribed Aerosol Mode</A>
+<B>Up:</B> <A NAME="tex2html359"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html346"
+<B> Previous:</B> <A NAME="tex2html353"
   HREF="node21.html">Run Types</A>
- &nbsp; <B>  <A NAME="tex2html354"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
 <H1><A NAME="SECTION00070000000000000000"></A>
-  <A NAME="ncat"></A>
+  <A NAME="prescribed"></A>
 <BR>
-Changing the Number of Ice Thickness Categories
+Prescribed Ice Mode
 </H1>
   
 <P>
-The number of ice thickness categories affects ice model input files in three
-places:
-  
-<UL>
-<LI><TT>$NCAT</TT> in the run script
-</LI>
-<LI>The source code module <B>ice_model_size.F90</B>
-</LI>
-<LI>The initial condition (restart) file in the input file directory
-  
-</LI>
-</UL>
+The prescribed ice mode is a functionality feature that is needed for
+certain standalone CAM runs such as AMIP (Atmospheric Model Intercomparison
+Project) style runs. In this mode, the sea ice concentration is read from a
+file and replaces the prognostic concentrations computed in the model. The sea
+ice dynamics is turned off in this mode and the sea ice thickness is reset
+to 2 m in the northern hemisphere and 1 m in the southern at every timestep.
+The main purpose of this mode is to compute the surface fluxes, snow depth, 
+albedos, and surface temperature over the ice by using the 1D thermodynamics 
+in the sea ice model. This mode is not energy conserving and is mainly
+intended as a testbed for atmospheric sensitivity experiments.
 
 <P>
-The number of ice thickness categories is set in 
-<B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B> using the variable 
-called <TT>$NCAT</TT>.  The default value is 5 categories. <TT>$NCAT</TT> is 
-used to determine the CPP variable setting (NCAT) in 
-<B>ice_model_size.F90</B>. <TT>$RES</TT> is the resolution of the grid, 
-100x116 (gx3v7) and 320x384 (gx1v6) for low and medium resolution grids, 
-respectively.
+The input netCDF file name required for this prescribed mode is set in the CCSM
+scripts or via the CICE build-namelist as follows:
 
-<P>
-
-<DL COMPACT>
-<DT>NOTE
-<DD>To use one ice thickness category, the following changes will need to be
-made in the namelist: 
-<BR>
 <P>
 <PRE>
-  , kitd          = 0
-  , kstrength     = 0
+  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
+        $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+        -inputdata $CASEBUILD/cice.input_data_list \
+        -namelist "&amp;cice $CICE_NAMELIST_OPTS \
+                    stream_fldfilename='$CCSMSSTFN' \
+                    stream_domfilename='$CCSMSSTFN' \
+                    stream_year_first=$DOCN_SSTDATA_YEAR_START \
+                    stream_year_last=$DOCN_SSTDATA_YEAR_END \
+                    model_year_align=$DOCN_SSTDATA_YEAR_START \
+                    stream_fldvarname='ice_cov' /"  || exit -1
 </PRE>
 
 <P>
-With these settings, the model will use the delta scheme instead of linear
-remapping and a strength parameterization based on open water area and
-mean ice thickness.
-
-<P>
-</DD>
-</DL>
-<P>
-The information in the initial restart file is dependent on the number of
-ice thickness categories and the total number of layers in the ice distribution.
-An initial condition file exists only for the default case of 5 ice thickness
-categories, with four layers in each category. To create an initial condition
-file for a different number of categories or layers, these steps should be 
-followed:
-
-<P>
-
-<UL>
-<LI>Set <TT>$NCAT</TT> to the desired number of categories in 
-<BR>        <B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B>.
-</LI>
-<LI>Set the namelist variable <TT>dumpfreq = 'm'</TT> in 
-<BR>        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
-<BR>
-to print out restart files monthly.
-</LI>
-<LI>Set the namelist variable <TT>restart = .false.</TT> in 
-        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
-<BR>
-to use the initial conditions within the ice model.
-</LI>
-<LI>Run the model to equilibrium. 
-</LI>
-<LI>The last restart file can be used as an initial condition file.
-</LI>
-<LI>Change the name of the last restart file to <I>iced.0001-01-01.$GRID</I>.
-</LI>
-<LI>Copy the file into the input data directory or directly into the 
-        the executable directory.
-</LI>
-</UL>
-
-<P>
-Note that the date printed inside the binary restart file will not be the 
-same as 0001-01-01.  For coupled runs, <TT>$BASEDATE</TT> will be the starting o
-date and the date inside the file will not be used.  
+The variables in upper case letters are set during the CCSM configure step
+and passed through to the CICE namelist. The ice concentration variable is
+assumed to be "ice_cov". There also needs to be a reconizable time axis
+like "days since 0001-01-01" in the netCDF file so that the time interpolation 
+can be handled within the ice model.
 
 <P>
 <HR>
-<!--Navigation Panel-->
-<A NAME="tex2html355"
+<A NAME="tex2html362"
   HREF="node23.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html351"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html358"
   HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html345"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html352"
   HREF="node21.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html353"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html360"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html356"
-  HREF="node23.html">Output Data</A>
-<B> Up:</B> <A NAME="tex2html352"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html363"
+  HREF="node23.html">Prescribed Aerosol Mode</A>
+<B>Up:</B> <A NAME="tex2html359"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html346"
+<B> Previous:</B> <A NAME="tex2html353"
   HREF="node21.html">Run Types</A>
- &nbsp; <B>  <A NAME="tex2html354"
-  HREF="node1.html">Contents</A></B> 
+
 <!--End of Navigation Panel-->
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

@@ -7,141 +7,116 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>History Files</TITLE>
-<META NAME="description" CONTENT="History Files">
+<TITLE>Restart Files</TITLE>
+<META NAME="description" CONTENT="Restart Files">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="previous" HREF="node25.html">
-<LINK REL="up" HREF="node23.html">
+<LINK REL="next" HREF="node29.html">
+<LINK REL="previous" HREF="node26.html">
+<LINK REL="up" HREF="node25.html">
 <LINK REL="next" HREF="node28.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html419"
+
+<A NAME="tex2html429"
   HREF="node28.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html415"
-  HREF="node23.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html411"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html425"
+  HREF="node25.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html419"
   HREF="node26.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html417"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html427"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html420"
-  HREF="node28.html">Caveats Regarding Averaged Fields</A>
-<B> Up:</B> <A NAME="tex2html416"
-  HREF="node23.html">Output Data</A>
-<B> Previous:</B> <A NAME="tex2html412"
-  HREF="node26.html">Restart Pointer Files</A>
- &nbsp; <B>  <A NAME="tex2html418"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html430"
+  HREF="node28.html">Restart Pointer Files</A>
+<B>Up:</B> <A NAME="tex2html426"
+  HREF="node25.html">Output Data</A>
+<B> Previous:</B> <A NAME="tex2html420"
+  HREF="node26.html">Stdout Output</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00083000000000000000"></A>
-      <A NAME="history_files"></A>      <A NAME="history"></A>
+<H2><A NAME="SECTION000102000000000000000"></A>
+      <A NAME="restart_files"></A>
 <BR>
-History Files
+Restart Files
 </H2>
       
 <P>
-History files contain gridded data values written at specified times
-during a model run.  By default, the history files will be written to
-the directory <TT>history_dir</TT> defined in the namelist. 
-The netCDF file names are prepended by the character
-string given by <TT>history_file</TT> in the <TT>ice_nml</TT> namelist.
-This character string has been set according to CCSM Output Filename Requirements.
-If <TT>history_file</TT> is not set in the namelist, the default character string
-<TT>'iceh'</TT> is used. The user can specify the frequency at which the data
-are written. Options are also available to record averaged or instantaneous data.
-The form of the history file names are as follows: 
+Restart files contain all of the initial condition information
+necessary to restart from a previous simulation.  These files are in a
+standard netCDF 64-bit binary format. A restart file is not necessary for
+an initial run, but is highly recommended.  The initial conditions
+that are internal to the ice model produce an unrealistic ice cover
+that an uncoupled ice model will correct in several years.  The initial
+conditions from a restart file are created from an equilibrium solution,
+and provide more realistic information that is necessary if coupling
+to an active ocean model.  The frequency at which restart files are created
+is controlled by the namelist parameter <TT>dumpfreq</TT>. 
+The names of these files are proceeded by the namelist parameter 
+<TT>dump_file</TT> and, by default are written out yearly to
+the executable directory.  To change the directory where these files are
+located, modify the variable <TT>$RSTDIR</TT> at the top of the setup script.
+The names of the restart files follow the CCSM Output Filename Requirements.
+The form of the restart file names are as follows: 
 <BR>
 <P>
-Yearly averaged:  <B>$CASE.cice.h?.yyyy.nc</B> 
-<BR>
-Monthly averaged: <B>$CASE.cice.h?.yyyy-mm.nc</B> 
-<BR>
-Daily averaged: <B>$CASE.cice.h?.yyyy-mm-dd.nc</B> 
-<BR>
-Instantaneous (<TT>histfreq</TT> = 'y', 'm', or 'd'): <B>$CASE.cice.h?.yyyy-mm-dd-sssss.nc</B> 
-<BR>
-Instantaneous (written every dt, <TT>histfreq</TT> = 1): <B>$CASE.cice.h?.yyyy-mm-dd-sssss.nc</B> 
+<B>$CASE.cice.r.yyyy-mm-dd-sssss.nc</B> 
 <BR>
 <P>
-<TT>$CASE</TT> is set in the main setup script. Note that the <TT>?</TT> denotes the
-multiple stream option where the first stream is just <TT>.h.</TT> and subsequent
-streams are <TT>h1, h2, etc</TT>. All history files are written
-in the executable directory.  Changes to the frequency and
-averaging will affect all output fields.  The best description
-of the history data comes from the file itself using the netCDF command
-<TT>ncdump -h filename.nc</TT>.  Variables containing grid information are
-written to every file and are listed in Table <A HREF="node30.html#table:time_grid_hist">9</A>.
-In addition to the history files, a netCDF file containing a snapshot
-of the initial ice state can be created at the start of each run.  The file
-name is <B>$CASE.cice.i.yyyy-mm-dd-sssss.nc</B> and is written
-in the executable directory.
+For example, the file <B>$CASE.cice.r.0002-01-01-00000.nc</B> would be written
+out at the end of year 1, month 12.  A file containing the name of a restart
+file is called a restart pointer file. This filename information allows the
+model simulation to continue from the correct point in time, and hence the
+correct restart file.
 
 <P>
-<BR><HR>
+<BR> <HR>
 <!--Table of Child-Links-->
 <A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
 <UL>
-<LI><A NAME="tex2html421"
-  HREF="node28.html">Caveats Regarding Averaged Fields</A>
-<LI><A NAME="tex2html422"
-  HREF="node29.html">Changing Frequency and Averaging</A>
-<LI><A NAME="tex2html423"
-  HREF="node30.html">Changing Content</A>
+<LI><A NAME="tex2html431"
+  HREF="node28.html">Restart Pointer Files</A>
 </UL>
 <!--End of Table of Child-Links-->
 <HR>
-<!--Navigation Panel-->
-<A NAME="tex2html419"
+<A NAME="tex2html429"
   HREF="node28.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html415"
-  HREF="node23.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html411"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html425"
+  HREF="node25.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html419"
   HREF="node26.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html417"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html427"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html420"
-  HREF="node28.html">Caveats Regarding Averaged Fields</A>
-<B> Up:</B> <A NAME="tex2html416"
-  HREF="node23.html">Output Data</A>
-<B> Previous:</B> <A NAME="tex2html412"
-  HREF="node26.html">Restart Pointer Files</A>
- &nbsp; <B>  <A NAME="tex2html418"
-  HREF="node1.html">Contents</A></B> 
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html430"
+  HREF="node28.html">Restart Pointer Files</A>
+<B>Up:</B> <A NAME="tex2html426"
+  HREF="node25.html">Output Data</A>
+<B> Previous:</B> <A NAME="tex2html420"
+  HREF="node26.html">Stdout Output</A>
+
 <!--End of Navigation Panel-->
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

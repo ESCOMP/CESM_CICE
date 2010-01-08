@@ -13,6 +13,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -25,34 +26,27 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html107"
+
+<A NAME="tex2html114"
   HREF="node3.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html103"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html110"
   HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html97"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html104"
   HREF="node1.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html105"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html112"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html108"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html115"
   HREF="node3.html">What's new in CICE4?</A>
-<B> Up:</B> <A NAME="tex2html104"
+<B>Up:</B> <A NAME="tex2html111"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html98"
+<B> Previous:</B> <A NAME="tex2html105"
   HREF="node1.html">Contents</A>
- &nbsp; <B>  <A NAME="tex2html106"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
 <H1><A NAME="SECTION00020000000000000000">
@@ -63,8 +57,18 @@ Introduction</A>
 This User's Guide accompanies the CCSM4 User's Guide, and is intended
 for those who would like to run CICE coupled, on a supported
 platform, and "out of the box".  Users running CICE fully coupled should first
-look at the CCSM4 User's Guide.  It includes a quick start guide for downloading
-the CCSM4 source code and input datasets, and information on how to configure,
+look at the CCSM4 User's Guide:
+<BR>
+<P>
+
+    <TT>http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html</TT>.
+<BR>
+<A NAME="tex2html1"
+  HREF="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html</A>.
+
+<P>
+It includes a quick start guide for downloading the CCSM4 source code and 
+input datasets, and information on how to configure,
 build and run the model.  The supported configurations and scripts for building
 the fully coupled model are also described in the CCSM4 User's Guide.  The CICE
 User's Guide is intended for users interested in making modifications to the
@@ -91,7 +95,7 @@ version of CICE is available separately from Los Alamos National Laboratory:
 
                     <TT>http://oceans11.lanl.gov/trac/CICE</TT>.
 <BR>
-<A NAME="tex2html1"
+<A NAME="tex2html2"
   HREF="http://oceans11.lanl.gov/trac/CICE">http://oceans11.lanl.gov/trac/CICE</A>.
 
 <P>
@@ -105,17 +109,17 @@ Interface) for researchers without access to these computer resources.
 The physics in the uncoupled ice model are identical to those in the
 ice model used in the fully coupled system.  CICE is a dynamic-thermodynamic
 model that includes a subgrid-scale ice thickness distribution ((<A
- HREF="node38.html#bitz01">Bitz et&nbsp;al.(2001)</A>);
+ HREF="node40.html#bitz01">Bitz et&nbsp;al.(2001)</A>);
 (<A
- HREF="node38.html#lips01">Lipscomb(2001)</A>)).  It uses the energy conserving thermodynamics 
+ HREF="node40.html#lips01">Lipscomb(2001)</A>)).  It uses the energy conserving thermodynamics 
 of (<A
- HREF="node38.html#bitz99">Bitz and Lipscomb(1999)</A>), has multiple layers in each thickness category, and accounts
+ HREF="node40.html#bitz99">Bitz and Lipscomb(1999)</A>), has multiple layers in each thickness category, and accounts
 for the influences of brine pockets within the ice cover.  The ice dynamics
 utilizes the elastic-viscous-plastic (EVP) rheology of (<A
- HREF="node38.html#hunk97">Hunke and Dukowicz(1997)</A>).  Sea ice
+ HREF="node40.html#hunk97">Hunke and Dukowicz(1997)</A>).  Sea ice
 ridging follows (<A
- HREF="node38.html#roth75b">Rothrock(1975)</A>) and (<A
- HREF="node38.html#thor75">Thorndike et&nbsp;al.(1975)</A>).  A slab ocean mixed layer model
+ HREF="node40.html#roth75b">Rothrock(1975)</A>) and (<A
+ HREF="node40.html#thor75">Thorndike et&nbsp;al.(1975)</A>).  A slab ocean mixed layer model
 is included.  A Scientific Reference is available that contains more detailed
 information on the model physics. 
 
@@ -125,46 +129,39 @@ text convention.  Variable names used in the code are <TT>typewritten</TT>.
 Subroutine names are given in <I>italic</I>, and file names are in <B>boldface</B>.
 
 <P>
-<BR><HR>
+<BR> <HR>
 <!--Table of Child-Links-->
 <A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
 <UL>
-<LI><A NAME="tex2html109"
+<LI><A NAME="tex2html116"
   HREF="node3.html">What's new in CICE4?</A>
 </UL>
 <!--End of Table of Child-Links-->
 <HR>
-<!--Navigation Panel-->
-<A NAME="tex2html107"
+<A NAME="tex2html114"
   HREF="node3.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html103"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html110"
   HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html97"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html104"
   HREF="node1.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html105"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html112"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html108"
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html115"
   HREF="node3.html">What's new in CICE4?</A>
-<B> Up:</B> <A NAME="tex2html104"
+<B>Up:</B> <A NAME="tex2html111"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html98"
+<B> Previous:</B> <A NAME="tex2html105"
   HREF="node1.html">Contents</A>
- &nbsp; <B>  <A NAME="tex2html106"
-  HREF="node1.html">Contents</A></B> 
+
 <!--End of Navigation Panel-->
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

@@ -5,7 +5,52 @@
 \subsection{The Build Environment}
 
 The build and configure environment has changed significantly from previous
-versions of CCSM. See the CCSM documentation.
+versions of CCSM. The build namelist and configure utilities are based on
+the CAM scripts (). 
+
+The \textbf{configure} utility includes setting compile
+time parameters such as the horizontal grid, the sea ice mode (prognostic or
+prescribed), the prescribed aerosol option, tracers, etc. Additional options 
+can be set using the \textbf{configure} utility such as the decomposition,
+and the number of tasks, but these are typically set via CCSM enviroment
+variables. However, the CAM scripts set some of these explicitly through
+the configure command line. For example one such configure line in the
+CCSM scripts is:
+
+\begin{verbatim}
+
+#--------------------------------------------------------------------
+# Invoke cice configure
+#--------------------------------------------------------------------
+
+
+set hgrid = "-hgrid $ICE_GRID"
+if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
+
+set mode = "-cice_mode $CICE_MODE"
+
+cd $CASEBUILD/ciceconf || exit -1
+$CODEROOT/ice/cice/bld/configure $hgrid $mode -nodecomp $CICE_CONFIG_OPTS || exit -1
+
+\end{verbatim}
+
+This example sets the horizontal grid and the mode (prognostic or prescribed).  The \textbf{build namelist} utility sets up the namelist which controls the
+run time options for the CICE model. This utility sets namelist flags based
+on compile time settings from \textbf{configure} and some standard defaults
+based on horizontal grids and other options. The typical execution during
+the CCSM configure is:
+
+\begin{verbatim}
+
+  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
+         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+         -inputdata $CASEBUILD/cice.input_data_list \
+         -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
+
+\end{verbatim}
+
+Again, the typical usage of the \textbf{build namelist} tool is through
+the CCSM scripts, but can be called via the command line interface.
 
 \subsubsection{CICE Preprocessor Flags}
 

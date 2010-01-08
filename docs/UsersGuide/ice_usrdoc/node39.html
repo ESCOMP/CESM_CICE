@@ -7,71 +7,66 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>About this document ...</TITLE>
-<META NAME="description" CONTENT="About this document ...">
+<TITLE>Enabling the Debugger</TITLE>
+<META NAME="description" CONTENT="Enabling the Debugger">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
 <LINK REL="previous" HREF="node38.html">
-<LINK REL="up" HREF="ice_usrdoc.html">
+<LINK REL="up" HREF="node33.html">
+<LINK REL="next" HREF="node40.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next_g.png"> 
-<A NAME="tex2html562"
-  HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html558"
+
+<A NAME="tex2html575"
+  HREF="node40.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html571"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html567"
   HREF="node38.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html564"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html573"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Up:</B> <A NAME="tex2html563"
-  HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html559"
-  HREF="node38.html">Bibliography</A>
- &nbsp; <B>  <A NAME="tex2html565"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html576"
+  HREF="node40.html">Bibliography</A>
+<B>Up:</B> <A NAME="tex2html572"
+  HREF="node33.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html568"
+  HREF="node38.html">NX does not divide</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H1><A NAME="SECTION000110000000000000000">
-About this document ...</A>
-</H1>
- <P>
-This document was generated using the
-<A HREF="http://www.latex2html.org/"><STRONG>LaTeX</STRONG>2<tt>HTML</tt></A> translator Version 2002-2-1 (1.71)
+<H2><A NAME="SECTION000116000000000000000">
+Enabling the Debugger</A>
+</H2>
+
 <P>
-Copyright &#169; 1993, 1994, 1995, 1996,
-<A HREF="http://cbl.leeds.ac.uk/nikos/personal.html">Nikos Drakos</A>, 
-Computer Based Learning Unit, University of Leeds.
-<BR>
-Copyright &#169; 1997, 1998, 1999,
-<A HREF="http://www.maths.mq.edu.au/~ross/">Ross Moore</A>, 
-Mathematics Department, Macquarie University, Sydney.
+This section explains how to set some compiler options for debugging. For
+the coupled model, set <TT>DEBUG</TT> to <TT>TRUE</TT> in the <B>env_run.xml</B> 
+script.  Before running the model, be sure to delete the
+object files so that the source code will be recompiled.  If a core file
+is created, it will be in the executable directory.  Use dbx to look at
+the core file. Useful information may also appear in the standard error
+and output files.
+
 <P>
-The command line arguments were: <BR>
- <STRONG>latex2html</STRONG> <TT>ice_usrdoc</TT>
-<P>
-The translation was initiated by David Bailey on 2009-12-28
-<BR><HR>
+
+ <BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

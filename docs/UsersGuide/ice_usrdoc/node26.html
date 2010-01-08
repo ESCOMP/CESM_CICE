@@ -7,73 +7,72 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Restart Pointer Files</TITLE>
-<META NAME="description" CONTENT="Restart Pointer Files">
+<TITLE>Stdout Output</TITLE>
+<META NAME="description" CONTENT="Stdout Output">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
+<LINK REL="next" HREF="node27.html">
 <LINK REL="previous" HREF="node25.html">
 <LINK REL="up" HREF="node25.html">
 <LINK REL="next" HREF="node27.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html409"
+
+<A NAME="tex2html417"
   HREF="node27.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html405"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html413"
   HREF="node25.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html401"
-  HREF="node25.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
 <A NAME="tex2html407"
+  HREF="node25.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html415"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html410"
-  HREF="node27.html">History Files</A>
-<B> Up:</B> <A NAME="tex2html406"
-  HREF="node25.html">Restart Files</A>
-<B> Previous:</B> <A NAME="tex2html402"
-  HREF="node25.html">Restart Files</A>
- &nbsp; <B>  <A NAME="tex2html408"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html418"
+  HREF="node27.html">Restart Files</A>
+<B>Up:</B> <A NAME="tex2html414"
+  HREF="node25.html">Output Data</A>
+<B> Previous:</B> <A NAME="tex2html408"
+  HREF="node25.html">Output Data</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H3><A NAME="SECTION00082100000000000000"></A>
-<A NAME="pointer_files"></A>
+<H2><A NAME="SECTION000101000000000000000"></A>
+<A NAME="stdout"></A>
 <BR>
-Restart Pointer Files
-</H3>
+Stdout Output
+</H2>
 
 <P>
-A pointer file is an ascii file named <B>rpointer.ice</B> that contains the
-path and filename of the latest restart file. The model uses this information to find
-a restart file from which initialization data is read.  The pointer files are
-written to and then read from the executable directory. For 
-<TT>startup</TT> runs, a pointer is created by the ice setup script 
-Whenever a restart file is written, the existing restart pointer file 
-is overwritten.  The namelist variable <TT>pointer_file</TT> contains the
-name of the pointer file. Pointer files seldom need editing.  The contents
-are usually maintained by the setup script and the component model. 
-    <BR><HR>
+Diagnostics from the ice model are written to an ASCII file that contains
+information from the compilation, a record
+of the input parameters, and how hemispherically averaged, maximum and minimum
+values are evolving with the integration.  Certain error conditions detected
+within the ice setup script or the ice model will also appear in this file.
+Upon the completion of the simulation, some timing information will appear
+at the bottom of the file.
+The file name is of the form <B>ice.log.$LID</B>, where <TT>$LID</TT> is
+a timestamp for the file ID. It resides in the executable directory.
+The frequency of the diagnostics is determined by the namelist parameter
+<TT>diagfreq</TT>. Other diagnostic messages appear in the <B>ccsm.log.$LID</B>
+or <B>cpl.log.$LID</B> files in the executable directory. See the CCSM scripts
+documentation.
+    <BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

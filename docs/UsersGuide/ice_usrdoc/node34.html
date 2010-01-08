@@ -7,12 +7,13 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Thermodynamic Iteration Error</TITLE>
-<META NAME="description" CONTENT="Thermodynamic Iteration Error">
+<TITLE>Code does not Compile or Run </TITLE>
+<META NAME="description" CONTENT="Code does not Compile or Run ">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -20,62 +21,68 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node35.html">
 <LINK REL="previous" HREF="node33.html">
-<LINK REL="up" HREF="node31.html">
+<LINK REL="up" HREF="node33.html">
 <LINK REL="next" HREF="node35.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html510"
+
+<A NAME="tex2html517"
   HREF="node35.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html506"
-  HREF="node31.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html500"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html513"
   HREF="node33.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html508"
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html507"
+  HREF="node33.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html515"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html511"
-  HREF="node35.html">Conservation Error</A>
-<B> Up:</B> <A NAME="tex2html507"
-  HREF="node31.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html501"
-  HREF="node33.html">Negative Ice Area in</A>
- &nbsp; <B>  <A NAME="tex2html509"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html518"
+  HREF="node35.html">Negative Ice Area in</A>
+<B>Up:</B> <A NAME="tex2html514"
+  HREF="node33.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html508"
+  HREF="node33.html">Troubleshooting</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00093000000000000000">
-Thermodynamic Iteration Error</A>
+<H2><A NAME="SECTION000111000000000000000">
+Code does not Compile or Run </A>
 </H2>
 
 <P>
-This error is written from <B>ice_therm_vertical.F90</B> when the ice model 
-temperature iteration is not converging in the thermodynamics.  This is usually
-a problem with the forcing, but sometimes can be indicative of a timestep
-problem in the ice.
+Check the <B>ice.log.*</B> or <B>ice.bldlog.*</B> files in the executable 
+directory, or the standard output and error files for information.  Also,
+try the following:
 
 <P>
-<PRE>
-  Thermo iteration does not converge
-  istep1, my_task, i, j:
-</PRE>
+
+<UL>
+<LI>Delete the executable directory and rebuild the model.
+</LI>
+<LI>Make sure that there is a <B>Macros.&lt;
+<tex2html_verbatim_mark>OS&gt;
+<tex2html_verbatim_mark></B> file for your
+        platform.  Modify the directory paths for the libraries.
+</LI>
+<LI>Make sure all paths and file names are set correctly in the scripts.
+</LI>
+<LI>If changes were made to the <B>ice_model_size.F90</B> file in the
+        source code directory, they will be overwritten by the file
+        in <B>input_templates</B>.  
 
 <P>
-<BR><HR>
+</LI>
+</UL>
+
+<P>
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

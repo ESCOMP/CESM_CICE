@@ -42,8 +42,22 @@ generate a set of "resolved scripts" for a specific configuration determined
 by the user. The configuration includes components, resolution, run type, and
 machine. The run and setup scripts that were previously in the {\bf /scripts}
 directory for CCSM3 are now generated automatically.  See the CCSM4 User's 
-Guide for information on how to use the new scripts.  The file that contains 
-the ice model namelist is now located in {\bf \$CASE/Buildconf}. The
+Guide for information on how to use the new scripts:\\
+
+\ifpdf
+                    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.\\
+\else
+\begin{htmlonly}
+  \htmladdnormallink{http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}
+                    {http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
+\end{htmlonly}
+\begin{latexonly}
+                    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
+\end{latexonly}
+\fi
+
+The file that contains the ice model namelist is now located in 
+{\bf \$CASE/Buildconf}. The
 script containing the environment variables used for building the executable
 file for the ice model is also in {\bf \$CASE/Buildconf}.
 The contents of the ice model namelist are described in section \ref{namelist}.

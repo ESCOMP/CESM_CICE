@@ -7,92 +7,76 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Negative Ice Area in Horizontal Remapping</TITLE>
-<META NAME="description" CONTENT="Negative Ice Area in Horizontal Remapping">
+<TITLE>Troubleshooting</TITLE>
+<META NAME="description" CONTENT="Troubleshooting">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="next" HREF="node34.html">
-<LINK REL="previous" HREF="node32.html">
-<LINK REL="up" HREF="node31.html">
+<LINK REL="next" HREF="node40.html">
+<LINK REL="previous" HREF="node25.html">
+<LINK REL="up" HREF="ice_usrdoc.html">
 <LINK REL="next" HREF="node34.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html498"
+
+<A NAME="tex2html499"
   HREF="node34.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html494"
-  HREF="node31.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html488"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html495"
+  HREF="ice_usrdoc.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html489"
   HREF="node32.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html496"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html497"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html499"
-  HREF="node34.html">Thermodynamic Iteration Error</A>
-<B> Up:</B> <A NAME="tex2html495"
-  HREF="node31.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html489"
-  HREF="node32.html">Code does not Compile</A>
- &nbsp; <B>  <A NAME="tex2html497"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html500"
+  HREF="node34.html">Code does not Compile</A>
+<B>Up:</B> <A NAME="tex2html496"
+  HREF="ice_usrdoc.html">ice_usrdoc</A>
+<B> Previous:</B> <A NAME="tex2html490"
+  HREF="node32.html">Changing Content</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00092000000000000000">
-Negative Ice Area in Horizontal Remapping</A>
-</H2>
-
+<H1><A NAME="SECTION000110000000000000000">
+Troubleshooting</A>
+</H1>
+  
 <P>
-This error is written from <B>ice_transport_remap.F90</B> when the ice model
-is checking for negative ice areas. If it happens well into a model integration,
-it can be indicative of a CFL violation.  The output looks like:
+<BR> <HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
-<P>
-<PRE>
-  60: New area &lt; 0, istep = 119588
-  60: (my_task,i,j,n) = 4 21 380 1
-  60: Old area = 0.960675000975677174E-05
-  60: New area = -0.161808948357841311E-06
-  60: Net flux = -0.976855895811461324E-05
-  60:(shr_sys_abort) ERROR: remap transport: negative area
-  60:(shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
-  60:(shr_mpi_abort):remap transport: negative area 0
-</PRE>
-
-<P>
-The dynamics timestep should be reduced to integrate past this problem.  Set
-
-<P>
-<PRE>
- , xndt_dyn = 2
-</PRE>
-
-<P>
-in the namelist and restart the model.  When the job completes set the value
-back to 1.
-
-<P>
-<BR><HR>
+<UL>
+<LI><A NAME="tex2html501"
+  HREF="node34.html">Code does not Compile or Run </A>
+<LI><A NAME="tex2html502"
+  HREF="node35.html">Negative Ice Area in Horizontal Remapping</A>
+<LI><A NAME="tex2html503"
+  HREF="node36.html">Thermodynamic Iteration Error</A>
+<LI><A NAME="tex2html504"
+  HREF="node37.html">Conservation Error</A>
+<LI><A NAME="tex2html505"
+  HREF="node38.html">NX does not divide evenly into grid</A>
+<LI><A NAME="tex2html506"
+  HREF="node39.html">Enabling the Debugger</A>
+</UL>
+<!--End of Table of Child-Links-->
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

@@ -7,82 +7,68 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Troubleshooting</TITLE>
-<META NAME="description" CONTENT="Troubleshooting">
+<TITLE>Changing Frequency and Averaging</TITLE>
+<META NAME="description" CONTENT="Changing Frequency and Averaging">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
 <LINK REL="STYLESHEET" HREF="ice_usrdoc.css">
 
-<LINK REL="next" HREF="node38.html">
-<LINK REL="previous" HREF="node23.html">
-<LINK REL="up" HREF="ice_usrdoc.html">
+<LINK REL="next" HREF="node32.html">
+<LINK REL="previous" HREF="node30.html">
+<LINK REL="up" HREF="node29.html">
 <LINK REL="next" HREF="node32.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html468"
+
+<A NAME="tex2html477"
   HREF="node32.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html464"
-  HREF="ice_usrdoc.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html458"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html473"
+  HREF="node29.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html467"
   HREF="node30.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html466"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html475"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html469"
-  HREF="node32.html">Code does not Compile</A>
-<B> Up:</B> <A NAME="tex2html465"
-  HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html459"
-  HREF="node30.html">Changing Content</A>
- &nbsp; <B>  <A NAME="tex2html467"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html478"
+  HREF="node32.html">Changing Content</A>
+<B>Up:</B> <A NAME="tex2html474"
+  HREF="node29.html">History Files</A>
+<B> Previous:</B> <A NAME="tex2html468"
+  HREF="node30.html">Caveats Regarding Averaged Fields</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H1><A NAME="SECTION00090000000000000000">
-Troubleshooting</A>
-</H1>
-  
-<P>
-<BR><HR>
-<!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+<H3><A NAME="SECTION000103200000000000000">
+Changing Frequency and Averaging</A>
+</H3> 
 
-<UL>
-<LI><A NAME="tex2html470"
-  HREF="node32.html">Code does not Compile or Run </A>
-<LI><A NAME="tex2html471"
-  HREF="node33.html">Negative Ice Area in Horizontal Remapping</A>
-<LI><A NAME="tex2html472"
-  HREF="node34.html">Thermodynamic Iteration Error</A>
-<LI><A NAME="tex2html473"
-  HREF="node35.html">Conservation Error</A>
-<LI><A NAME="tex2html474"
-  HREF="node36.html">NX does not divide evenly into grid</A>
-<LI><A NAME="tex2html475"
-  HREF="node37.html">Enabling the Debugger</A>
-</UL>
-<!--End of Table of Child-Links-->
-<BR><HR>
+<P>
+The frequency at which data are written to a history file as well as the
+interval over which the time average is to be performed is controlled
+by the namelist variable <TT>histfreq</TT>.  Data averaging is invoked
+by the namelist variable <TT>hist_avg</TT>.  The averages are constructed
+by accumulating the running sums of all variables in memory at each timestep.
+The options for both of these variables are described in Table 
+<A HREF="node8.html#table:setup_nml">1</A>.  If <TT>hist_avg</TT> is true, and <TT>histfreq</TT>
+is set to monthly, for example, monthly averaged data is written out on
+the last day of the month.
+
+<P>
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>

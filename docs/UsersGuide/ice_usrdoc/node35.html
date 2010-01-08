@@ -7,12 +7,13 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Conservation Error</TITLE>
-<META NAME="description" CONTENT="Conservation Error">
+<TITLE>Negative Ice Area in Horizontal Remapping</TITLE>
+<META NAME="description" CONTENT="Negative Ice Area in Horizontal Remapping">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
 
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <META NAME="Generator" CONTENT="LaTeX2HTML v2002-2-1">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
@@ -20,73 +21,72 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <LINK REL="next" HREF="node36.html">
 <LINK REL="previous" HREF="node34.html">
-<LINK REL="up" HREF="node31.html">
+<LINK REL="up" HREF="node33.html">
 <LINK REL="next" HREF="node36.html">
 </HEAD>
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
-<!--Navigation Panel-->
-<A NAME="tex2html522"
+
+<A NAME="tex2html529"
   HREF="node36.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
- SRC="file:/usr/share/latex2html/icons/next.png"></A> 
-<A NAME="tex2html518"
-  HREF="node31.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
- SRC="file:/usr/share/latex2html/icons/up.png"></A> 
-<A NAME="tex2html512"
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html525"
+  HREF="node33.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html519"
   HREF="node34.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
- SRC="file:/usr/share/latex2html/icons/prev.png"></A> 
-<A NAME="tex2html520"
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
+<A NAME="tex2html527"
   HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents"
- SRC="file:/usr/share/latex2html/icons/contents.png"></A>  
-<BR>
-<B> Next:</B> <A NAME="tex2html523"
-  HREF="node36.html">NX does not divide</A>
-<B> Up:</B> <A NAME="tex2html519"
-  HREF="node31.html">Troubleshooting</A>
-<B> Previous:</B> <A NAME="tex2html513"
-  HREF="node34.html">Thermodynamic Iteration Error</A>
- &nbsp; <B>  <A NAME="tex2html521"
-  HREF="node1.html">Contents</A></B> 
-<BR>
-<BR>
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
+<B> Next:</B> <A NAME="tex2html530"
+  HREF="node36.html">Thermodynamic Iteration Error</A>
+<B>Up:</B> <A NAME="tex2html526"
+  HREF="node33.html">Troubleshooting</A>
+<B> Previous:</B> <A NAME="tex2html520"
+  HREF="node34.html">Code does not Compile</A>
+<BR> <P>
+
 <!--End of Navigation Panel-->
 
-<H2><A NAME="SECTION00094000000000000000">
-Conservation Error</A>
+<H2><A NAME="SECTION000112000000000000000">
+Negative Ice Area in Horizontal Remapping</A>
 </H2>
 
 <P>
-This error is written from <B>ice_itd.F</B> when the ice model is checking
-that initial and final values of a conserved field are equal to within
-a small value. The output looks like:
+This error is written from <B>ice_transport_remap.F90</B> when the ice model
+is checking for negative ice areas. If it happens well into a model integration,
+it can be indicative of a CFL violation.  The output looks like:
 
 <P>
 <PRE>
-  Conservation error: vice, add_new_ice
-  11  :  14  185
-  Initial value =  1362442.600400560
-  Final value =  1362442.600400561
-  Difference =  2.328306436538696D-10
-  (shr_sys_abort) ERROR: ice: Conservation error
-  (shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
-  (shr_mpi_abort):ice: Conservation error  0
+  60: New area &lt; 0, istep = 119588
+  60: (my_task,i,j,n) = 4 21 380 1
+  60: Old area = 0.960675000975677174E-05
+  60: New area = -0.161808948357841311E-06
+  60: Net flux = -0.976855895811461324E-05
+  60:(shr_sys_abort) ERROR: remap transport: negative area
+  60:(shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+  60:(shr_mpi_abort):remap transport: negative area 0
 </PRE>
 
 <P>
-Non-conservation can occur if the ice model is receiving
-very bad forcing, and is not able to deal with it.  This has occurred
-after a CFL violation in the ocean.  The timestep in the ocean may
-be decreased to get around the problem.
+The dynamics timestep should be reduced to integrate past this problem.  Set
 
 <P>
-<BR><HR>
+<PRE>
+ , xndt_dyn = 2
+</PRE>
+
+<P>
+in the namelist and restart the model.  When the job completes set the value
+back to 1.
+
+<P>
+<BR> <HR>
 <ADDRESS>
-David Bailey
-2009-12-28
+<I>David Bailey <BR>
+2010-01-07</I>
 </ADDRESS>
 </BODY>
 </HTML>
