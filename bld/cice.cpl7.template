@@ -38,15 +38,18 @@ cat >! $CASEBUILD/ciceconf/ccsm_namelist << EOF1
  / 
 EOF1
 
+# Allow the user to supply namelist values by putting them in the file
+# $CASEROOT/user_nl_cice.  The file should contain a valid namelist, just like
+# any file that supplies user input to build-namelist via the -infile argument.
+if (-f $CASEROOT/user_nl_cice) then
+   cat $CASEROOT/user_nl_cice >> $CASEBUILD/ciceconf/ccsm_namelist || exit -1
+endif
+
 #----------------------------
 # Invoke build-namelist
 #----------------------------
 
 set presaero_type = "-presaero_type $CICE_PRESAERO_TYPE "
-
-if ($ICE_CDF64 == "TRUE") then
-    setenv CICE_NAMELIST_OPTS "$CICE_NAMELIST_OPTS lcdf64=.true."
-endif
 
 set SSTDATA = "FALSE"
 if ($CICE_MODE == "prescribed") then

@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20100124
+Originator: mvertens
+Date: Sun Jan 24 2010
+Version: 4.0
+One-line Summary: Made lcdf64 .true. as default
+CCSM Version compatible with: ccsm4_0_beta39
+Changes made:
+	
+M      bld/cice.cpl7.template
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+- removed $ICE_CDF65	
+- set lcdf64 to .true. as default	
+- made 4x5 use a gx3v7 ocean mask (now consistent 
+  with updated clm and docn)
+- added 2.5x3.3 lat/lon grid support
+- modified cice.cpl7.template to allow the user to supply 
+  namelist values by putting them in the file
+  $CASEROOT/user_nl_cice. 
+
+===============================================================
 cice4_0_20100108
 Originator: dbailey
 Date: Fri Jan 8 2010
