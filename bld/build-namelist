@@ -348,6 +348,8 @@ add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'albedo_type');
 add_default($nl, 'shortwave');
+add_default($nl, 'dT_mlt_in');
+add_default($nl, 'rsnw_melt_in');
 add_default($nl, 'R_snw');
 add_default($nl, 'kitd');
 add_default($nl, 'kdyn');

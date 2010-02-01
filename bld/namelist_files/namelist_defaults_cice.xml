@@ -144,6 +144,9 @@
 <shortwave                 >'dEdd'</shortwave>
 <shortwave hgrid="tx0.1v2" >'default'</shortwave>
 
+<dT_mlt_in> 1.50 </dT_mlt_in>
+<rsnw_melt_in> 1500. </rsnw_melt_in>
+
 <R_snw> 1.5 </R_snw>
 
 <advection>'remap'</advection>

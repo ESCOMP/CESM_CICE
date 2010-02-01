@@ -167,6 +167,14 @@ shortwave method, 'default' ('ccsm3') or 'dEdd'
 Default:'dEdd'
 </entry>
 
+<entry id="dT_mlt_in" type="real"  category="cice" group="ice_nml" valid_values="">
+melt onset temperature tunable parameter for dEdd albedo
+</entry>
+
+<entry id="rsnw_melt_in" type="real"  category="cice" group="ice_nml" valid_values="">
+maximum melting snow grain radius tunable parameter for dEdd albedo
+</entry>
+
 <entry id="R_snw" type="real"  category="cice" group="ice_nml" valid_values="">
 snow grain radius tunable parameter for dEdd albedo
 </entry>

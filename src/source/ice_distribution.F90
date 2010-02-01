@@ -20,7 +20,6 @@
 
    use ice_kinds_mod
    use ice_communicate
-   use ice_communicate, only : my_task, master_task, lprint_stats
    use ice_domain_size
    use ice_blocks
    use ice_exit
