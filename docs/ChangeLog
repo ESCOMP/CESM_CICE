@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100211
+Originator: dbailey
+Date: Thu Feb 11 2010
+Version: 4.0
+One-line Summary: Add RCP 8.5 aerosol dataset.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20100201
 Originator: dbailey
 Date: Mon Feb 01 2010
