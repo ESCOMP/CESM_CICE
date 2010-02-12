@@ -97,8 +97,9 @@ module ice_comp_mct
 !
 ! !PRIVATE VARIABLES
 
-  integer :: ICEID       
+  integer (kind=int_kind) :: ICEID       
 
+  logical (kind=log_kind) :: atm_aero
 
 !=======================================================================
 
@@ -166,6 +167,9 @@ contains
 
     ! Determine time of next atmospheric shortwave calculation
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+
+    ! Determine if aerosols are coming from the coupler
+    call seq_infodata_GetData(infodata, atm_aero=atm_aero )
 
 !   call shr_init_memusage()
 
@@ -836,7 +840,7 @@ contains
      ,  ailohi       ! fractional ice area
 
     real (kind=dbl_kind) :: &
-       gsum, workx, worky           ! tmps for converting grid
+       workx, worky           ! tmps for converting grid
 
     type(block)        :: this_block                           ! block information for current block
     logical :: flag
@@ -978,9 +982,7 @@ contains
     real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
 
     real (kind=dbl_kind) :: &
-         gsum, workx, worky, maxwork
-    real (kind=dbl_kind), allocatable, dimension (:,:,:) :: &
-         work
+         workx, worky
     logical (kind=log_kind) :: &
          first_call = .true.
     logical (kind=log_kind) :: &
@@ -1120,32 +1122,14 @@ contains
      ! Accept aerosols from coupler when not prescribed.
      !-------------------------------------------------------
      
-     ! Check for special values in coupler input.
+     ! Check for atm_aero flag.
 
      if (tr_aero .and. first_call) then
-        allocate(work(nx_block,ny_block,max_blocks))
-        n=0
-        do iblk = 1, nblocks
-           this_block = get_block(blocks_ice(iblk),iblk)
-           ilo = this_block%ilo
-           ihi = this_block%ihi
-           jlo = this_block%jlo
-           jhi = this_block%jhi
-           do j = jlo, jhi
-              do i = ilo, ihi
-                 n = n+1
-                 work(i,j,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
-              end do
-           end do
-        end do
-        maxwork = global_maxval(work,distrb_info)
-        call broadcast_scalar(maxwork, master_task)
-        if (abs(maxwork) < c100) then
+        if (atm_aero) then
            prescribed_aero = .false.
         else
            call ice_prescaero_init(prescribed_aero_in = .true.)
         end if
-        deallocate(work)
         first_call = .false.
      endif
 

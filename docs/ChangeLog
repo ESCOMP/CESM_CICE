@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100212
+Originator: dbailey
+Date: Fri Feb 12 2010
+Version: 4.0
+One-line Summary: Add atm_aero infodata flag.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20100211
 Originator: dbailey
 Date: Thu Feb 11 2010
