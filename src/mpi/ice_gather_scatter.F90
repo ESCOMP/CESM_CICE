@@ -90,7 +90,53 @@
 
    integer(int_kind) :: ierr
 
-   call MPI_Gather(array,length,MPI_REAL8,array_g, length,MPI_REAL8,root,MPI_COMM_ICE,ierr)
+#ifdef _USE_FLOW_CONTROL
+   integer (int_kind) :: &
+     i                  ,&! loop index
+     nprocs             ,&! number of processes in communicator
+     itask              ,&! task loop index
+     mtag               ,&! MPI message tag
+     displs             ,&! MPI message length
+     rcv_request        ,&! request id
+     signal               ! MPI handshaking variable
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: status
+
+   signal = 1
+   nprocs = get_num_procs()
+
+   if (root .eq. my_task) then
+      do itask=0, nprocs-1
+         if (itask .ne. root) then
+            mtag = 3*mpitag_gs+itask
+            displs = itask*length
+            call mpi_irecv( array_g(displs+1), length, &
+                            MPI_REAL8, itask, mtag, MPI_COMM_ICE, &
+                            rcv_request, ierr )
+            call mpi_send ( signal, 1, mpi_integer, itask, mtag, &
+                            MPI_COMM_ICE, ierr )
+            call mpi_wait ( rcv_request, status, ierr )
+         end if
+      end do
+
+! copy local data
+      displs = root*length
+      do i=1,length
+         array_g(displs+i) = array(i)
+      enddo
+
+   else
+      mtag = 3*mpitag_gs+my_task
+
+      call mpi_recv ( signal, 1, mpi_integer, root, mtag, MPI_COMM_ICE, &
+                      status, ierr )
+      call mpi_rsend ( array, length, MPI_REAL8, root, mtag, MPI_COMM_ICE, &
+                      ierr )
+   endif
+#else
+   call MPI_Gather(array,length,MPI_REAL8,array_g, length,MPI_REAL8,root, &
+                   MPI_COMM_ICE,ierr)
+#endif
 
  end subroutine gatherArray_dbl
 
@@ -176,6 +222,14 @@
    integer (int_kind) :: iig,ijg,it
    integer (int_kind) :: msgLen, msgTag
 
+#ifdef _USE_FLOW_CONTROL
+   integer (int_kind) :: &
+     rcv_request    ,&! request id
+     signal           ! MPI handshaking variable
+
+   signal = 1
+#endif
+
 !-----------------------------------------------------------------------
 !
 !  if this task is the dst_task, copy local blocks into the global 
@@ -229,8 +283,19 @@
            msgTag = 3*mpitag_gs+itask
            if(maxBlocks>0) then 
 
+#ifdef _USE_FLOW_CONTROL
+             call MPI_IRECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
+               mpiR8, itask, msgTag, MPI_COMM_ICE, rcv_request, &
+               ierr)
+
+             call MPI_SEND(signal, 1, mpi_integer, itask, &
+                           msgTag, MPI_COMM_ICE, ierr)
+
+             call MPI_WAIT(rcv_request, status, ierr)
+#else
              call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
                mpiR8, itask, msgTag, MPI_COMM_ICE, status, ierr)
+#endif
 
              do ib=1,maxBlocks
                ig = src_dist%blockIndex(itask+1,ib)
@@ -257,9 +322,21 @@
 
          this_block = get_block(n,n)
 
+#ifdef _USE_FLOW_CONTROL
+         call MPI_IRECV(msg_buffer, size(msg_buffer), &
+                        mpiR8, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                        MPI_COMM_ICE, rcv_request, ierr)
+
+         call MPI_SEND(signal, 1, mpi_integer, &
+                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, ierr)
+
+         call MPI_WAIT(rcv_request, status, ierr)
+#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpiR8, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
+#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -286,7 +363,15 @@
      if(nblocks>0) then 
         msgLen = nx_block*ny_block*nblocks
         msgTag = 3*mpitag_gs+my_task
-	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task,msgTag,MPI_COMM_ICE,ierr)
+#ifdef _USE_FLOW_CONTROL
+        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
+                      MPI_COMM_ICE, status, ierr)
+	call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task, &
+           msgTag,MPI_COMM_ICE,ierr)
+#else
+	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task, &
+           msgTag,MPI_COMM_ICE,ierr)
+#endif
      endif
 
 #else
@@ -299,9 +384,17 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
+#ifdef _USE_FLOW_CONTROL
+         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, status, ierr)
+         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
+                     mpiR8, dst_task, 3*mpitag_gs+n, &
+                     MPI_COMM_ICE, snd_request(nsends), ierr)
+#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpiR8, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
+#endif
        endif
      end do
 
@@ -389,6 +482,14 @@
    integer (int_kind) :: iig,ijg
    integer (int_kind) :: msgLen, msgTag
 
+#ifdef _USE_FLOW_CONTROL
+   integer (int_kind) :: &
+     rcv_request    ,&! request id
+     signal           ! MPI handshaking variable
+
+   signal = 1
+#endif
+
 !-----------------------------------------------------------------------
 !
 !  if this task is the dst_task, copy local blocks into the global 
@@ -444,8 +545,19 @@
            msgTag = 3*mpitag_gs+itask
            if( maxBlocks>0) then 
 
+#ifdef _USE_FLOW_CONTROL
+              call MPI_IRECV(msg_buffer(:,:,1:maxBlocks), msgLen, &
+                   mpiR4, itask, msgTag ,MPI_COMM_ICE, &
+                   rcv_request, ierr)
+
+              call MPI_SEND(signal, 1, mpi_integer, itask, &
+                            msgTag, MPI_COMM_ICE, ierr)
+
+              call MPI_WAIT(rcv_request, status, ierr)
+#else
               call MPI_RECV(msg_buffer(:,:,1:maxBlocks), msgLen, &
                    mpiR4, itask, msgTag ,MPI_COMM_ICE, status, ierr)
+#endif
 
               do ib=1,maxBlocks
                  ig = src_dist%blockIndex(itask+1,ib)
@@ -473,9 +585,21 @@
 
          this_block = get_block(n,n)
 
+#ifdef _USE_FLOW_CONTROL
+         call MPI_IRECV(msg_buffer, size(msg_buffer), &
+                        mpiR4, src_dist%blockLocation(n)-1, &
+                        3*mpitag_gs+n, MPI_COMM_ICE, rcv_request, ierr)
+
+         call MPI_SEND(signal, 1, mpi_integer, &
+                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, ierr)
+
+         call MPI_WAIT(rcv_request, status, ierr)
+#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpiR4, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
+#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -501,7 +625,15 @@
      if(nblocks>0) then
         msgLen = nx_block*ny_block*nblocks
         msgTag = 3*mpitag_gs+my_task 
-	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task,msgTag,MPI_COMM_ICE,ierr)
+#ifdef _USE_FLOW_CONTROL
+        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
+                      MPI_COMM_ICE, status, ierr)
+	call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task, &
+           msgTag,MPI_COMM_ICE,ierr)
+#else
+	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task, &
+           msgTag,MPI_COMM_ICE,ierr)
+#endif
      endif
 
 #else
@@ -515,9 +647,17 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
+#ifdef _USE_FLOW_CONTROL
+         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, status, ierr)
+         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
+                     mpiR4, dst_task, 3*mpitag_gs+n, &
+                     MPI_COMM_ICE, snd_request(nsends), ierr)
+#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpiR4, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
+#endif
        endif
      end do
 
@@ -605,6 +745,14 @@
    integer (int_kind) :: iig,ijg
    integer (int_kind) :: msgLen, msgTag
 
+#ifdef _USE_FLOW_CONTROL
+   integer (int_kind) :: &
+     rcv_request    ,&! request id
+     signal           ! MPI handshaking variable
+
+   signal = 1
+#endif
+
 !-----------------------------------------------------------------------
 !
 !  if this task is the dst_task, copy local blocks into the global 
@@ -659,8 +807,19 @@
            msgLen = nx_block*ny_block*max_blocks
            msgTag = 3*mpitag_gs+itask
            if(maxBLocks>0) then 
+#ifdef _USE_FLOW_CONTROL
+             call MPI_IRECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
+                  mpi_integer, itask, msgTag, MPI_COMM_ICE, &
+                  rcv_request, ierr)
+
+             call MPI_SEND(signal, 1, mpi_integer, itask, &
+                           msgTag, MPI_COMM_ICE, ierr)
+
+             call MPI_WAIT(rcv_request, status, ierr)
+#else
              call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
                    mpi_integer, itask, msgTag, MPI_COMM_ICE, status, ierr)
+#endif
              do ib=1,maxBlocks
                 ig = src_dist%blockIndex(itask+1,ib)
                 this_block = get_block(ig,ig)
@@ -686,9 +845,21 @@
 
          this_block = get_block(n,n)
 
+#ifdef _USE_FLOW_CONTROL
+         call MPI_IRECV(msg_buffer, size(msg_buffer), &
+                        mpi_integer, src_dist%blockLocation(n)-1, &
+                        3*mpitag_gs+n, MPI_COMM_ICE, rcv_request, ierr)
+
+         call MPI_SEND(signal, 1, mpi_integer, &
+                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, ierr)
+
+         call MPI_WAIT(rcv_request, status, ierr)
+#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpi_integer, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
+#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -715,8 +886,15 @@
      if(nblocks>0) then
         msgLen = nx_block*ny_block*nblocks
         msgTag = 3*mpitag_gs+my_task
+#ifdef _USE_FLOW_CONTROL
+        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
+                      MPI_COMM_ICE, status, ierr)
+        call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen, &
+             mpi_integer, dst_task, msgTag, MPI_COMM_ICE, ierr)
+#else
         call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen, &
              mpi_integer, dst_task, msgTag, MPI_COMM_ICE, ierr)
+#endif
      endif
 
 #else
@@ -730,9 +908,17 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
+#ifdef _USE_FLOW_CONTROL
+         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, status, ierr)
+         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
+                     mpi_integer, dst_task, 3*mpitag_gs+n, &
+                     MPI_COMM_ICE, snd_request(nsends), ierr)
+#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpi_integer, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
+#endif
        endif
      end do
 

@@ -375,6 +375,7 @@
 ! !INTERFACE:
 
  subroutine ice_timer_start(timer_id, block_id)
+ use perf_mod
 
 ! !DESCRIPTION:
 !  This routine starts a given node timer if it has not already
@@ -409,6 +410,8 @@
 !-----------------------------------------------------------------------
 
    if (all_timers(timer_id)%in_use) then
+
+      call t_startf(trim(all_timers(timer_id)%name))
 
       !***
       !*** if called from within a block loop, start block timers
@@ -478,6 +481,7 @@
 ! !INTERFACE:
 
  subroutine ice_timer_stop(timer_id, block_id)
+ use perf_mod
 
 ! !DESCRIPTION:
 !  This routine stops a given node timer if appropriate.  If block 
@@ -586,6 +590,8 @@
          all_ltime(timer_id) = all_timers(timer_id)%node_accum_time
 
       endif
+
+      call t_stopf(trim(all_timers(timer_id)%name))
    else
       call abort_ice &
                  ('ice_timer_stop: attempt to stop undefined timer')

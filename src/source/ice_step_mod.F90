@@ -424,7 +424,7 @@
       ! thickness categories.
       !-----------------------------------------------------------------
 
-      call ice_timer_start(timer_catconv)    ! category conversions
+      call ice_timer_start(timer_catconv, iblk) ! category conversions
 
       if (kitd == 1) then
       !-----------------------------------------------------------------
@@ -482,7 +482,7 @@
 
       endif  ! kitd
 
-      call ice_timer_stop(timer_catconv)    ! category conversions
+      call ice_timer_stop(timer_catconv, iblk)  ! category conversions
 
       !-----------------------------------------------------------------
       ! Add frazil ice growing in leads.

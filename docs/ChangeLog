@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20100218
+Originator: dbailey, worley
+Date: Thu Feb 18 2010
+Version: 4.0
+One-line Summary: New hand-shaking mods for the Crays.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      bld/cice_decomp.xml
+M      src/source/ice_step_mod.F90
+M      src/mpi/ice_timers.F90
+M      src/mpi/ice_gather_scatter.F90
+
+===============================================================
 cice4_0_20100217
 Originator: dbailey, tcraig
 Date: Wed Feb 17 2010
