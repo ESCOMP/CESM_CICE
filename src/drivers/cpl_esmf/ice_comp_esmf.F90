@@ -172,7 +172,7 @@ end subroutine
     integer            :: lbnum
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
-    integer            :: mpicom_loc, mpicom_vm
+    integer            :: mpicom_loc, mpicom_vm, gsize
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall, Fei Liu
 !EOP
@@ -321,8 +321,10 @@ end subroutine
 
     ! Initialize ice distgrid
 
-    distgrid = ice_DistGrid_esmf(rc=rc)
+    distgrid = ice_DistGrid_esmf(gsize,rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeSet(export_state, name="gsize", value=gsize, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     ! Initialize ice domain (needs ice initialization info)
 
@@ -347,7 +349,7 @@ end subroutine
     call ESMF_StateAdd(import_state, x2d, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call esmf2mct_init(distgrid,ICEID,gsmap_i,MPI_COMM_ICE,rc=rc)
+    call esmf2mct_init(distgrid,ICEID,gsmap_i,MPI_COMM_ICE,gsize=gsize,rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     call esmf2mct_init(dom,dom_i,rc=rc)
@@ -803,13 +805,14 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
 end subroutine ice_final_esmf
 
 !=================================================================================
-function ice_DistGrid_esmf(rc)
+function ice_DistGrid_esmf(gsize,rc)
 
     implicit none
     !-------------------------------------------------------------------
     !
     ! Arguments
     !
+    integer, intent(out)    :: gsize
     integer, intent(out)    :: rc
     ! Return
     type(ESMF_DistGrid)     :: ice_DistGrid_esmf
@@ -820,7 +823,7 @@ function ice_DistGrid_esmf(rc)
     integer     :: lat
     integer     :: lon
     integer     :: i, j, iblk, n, gi
-    integer     :: lsize,gsize
+    integer     :: lsize
     integer     :: ier
     integer     :: ilo, ihi, jlo, jhi ! beginning and end of physical domain
     type(block) :: this_block         ! block information for current block

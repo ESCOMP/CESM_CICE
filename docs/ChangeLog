@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20100217
+Originator: dbailey, tcraig
+Date: Wed Feb 17 2010
+Version: 4.0
+One-line Summary: ESMF driver changes.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      src/drivers/cpl_esmf/ice_comp_esmf.F90
+M      src/drivers/cpl_esmf/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20100212
 Originator: dbailey
 Date: Fri Feb 12 2010
