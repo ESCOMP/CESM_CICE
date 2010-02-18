@@ -97,6 +97,8 @@ module ice_comp_esmf
   type(mct_gsmap),save :: gsmap_i
   type(mct_ggrid),save :: dom_i
  
+  logical (kind=log_kind),save :: atm_aero
+
 !=======================================================================
 
 contains
@@ -192,10 +194,13 @@ end subroutine
    call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
+   ! Determine if aerosols are coming through the coupler
+   call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! use infodata to determine type of run
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     ! Preset single column values
 
@@ -1057,9 +1062,7 @@ subroutine ice_import_esmf(array, rc)
     real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
 
     real (kind=dbl_kind) :: &
-         gsum, workx, worky, maxwork
-    real (kind=dbl_kind), allocatable, dimension (:,:,:) :: &
-         work
+         workx, worky
     logical (kind=log_kind) :: &
          first_call = .true.
     logical (kind=log_kind) :: &
@@ -1211,29 +1214,11 @@ subroutine ice_import_esmf(array, rc)
      ! Check for special values in coupler input.
 
      if (tr_aero .and. first_call) then
-        allocate(work(nx_block,ny_block,max_blocks))
-        n=0
-        do iblk = 1, nblocks
-           this_block = get_block(blocks_ice(iblk),iblk)
-           ilo = this_block%ilo
-           ihi = this_block%ihi
-           jlo = this_block%jlo
-           jhi = this_block%jhi
-           do j = jlo, jhi
-              do i = ilo, ihi
-                 n = n+1
-                 work(i,j,iblk) = fptr(index_x2i_Faxa_bcphodry,n)
-              end do
-           end do
-        end do
-        maxwork = global_maxval(work,distrb_info)
-        call broadcast_scalar(maxwork, master_task)
-        if (abs(maxwork) < c100) then
+        if (atm_aero) then
            prescribed_aero = .false.
         else
            call ice_prescaero_init(prescribed_aero_in = .true.)
         end if
-        deallocate(work)
         first_call = .false.
      endif
 

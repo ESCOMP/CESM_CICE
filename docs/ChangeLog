@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100219
+Originator: dbailey, worley
+Date: Fri Feb 19 2010
+Version: 4.0
+One-line Summary: Add atm_aero to ESMF interface.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20100218
 Originator: dbailey, worley
 Date: Thu Feb 18 2010
