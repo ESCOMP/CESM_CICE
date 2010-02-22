@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100222
+Originator: dbailey
+Date: Mon Feb 22 2010
+Version: 4.0
+One-line Summary: Remove temporary ice_in in ciceconf.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      bld/cice.cpl7.template
+
+===============================================================
 cice4_0_20100219
 Originator: dbailey, worley
 Date: Fri Feb 19 2010

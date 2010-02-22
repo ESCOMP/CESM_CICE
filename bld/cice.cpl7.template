@@ -105,7 +105,7 @@ EOF1
 endif
 
 #----------------------------
-# Create cice.build_nml_prestage.csh
+# Create cice.buildnml.csh
 #----------------------------
 
 cat >! $CASEBUILD/cice.buildnml.csh << EOF1
@@ -119,6 +119,10 @@ cat ice_in >> $CASEBUILD/cice.buildnml.csh || exit -1
 cat >> $CASEBUILD/cice.buildnml.csh << EOF1
 EOF
 EOF1
+
+# Delete copy of ice_in.
+
+/bin/rm -f $CASEBUILD/ciceconf/ice_in
 
 #--------------------------------------------------------------------
 # Create cice.buildexe.csh
