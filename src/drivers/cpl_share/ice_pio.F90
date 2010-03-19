@@ -211,7 +211,6 @@ contains
          inquire(file=trim(filename),exist=exists)
          if (exists) then
             status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_nowrite)
-            call pio_seterrorhandling(File,PIO_RETURN_ERROR)
          else
             if(my_task==master_task) then
                write(nu_diag,*) 'ice_pio_ropen ERROR: file invalid ',trim(filename)

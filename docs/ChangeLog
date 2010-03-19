@@ -1,3 +1,14 @@
+cice4_0_20100319
+Originator: mvertens
+Date: Fri Mar 19 2010
+Version: 4.0
+One-line Summary: Remove temporary ice_in in ciceconf.
+CCSM Version compatible with: ccsm4_0_beta43+
+Changes made:
+
+M      src/drivers/cpl_share/ice_pio.F90
+       - removed call to pio_seterrorhandling(File,PIO_RETURN_ERROR)
+	
 ===============================================================
 cice4_0_20100222
 Originator: dbailey
