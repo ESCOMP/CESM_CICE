@@ -1,8 +1,20 @@
+===============================================================
+cice4_0_20100323
+Originator: dbailey
+Date: Tue Mar 23 2010
+Version: 4.0
+One-line Summary: Fix error handling in ice_restart.
+CCSM Version compatible with: ccsm4_0_beta46+
+Changes made:
+
+M      src/drivers/cpl_share/ice_restart.F90
+
+===============================================================
 cice4_0_20100319
 Originator: mvertens
 Date: Fri Mar 19 2010
 Version: 4.0
-One-line Summary: Remove temporary ice_in in ciceconf.
+One-line Summary: Remove error handling in ice_pio.
 CCSM Version compatible with: ccsm4_0_beta43+
 Changes made:
 

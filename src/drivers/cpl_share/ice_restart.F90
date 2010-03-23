@@ -564,8 +564,10 @@
       endif
 
       if (tr_iage) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'iage',varid)
          call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_iage,:,:), status, fillval=c0)
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_FY) then
@@ -1362,6 +1364,7 @@
       enddo
 
       if (tr_aero) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'aerosnossl1',varid)
          if (status == PIO_noerr) then
             do k=1,n_aero
@@ -1384,25 +1387,31 @@
                                     trcrn(:,:,nt_aero+3+(k-1)*4,:,:), status)
             enddo
          endif
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_iage) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'iage',varid)
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
 	                         trcrn(:,:,nt_iage,:,:), status)
          endif
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_FY) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'FY',varid)
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
                                  trcrn(:,:,nt_FY,:,:), status)
          endif
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_lvl) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'alvl',varid)
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
@@ -1413,9 +1422,11 @@
             call pio_read_darray(File, varid, iodesc3d_ncat, &
                                  trcrn(:,:,nt_vlvl,:,:), status)
          endif
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_pond) then
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'volpn',varid)
          if (status == PIO_noerr) then
             call pio_read_darray(File, varid, iodesc3d_ncat, &
@@ -1429,6 +1440,7 @@
             call pio_read_darray(File, varid, iodesc3d_ncat, &
                                  hpondn(:,:,:,:), status)
          endif
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       call pio_closefile(File)
