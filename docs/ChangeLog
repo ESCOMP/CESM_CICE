@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100402
+Originator: dbailey
+Date: Fri Apr 2 2010
+Version: 4.0
+One-line Summary: Add RCP 2.6 and 4.5 support.
+CCSM Version compatible with: ccsm4_0_beta46+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20100323
 Originator: dbailey
 Date: Tue Mar 23 2010
