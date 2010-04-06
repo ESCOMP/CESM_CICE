@@ -891,6 +891,20 @@
       alidr(:,:,:) = c0
       alidf(:,:,:) = c0
       Sswabsn(:,:,:,:) = c0
+#ifdef AEROFRC
+      alvdr_noaero(:,:,:) = c0
+      alvdf_noaero(:,:,:) = c0
+      alidr_noaero(:,:,:) = c0
+      alidf_noaero(:,:,:) = c0
+      Sswabsn_noaero(:,:,:,:) = c0
+#endif
+#ifdef PONDFRC
+      alvdr_nopond(:,:,:) = c0
+      alvdf_nopond(:,:,:) = c0
+      alidr_nopond(:,:,:) = c0
+      alidf_nopond(:,:,:) = c0
+      Sswabsn_nopond(:,:,:,:) = c0
+#endif
 !      do iblk = 1,nblocks
 !         alvdr(:,:,iblk) = c0
 !         alvdf(:,:,iblk) = c0
@@ -1083,14 +1097,117 @@
                                  fsn,                 fpn,                 &
                                  hpn)
 
-               else
-
+            else
 
                fpn(:,:) = apondn(:,:,n,iblk)
                hpn(:,:) = hpondn(:,:,n,iblk)
 
             endif
 
+#ifdef AEROFRC
+            ! Diagnose aerosol forcing
+
+            if (tr_aero) then
+
+            tr_aero = .false.
+
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                                icells,                                 &
+                                indxi,             indxj,               &
+                                coszen(:,:, iblk),                      &
+                                aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                vsnon(:,:,n,iblk), fsn,                 &
+                                rhosnwn,           rsnwn,               &
+                                fpn,               hpn,                 &
+                                trcrn(:,:,:,n,iblk), tarea(:,:,iblk),   &
+                                swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                alvdrn_noaero(:,:,n,iblk),              &
+                                alvdfn_noaero(:,:,n,iblk),              &
+                                alidrn_noaero(:,:,n,iblk),              &
+                                alidfn_noaero(:,:,n,iblk),              &
+                                fswsfcn_noaero(:,:,n,iblk),             &
+                                fswintn_noaero(:,:,n,iblk),             &
+                                fswthrun_noaero(:,:,n,iblk),            &
+                                Sswabsn_noaero(:,:,sl1:sl2,iblk),       &
+                                Iswabsn_noaero(:,:,il1:il2,iblk),       &
+                                albicen_noaero(:,:,n,iblk),             &
+                                albsnon_noaero(:,:,n,iblk),             &
+                                albpndn_noaero(:,:,n,iblk))
+
+            fswabsn_noaero(:,:,n,iblk) = fswsfcn_noaero(:,:,n,iblk) &
+                                       + fswintn_noaero(:,:,n,iblk) &
+                                       + fswthrun_noaero(:,:,n,iblk)
+            tr_aero = .true.
+
+            endif
+#endif
+
+#ifdef PONDFRC
+            ! Diagnose pond forcing
+
+            if (tr_pond) then
+
+            fpn(:,:) = c0
+            hpn(:,:) = c0
+
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                                icells,                                 &
+                                indxi,             indxj,               &
+                                coszen(:,:, iblk),                      &
+                                aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                                vsnon(:,:,n,iblk), fsn,                 &
+                                rhosnwn,           rsnwn,               &
+                                fpn,               hpn,                 &
+                                trcrn(:,:,:,n,iblk), tarea(:,:,iblk),   &
+                                swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                                swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                                alvdrn_nopond(:,:,n,iblk),              &
+                                alvdfn_nopond(:,:,n,iblk),              &
+                                alidrn_nopond(:,:,n,iblk),              &
+                                alidfn_nopond(:,:,n,iblk),              &
+                                fswsfcn_nopond(:,:,n,iblk),             &
+                                fswintn_nopond(:,:,n,iblk),             &
+                                fswthrun_nopond(:,:,n,iblk),            &
+                                Sswabsn_nopond(:,:,sl1:sl2,iblk),       &
+                                Iswabsn_nopond(:,:,il1:il2,iblk),       &
+                                albicen_nopond(:,:,n,iblk),             &
+                                albsnon_nopond(:,:,n,iblk),             &
+                                albpndn_nopond(:,:,n,iblk))
+
+            fswabsn_nopond(:,:,n,iblk) = fswsfcn_nopond(:,:,n,iblk) &
+                                       + fswintn_nopond(:,:,n,iblk) &
+                                       + fswthrun_nopond(:,:,n,iblk)
+
+            fpn(:,:) = apondn(:,:,n,iblk)
+            hpn(:,:) = hpondn(:,:,n,iblk)
+
+            endif
+#endif
+#ifdef CCSM3FRC
+            call shortwave_ccsm3(nx_block,     ny_block,           &
+                           icells,                                 &
+                           indxi,             indxj,               &
+                           aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                           vsnon(:,:,n,iblk),                      &
+                           trcrn(:,:,nt_Tsfc,n,iblk),              &
+                           swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                           swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                           alvdrn_ccsm3(:,:,n,iblk),               &
+                           alidrn_ccsm3(:,:,n,iblk),               &
+                           alvdfn_ccsm3(:,:,n,iblk),               &
+                           alidfn_ccsm3(:,:,n,iblk),               &
+                           fswsfcn_ccsm3(:,:,n,iblk),              &
+                           fswintn_ccsm3(:,:,n,iblk),              &
+                           fswthrun_ccsm3(:,:,n,iblk),             &
+                           Iswabsn_ccsm3(:,:,il1:il2,iblk),        &
+                           albicen_ccsm3(:,:,n,iblk),              &
+                           albsnon_ccsm3(:,:,n,iblk))
+
+            fswabsn_ccsm3(:,:,n,iblk) = fswsfcn_ccsm3(:,:,n,iblk) &
+                                      + fswintn_ccsm3(:,:,n,iblk) &
+                                      + fswthrun_ccsm3(:,:,n,iblk)
+#endif
             call shortwave_dEdd(nx_block,        ny_block,            &
                                 icells,                                 &
                                 indxi,             indxj,               &

@@ -76,14 +76,46 @@
       ! category albedos
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ncat,max_blocks) :: &
-         alvdrn      , & ! visible direct albedo           (fraction)
-         alidrn      , & ! near-ir direct albedo           (fraction)
-         alvdfn      , & ! visible diffuse albedo          (fraction)
-         alidfn          ! near-ir diffuse albedo          (fraction)
+#ifdef AEROFRC
+         alvdrn_noaero, & ! visible direct albedo (diag)    (fraction)
+         alidrn_noaero, & ! near-ir direct albedo (diag)    (fraction)
+         alvdfn_noaero, & ! visible diffuse albedo (diag)   (fraction)
+         alidfn_noaero, & ! near-ir diffuse albedo (diag)   (fraction)
+#endif
+#ifdef CCSM3FRC
+         alvdrn_ccsm3, & ! visible direct albedo (diag)    (fraction)
+         alidrn_ccsm3, & ! near-ir direct albedo (diag)    (fraction)
+         alvdfn_ccsm3, & ! visible diffuse albedo (diag)   (fraction)
+         alidfn_ccsm3, & ! near-ir diffuse albedo (diag)   (fraction)
+#endif
+#ifdef PONDFRC
+         alvdrn_nopond, & ! visible direct albedo (diag)    (fraction)
+         alidrn_nopond, & ! near-ir direct albedo (diag)    (fraction)
+         alvdfn_nopond, & ! visible diffuse albedo (diag)   (fraction)
+         alidfn_nopond, & ! near-ir diffuse albedo (diag)   (fraction)
+#endif
+         alvdrn       , & ! visible direct albedo           (fraction)
+         alidrn       , & ! near-ir direct albedo           (fraction)
+         alvdfn       , & ! visible diffuse albedo          (fraction)
+         alidfn           ! near-ir diffuse albedo          (fraction)
 
       ! albedo components for history
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ncat,max_blocks) :: &
+#ifdef AEROFRC
+         albicen_noaero, & ! bare ice (diag)
+         albsnon_noaero, & ! snow (diag)
+         albpndn_noaero, & ! pond (diag)
+#endif
+#ifdef CCSM3FRC
+         albicen_ccsm3, & ! bare ice (diag)
+         albsnon_ccsm3, & ! snow (diag)
+#endif
+#ifdef PONDFRC
+         albicen_nopond, & ! bare ice (diag)
+         albsnon_nopond, & ! snow (diag)
+         albpndn_nopond, & ! pond (diag)
+#endif
          albicen  , & ! bare ice 
          albsnon  , & ! snow 
          albpndn      ! pond 
@@ -91,16 +123,52 @@
       ! shortwave components
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ntilyr,max_blocks) :: &
-         Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
+#ifdef AEROFRC
+         Iswabsn_noaero, & ! SW radiation absorbed in ice layers (diag) (W m-2)
+#endif
+#ifdef CCSM3FRC
+         Iswabsn_ccsm3, & ! SW radiation absorbed in ice layers (diag) (W m-2)
+#endif
+#ifdef PONDFRC
+         Iswabsn_nopond, & ! SW radiation absorbed in ice layers (diag) (W m-2)
+#endif
+         Iswabsn           ! SW radiation absorbed in ice layers (W m-2)
 
       real (kind=dbl_kind), &
          dimension (nx_block,ny_block,ntslyr,max_blocks) :: &
-         Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
+#ifdef AEROFRC
+         Sswabsn_noaero, & ! SW radiation absorbed in snow layers (diag) (W m-2)
+#endif
+#ifdef CCSM3FRC
+         Sswabsn_ccsm3, & ! SW radiation absorbed in snow layers (diag) (W m-2)
+#endif
+#ifdef PONDFRC
+         Sswabsn_nopond, & ! SW radiation absorbed in snow layers (diag) (W m-2)
+#endif
+         Sswabsn           ! SW radiation absorbed in snow layers (W m-2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat,max_blocks) :: &
-         fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
-         fswthrun    , & ! SW through ice to ocean            (W/m^2)
-         fswintn         ! SW absorbed in ice interior, below surface (W m-2)
+#ifdef AEROFRC
+         fswabsn_noaero , & ! SW absorbed in ice/snow (diag) (W m-2)
+         fswsfcn_noaero , & ! SW absorbed at ice/snow surface (diag) (W m-2)
+         fswthrun_noaero, & ! SW through ice to ocean (diag)     (W/m^2)
+         fswintn_noaero , & ! SW absorbed in ice interior, below surface (W m-2)
+#endif
+#ifdef AEROFRC
+         fswabsn_ccsm3 , & ! SW absorbed in ice/snow (diag) (W m-2)
+         fswsfcn_ccsm3 , & ! SW absorbed at ice/snow surface (diag) (W m-2)
+         fswthrun_ccsm3, & ! SW through ice to ocean (diag)     (W/m^2)
+         fswintn_ccsm3 , & ! SW absorbed in ice interior, below surface (W m-2)
+#endif
+#ifdef PONDFRC
+         fswabsn_nopond , & ! SW absorbed in ice/snow (diag) (W m-2)
+         fswsfcn_nopond , & ! SW absorbed at ice/snow surface (diag) (W m-2)
+         fswthrun_nopond, & ! SW through ice to ocean (diag)     (W/m^2)
+         fswintn_nopond , & ! SW absorbed in ice interior, below surface (W m-2)
+#endif
+         fswsfcn        , & ! SW absorbed at ice/snow surface (W m-2)
+         fswthrun       , & ! SW through ice to ocean            (W/m^2)
+         fswintn            ! SW absorbed in ice interior, below surface (W m-2)
 
       real (kind=dbl_kind) :: &
          rnilyr      , & ! real(nilyr)
@@ -293,6 +361,62 @@
                   albpnd(i,j,iblk) = albpnd(i,j,iblk) &
                      + albpndn(i,j,n,iblk)*aicen(i,j,n,iblk)
                endif
+
+#ifdef AEROFRC
+               alvdf_noaero(i,j,iblk) = alvdf_noaero(i,j,iblk) &
+                  + alvdfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf_noaero(i,j,iblk) = alidf_noaero(i,j,iblk) &
+                  + alidfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr_noaero(i,j,iblk) = alvdr_noaero(i,j,iblk) &
+                  + alvdrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr_noaero(i,j,iblk) = alidr_noaero(i,j,iblk) &
+                  + alidrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+
+               if (coszen(i,j,iblk) > puny) then ! sun above horizon
+                  albice_noaero(i,j,iblk) = albice_noaero(i,j,iblk) &
+                     + albicen_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  albsno_noaero(i,j,iblk) = albsno_noaero(i,j,iblk) &
+                     + albsnon_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  albpnd_noaero(i,j,iblk) = albpnd_noaero(i,j,iblk) &
+                     + albpndn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               endif
+#endif
+#ifdef CCSM3FRC
+               alvdf_ccsm3(i,j,iblk) = alvdf_ccsm3(i,j,iblk) &
+                  + alvdfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf_ccsm3(i,j,iblk) = alidf_ccsm3(i,j,iblk) &
+                  + alidfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr_ccsm3(i,j,iblk) = alvdr_ccsm3(i,j,iblk) &
+                  + alvdrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr_ccsm3(i,j,iblk) = alidr_ccsm3(i,j,iblk) &
+                  + alidrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+
+               if (coszen(i,j,iblk) > puny) then ! sun above horizon
+                  albice_ccsm3(i,j,iblk) = albice_ccsm3(i,j,iblk) &
+                     + albicen_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  albsno_ccsm3(i,j,iblk) = albsno_ccsm3(i,j,iblk) &
+                     + albsnon_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               endif
+#endif
+#ifdef PONDFRC
+               alvdf_nopond(i,j,iblk) = alvdf_nopond(i,j,iblk) &
+                  + alvdfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidf_nopond(i,j,iblk) = alidf_nopond(i,j,iblk) &
+                  + alidfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alvdr_nopond(i,j,iblk) = alvdr_nopond(i,j,iblk) &
+                  + alvdrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               alidr_nopond(i,j,iblk) = alidr_nopond(i,j,iblk) &
+                  + alidrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+
+               if (coszen(i,j,iblk) > puny) then ! sun above horizon
+                  albice_nopond(i,j,iblk) = albice_nopond(i,j,iblk) &
+                     + albicen_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  albsno_nopond(i,j,iblk) = albsno_nopond(i,j,iblk) &
+                     + albsnon_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+                  albpnd_nopond(i,j,iblk) = albpnd_nopond(i,j,iblk) &
+                     + albpndn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               endif
+#endif
             enddo
 
          enddo  ! ncat
@@ -1172,6 +1296,78 @@
                hpn(:,:) = hpondn(:,:,n,iblk)
 
             endif
+
+#ifdef AEROFRC
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                              icells,                                 &
+                              indxi,             indxj,               &
+                              coszen(:,:, iblk),                      &
+                              aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                              vsnon(:,:,n,iblk), fsn,                 &
+                              rhosnwn,           rsnwn,               &
+                              fpn,               hpn,                 &
+                              trcrn(:,:,:,n,iblk),tarea(:,:,iblk),    &
+                              swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                              swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                              alvdrn_noaero(:,:,n,iblk),              &
+                              alvdfn_noaero(:,:,n,iblk),              &
+                              alidrn_noaero(:,:,n,iblk),              &
+                              alidfn_noaero(:,:,n,iblk),              &
+                              fswsfcn_noaero(:,:,n,iblk),             &
+                              fswintn_noaero(:,:,n,iblk),             &
+                              fswthrun_noaero(:,:,n,iblk),            &
+                              Sswabsn_noaero(:,:,sl1:sl2,iblk),       &
+                              Iswabsn_noaero(:,:,il1:il2,iblk),       &
+                              albicen_noaero(:,:,n,iblk),             &
+                              albsnon_noaero(:,:,n,iblk),             &
+                              albpndn_noaero(:,:,n,iblk))
+
+#endif
+#ifdef CCSM3FRC
+            call shortwave_ccsm3(nx_block,     ny_block,              &
+                              icells,                                 &
+                              indxi,             indxj,               &
+                              aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                              vsnon(:,:,n,iblk),                      &
+                              trcrn(:,:,nt_Tsfc,n,iblk),              &
+                              swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                              swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                              alvdrn_ccsm3(:,:,n,iblk),               &
+                              alidrn_ccsm3(:,:,n,iblk),               &
+                              alvdfn_ccsm3(:,:,n,iblk),               &
+                              alidfn_ccsm3(:,:,n,iblk),               &
+                              fswsfcn_ccsm3(:,:,n,iblk),              &
+                              fswintn_ccsm3(:,:,n,iblk),              &
+                              fswthrun_ccsm3(:,:,n,iblk),             &
+                              Iswabsn_ccsm3(:,:,il1:il2,iblk),        &
+                              albicen_ccsm3(:,:,n,iblk),              &
+                              albsnon_ccsm3(:,:,n,iblk))
+#endif
+#ifdef PONDFRC
+            call shortwave_dEdd(nx_block,        ny_block,            &
+                              icells,                                 &
+                              indxi,             indxj,               &
+                              coszen(:,:, iblk),                      &
+                              aicen(:,:,n,iblk), vicen(:,:,n,iblk),   &
+                              vsnon(:,:,n,iblk), fsn,                 &
+                              rhosnwn,           rsnwn,               &
+                              fpn,               hpn,                 &
+                              trcrn(:,:,:,n,iblk),tarea(:,:,iblk),    &
+                              swvdr(:,:,  iblk), swvdf(:,:,  iblk),   &
+                              swidr(:,:,  iblk), swidf(:,:,  iblk),   &
+                              alvdrn_nopond(:,:,n,iblk),              &
+                              alvdfn_nopond(:,:,n,iblk),              &
+                              alidrn_nopond(:,:,n,iblk),              &
+                              alidfn_nopond(:,:,n,iblk),              &
+                              fswsfcn_nopond(:,:,n,iblk),             &
+                              fswintn_nopond(:,:,n,iblk),             &
+                              fswthrun_nopond(:,:,n,iblk),            &
+                              Sswabsn_nopond(:,:,sl1:sl2,iblk),       &
+                              Iswabsn_nopond(:,:,il1:il2,iblk),       &
+                              albicen_nopond(:,:,n,iblk),             &
+                              albsnon_nopond(:,:,n,iblk),             &
+                              albpndn_nopond(:,:,n,iblk))
+#endif
 
             call shortwave_dEdd(nx_block,        ny_block,            &
                               icells,                                 &

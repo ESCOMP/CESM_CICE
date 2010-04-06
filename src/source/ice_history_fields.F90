@@ -132,6 +132,39 @@
            n_sst        , n_sss        , &
            n_uocn       , n_vocn       , &
            n_frzmlt     , n_fswfac     , &
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+           n_fswsfc_ai , &
+           n_fswint_ai , &
+#endif
+#ifdef AEROFRC
+           n_fswabs_noaero   , &
+           n_fswup_noaero   , &
+           n_fswsfc_noaero  , &
+           n_fswint_noaero  , &
+           n_fswthru_noaero  , &
+           n_alvdr_noaero,   n_alidr_noaero      , &
+           n_albice_noaero,  n_albsno_noaero     , &
+           n_albpnd_noaero,                        &
+#endif
+#ifdef CCSM3FRC
+           n_fswabs_ccsm3   , &
+           n_fswup_ccsm3   , &
+           n_fswsfc_ccsm3  , &
+           n_fswint_ccsm3  , &
+           n_fswthru_ccsm3  , &
+           n_alvdr_ccsm3,   n_alidr_ccsm3      , &
+           n_albice_ccsm3,  n_albsno_ccsm3     , &
+#endif
+#ifdef PONDFRC
+           n_fswabs_nopond   , &
+           n_fswup_nopond   , &
+           n_fswsfc_nopond  , &
+           n_fswint_nopond  , &
+           n_fswthru_nopond  , &
+           n_alvdr_nopond,   n_alidr_nopond      , &
+           n_albice_nopond,  n_albsno_nopond     , &
+           n_albpnd_nopond,                        &
+#endif
            n_fswabs     , n_fswabs_ai  , &
            n_alvdr      , n_alidr      , &
            n_albice     , n_albsno     , &

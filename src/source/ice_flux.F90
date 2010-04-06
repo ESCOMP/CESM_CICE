@@ -178,12 +178,44 @@
          alidr   , & ! near-ir, direct   (fraction)
          alvdf   , & ! visible, diffuse  (fraction)
          alidf   , & ! near-ir, diffuse  (fraction)
+#ifdef AEROFRC
+         alvdr_noaero   , & ! visible, direct   (fraction) (diag)
+         alidr_noaero   , & ! near-ir, direct   (fraction) (diag)
+         alvdf_noaero   , & ! visible, diffuse  (fraction) (diag)
+         alidf_noaero   , & ! near-ir, diffuse  (fraction) (diag)
+#endif
+#ifdef CCSM3FRC
+         alvdr_ccsm3   , & ! visible, direct   (fraction) (diag)
+         alidr_ccsm3   , & ! near-ir, direct   (fraction) (diag)
+         alvdf_ccsm3   , & ! visible, diffuse  (fraction) (diag)
+         alidf_ccsm3   , & ! near-ir, diffuse  (fraction) (diag)
+#endif
+#ifdef PONDFRC
+         alvdr_nopond   , & ! visible, direct   (fraction) (diag)
+         alidr_nopond   , & ! near-ir, direct   (fraction) (diag)
+         alvdf_nopond   , & ! visible, diffuse  (fraction) (diag)
+         alidf_nopond   , & ! near-ir, diffuse  (fraction) (diag)
+#endif
          ! grid-box-mean versions
          alvdr_gbm, & ! visible, direct   (fraction)
          alidr_gbm, & ! near-ir, direct   (fraction)
          alvdf_gbm, & ! visible, diffuse  (fraction)
          alidf_gbm, & ! near-ir, diffuse  (fraction)
          ! components for history
+#ifdef AEROFRC
+         albice_noaero   , & ! bare ice albedo (diag)
+         albsno_noaero   , & ! snow albedo (diag)
+         albpnd_noaero   , & ! melt pond albedo (diag)
+#endif
+#ifdef CCSM3FRC
+         albice_ccsm3   , & ! bare ice albedo (diag)
+         albsno_ccsm3   , & ! snow albedo (diag)
+#endif
+#ifdef PONDFRC
+         albice_nopond   , & ! bare ice albedo (diag)
+         albsno_nopond   , & ! snow albedo (diag)
+         albpnd_nopond   , & ! melt pond albedo (diag)
+#endif
          albice   , & ! bare ice albedo
          albsno   , & ! snow albedo
          albpnd       ! melt pond albedo
@@ -199,6 +231,28 @@
          fresh   , & ! fresh water flux to ocean (kg/m^2/s)
          fsalt   , & ! salt flux to ocean (kg/m^2/s)
          fhocn   , & ! net heat flux to ocean (W/m^2)
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+         fswsfc  , & ! shortwave absorbed at the surface (W/m^2)
+         fswint  , & ! shortwave absorbed internally (W/m^2)
+#endif
+#ifdef AEROFRC
+         fswabs_noaero  , & ! shortwave absorbed (diag) (W/m^2)
+         fswsfc_noaero  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         fswint_noaero  , & ! shortwave absorbed internally (diag) (W/m^2)
+         fswthru_noaero , & ! shortwave penetrating to ocean (diag) (W/m^2)
+#endif
+#ifdef CCSM3FRC
+         fswabs_ccsm3  , & ! shortwave absorbed (diag) (W/m^2)
+         fswsfc_ccsm3  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         fswint_ccsm3  , & ! shortwave absorbed internally (diag) (W/m^2)
+         fswthru_ccsm3 , & ! shortwave penetrating to ocean (diag) (W/m^2)
+#endif
+#ifdef PONDFRC
+         fswabs_nopond  , & ! shortwave absorbed (diag) (W/m^2)
+         fswsfc_nopond  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         fswint_nopond  , & ! shortwave absorbed internally (diag) (W/m^2)
+         fswthru_nopond , & ! shortwave penetrating to ocean (diag) (W/m^2)
+#endif
          fswthru     ! shortwave penetrating to ocean (W/m^2)
 
       real (kind=dbl_kind), &
@@ -415,6 +469,40 @@
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+      fswsfc  (:,:,:) = c0
+      fswint  (:,:,:) = c0
+#endif
+#ifdef AEROFRC
+      fswabs_noaero  (:,:,:) = c0
+      fswsfc_noaero  (:,:,:) = c0
+      fswint_noaero  (:,:,:) = c0
+      fswthru_noaero  (:,:,:) = c0
+      alvdr_noaero   (:,:,:) = c0
+      alidr_noaero   (:,:,:) = c0
+      alvdf_noaero   (:,:,:) = c0
+      alidf_noaero   (:,:,:) = c0
+#endif
+#ifdef CCSM3FRC
+      fswabs_ccsm3  (:,:,:) = c0
+      fswsfc_ccsm3  (:,:,:) = c0
+      fswint_ccsm3  (:,:,:) = c0
+      fswthru_ccsm3  (:,:,:) = c0
+      alvdr_ccsm3   (:,:,:) = c0
+      alidr_ccsm3   (:,:,:) = c0
+      alvdf_ccsm3   (:,:,:) = c0
+      alidf_ccsm3   (:,:,:) = c0
+#endif
+#ifdef PONDFRC
+      fswabs_nopond  (:,:,:) = c0
+      fswsfc_nopond  (:,:,:) = c0
+      fswint_nopond  (:,:,:) = c0
+      fswthru_nopond  (:,:,:) = c0
+      alvdr_nopond   (:,:,:) = c0
+      alidr_nopond   (:,:,:) = c0
+      alvdf_nopond   (:,:,:) = c0
+      alidf_nopond   (:,:,:) = c0
+#endif
 
       !-----------------------------------------------------------------
       ! fluxes sent to ocean
@@ -473,6 +561,28 @@
       fsens   (:,:,:) = c0
       flat    (:,:,:) = c0
       fswabs  (:,:,:) = c0
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+      fswsfc  (:,:,:) = c0
+      fswint  (:,:,:) = c0
+#endif
+#ifdef AEROFRC
+      fswabs_noaero  (:,:,:) = c0
+      fswsfc_noaero  (:,:,:) = c0
+      fswint_noaero  (:,:,:) = c0
+      fswthru_noaero  (:,:,:) = c0
+#endif
+#ifdef CCSM3FRC
+      fswabs_ccsm3  (:,:,:) = c0
+      fswsfc_ccsm3  (:,:,:) = c0
+      fswint_ccsm3  (:,:,:) = c0
+      fswthru_ccsm3  (:,:,:) = c0
+#endif
+#ifdef PONDFRC
+      fswabs_nopond  (:,:,:) = c0
+      fswsfc_nopond  (:,:,:) = c0
+      fswint_nopond  (:,:,:) = c0
+      fswthru_nopond  (:,:,:) = c0
+#endif
       flwout  (:,:,:) = c0
       evap    (:,:,:) = c0
       Tref    (:,:,:) = c0
@@ -570,6 +680,20 @@
       albice (:,:,:) = c0
       albsno (:,:,:) = c0
       albpnd (:,:,:) = c0
+#ifdef AEROFRC
+      albice_noaero (:,:,:) = c0
+      albsno_noaero (:,:,:) = c0
+      albpnd_noaero (:,:,:) = c0
+#endif
+#ifdef CCSM3FRC
+      albice_ccsm3 (:,:,:) = c0
+      albsno_ccsm3 (:,:,:) = c0
+#endif
+#ifdef PONDFRC
+      albice_nopond (:,:,:) = c0
+      albsno_nopond (:,:,:) = c0
+      albpnd_nopond (:,:,:) = c0
+#endif
      
       end subroutine init_history_therm
 
@@ -636,6 +760,21 @@
                                fsurfn,   fcondtopn,  &
                                fsensn,   flatn,      & 
                                fswabsn,  flwoutn,    &
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+                               fswsfcn,  fswintn,    &
+#endif
+#ifdef AEROFRC
+                               fswabsn_noaero,  fswsfcn_noaero,    &
+                               fswintn_noaero,  fswthrun_noaero,    &
+#endif
+#ifdef CCSM3FRC
+                               fswabsn_ccsm3,  fswsfcn_ccsm3,    &
+                               fswintn_ccsm3,  fswthrun_ccsm3,    &
+#endif
+#ifdef PONDFRC
+                               fswabsn_nopond,  fswsfcn_nopond,    &
+                               fswintn_nopond,  fswthrun_nopond,    &
+#endif
                                evapn,                &
                                Trefn,    Qrefn,      &
                                freshn,   fsaltn,     &
@@ -644,6 +783,21 @@
                                fsurf,    fcondtop,   &
                                fsens,    flat,       & 
                                fswabs,   flwout,     &
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+                               fswsfc,   fswint,     &
+#endif
+#ifdef AEROFRC
+                               fswabs_noaero, fswsfc_noaero, &
+                               fswint_noaero, fswthru_noaero, &
+#endif
+#ifdef CCSM3FRC
+                               fswabs_ccsm3, fswsfc_ccsm3, &
+                               fswint_ccsm3, fswthru_ccsm3, &
+#endif
+#ifdef PONDFRC
+                               fswabs_nopond, fswsfc_nopond, &
+                               fswint_nopond, fswthru_nopond, &
+#endif
                                evap,                 & 
                                Tref,     Qref,       &
                                fresh,    fsalt,      &
@@ -686,6 +840,28 @@
           fsensn  , & ! sensible heat flx               (W/m**2)
           flatn   , & ! latent   heat flx               (W/m**2)
           fswabsn , & ! shortwave absorbed heat flx     (W/m**2)
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+          fswsfcn , & ! shortwave surface absorbed heat flx   (W/m**2)
+          fswintn , & ! shortwave internal absorbed heat flx  (W/m**2)
+#endif
+#ifdef AEROFRC
+          fswabsn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          fswsfcn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          fswintn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          fswthrun_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+#endif
+#ifdef CCSM3FRC
+          fswabsn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          fswsfcn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          fswintn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          fswthrun_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+#endif
+#ifdef PONDFRC
+          fswabsn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          fswsfcn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          fswintn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          fswthrun_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+#endif
           flwoutn , & ! upwd lw emitted heat flx        (W/m**2)
           evapn   , & ! evaporation                     (kg/m2/s)
           Trefn   , & ! air tmp reference level         (K)
@@ -710,6 +886,28 @@
           fsens   , & ! sensible heat flx               (W/m**2)
           flat    , & ! latent   heat flx               (W/m**2)
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+          fswsfc  , & ! shortwave surface absorbed heat flx         (W/m**2)
+          fswint  , & ! shortwave internal absorbed heat flx        (W/m**2)
+#endif
+#ifdef AEROFRC
+          fswabs_noaero  , & ! shortwave absorbed heat flx          (W/m**2)
+          fswsfc_noaero  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          fswint_noaero  , & ! shortwave internal absorbed heat flx (W/m**2)
+          fswthru_noaero  , & ! shortwave penetrating heat flux     (W/m**2)
+#endif
+#ifdef CCSM3FRC
+          fswabs_ccsm3  , & ! shortwave absorbed heat flx          (W/m**2)
+          fswsfc_ccsm3  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          fswint_ccsm3  , & ! shortwave internal absorbed heat flx (W/m**2)
+          fswthru_ccsm3  , & ! shortwave penetrating heat flux     (W/m**2)
+#endif
+#ifdef PONDFRC
+          fswabs_nopond  , & ! shortwave absorbed heat flx          (W/m**2)
+          fswsfc_nopond  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          fswint_nopond  , & ! shortwave internal absorbed heat flx (W/m**2)
+          fswthru_nopond  , & ! shortwave penetrating heat flux     (W/m**2)
+#endif
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
           Tref    , & ! air tmp reference level         (K)
@@ -750,6 +948,28 @@
          fsens    (i,j)  = fsens   (i,j) + fsensn  (i,j)*aicen(i,j)
          flat     (i,j)  = flat    (i,j) + flatn   (i,j)*aicen(i,j)
          fswabs   (i,j)  = fswabs  (i,j) + fswabsn (i,j)*aicen(i,j)
+#if (defined AEROFRC) || (defined PONDFRC) || (defined CCSM3FRC)
+         fswint(i,j)=fswint(i,j) + fswintn(i,j)*aicen(i,j)
+         fswsfc(i,j)=fswsfc(i,j) + fswsfcn(i,j)*aicen(i,j)
+#endif
+#ifdef AEROFRC
+         fswsfc_noaero(i,j)=fswsfc_noaero(i,j) + fswsfcn_noaero(i,j)*aicen(i,j)
+         fswabs_noaero(i,j)=fswabs_noaero(i,j) + fswabsn_noaero(i,j)*aicen(i,j)
+         fswint_noaero(i,j)=fswint_noaero(i,j) + fswintn_noaero(i,j)*aicen(i,j)
+         fswthru_noaero(i,j)=fswthru_noaero(i,j)+fswthrun_noaero(i,j)*aicen(i,j)
+#endif
+#ifdef CCSM3FRC
+         fswsfc_ccsm3(i,j)=fswsfc_ccsm3(i,j) + fswsfcn_ccsm3(i,j)*aicen(i,j)
+         fswabs_ccsm3(i,j)=fswabs_ccsm3(i,j) + fswabsn_ccsm3(i,j)*aicen(i,j)
+         fswint_ccsm3(i,j)=fswint_ccsm3(i,j) + fswintn_ccsm3(i,j)*aicen(i,j)
+         fswthru_ccsm3(i,j)=fswthru_ccsm3(i,j)+fswthrun_ccsm3(i,j)*aicen(i,j)
+#endif
+#ifdef PONDFRC
+         fswsfc_nopond(i,j)=fswsfc_nopond(i,j) + fswsfcn_nopond(i,j)*aicen(i,j)
+         fswabs_nopond(i,j)=fswabs_nopond(i,j) + fswabsn_nopond(i,j)*aicen(i,j)
+         fswint_nopond(i,j)=fswint_nopond(i,j) + fswintn_nopond(i,j)*aicen(i,j)
+         fswthru_nopond(i,j)=fswthru_nopond(i,j)+fswthrun_nopond(i,j)*aicen(i,j)
+#endif
          flwout   (i,j)  = flwout  (i,j) &
              + (flwoutn(i,j) - (c1-emissivity)*flw(i,j))*aicen(i,j)
          evap     (i,j)  = evap    (i,j) + evapn   (i,j)*aicen(i,j)
@@ -796,6 +1016,15 @@
                                strairxT, strairyT, &
                                fsens,    flat,     &
                                fswabs,   flwout,   &
+#ifdef AEROFRC
+                               fswabs_noaero,      &
+#endif
+#ifdef CCSM3FRC
+                               fswabs_ccsm3,      &
+#endif
+#ifdef PONDFRC
+                               fswabs_nopond,      &
+#endif
                                evap,               &
                                Tref,     Qref,     &
                                fresh,    fsalt,    &
@@ -834,6 +1063,15 @@
           fsens   , & ! sensible heat flx               (W/m**2)
           flat    , & ! latent   heat flx               (W/m**2)
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
+#ifdef AEROFRC
+          fswabs_noaero, & ! shortwave absorbed heat flx (diag) (W/m**2)
+#endif
+#ifdef CCSM3FRC
+          fswabs_ccsm3, & ! shortwave absorbed heat flx (diag) (W/m**2)
+#endif
+#ifdef PONDFRC
+          fswabs_nopond, & ! shortwave absorbed heat flx (diag) (W/m**2)
+#endif
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
           Tref    , & ! air tmp reference level         (K)
@@ -871,6 +1109,15 @@
             fsens   (i,j) = fsens   (i,j) * ar
             flat    (i,j) = flat    (i,j) * ar
             fswabs  (i,j) = fswabs  (i,j) * ar
+#ifdef AEROFRC
+            fswabs_noaero(i,j) = fswabs_noaero(i,j) * ar
+#endif
+#ifdef CCSM3FRC
+            fswabs_ccsm3(i,j) = fswabs_ccsm3(i,j) * ar
+#endif
+#ifdef PONDFRC
+            fswabs_nopond(i,j) = fswabs_nopond(i,j) * ar
+#endif
             flwout  (i,j) = flwout  (i,j) * ar
             evap    (i,j) = evap    (i,j) * ar
             Tref    (i,j) = Tref    (i,j) * ar
@@ -890,6 +1137,15 @@
             fsens   (i,j) = c0
             flat    (i,j) = c0
             fswabs  (i,j) = c0
+#ifdef AEROFRC
+            fswabs_noaero(i,j) = c0
+#endif
+#ifdef CCSM3FRC
+            fswabs_ccsm3(i,j) = c0
+#endif
+#ifdef PONDFRC
+            fswabs_nopond(i,j) = c0
+#endif
             flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0

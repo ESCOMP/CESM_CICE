@@ -1,4 +1,28 @@
 ===============================================================
+cice4_0_20100406
+Originator: dbailey
+Date: Tue Apr 6 2010
+Version: 4.0
+One-line Summary: Add forcing diagnostics.
+CCSM Version compatible with: ccsm4_0_beta48+
+Changes made:
+
+These changes add forcing diagnostics for radiative calculations.
+They are triggered using CPP flags: AEROFRC, CCSM3FRC, and PONDFRC.
+The changes are bfb regardless of whether these forcing calculations
+are turned on or off. Also, the default Makefile is now in the
+$CASETOOLS directory.
+
+M      bld/cice.cpl7.template
+M      src/source/ice_shortwave.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_history_fields.F90
+M      src/source/ice_history.F90
+M      src/drivers/cpl_share/CICE_RunMod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20100402
 Originator: dbailey
 Date: Fri Apr 2 2010
