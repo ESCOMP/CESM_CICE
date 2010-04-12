@@ -113,6 +113,7 @@
            f_fswint_noaero = 'mxxxx', &
            f_fswthru_noaero= 'mxxxx', &
            f_alvdr_noaero  = 'mxxxx', f_alidr_noaero     = 'mxxxx', &
+           f_alvdf_noaero  = 'mxxxx', f_alidf_noaero     = 'mxxxx', &
            f_albice_noaero = 'mxxxx', f_albsno_noaero    = 'mxxxx', &
            f_albpnd_noaero = 'mxxxx',                               &
 #endif
@@ -123,6 +124,7 @@
            f_fswint_ccsm3 = 'mxxxx', &
            f_fswthru_ccsm3= 'mxxxx', &
            f_alvdr_ccsm3  = 'mxxxx', f_alidr_ccsm3     = 'mxxxx', &
+           f_alvdf_ccsm3  = 'mxxxx', f_alidf_ccsm3     = 'mxxxx', &
            f_albice_ccsm3 = 'mxxxx', f_albsno_ccsm3    = 'mxxxx', &
 #endif
 #ifdef PONDFRC
@@ -132,11 +134,13 @@
            f_fswint_nopond = 'mxxxx', &
            f_fswthru_nopond= 'mxxxx', &
            f_alvdr_nopond  = 'mxxxx', f_alidr_nopond     = 'mxxxx', &
+           f_alvdf_nopond  = 'mxxxx', f_alidf_nopond     = 'mxxxx', &
            f_albice_nopond = 'mxxxx', f_albsno_nopond    = 'mxxxx', &
            f_albpnd_nopond = 'mxxxx',                               &
 #endif
            f_fswabs    = 'mxxxx', f_fswabs_ai  = 'mxxxx', &
            f_alvdr     = 'mxxxx', f_alidr      = 'mxxxx', &
+           f_alvdf     = 'mxxxx', f_alidf      = 'mxxxx', &
            f_albice    = 'mxxxx', f_albsno     = 'mxxxx', &
            f_albpnd    = 'mxxxx', f_coszen     = 'mxxxx', &
            f_flat      = 'mxxxx', f_flat_ai    = 'mxxxx', &
@@ -210,6 +214,7 @@
            f_fswfac                , &
            f_fswabs,    f_fswabs_ai, &
            f_alvdr,     f_alidr    , &
+           f_alvdf,     f_alidf    , &
            f_albice,    f_albsno   , &
            f_albpnd,    f_coszen   , &
            f_flat,      f_flat_ai  , &
@@ -435,6 +440,8 @@
       call broadcast_scalar (f_fswthru_noaero, master_task)
       call broadcast_scalar (f_alvdr_noaero, master_task)
       call broadcast_scalar (f_alidr_noaero, master_task)
+      call broadcast_scalar (f_alvdf_noaero, master_task)
+      call broadcast_scalar (f_alidf_noaero, master_task)
       call broadcast_scalar (f_albice_noaero, master_task)
       call broadcast_scalar (f_albsno_noaero, master_task)
       call broadcast_scalar (f_albpnd_noaero, master_task)
@@ -447,6 +454,8 @@
       call broadcast_scalar (f_fswthru_ccsm3, master_task)
       call broadcast_scalar (f_alvdr_ccsm3, master_task)
       call broadcast_scalar (f_alidr_ccsm3, master_task)
+      call broadcast_scalar (f_alvdf_ccsm3, master_task)
+      call broadcast_scalar (f_alidf_ccsm3, master_task)
       call broadcast_scalar (f_albice_ccsm3, master_task)
       call broadcast_scalar (f_albsno_ccsm3, master_task)
 #endif
@@ -458,12 +467,16 @@
       call broadcast_scalar (f_fswthru_nopond, master_task)
       call broadcast_scalar (f_alvdr_nopond, master_task)
       call broadcast_scalar (f_alidr_nopond, master_task)
+      call broadcast_scalar (f_alvdf_nopond, master_task)
+      call broadcast_scalar (f_alidf_nopond, master_task)
       call broadcast_scalar (f_albice_nopond, master_task)
       call broadcast_scalar (f_albsno_nopond, master_task)
       call broadcast_scalar (f_albpnd_nopond, master_task)
 #endif
       call broadcast_scalar (f_alvdr, master_task)
       call broadcast_scalar (f_alidr, master_task)
+      call broadcast_scalar (f_alvdf, master_task)
+      call broadcast_scalar (f_alidf, master_task)
       call broadcast_scalar (f_albice, master_task)
       call broadcast_scalar (f_albsno, master_task)
       call broadcast_scalar (f_albpnd, master_task)
@@ -773,6 +786,20 @@
              "none", c100, c0,                                   &
              ns1, f_alidr_noaero)
       
+      if (f_alvdf_noaero(1:1) /= 'x') &
+         call define_hist_field(n_alvdf_noaero,"alvdf_noaero",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic visible diffuse albedo",                &
+             "none", c100, c0,                                   &
+             ns1, f_alvdf_noaero)
+      
+      if (f_alidf_noaero(1:1) /= 'x') &
+         call define_hist_field(n_alidf_noaero,"alidf_noaero",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic infrared diffuse albedo",               &
+             "none", c100, c0,                                   &
+             ns1, f_alidf_noaero)
+      
       if (f_albice_noaero(1:1) /= 'x') &
          call define_hist_field(n_albice_noaero,"albice_noaero",   &
              "%",tstr, tcstr,                                      &
@@ -844,6 +871,20 @@
              "none", c100, c0,                                   &
              ns1, f_alidr_ccsm3)
       
+      if (f_alvdf_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_alvdf_ccsm3,"alvdf_ccsm3",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic visible diffuse albedo",                &
+             "none", c100, c0,                                   &
+             ns1, f_alvdf_ccsm3)
+      
+      if (f_alidf_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_alidf_ccsm3,"alidf_ccsm3",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic infrared diffuse albedo",               &
+             "none", c100, c0,                                   &
+             ns1, f_alidf_ccsm3)
+      
       if (f_albice_ccsm3(1:1) /= 'x') &
          call define_hist_field(n_albice_ccsm3,"albice_ccsm3",   &
              "%",tstr, tcstr,                                      &
@@ -908,6 +949,20 @@
              "none", c100, c0,                                   &
              ns1, f_alidr_nopond)
       
+      if (f_alvdf_nopond(1:1) /= 'x') &
+         call define_hist_field(n_alvdf_nopond,"alvdf_nopond",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic visible diffuse albedo",                &
+             "none", c100, c0,                                   &
+             ns1, f_alvdf_nopond)
+      
+      if (f_alidf_nopond(1:1) /= 'x') &
+         call define_hist_field(n_alidf_nopond,"alidf_nopond",   &
+             "%",tstr, tcstr,                                    &
+             "diagnostic infrared diffuse albedo",               &
+             "none", c100, c0,                                   &
+             ns1, f_alidf_nopond)
+      
       if (f_albice_nopond(1:1) /= 'x') &
          call define_hist_field(n_albice_nopond,"albice_nopond",   &
              "%",tstr, tcstr,                                      &
@@ -940,6 +995,18 @@
              "near IR direct albedo",                            &
              "none", c100, c0,                                   &
              ns1, f_alidr)
+      
+      if (f_alvdf(1:1) /= 'x') &
+         call define_hist_field(n_alvdf,"alvdf","%",tstr, tcstr, &
+             "visible diffuse albedo",                           &
+             "none", c100, c0,                                   &
+             ns1, f_alvdf)
+      
+      if (f_alidf(1:1) /= 'x') &
+         call define_hist_field(n_alidf,"alidf","%",tstr, tcstr, &
+             "near IR diffuse albedo",                           &
+             "none", c100, c0,                                   &
+             ns1, f_alidf)
       
       if (f_albice(1:1) /= 'x') &
          call define_hist_field(n_albice,"albice","%",tstr, tcstr, &
@@ -1745,6 +1812,12 @@
          if (f_alidr_noaero(1:1) /= 'x') &
             call accum_hist_field(n_alidr_noaero,iblk, &
                                     alidr_noaero(:,:,iblk))
+         if (f_alvdf_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_alvdf_noaero,iblk, &
+                                    alvdf_noaero(:,:,iblk))
+         if (f_alidf_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_alidf_noaero,iblk, &
+                                    alidf_noaero(:,:,iblk))
          if (f_albice_noaero(1:1) /= 'x') &
             call accum_hist_field(n_albice_noaero,iblk, &
                                     albice_noaero(:,:,iblk))
@@ -1777,6 +1850,12 @@
          if (f_alidr_ccsm3(1:1) /= 'x') &
             call accum_hist_field(n_alidr_ccsm3,iblk, &
                                     alidr_ccsm3(:,:,iblk))
+         if (f_alvdf_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_alvdf_ccsm3,iblk, &
+                                    alvdf_ccsm3(:,:,iblk))
+         if (f_alidf_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_alidf_ccsm3,iblk, &
+                                    alidf_ccsm3(:,:,iblk))
          if (f_albice_ccsm3(1:1) /= 'x') &
             call accum_hist_field(n_albice_ccsm3,iblk, &
                                     albice_ccsm3(:,:,iblk))
@@ -1806,6 +1885,12 @@
          if (f_alidr_nopond(1:1) /= 'x') &
             call accum_hist_field(n_alidr_nopond,iblk, &
                                     alidr_nopond(:,:,iblk))
+         if (f_alvdf_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_alvdf_nopond,iblk, &
+                                    alvdf_nopond(:,:,iblk))
+         if (f_alidf_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_alidf_nopond,iblk, &
+                                    alidf_nopond(:,:,iblk))
          if (f_albice_nopond(1:1) /= 'x') &
             call accum_hist_field(n_albice_nopond,iblk, &
                                     albice_nopond(:,:,iblk))
@@ -1820,6 +1905,10 @@
             call accum_hist_field(n_alvdr,  iblk, alvdr(:,:,iblk)*workb(:,:))
          if (f_alidr(1:1) /= 'x') &
             call accum_hist_field(n_alidr,  iblk, alidr(:,:,iblk)*workb(:,:))
+         if (f_alvdf(1:1) /= 'x') &
+            call accum_hist_field(n_alvdf,  iblk, alvdf(:,:,iblk)*workb(:,:))
+         if (f_alidf(1:1) /= 'x') &
+            call accum_hist_field(n_alidf,  iblk, alidf(:,:,iblk)*workb(:,:))
 
          if (f_albice (1:1) /= 'x') &
              call accum_hist_field(n_albice, iblk, albice(:,:,iblk))

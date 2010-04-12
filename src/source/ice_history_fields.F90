@@ -143,6 +143,7 @@
            n_fswint_noaero  , &
            n_fswthru_noaero  , &
            n_alvdr_noaero,   n_alidr_noaero      , &
+           n_alvdf_noaero,   n_alidf_noaero      , &
            n_albice_noaero,  n_albsno_noaero     , &
            n_albpnd_noaero,                        &
 #endif
@@ -153,6 +154,7 @@
            n_fswint_ccsm3  , &
            n_fswthru_ccsm3  , &
            n_alvdr_ccsm3,   n_alidr_ccsm3      , &
+           n_alvdf_ccsm3,   n_alidf_ccsm3      , &
            n_albice_ccsm3,  n_albsno_ccsm3     , &
 #endif
 #ifdef PONDFRC
@@ -162,11 +164,13 @@
            n_fswint_nopond  , &
            n_fswthru_nopond  , &
            n_alvdr_nopond,   n_alidr_nopond      , &
+           n_alvdf_nopond,   n_alidf_nopond      , &
            n_albice_nopond,  n_albsno_nopond     , &
            n_albpnd_nopond,                        &
 #endif
            n_fswabs     , n_fswabs_ai  , &
            n_alvdr      , n_alidr      , &
+           n_alvdf      , n_alidf      , &
            n_albice     , n_albsno     , &
            n_albpnd     , n_coszen     , &
            n_flat       , n_flat_ai    , &

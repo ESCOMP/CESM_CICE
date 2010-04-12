@@ -154,7 +154,7 @@
          fswthrun_noaero, & ! SW through ice to ocean (diag)     (W/m^2)
          fswintn_noaero , & ! SW absorbed in ice interior, below surface (W m-2)
 #endif
-#ifdef AEROFRC
+#ifdef CCSM3FRC
          fswabsn_ccsm3 , & ! SW absorbed in ice/snow (diag) (W m-2)
          fswsfcn_ccsm3 , & ! SW absorbed at ice/snow surface (diag) (W m-2)
          fswthrun_ccsm3, & ! SW through ice to ocean (diag)     (W/m^2)
@@ -247,10 +247,6 @@
       do iblk=1,nblocks
       do j = 1, ny_block
       do i = 1, nx_block
-         alvdf(i,j,iblk) = c0
-         alidf(i,j,iblk) = c0
-         alvdr(i,j,iblk) = c0
-         alidr(i,j,iblk) = c0
          alvdr_gbm(i,j,iblk) = c0
          alidr_gbm(i,j,iblk) = c0
          alvdf_gbm(i,j,iblk) = c0
@@ -1298,6 +1294,10 @@
             endif
 
 #ifdef AEROFRC
+            if (tr_aero) then
+
+            tr_aero = .false.
+
             call shortwave_dEdd(nx_block,        ny_block,            &
                               icells,                                 &
                               indxi,             indxj,               &
@@ -1322,6 +1322,13 @@
                               albsnon_noaero(:,:,n,iblk),             &
                               albpndn_noaero(:,:,n,iblk))
 
+            fswabsn_noaero(:,:,n,iblk) = fswsfcn_noaero(:,:,n,iblk) &
+                                       + fswintn_noaero(:,:,n,iblk) &
+                                       + fswthrun_noaero(:,:,n,iblk)
+
+            tr_aero = .true.
+
+            endif
 #endif
 #ifdef CCSM3FRC
             call shortwave_ccsm3(nx_block,     ny_block,              &
@@ -1344,6 +1351,11 @@
                               albsnon_ccsm3(:,:,n,iblk))
 #endif
 #ifdef PONDFRC
+            if (tr_pond) then
+
+            fpn(:,:) = c0
+            hpn(:,:) = c0
+
             call shortwave_dEdd(nx_block,        ny_block,            &
                               icells,                                 &
                               indxi,             indxj,               &
@@ -1367,6 +1379,15 @@
                               albicen_nopond(:,:,n,iblk),             &
                               albsnon_nopond(:,:,n,iblk),             &
                               albpndn_nopond(:,:,n,iblk))
+
+            fswabsn_nopond(:,:,n,iblk) = fswsfcn_nopond(:,:,n,iblk) &
+                                       + fswintn_nopond(:,:,n,iblk) &
+                                       + fswthrun_nopond(:,:,n,iblk)
+
+            fpn(:,:) = apondn(:,:,n,iblk)
+            hpn(:,:) = hpondn(:,:,n,iblk)
+
+            endif
 #endif
 
             call shortwave_dEdd(nx_block,        ny_block,            &
