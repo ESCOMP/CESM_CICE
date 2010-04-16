@@ -137,36 +137,33 @@
            n_fswint_ai , &
 #endif
 #ifdef AEROFRC
-           n_fswabs_noaero   , &
-           n_fswup_noaero   , &
-           n_fswsfc_noaero  , &
-           n_fswint_noaero  , &
-           n_fswthru_noaero  , &
-           n_alvdr_noaero,   n_alidr_noaero      , &
-           n_alvdf_noaero,   n_alidf_noaero      , &
-           n_albice_noaero,  n_albsno_noaero     , &
-           n_albpnd_noaero,                        &
+           n_dfswabs_noaero   , &
+           n_dfswsfc_noaero  , &
+           n_dfswint_noaero  , &
+           n_dfswthru_noaero  , &
+           n_dalvdr_noaero,   n_dalidr_noaero      , &
+           n_dalvdf_noaero,   n_dalidf_noaero      , &
+           n_dalbice_noaero,  n_dalbsno_noaero     , &
+           n_dalbpnd_noaero,                        &
 #endif
 #ifdef CCSM3FRC
-           n_fswabs_ccsm3   , &
-           n_fswup_ccsm3   , &
-           n_fswsfc_ccsm3  , &
-           n_fswint_ccsm3  , &
-           n_fswthru_ccsm3  , &
-           n_alvdr_ccsm3,   n_alidr_ccsm3      , &
-           n_alvdf_ccsm3,   n_alidf_ccsm3      , &
-           n_albice_ccsm3,  n_albsno_ccsm3     , &
+           n_dfswabs_ccsm3   , &
+           n_dfswsfc_ccsm3  , &
+           n_dfswint_ccsm3  , &
+           n_dfswthru_ccsm3  , &
+           n_dalvdr_ccsm3,   n_dalidr_ccsm3      , &
+           n_dalvdf_ccsm3,   n_dalidf_ccsm3      , &
+           n_dalbice_ccsm3,  n_dalbsno_ccsm3     , &
 #endif
 #ifdef PONDFRC
-           n_fswabs_nopond   , &
-           n_fswup_nopond   , &
-           n_fswsfc_nopond  , &
-           n_fswint_nopond  , &
-           n_fswthru_nopond  , &
-           n_alvdr_nopond,   n_alidr_nopond      , &
-           n_alvdf_nopond,   n_alidf_nopond      , &
-           n_albice_nopond,  n_albsno_nopond     , &
-           n_albpnd_nopond,                        &
+           n_dfswabs_nopond   , &
+           n_dfswsfc_nopond  , &
+           n_dfswint_nopond  , &
+           n_dfswthru_nopond  , &
+           n_dalvdr_nopond,   n_dalidr_nopond      , &
+           n_dalvdf_nopond,   n_dalidf_nopond      , &
+           n_dalbice_nopond,  n_dalbsno_nopond     , &
+           n_dalbpnd_nopond,                        &
 #endif
            n_fswabs     , n_fswabs_ai  , &
            n_alvdr      , n_alidr      , &

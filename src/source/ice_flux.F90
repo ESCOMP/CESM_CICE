@@ -179,22 +179,22 @@
          alvdf   , & ! visible, diffuse  (fraction)
          alidf   , & ! near-ir, diffuse  (fraction)
 #ifdef AEROFRC
-         alvdr_noaero   , & ! visible, direct   (fraction) (diag)
-         alidr_noaero   , & ! near-ir, direct   (fraction) (diag)
-         alvdf_noaero   , & ! visible, diffuse  (fraction) (diag)
-         alidf_noaero   , & ! near-ir, diffuse  (fraction) (diag)
+         dalvdr_noaero   , & ! visible, direct   (fraction) (diag)
+         dalidr_noaero   , & ! near-ir, direct   (fraction) (diag)
+         dalvdf_noaero   , & ! visible, diffuse  (fraction) (diag)
+         dalidf_noaero   , & ! near-ir, diffuse  (fraction) (diag)
 #endif
 #ifdef CCSM3FRC
-         alvdr_ccsm3   , & ! visible, direct   (fraction) (diag)
-         alidr_ccsm3   , & ! near-ir, direct   (fraction) (diag)
-         alvdf_ccsm3   , & ! visible, diffuse  (fraction) (diag)
-         alidf_ccsm3   , & ! near-ir, diffuse  (fraction) (diag)
+         dalvdr_ccsm3   , & ! visible, direct   (fraction) (diag)
+         dalidr_ccsm3   , & ! near-ir, direct   (fraction) (diag)
+         dalvdf_ccsm3   , & ! visible, diffuse  (fraction) (diag)
+         dalidf_ccsm3   , & ! near-ir, diffuse  (fraction) (diag)
 #endif
 #ifdef PONDFRC
-         alvdr_nopond   , & ! visible, direct   (fraction) (diag)
-         alidr_nopond   , & ! near-ir, direct   (fraction) (diag)
-         alvdf_nopond   , & ! visible, diffuse  (fraction) (diag)
-         alidf_nopond   , & ! near-ir, diffuse  (fraction) (diag)
+         dalvdr_nopond   , & ! visible, direct   (fraction) (diag)
+         dalidr_nopond   , & ! near-ir, direct   (fraction) (diag)
+         dalvdf_nopond   , & ! visible, diffuse  (fraction) (diag)
+         dalidf_nopond   , & ! near-ir, diffuse  (fraction) (diag)
 #endif
          ! grid-box-mean versions
          alvdr_gbm, & ! visible, direct   (fraction)
@@ -203,18 +203,18 @@
          alidf_gbm, & ! near-ir, diffuse  (fraction)
          ! components for history
 #ifdef AEROFRC
-         albice_noaero   , & ! bare ice albedo (diag)
-         albsno_noaero   , & ! snow albedo (diag)
-         albpnd_noaero   , & ! melt pond albedo (diag)
+         dalbice_noaero   , & ! bare ice albedo (diag)
+         dalbsno_noaero   , & ! snow albedo (diag)
+         dalbpnd_noaero   , & ! melt pond albedo (diag)
 #endif
 #ifdef CCSM3FRC
-         albice_ccsm3   , & ! bare ice albedo (diag)
-         albsno_ccsm3   , & ! snow albedo (diag)
+         dalbice_ccsm3   , & ! bare ice albedo (diag)
+         dalbsno_ccsm3   , & ! snow albedo (diag)
 #endif
 #ifdef PONDFRC
-         albice_nopond   , & ! bare ice albedo (diag)
-         albsno_nopond   , & ! snow albedo (diag)
-         albpnd_nopond   , & ! melt pond albedo (diag)
+         dalbice_nopond   , & ! bare ice albedo (diag)
+         dalbsno_nopond   , & ! snow albedo (diag)
+         dalbpnd_nopond   , & ! melt pond albedo (diag)
 #endif
          albice   , & ! bare ice albedo
          albsno   , & ! snow albedo
@@ -236,22 +236,22 @@
          fswint  , & ! shortwave absorbed internally (W/m^2)
 #endif
 #ifdef AEROFRC
-         fswabs_noaero  , & ! shortwave absorbed (diag) (W/m^2)
-         fswsfc_noaero  , & ! shortwave absorbed at the surface (diag) (W/m^2)
-         fswint_noaero  , & ! shortwave absorbed internally (diag) (W/m^2)
-         fswthru_noaero , & ! shortwave penetrating to ocean (diag) (W/m^2)
+         dfswabs_noaero  , & ! shortwave absorbed (diag) (W/m^2)
+         dfswsfc_noaero  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         dfswint_noaero  , & ! shortwave absorbed internally (diag) (W/m^2)
+         dfswthru_noaero , & ! shortwave penetrating to ocean (diag) (W/m^2)
 #endif
 #ifdef CCSM3FRC
-         fswabs_ccsm3  , & ! shortwave absorbed (diag) (W/m^2)
-         fswsfc_ccsm3  , & ! shortwave absorbed at the surface (diag) (W/m^2)
-         fswint_ccsm3  , & ! shortwave absorbed internally (diag) (W/m^2)
-         fswthru_ccsm3 , & ! shortwave penetrating to ocean (diag) (W/m^2)
+         dfswabs_ccsm3  , & ! shortwave absorbed (diag) (W/m^2)
+         dfswsfc_ccsm3  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         dfswint_ccsm3  , & ! shortwave absorbed internally (diag) (W/m^2)
+         dfswthru_ccsm3 , & ! shortwave penetrating to ocean (diag) (W/m^2)
 #endif
 #ifdef PONDFRC
-         fswabs_nopond  , & ! shortwave absorbed (diag) (W/m^2)
-         fswsfc_nopond  , & ! shortwave absorbed at the surface (diag) (W/m^2)
-         fswint_nopond  , & ! shortwave absorbed internally (diag) (W/m^2)
-         fswthru_nopond , & ! shortwave penetrating to ocean (diag) (W/m^2)
+         dfswabs_nopond  , & ! shortwave absorbed (diag) (W/m^2)
+         dfswsfc_nopond  , & ! shortwave absorbed at the surface (diag) (W/m^2)
+         dfswint_nopond  , & ! shortwave absorbed internally (diag) (W/m^2)
+         dfswthru_nopond , & ! shortwave penetrating to ocean (diag) (W/m^2)
 #endif
          fswthru     ! shortwave penetrating to ocean (W/m^2)
 
@@ -474,34 +474,34 @@
       fswint  (:,:,:) = c0
 #endif
 #ifdef AEROFRC
-      fswabs_noaero  (:,:,:) = c0
-      fswsfc_noaero  (:,:,:) = c0
-      fswint_noaero  (:,:,:) = c0
-      fswthru_noaero  (:,:,:) = c0
-      alvdr_noaero   (:,:,:) = c0
-      alidr_noaero   (:,:,:) = c0
-      alvdf_noaero   (:,:,:) = c0
-      alidf_noaero   (:,:,:) = c0
+      dfswabs_noaero  (:,:,:) = c0
+      dfswsfc_noaero  (:,:,:) = c0
+      dfswint_noaero  (:,:,:) = c0
+      dfswthru_noaero  (:,:,:) = c0
+      dalvdr_noaero   (:,:,:) = c0
+      dalidr_noaero   (:,:,:) = c0
+      dalvdf_noaero   (:,:,:) = c0
+      dalidf_noaero   (:,:,:) = c0
 #endif
 #ifdef CCSM3FRC
-      fswabs_ccsm3  (:,:,:) = c0
-      fswsfc_ccsm3  (:,:,:) = c0
-      fswint_ccsm3  (:,:,:) = c0
-      fswthru_ccsm3  (:,:,:) = c0
-      alvdr_ccsm3   (:,:,:) = c0
-      alidr_ccsm3   (:,:,:) = c0
-      alvdf_ccsm3   (:,:,:) = c0
-      alidf_ccsm3   (:,:,:) = c0
+      dfswabs_ccsm3  (:,:,:) = c0
+      dfswsfc_ccsm3  (:,:,:) = c0
+      dfswint_ccsm3  (:,:,:) = c0
+      dfswthru_ccsm3  (:,:,:) = c0
+      dalvdr_ccsm3   (:,:,:) = c0
+      dalidr_ccsm3   (:,:,:) = c0
+      dalvdf_ccsm3   (:,:,:) = c0
+      dalidf_ccsm3   (:,:,:) = c0
 #endif
 #ifdef PONDFRC
-      fswabs_nopond  (:,:,:) = c0
-      fswsfc_nopond  (:,:,:) = c0
-      fswint_nopond  (:,:,:) = c0
-      fswthru_nopond  (:,:,:) = c0
-      alvdr_nopond   (:,:,:) = c0
-      alidr_nopond   (:,:,:) = c0
-      alvdf_nopond   (:,:,:) = c0
-      alidf_nopond   (:,:,:) = c0
+      dfswabs_nopond  (:,:,:) = c0
+      dfswsfc_nopond  (:,:,:) = c0
+      dfswint_nopond  (:,:,:) = c0
+      dfswthru_nopond  (:,:,:) = c0
+      dalvdr_nopond   (:,:,:) = c0
+      dalidr_nopond   (:,:,:) = c0
+      dalvdf_nopond   (:,:,:) = c0
+      dalidf_nopond   (:,:,:) = c0
 #endif
 
       !-----------------------------------------------------------------
@@ -566,22 +566,22 @@
       fswint  (:,:,:) = c0
 #endif
 #ifdef AEROFRC
-      fswabs_noaero  (:,:,:) = c0
-      fswsfc_noaero  (:,:,:) = c0
-      fswint_noaero  (:,:,:) = c0
-      fswthru_noaero  (:,:,:) = c0
+      dfswabs_noaero  (:,:,:) = c0
+      dfswsfc_noaero  (:,:,:) = c0
+      dfswint_noaero  (:,:,:) = c0
+      dfswthru_noaero  (:,:,:) = c0
 #endif
 #ifdef CCSM3FRC
-      fswabs_ccsm3  (:,:,:) = c0
-      fswsfc_ccsm3  (:,:,:) = c0
-      fswint_ccsm3  (:,:,:) = c0
-      fswthru_ccsm3  (:,:,:) = c0
+      dfswabs_ccsm3  (:,:,:) = c0
+      dfswsfc_ccsm3  (:,:,:) = c0
+      dfswint_ccsm3  (:,:,:) = c0
+      dfswthru_ccsm3  (:,:,:) = c0
 #endif
 #ifdef PONDFRC
-      fswabs_nopond  (:,:,:) = c0
-      fswsfc_nopond  (:,:,:) = c0
-      fswint_nopond  (:,:,:) = c0
-      fswthru_nopond  (:,:,:) = c0
+      dfswabs_nopond  (:,:,:) = c0
+      dfswsfc_nopond  (:,:,:) = c0
+      dfswint_nopond  (:,:,:) = c0
+      dfswthru_nopond  (:,:,:) = c0
 #endif
       flwout  (:,:,:) = c0
       evap    (:,:,:) = c0
@@ -681,18 +681,18 @@
       albsno (:,:,:) = c0
       albpnd (:,:,:) = c0
 #ifdef AEROFRC
-      albice_noaero (:,:,:) = c0
-      albsno_noaero (:,:,:) = c0
-      albpnd_noaero (:,:,:) = c0
+      dalbice_noaero (:,:,:) = c0
+      dalbsno_noaero (:,:,:) = c0
+      dalbpnd_noaero (:,:,:) = c0
 #endif
 #ifdef CCSM3FRC
-      albice_ccsm3 (:,:,:) = c0
-      albsno_ccsm3 (:,:,:) = c0
+      dalbice_ccsm3 (:,:,:) = c0
+      dalbsno_ccsm3 (:,:,:) = c0
 #endif
 #ifdef PONDFRC
-      albice_nopond (:,:,:) = c0
-      albsno_nopond (:,:,:) = c0
-      albpnd_nopond (:,:,:) = c0
+      dalbice_nopond (:,:,:) = c0
+      dalbsno_nopond (:,:,:) = c0
+      dalbpnd_nopond (:,:,:) = c0
 #endif
      
       end subroutine init_history_therm
@@ -764,16 +764,16 @@
                                fswsfcn,  fswintn,    &
 #endif
 #ifdef AEROFRC
-                               fswabsn_noaero,  fswsfcn_noaero,    &
-                               fswintn_noaero,  fswthrun_noaero,    &
+                               dfswabsn_noaero,  dfswsfcn_noaero,    &
+                               dfswintn_noaero,  dfswthrun_noaero,    &
 #endif
 #ifdef CCSM3FRC
-                               fswabsn_ccsm3,  fswsfcn_ccsm3,    &
-                               fswintn_ccsm3,  fswthrun_ccsm3,    &
+                               dfswabsn_ccsm3,  dfswsfcn_ccsm3,    &
+                               dfswintn_ccsm3,  dfswthrun_ccsm3,    &
 #endif
 #ifdef PONDFRC
-                               fswabsn_nopond,  fswsfcn_nopond,    &
-                               fswintn_nopond,  fswthrun_nopond,    &
+                               dfswabsn_nopond,  dfswsfcn_nopond,    &
+                               dfswintn_nopond,  dfswthrun_nopond,    &
 #endif
                                evapn,                &
                                Trefn,    Qrefn,      &
@@ -787,16 +787,16 @@
                                fswsfc,   fswint,     &
 #endif
 #ifdef AEROFRC
-                               fswabs_noaero, fswsfc_noaero, &
-                               fswint_noaero, fswthru_noaero, &
+                               dfswabs_noaero, dfswsfc_noaero, &
+                               dfswint_noaero, dfswthru_noaero, &
 #endif
 #ifdef CCSM3FRC
-                               fswabs_ccsm3, fswsfc_ccsm3, &
-                               fswint_ccsm3, fswthru_ccsm3, &
+                               dfswabs_ccsm3, dfswsfc_ccsm3, &
+                               dfswint_ccsm3, dfswthru_ccsm3, &
 #endif
 #ifdef PONDFRC
-                               fswabs_nopond, fswsfc_nopond, &
-                               fswint_nopond, fswthru_nopond, &
+                               dfswabs_nopond, dfswsfc_nopond, &
+                               dfswint_nopond, dfswthru_nopond, &
 #endif
                                evap,                 & 
                                Tref,     Qref,       &
@@ -845,22 +845,22 @@
           fswintn , & ! shortwave internal absorbed heat flx  (W/m**2)
 #endif
 #ifdef AEROFRC
-          fswabsn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
-          fswsfcn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
-          fswintn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
-          fswthrun_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswabsn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswsfcn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswintn_noaero, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswthrun_noaero, & ! shortwave absorbed heat flx     (W/m**2)
 #endif
 #ifdef CCSM3FRC
-          fswabsn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
-          fswsfcn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
-          fswintn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
-          fswthrun_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswabsn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswsfcn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswintn_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswthrun_ccsm3, & ! shortwave absorbed heat flx     (W/m**2)
 #endif
 #ifdef PONDFRC
-          fswabsn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
-          fswsfcn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
-          fswintn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
-          fswthrun_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswabsn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswsfcn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswintn_nopond, & ! shortwave absorbed heat flx     (W/m**2)
+          dfswthrun_nopond, & ! shortwave absorbed heat flx     (W/m**2)
 #endif
           flwoutn , & ! upwd lw emitted heat flx        (W/m**2)
           evapn   , & ! evaporation                     (kg/m2/s)
@@ -891,22 +891,22 @@
           fswint  , & ! shortwave internal absorbed heat flx        (W/m**2)
 #endif
 #ifdef AEROFRC
-          fswabs_noaero  , & ! shortwave absorbed heat flx          (W/m**2)
-          fswsfc_noaero  , & ! shortwave surface absorbed heat flx  (W/m**2)
-          fswint_noaero  , & ! shortwave internal absorbed heat flx (W/m**2)
-          fswthru_noaero  , & ! shortwave penetrating heat flux     (W/m**2)
+          dfswabs_noaero  , & ! shortwave absorbed heat flx          (W/m**2)
+          dfswsfc_noaero  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          dfswint_noaero  , & ! shortwave internal absorbed heat flx (W/m**2)
+          dfswthru_noaero  , & ! shortwave penetrating heat flux     (W/m**2)
 #endif
 #ifdef CCSM3FRC
-          fswabs_ccsm3  , & ! shortwave absorbed heat flx          (W/m**2)
-          fswsfc_ccsm3  , & ! shortwave surface absorbed heat flx  (W/m**2)
-          fswint_ccsm3  , & ! shortwave internal absorbed heat flx (W/m**2)
-          fswthru_ccsm3  , & ! shortwave penetrating heat flux     (W/m**2)
+          dfswabs_ccsm3  , & ! shortwave absorbed heat flx          (W/m**2)
+          dfswsfc_ccsm3  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          dfswint_ccsm3  , & ! shortwave internal absorbed heat flx (W/m**2)
+          dfswthru_ccsm3  , & ! shortwave penetrating heat flux     (W/m**2)
 #endif
 #ifdef PONDFRC
-          fswabs_nopond  , & ! shortwave absorbed heat flx          (W/m**2)
-          fswsfc_nopond  , & ! shortwave surface absorbed heat flx  (W/m**2)
-          fswint_nopond  , & ! shortwave internal absorbed heat flx (W/m**2)
-          fswthru_nopond  , & ! shortwave penetrating heat flux     (W/m**2)
+          dfswabs_nopond  , & ! shortwave absorbed heat flx          (W/m**2)
+          dfswsfc_nopond  , & ! shortwave surface absorbed heat flx  (W/m**2)
+          dfswint_nopond  , & ! shortwave internal absorbed heat flx (W/m**2)
+          dfswthru_nopond  , & ! shortwave penetrating heat flux     (W/m**2)
 #endif
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
@@ -953,22 +953,22 @@
          fswsfc(i,j)=fswsfc(i,j) + fswsfcn(i,j)*aicen(i,j)
 #endif
 #ifdef AEROFRC
-         fswsfc_noaero(i,j)=fswsfc_noaero(i,j) + fswsfcn_noaero(i,j)*aicen(i,j)
-         fswabs_noaero(i,j)=fswabs_noaero(i,j) + fswabsn_noaero(i,j)*aicen(i,j)
-         fswint_noaero(i,j)=fswint_noaero(i,j) + fswintn_noaero(i,j)*aicen(i,j)
-         fswthru_noaero(i,j)=fswthru_noaero(i,j)+fswthrun_noaero(i,j)*aicen(i,j)
+         dfswsfc_noaero(i,j)=dfswsfc_noaero(i,j) + dfswsfcn_noaero(i,j)*aicen(i,j)
+         dfswabs_noaero(i,j)=dfswabs_noaero(i,j) + dfswabsn_noaero(i,j)*aicen(i,j)
+         dfswint_noaero(i,j)=dfswint_noaero(i,j) + dfswintn_noaero(i,j)*aicen(i,j)
+         dfswthru_noaero(i,j)=dfswthru_noaero(i,j)+dfswthrun_noaero(i,j)*aicen(i,j)
 #endif
 #ifdef CCSM3FRC
-         fswsfc_ccsm3(i,j)=fswsfc_ccsm3(i,j) + fswsfcn_ccsm3(i,j)*aicen(i,j)
-         fswabs_ccsm3(i,j)=fswabs_ccsm3(i,j) + fswabsn_ccsm3(i,j)*aicen(i,j)
-         fswint_ccsm3(i,j)=fswint_ccsm3(i,j) + fswintn_ccsm3(i,j)*aicen(i,j)
-         fswthru_ccsm3(i,j)=fswthru_ccsm3(i,j)+fswthrun_ccsm3(i,j)*aicen(i,j)
+         dfswsfc_ccsm3(i,j)=dfswsfc_ccsm3(i,j) + dfswsfcn_ccsm3(i,j)*aicen(i,j)
+         dfswabs_ccsm3(i,j)=dfswabs_ccsm3(i,j) + dfswabsn_ccsm3(i,j)*aicen(i,j)
+         dfswint_ccsm3(i,j)=dfswint_ccsm3(i,j) + dfswintn_ccsm3(i,j)*aicen(i,j)
+         dfswthru_ccsm3(i,j)=dfswthru_ccsm3(i,j)+dfswthrun_ccsm3(i,j)*aicen(i,j)
 #endif
 #ifdef PONDFRC
-         fswsfc_nopond(i,j)=fswsfc_nopond(i,j) + fswsfcn_nopond(i,j)*aicen(i,j)
-         fswabs_nopond(i,j)=fswabs_nopond(i,j) + fswabsn_nopond(i,j)*aicen(i,j)
-         fswint_nopond(i,j)=fswint_nopond(i,j) + fswintn_nopond(i,j)*aicen(i,j)
-         fswthru_nopond(i,j)=fswthru_nopond(i,j)+fswthrun_nopond(i,j)*aicen(i,j)
+         dfswsfc_nopond(i,j)=dfswsfc_nopond(i,j) + dfswsfcn_nopond(i,j)*aicen(i,j)
+         dfswabs_nopond(i,j)=dfswabs_nopond(i,j) + dfswabsn_nopond(i,j)*aicen(i,j)
+         dfswint_nopond(i,j)=dfswint_nopond(i,j) + dfswintn_nopond(i,j)*aicen(i,j)
+         dfswthru_nopond(i,j)=dfswthru_nopond(i,j)+dfswthrun_nopond(i,j)*aicen(i,j)
 #endif
          flwout   (i,j)  = flwout  (i,j) &
              + (flwoutn(i,j) - (c1-emissivity)*flw(i,j))*aicen(i,j)
@@ -1016,15 +1016,6 @@
                                strairxT, strairyT, &
                                fsens,    flat,     &
                                fswabs,   flwout,   &
-#ifdef AEROFRC
-                               fswabs_noaero,      &
-#endif
-#ifdef CCSM3FRC
-                               fswabs_ccsm3,      &
-#endif
-#ifdef PONDFRC
-                               fswabs_nopond,      &
-#endif
                                evap,               &
                                Tref,     Qref,     &
                                fresh,    fsalt,    &
@@ -1063,15 +1054,6 @@
           fsens   , & ! sensible heat flx               (W/m**2)
           flat    , & ! latent   heat flx               (W/m**2)
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
-#ifdef AEROFRC
-          fswabs_noaero, & ! shortwave absorbed heat flx (diag) (W/m**2)
-#endif
-#ifdef CCSM3FRC
-          fswabs_ccsm3, & ! shortwave absorbed heat flx (diag) (W/m**2)
-#endif
-#ifdef PONDFRC
-          fswabs_nopond, & ! shortwave absorbed heat flx (diag) (W/m**2)
-#endif
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
           Tref    , & ! air tmp reference level         (K)
@@ -1109,15 +1091,6 @@
             fsens   (i,j) = fsens   (i,j) * ar
             flat    (i,j) = flat    (i,j) * ar
             fswabs  (i,j) = fswabs  (i,j) * ar
-#ifdef AEROFRC
-            fswabs_noaero(i,j) = fswabs_noaero(i,j) * ar
-#endif
-#ifdef CCSM3FRC
-            fswabs_ccsm3(i,j) = fswabs_ccsm3(i,j) * ar
-#endif
-#ifdef PONDFRC
-            fswabs_nopond(i,j) = fswabs_nopond(i,j) * ar
-#endif
             flwout  (i,j) = flwout  (i,j) * ar
             evap    (i,j) = evap    (i,j) * ar
             Tref    (i,j) = Tref    (i,j) * ar
@@ -1137,15 +1110,6 @@
             fsens   (i,j) = c0
             flat    (i,j) = c0
             fswabs  (i,j) = c0
-#ifdef AEROFRC
-            fswabs_noaero(i,j) = c0
-#endif
-#ifdef CCSM3FRC
-            fswabs_ccsm3(i,j) = c0
-#endif
-#ifdef PONDFRC
-            fswabs_nopond(i,j) = c0
-#endif
             flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0

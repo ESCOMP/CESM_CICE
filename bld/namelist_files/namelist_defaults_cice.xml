@@ -63,13 +63,12 @@
 <grid_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</grid_file> 
 <grid_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</grid_file> 
 
-<grid_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20010402.grid'</grid_file> 
-<grid_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20010402.grid'</grid_file> 
-<grid_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20010402.grid'</grid_file> 
-<grid_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20030806.grid'</grid_file> 
-<grid_file hgrid="gx3v7"     >'ice/cice/global_gx3v7_20030806.grid'</grid_file> 
-<grid_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.grid'</grid_file> 
-<grid_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.grid'</grid_file>
+<grid_file hgrid="gx1v6"     >'ocn/pop/gx1v6/grid/horiz_grid_20010402.ieeer8'</grid_file> 
+<grid_file hgrid="gx1v5"     >'ocn/pop/gx1v5/grid/horiz_grid_20010402.ieeer8'</grid_file> 
+<grid_file hgrid="gx3v5"     >'ocn/pop/gx3v5/grid/horiz_grid_20030806.ieeer8'</grid_file> 
+<grid_file hgrid="gx3v7"     >'ocn/pop/gx3v7/grid/horiz_grid_20030806.ieeer8'</grid_file> 
+<grid_file hgrid="tx0.1v2"   >'ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8'</grid_file> 
+<grid_file hgrid="tx1v1"     >'ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8'</grid_file>
 
 <kmt_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
 <kmt_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </kmt_file> 
@@ -84,13 +83,12 @@
 <kmt_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</kmt_file> 
 <kmt_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v5_080115.nc'</kmt_file> 
 
-<kmt_file hgrid="gx1v6"     >'ice/cice/global_gx1v6_20090204.kmt'</kmt_file> 
-<kmt_file hgrid="gx1v5"     >'ice/cice/global_gx1v5_20061229.kmt'</kmt_file> 
-<kmt_file hgrid="gx1v4"     >'ice/cice/global_gx1v4_20060831.kmt'</kmt_file> 
-<kmt_file hgrid="gx3v5"     >'ice/cice/global_gx3v5_20040323.kmt'</kmt_file> 
-<kmt_file hgrid="gx3v7"     >'ice/cice/global_gx3v7_20090828.kmt'</kmt_file> 
-<kmt_file hgrid="tx0.1v2"   >'ice/cice/global_tx0.1v2_20070901.kmt'</kmt_file> 
-<kmt_file hgrid="tx1v1"     >'ice/cice/global_tx1v1_20050510.kmt'</kmt_file>
+<kmt_file hgrid="gx1v6"     >'ocn/pop/gx1v6/grid/topography_20090204.ieeei4'</kmt_file> 
+<kmt_file hgrid="gx1v5"     >'ocn/pop/gx1v5/grid/topography_20061229.ieeei4'</kmt_file> 
+<kmt_file hgrid="gx3v5"     >'ocn/pop/gx3v5/grid/topography_20040323.ieeei4'</kmt_file> 
+<kmt_file hgrid="gx3v7"     >'ocn/pop/gx3v7/grid/topography_20100105.ieeei4'</kmt_file> 
+<kmt_file hgrid="tx0.1v2"   >'ocn/pop/tx0.1v2/grid/topography_200709.ieeei4'</kmt_file> 
+<kmt_file hgrid="tx1v1"     >'ocn/pop/tx1v1/grid/topography_20050510.ieeei4'</kmt_file>
 
 <kcatbound> 0 </kcatbound>
 
@@ -335,22 +333,16 @@
 <stream_mapwrite_aero    >'NOT_SET'   </stream_mapwrite_aero   >
 <stream_mapread_aero     >'NOT_SET'   </stream_mapread_aero    >
 
-<stream_domfilename_aero presaero_type='data_clim_1990'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_domfilename_aero>
-<stream_fldfilename_aero presaero_type='data_clim_1990'> 'ice/cice/aerosoldep_monthly_1990s_mean_1.9x2.5_c081001.nc'</stream_fldfilename_aero>
-<stream_year_first_aero  presaero_type='data_clim_1990'> 1  </stream_year_first_aero>
-<stream_year_last_aero   presaero_type='data_clim_1990'> 1  </stream_year_last_aero>
-<model_year_align_aero   presaero_type='data_clim_1990'> 1  </model_year_align_aero>
 
-
-<stream_domfilename_aero presaero_type='data_clim_1850'> 'ice/cice/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'</stream_domfilename_aero>
-<stream_fldfilename_aero presaero_type='data_clim_1850'> 'ice/cice/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'</stream_fldfilename_aero>
+<stream_domfilename_aero presaero_type='data_clim_1850'> 'atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'</stream_domfilename_aero>
+<stream_fldfilename_aero presaero_type='data_clim_1850'> 'atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'</stream_fldfilename_aero>
 <stream_year_first_aero  presaero_type='data_clim_1850'> 1  </stream_year_first_aero>
 <stream_year_last_aero   presaero_type='data_clim_1850'> 1  </stream_year_last_aero>
 <model_year_align_aero   presaero_type='data_clim_1850'> 1  </model_year_align_aero>
 
 
-<stream_domfilename_aero presaero_type='data_clim_2000'> 'ice/cice/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc'</stream_domfilename_aero>
-<stream_fldfilename_aero presaero_type='data_clim_2000'> 'ice/cice/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc'</stream_fldfilename_aero>
+<stream_domfilename_aero presaero_type='data_clim_2000'> 'atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc'</stream_domfilename_aero>
+<stream_fldfilename_aero presaero_type='data_clim_2000'> 'atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc'</stream_fldfilename_aero>
 <stream_year_first_aero  presaero_type='data_clim_2000'> 1  </stream_year_first_aero>
 <stream_year_last_aero   presaero_type='data_clim_2000'> 1  </stream_year_last_aero>
 <model_year_align_aero   presaero_type='data_clim_2000'> 1  </model_year_align_aero>

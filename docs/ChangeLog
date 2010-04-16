@@ -1,4 +1,29 @@
 ===============================================================
+cice4_0_20100416
+Originator: dbailey
+Date: Fri Apr 16 2010
+Version: 4.0
+One-line Summary: Redo forcing diagnostics and inputdata changes.
+CCSM Version compatible with: ccsm4_0_beta48+
+Changes made:
+
+The forcing diagnostics are reworked so they compute the change due to
+aerosols, ponds, or choice of radiation calculation is done right
+away instead of after being written to the history file. So the new
+variables on the history file represent differences instead of absolute
+values. Also, the namelist defaults file now points at POP paths
+for the grid and kmt files and CAM paths for the aerosol deposition
+files.
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/source/ice_shortwave.F90
+M      src/source/ice_step_mod.F90
+M      src/source/ice_flux.F90
+M      src/source/ice_history_fields.F90
+M      src/source/ice_history.F90
+M      src/drivers/cpl_share/CICE_RunMod.F90
+
+===============================================================
 cice4_0_20100412
 Originator: dbailey
 Date: Mon Apr 12 2010

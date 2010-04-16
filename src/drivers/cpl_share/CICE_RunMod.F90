@@ -467,22 +467,22 @@
                             fswsfcn(:,:,n,iblk),fswintn(:,:,n,iblk),  &
 #endif
 #ifdef AEROFRC
-                            fswabsn_noaero(:,:,n,iblk),               &
-                            fswsfcn_noaero(:,:,n,iblk),               &
-                            fswintn_noaero(:,:,n,iblk),               &
-                            fswthrun_noaero(:,:,n,iblk),              &
+                            dfswabsn_noaero(:,:,n,iblk),               &
+                            dfswsfcn_noaero(:,:,n,iblk),               &
+                            dfswintn_noaero(:,:,n,iblk),               &
+                            dfswthrun_noaero(:,:,n,iblk),              &
 #endif
 #ifdef CCSM3FRC
-                            fswabsn_ccsm3(:,:,n,iblk),               &
-                            fswsfcn_ccsm3(:,:,n,iblk),               &
-                            fswintn_ccsm3(:,:,n,iblk),               &
-                            fswthrun_ccsm3(:,:,n,iblk),              &
+                            dfswabsn_ccsm3(:,:,n,iblk),               &
+                            dfswsfcn_ccsm3(:,:,n,iblk),               &
+                            dfswintn_ccsm3(:,:,n,iblk),               &
+                            dfswthrun_ccsm3(:,:,n,iblk),              &
 #endif
 #ifdef PONDFRC
-                            fswabsn_nopond(:,:,n,iblk),               &
-                            fswsfcn_nopond(:,:,n,iblk),               &
-                            fswintn_nopond(:,:,n,iblk),               &
-                            fswthrun_nopond(:,:,n,iblk),              &
+                            dfswabsn_nopond(:,:,n,iblk),               &
+                            dfswsfcn_nopond(:,:,n,iblk),               &
+                            dfswintn_nopond(:,:,n,iblk),               &
+                            dfswthrun_nopond(:,:,n,iblk),              &
 #endif
                             evapn,                                    &
                             Trefn,              Qrefn,                &
@@ -496,16 +496,16 @@
                             fswsfc  (:,:,iblk), fswint    (:,:,iblk), &
 #endif
 #ifdef AEROFRC
-                            fswabs_noaero(:,:,iblk),fswsfc_noaero(:,:,iblk), &
-                            fswint_noaero(:,:,iblk),fswthru_noaero(:,:,iblk),&
+                            dfswabs_noaero(:,:,iblk),dfswsfc_noaero(:,:,iblk), &
+                            dfswint_noaero(:,:,iblk),dfswthru_noaero(:,:,iblk),&
 #endif
 #ifdef CCSM3FRC
-                            fswabs_ccsm3(:,:,iblk),fswsfc_ccsm3(:,:,iblk), &
-                            fswint_ccsm3(:,:,iblk),fswthru_ccsm3(:,:,iblk),&
+                            dfswabs_ccsm3(:,:,iblk),dfswsfc_ccsm3(:,:,iblk), &
+                            dfswint_ccsm3(:,:,iblk),dfswthru_ccsm3(:,:,iblk),&
 #endif
 #ifdef PONDFRC
-                            fswabs_nopond(:,:,iblk),fswsfc_nopond(:,:,iblk), &
-                            fswint_nopond(:,:,iblk),fswthru_nopond(:,:,iblk),&
+                            dfswabs_nopond(:,:,iblk),dfswsfc_nopond(:,:,iblk), &
+                            dfswint_nopond(:,:,iblk),dfswthru_nopond(:,:,iblk),&
 #endif
                             evap    (:,:,iblk),                       &
                             Tref    (:,:,iblk), Qref      (:,:,iblk), &
@@ -610,33 +610,33 @@
             albsno(i,j,iblk) = c0
             albpnd(i,j,iblk) = c0
 #ifdef AEROFRC
-            alvdf_noaero(i,j,iblk) = c0
-            alidf_noaero(i,j,iblk) = c0
-            alvdr_noaero(i,j,iblk) = c0
-            alidr_noaero(i,j,iblk) = c0
+            dalvdf_noaero(i,j,iblk) = c0
+            dalidf_noaero(i,j,iblk) = c0
+            dalvdr_noaero(i,j,iblk) = c0
+            dalidr_noaero(i,j,iblk) = c0
 
-            albice_noaero(i,j,iblk) = c0
-            albsno_noaero(i,j,iblk) = c0
-            albpnd_noaero(i,j,iblk) = c0
+            dalbice_noaero(i,j,iblk) = c0
+            dalbsno_noaero(i,j,iblk) = c0
+            dalbpnd_noaero(i,j,iblk) = c0
 #endif
 #ifdef CCSM3FRC
-            alvdf_ccsm3(i,j,iblk) = c0
-            alidf_ccsm3(i,j,iblk) = c0
-            alvdr_ccsm3(i,j,iblk) = c0
-            alidr_ccsm3(i,j,iblk) = c0
+            dalvdf_ccsm3(i,j,iblk) = c0
+            dalidf_ccsm3(i,j,iblk) = c0
+            dalvdr_ccsm3(i,j,iblk) = c0
+            dalidr_ccsm3(i,j,iblk) = c0
 
-            albice_ccsm3(i,j,iblk) = c0
-            albsno_ccsm3(i,j,iblk) = c0
+            dalbice_ccsm3(i,j,iblk) = c0
+            dalbsno_ccsm3(i,j,iblk) = c0
 #endif
 #ifdef PONDFRC
-            alvdf_nopond(i,j,iblk) = c0
-            alidf_nopond(i,j,iblk) = c0
-            alvdr_nopond(i,j,iblk) = c0
-            alidr_nopond(i,j,iblk) = c0
+            dalvdf_nopond(i,j,iblk) = c0
+            dalidf_nopond(i,j,iblk) = c0
+            dalvdr_nopond(i,j,iblk) = c0
+            dalidr_nopond(i,j,iblk) = c0
 
-            albice_nopond(i,j,iblk) = c0
-            albsno_nopond(i,j,iblk) = c0
-            albpnd_nopond(i,j,iblk) = c0
+            dalbice_nopond(i,j,iblk) = c0
+            dalbsno_nopond(i,j,iblk) = c0
+            dalbpnd_nopond(i,j,iblk) = c0
 #endif
 
             ! for history averaging
@@ -668,58 +668,58 @@
                   + albpndn(i,j,n,iblk)*aicen(i,j,n,iblk)
             endif
 #ifdef AEROFRC
-            alvdf_noaero(i,j,iblk) = alvdf_noaero(i,j,iblk) &
-               + alvdfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidf_noaero(i,j,iblk) = alidf_noaero(i,j,iblk) &
-               + alidfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alvdr_noaero(i,j,iblk) = alvdr_noaero(i,j,iblk) &
-               + alvdrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidr_noaero(i,j,iblk) = alidr_noaero(i,j,iblk) &
-               + alidrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdf_noaero(i,j,iblk) = dalvdf_noaero(i,j,iblk) &
+               + dalvdfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidf_noaero(i,j,iblk) = dalidf_noaero(i,j,iblk) &
+               + dalidfn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdr_noaero(i,j,iblk) = dalvdr_noaero(i,j,iblk) &
+               + dalvdrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidr_noaero(i,j,iblk) = dalidr_noaero(i,j,iblk) &
+               + dalidrn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
 
             if (coszen(i,j,iblk) > puny) then ! sun above horizon
-               albice_noaero(i,j,iblk) = albice_noaero(i,j,iblk) &
-                  + albicen_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
-               albsno_noaero(i,j,iblk) = albsno_noaero(i,j,iblk) &
-                  + albsnon_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
-               albpnd_noaero(i,j,iblk) = albpnd_noaero(i,j,iblk) &
-                  + albpndn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbice_noaero(i,j,iblk) = dalbice_noaero(i,j,iblk) &
+                  + dalbicen_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbsno_noaero(i,j,iblk) = dalbsno_noaero(i,j,iblk) &
+                  + dalbsnon_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbpnd_noaero(i,j,iblk) = dalbpnd_noaero(i,j,iblk) &
+                  + dalbpndn_noaero(i,j,n,iblk)*aicen(i,j,n,iblk)
             endif
 #endif
 #ifdef CCSM3FRC
-            alvdf_ccsm3(i,j,iblk) = alvdf_ccsm3(i,j,iblk) &
-               + alvdfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidf_ccsm3(i,j,iblk) = alidf_ccsm3(i,j,iblk) &
-               + alidfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alvdr_ccsm3(i,j,iblk) = alvdr_ccsm3(i,j,iblk) &
-               + alvdrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidr_ccsm3(i,j,iblk) = alidr_ccsm3(i,j,iblk) &
-               + alidrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdf_ccsm3(i,j,iblk) = dalvdf_ccsm3(i,j,iblk) &
+               + dalvdfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidf_ccsm3(i,j,iblk) = dalidf_ccsm3(i,j,iblk) &
+               + dalidfn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdr_ccsm3(i,j,iblk) = dalvdr_ccsm3(i,j,iblk) &
+               + dalvdrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidr_ccsm3(i,j,iblk) = dalidr_ccsm3(i,j,iblk) &
+               + dalidrn_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
 
             if (coszen(i,j,iblk) > puny) then ! sun above horizon
-               albice_ccsm3(i,j,iblk) = albice_ccsm3(i,j,iblk) &
-                  + albicen_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
-               albsno_ccsm3(i,j,iblk) = albsno_ccsm3(i,j,iblk) &
-                  + albsnon_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbice_ccsm3(i,j,iblk) = dalbice_ccsm3(i,j,iblk) &
+                  + dalbicen_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbsno_ccsm3(i,j,iblk) = dalbsno_ccsm3(i,j,iblk) &
+                  + dalbsnon_ccsm3(i,j,n,iblk)*aicen(i,j,n,iblk)
             endif
 #endif
 #ifdef PONDFRC
-            alvdf_nopond(i,j,iblk) = alvdf_nopond(i,j,iblk) &
-               + alvdfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidf_nopond(i,j,iblk) = alidf_nopond(i,j,iblk) &
-               + alidfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alvdr_nopond(i,j,iblk) = alvdr_nopond(i,j,iblk) &
-               + alvdrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
-            alidr_nopond(i,j,iblk) = alidr_nopond(i,j,iblk) &
-               + alidrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdf_nopond(i,j,iblk) = dalvdf_nopond(i,j,iblk) &
+               + dalvdfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidf_nopond(i,j,iblk) = dalidf_nopond(i,j,iblk) &
+               + dalidfn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalvdr_nopond(i,j,iblk) = dalvdr_nopond(i,j,iblk) &
+               + dalvdrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+            dalidr_nopond(i,j,iblk) = dalidr_nopond(i,j,iblk) &
+               + dalidrn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
 
             if (coszen(i,j,iblk) > puny) then ! sun above horizon
-               albice_nopond(i,j,iblk) = albice_nopond(i,j,iblk) &
-                  + albicen_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
-               albsno_nopond(i,j,iblk) = albsno_nopond(i,j,iblk) &
-                  + albsnon_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
-               albpnd_nopond(i,j,iblk) = albpnd_nopond(i,j,iblk) &
-                  + albpndn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbice_nopond(i,j,iblk) = dalbice_nopond(i,j,iblk) &
+                  + dalbicen_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbsno_nopond(i,j,iblk) = dalbsno_nopond(i,j,iblk) &
+                  + dalbsnon_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
+               dalbpnd_nopond(i,j,iblk) = dalbpnd_nopond(i,j,iblk) &
+                  + dalbpndn_nopond(i,j,n,iblk)*aicen(i,j,n,iblk)
             endif
 #endif
          enddo
@@ -766,15 +766,6 @@
                             strairxT (:,:,iblk), strairyT(:,:,iblk), &
                             fsens    (:,:,iblk), flat    (:,:,iblk), &
                             fswabs   (:,:,iblk), flwout  (:,:,iblk), &
-#ifdef AEROFRC
-                            fswabs_noaero(:,:,iblk),                 &
-#endif
-#ifdef CCSM3FRC
-                            fswabs_ccsm3(:,:,iblk),                 &
-#endif
-#ifdef PONDFRC
-                            fswabs_nopond(:,:,iblk),                 &
-#endif
                             evap     (:,:,iblk),                     &
                             Tref     (:,:,iblk), Qref    (:,:,iblk), &
                             fresh    (:,:,iblk), fsalt   (:,:,iblk), &

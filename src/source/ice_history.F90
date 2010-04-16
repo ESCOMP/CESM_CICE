@@ -107,36 +107,33 @@
            f_fswint_ai  = 'mxxxx', &
 #endif
 #ifdef AEROFRC
-           f_fswabs_noaero = 'mxxxx', &
-           f_fswup_noaero  = 'mxxxx', &
-           f_fswsfc_noaero = 'mxxxx', &
-           f_fswint_noaero = 'mxxxx', &
-           f_fswthru_noaero= 'mxxxx', &
-           f_alvdr_noaero  = 'mxxxx', f_alidr_noaero     = 'mxxxx', &
-           f_alvdf_noaero  = 'mxxxx', f_alidf_noaero     = 'mxxxx', &
-           f_albice_noaero = 'mxxxx', f_albsno_noaero    = 'mxxxx', &
-           f_albpnd_noaero = 'mxxxx',                               &
+           f_dfswabs_noaero = 'mxxxx', &
+           f_dfswsfc_noaero = 'mxxxx', &
+           f_dfswint_noaero = 'mxxxx', &
+           f_dfswthru_noaero= 'mxxxx', &
+           f_dalvdr_noaero  = 'mxxxx', f_dalidr_noaero     = 'mxxxx', &
+           f_dalvdf_noaero  = 'mxxxx', f_dalidf_noaero     = 'mxxxx', &
+           f_dalbice_noaero = 'mxxxx', f_dalbsno_noaero    = 'mxxxx', &
+           f_dalbpnd_noaero = 'mxxxx',                               &
 #endif
 #ifdef CCSM3FRC
-           f_fswabs_ccsm3 = 'mxxxx', &
-           f_fswup_ccsm3  = 'mxxxx', &
-           f_fswsfc_ccsm3 = 'mxxxx', &
-           f_fswint_ccsm3 = 'mxxxx', &
-           f_fswthru_ccsm3= 'mxxxx', &
-           f_alvdr_ccsm3  = 'mxxxx', f_alidr_ccsm3     = 'mxxxx', &
-           f_alvdf_ccsm3  = 'mxxxx', f_alidf_ccsm3     = 'mxxxx', &
-           f_albice_ccsm3 = 'mxxxx', f_albsno_ccsm3    = 'mxxxx', &
+           f_dfswabs_ccsm3 = 'mxxxx', &
+           f_dfswsfc_ccsm3 = 'mxxxx', &
+           f_dfswint_ccsm3 = 'mxxxx', &
+           f_dfswthru_ccsm3= 'mxxxx', &
+           f_dalvdr_ccsm3  = 'mxxxx', f_dalidr_ccsm3     = 'mxxxx', &
+           f_dalvdf_ccsm3  = 'mxxxx', f_dalidf_ccsm3     = 'mxxxx', &
+           f_dalbice_ccsm3 = 'mxxxx', f_dalbsno_ccsm3    = 'mxxxx', &
 #endif
 #ifdef PONDFRC
-           f_fswabs_nopond = 'mxxxx', &
-           f_fswup_nopond  = 'mxxxx', &
-           f_fswsfc_nopond = 'mxxxx', &
-           f_fswint_nopond = 'mxxxx', &
-           f_fswthru_nopond= 'mxxxx', &
-           f_alvdr_nopond  = 'mxxxx', f_alidr_nopond     = 'mxxxx', &
-           f_alvdf_nopond  = 'mxxxx', f_alidf_nopond     = 'mxxxx', &
-           f_albice_nopond = 'mxxxx', f_albsno_nopond    = 'mxxxx', &
-           f_albpnd_nopond = 'mxxxx',                               &
+           f_dfswabs_nopond = 'mxxxx', &
+           f_dfswsfc_nopond = 'mxxxx', &
+           f_dfswint_nopond = 'mxxxx', &
+           f_dfswthru_nopond= 'mxxxx', &
+           f_dalvdr_nopond  = 'mxxxx', f_dalidr_nopond     = 'mxxxx', &
+           f_dalvdf_nopond  = 'mxxxx', f_dalidf_nopond     = 'mxxxx', &
+           f_dalbice_nopond = 'mxxxx', f_dalbsno_nopond    = 'mxxxx', &
+           f_dalbpnd_nopond = 'mxxxx',                               &
 #endif
            f_fswabs    = 'mxxxx', f_fswabs_ai  = 'mxxxx', &
            f_alvdr     = 'mxxxx', f_alidr      = 'mxxxx', &
@@ -433,45 +430,42 @@
       call broadcast_scalar (f_fswint_ai, master_task)
 #endif
 #ifdef AEROFRC
-      call broadcast_scalar (f_fswabs_noaero, master_task)
-      call broadcast_scalar (f_fswup_noaero,  master_task)
-      call broadcast_scalar (f_fswsfc_noaero, master_task)
-      call broadcast_scalar (f_fswint_noaero, master_task)
-      call broadcast_scalar (f_fswthru_noaero, master_task)
-      call broadcast_scalar (f_alvdr_noaero, master_task)
-      call broadcast_scalar (f_alidr_noaero, master_task)
-      call broadcast_scalar (f_alvdf_noaero, master_task)
-      call broadcast_scalar (f_alidf_noaero, master_task)
-      call broadcast_scalar (f_albice_noaero, master_task)
-      call broadcast_scalar (f_albsno_noaero, master_task)
-      call broadcast_scalar (f_albpnd_noaero, master_task)
+      call broadcast_scalar (f_dfswabs_noaero, master_task)
+      call broadcast_scalar (f_dfswsfc_noaero, master_task)
+      call broadcast_scalar (f_dfswint_noaero, master_task)
+      call broadcast_scalar (f_dfswthru_noaero, master_task)
+      call broadcast_scalar (f_dalvdr_noaero, master_task)
+      call broadcast_scalar (f_dalidr_noaero, master_task)
+      call broadcast_scalar (f_dalvdf_noaero, master_task)
+      call broadcast_scalar (f_dalidf_noaero, master_task)
+      call broadcast_scalar (f_dalbice_noaero, master_task)
+      call broadcast_scalar (f_dalbsno_noaero, master_task)
+      call broadcast_scalar (f_dalbpnd_noaero, master_task)
 #endif
 #ifdef CCSM3FRC
-      call broadcast_scalar (f_fswabs_ccsm3, master_task)
-      call broadcast_scalar (f_fswup_ccsm3,  master_task)
-      call broadcast_scalar (f_fswsfc_ccsm3, master_task)
-      call broadcast_scalar (f_fswint_ccsm3, master_task)
-      call broadcast_scalar (f_fswthru_ccsm3, master_task)
-      call broadcast_scalar (f_alvdr_ccsm3, master_task)
-      call broadcast_scalar (f_alidr_ccsm3, master_task)
-      call broadcast_scalar (f_alvdf_ccsm3, master_task)
-      call broadcast_scalar (f_alidf_ccsm3, master_task)
-      call broadcast_scalar (f_albice_ccsm3, master_task)
-      call broadcast_scalar (f_albsno_ccsm3, master_task)
+      call broadcast_scalar (f_dfswabs_ccsm3, master_task)
+      call broadcast_scalar (f_dfswsfc_ccsm3, master_task)
+      call broadcast_scalar (f_dfswint_ccsm3, master_task)
+      call broadcast_scalar (f_dfswthru_ccsm3, master_task)
+      call broadcast_scalar (f_dalvdr_ccsm3, master_task)
+      call broadcast_scalar (f_dalidr_ccsm3, master_task)
+      call broadcast_scalar (f_dalvdf_ccsm3, master_task)
+      call broadcast_scalar (f_dalidf_ccsm3, master_task)
+      call broadcast_scalar (f_dalbice_ccsm3, master_task)
+      call broadcast_scalar (f_dalbsno_ccsm3, master_task)
 #endif
 #ifdef PONDFRC
-      call broadcast_scalar (f_fswabs_nopond, master_task)
-      call broadcast_scalar (f_fswup_nopond,  master_task)
-      call broadcast_scalar (f_fswsfc_nopond, master_task)
-      call broadcast_scalar (f_fswint_nopond, master_task)
-      call broadcast_scalar (f_fswthru_nopond, master_task)
-      call broadcast_scalar (f_alvdr_nopond, master_task)
-      call broadcast_scalar (f_alidr_nopond, master_task)
-      call broadcast_scalar (f_alvdf_nopond, master_task)
-      call broadcast_scalar (f_alidf_nopond, master_task)
-      call broadcast_scalar (f_albice_nopond, master_task)
-      call broadcast_scalar (f_albsno_nopond, master_task)
-      call broadcast_scalar (f_albpnd_nopond, master_task)
+      call broadcast_scalar (f_dfswabs_nopond, master_task)
+      call broadcast_scalar (f_dfswsfc_nopond, master_task)
+      call broadcast_scalar (f_dfswint_nopond, master_task)
+      call broadcast_scalar (f_dfswthru_nopond, master_task)
+      call broadcast_scalar (f_dalvdr_nopond, master_task)
+      call broadcast_scalar (f_dalidr_nopond, master_task)
+      call broadcast_scalar (f_dalvdf_nopond, master_task)
+      call broadcast_scalar (f_dalidf_nopond, master_task)
+      call broadcast_scalar (f_dalbice_nopond, master_task)
+      call broadcast_scalar (f_dalbsno_nopond, master_task)
+      call broadcast_scalar (f_dalbpnd_nopond, master_task)
 #endif
       call broadcast_scalar (f_alvdr, master_task)
       call broadcast_scalar (f_alidr, master_task)
@@ -737,252 +731,231 @@
              ns1, f_fswint_ai)
 #endif
 #ifdef AEROFRC
-      if (f_fswabs_noaero(1:1) /= 'x') &
-         call define_hist_field(n_fswabs_noaero,"fswabs_noaero",       &
+      if (f_dfswabs_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dfswabs_noaero,"dfswabs_noaero",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic absorbed solar flux",                  &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswabs_noaero)
+             ns1, f_dfswabs_noaero)
 
-      if (f_fswup_noaero(1:1) /= 'x') &
-         call define_hist_field(n_fswup_noaero,"fswup_noaero",         &
-             "W/m^2",tstr, tcstr,                                            &
-             "snow/ice/ocn diagnostic upward solar flux",                    &
-             "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswup_noaero)
-
-      if (f_fswsfc_noaero(1:1) /= 'x') &
-         call define_hist_field(n_fswsfc_noaero,"fswsfc_noaero",       &
+      if (f_dfswsfc_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dfswsfc_noaero,"dfswsfc_noaero",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic surface abs solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswsfc_noaero)
+             ns1, f_dfswsfc_noaero)
 
-      if (f_fswint_noaero(1:1) /= 'x') &
-         call define_hist_field(n_fswint_noaero,"fswint_noaero",       &
+      if (f_dfswint_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dfswint_noaero,"dfswint_noaero",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic internal abs solar flux",              &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswint_noaero)
+             ns1, f_dfswint_noaero)
 
-      if (f_fswthru_noaero(1:1) /= 'x') &
-         call define_hist_field(n_fswthru_noaero,"fswthru_noaero",     &
+      if (f_dfswthru_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dfswthru_noaero,"dfswthru_noaero",     &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic penetrating solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswthru_noaero)
+             ns1, f_dfswthru_noaero)
 
-      if (f_alvdr_noaero(1:1) /= 'x') &
-         call define_hist_field(n_alvdr_noaero,"alvdr_noaero",   &
+      if (f_dalvdr_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalvdr_noaero,"dalvdr_noaero",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible direct albedo",                 &
              "none", c100, c0,                                   &
-             ns1, f_alvdr_noaero)
+             ns1, f_dalvdr_noaero)
       
-      if (f_alidr_noaero(1:1) /= 'x') &
-         call define_hist_field(n_alidr_noaero,"alidr_noaero",   &
+      if (f_dalidr_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalidr_noaero,"dalidr_noaero",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared direct albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alidr_noaero)
+             ns1, f_dalidr_noaero)
       
-      if (f_alvdf_noaero(1:1) /= 'x') &
-         call define_hist_field(n_alvdf_noaero,"alvdf_noaero",   &
+      if (f_dalvdf_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalvdf_noaero,"dalvdf_noaero",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible diffuse albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alvdf_noaero)
+             ns1, f_dalvdf_noaero)
       
-      if (f_alidf_noaero(1:1) /= 'x') &
-         call define_hist_field(n_alidf_noaero,"alidf_noaero",   &
+      if (f_dalidf_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalidf_noaero,"dalidf_noaero",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared diffuse albedo",               &
              "none", c100, c0,                                   &
-             ns1, f_alidf_noaero)
+             ns1, f_dalidf_noaero)
       
-      if (f_albice_noaero(1:1) /= 'x') &
-         call define_hist_field(n_albice_noaero,"albice_noaero",   &
+      if (f_dalbice_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalbice_noaero,"dalbice_noaero",   &
              "%",tstr, tcstr,                                      &
              "diagnostic bare ice albedo",                         &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albice_noaero)
+             ns1, f_dalbice_noaero)
       
-      if (f_albsno_noaero(1:1) /= 'x') &
-         call define_hist_field(n_albsno_noaero,"albsno_noaero",   &
+      if (f_dalbsno_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalbsno_noaero,"dalbsno_noaero",   &
              "%",tstr, tcstr,                                      &
              "diagnostic snow albedo",                             &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albsno_noaero)
+             ns1, f_dalbsno_noaero)
       
-      if (f_albpnd_noaero(1:1) /= 'x') &
-         call define_hist_field(n_albpnd_noaero,"albpnd_noaero",   &
+      if (f_dalbpnd_noaero(1:1) /= 'x') &
+         call define_hist_field(n_dalbpnd_noaero,"dalbpnd_noaero",   &
              "%",tstr, tcstr,                                      &
              "diagnostic pond albedo",                             &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albpnd_noaero)
+             ns1, f_dalbpnd_noaero)
 #endif
 #ifdef CCSM3FRC
-      if (f_fswabs_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_fswabs_ccsm3,"fswabs_ccsm3",       &
+      if (f_dfswabs_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dfswabs_ccsm3,"dfswabs_ccsm3",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic absorbed solar flux",                  &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswabs_ccsm3)
+             ns1, f_dfswabs_ccsm3)
 
-      if (f_fswup_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_fswup_ccsm3,"fswup_ccsm3",         &
-             "W/m^2",tstr, tcstr,                                            &
-             "snow/ice/ocn diagnostic upward solar flux",                    &
-             "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswup_ccsm3)
-
-      if (f_fswsfc_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_fswsfc_ccsm3,"fswsfc_ccsm3",       &
+      if (f_dfswsfc_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dfswsfc_ccsm3,"dfswsfc_ccsm3",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic surface abs solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswsfc_ccsm3)
+             ns1, f_dfswsfc_ccsm3)
 
-      if (f_fswint_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_fswint_ccsm3,"fswint_ccsm3",       &
+      if (f_dfswint_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dfswint_ccsm3,"dfswint_ccsm3",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic internal abs solar flux",              &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswint_ccsm3)
+             ns1, f_dfswint_ccsm3)
 
-      if (f_fswthru_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_fswthru_ccsm3,"fswthru_ccsm3",     &
+      if (f_dfswthru_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dfswthru_ccsm3,"dfswthru_ccsm3",     &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic penetrating solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswthru_ccsm3)
+             ns1, f_dfswthru_ccsm3)
 
-      if (f_alvdr_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_alvdr_ccsm3,"alvdr_ccsm3",   &
+      if (f_dalvdr_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalvdr_ccsm3,"dalvdr_ccsm3",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible direct albedo",                 &
              "none", c100, c0,                                   &
-             ns1, f_alvdr_ccsm3)
+             ns1, f_dalvdr_ccsm3)
       
-      if (f_alidr_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_alidr_ccsm3,"alidr_ccsm3",   &
+      if (f_dalidr_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalidr_ccsm3,"dalidr_ccsm3",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared direct albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alidr_ccsm3)
+             ns1, f_dalidr_ccsm3)
       
-      if (f_alvdf_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_alvdf_ccsm3,"alvdf_ccsm3",   &
+      if (f_dalvdf_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalvdf_ccsm3,"dalvdf_ccsm3",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible diffuse albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alvdf_ccsm3)
+             ns1, f_dalvdf_ccsm3)
       
-      if (f_alidf_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_alidf_ccsm3,"alidf_ccsm3",   &
+      if (f_dalidf_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalidf_ccsm3,"dalidf_ccsm3",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared diffuse albedo",               &
              "none", c100, c0,                                   &
-             ns1, f_alidf_ccsm3)
+             ns1, f_dalidf_ccsm3)
       
-      if (f_albice_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_albice_ccsm3,"albice_ccsm3",   &
+      if (f_dalbice_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalbice_ccsm3,"dalbice_ccsm3",   &
              "%",tstr, tcstr,                                      &
              "diagnostic bare ice albedo",                         &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albice_ccsm3)
+             ns1, f_dalbice_ccsm3)
       
-      if (f_albsno_ccsm3(1:1) /= 'x') &
-         call define_hist_field(n_albsno_ccsm3,"albsno_ccsm3",   &
+      if (f_dalbsno_ccsm3(1:1) /= 'x') &
+         call define_hist_field(n_dalbsno_ccsm3,"dalbsno_ccsm3",   &
              "%",tstr, tcstr,                                      &
              "diagnostic snow albedo",                             &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albsno_ccsm3)
+             ns1, f_dalbsno_ccsm3)
 #endif
 #ifdef PONDFRC
-      if (f_fswabs_nopond(1:1) /= 'x') &
-         call define_hist_field(n_fswabs_nopond,"fswabs_nopond",       &
+      if (f_dfswabs_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dfswabs_nopond,"dfswabs_nopond",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic absorbed solar flux",                  &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswabs_nopond)
+             ns1, f_dfswabs_nopond)
 
-      if (f_fswup_nopond(1:1) /= 'x') &
-         call define_hist_field(n_fswup_nopond,"fswup_nopond",         &
-             "W/m^2",tstr, tcstr,                                            &
-             "snow/ice/ocn diagnostic upward solar flux",                    &
-             "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswup_nopond)
-
-      if (f_fswsfc_nopond(1:1) /= 'x') &
-         call define_hist_field(n_fswsfc_nopond,"fswsfc_nopond",       &
+      if (f_dfswsfc_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dfswsfc_nopond,"dfswsfc_nopond",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic surface abs solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswsfc_nopond)
+             ns1, f_dfswsfc_nopond)
 
-      if (f_fswint_nopond(1:1) /= 'x') &
-         call define_hist_field(n_fswint_nopond,"fswint_nopond",       &
+      if (f_dfswint_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dfswint_nopond,"dfswint_nopond",       &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic internal abs solar flux",              &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswint_nopond)
+             ns1, f_dfswint_nopond)
 
-      if (f_fswthru_nopond(1:1) /= 'x') &
-         call define_hist_field(n_fswthru_nopond,"fswthru_nopond",     &
+      if (f_dfswthru_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dfswthru_nopond,"dfswthru_nopond",     &
              "W/m^2",tstr, tcstr,                                            &
              "snow/ice/ocn diagnostic penetrating solar flux",               &
              "weighted by ice area", c1, c0,                                 &
-             ns1, f_fswthru_nopond)
+             ns1, f_dfswthru_nopond)
 
-      if (f_alvdr_nopond(1:1) /= 'x') &
-         call define_hist_field(n_alvdr_nopond,"alvdr_nopond",   &
+      if (f_dalvdr_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalvdr_nopond,"dalvdr_nopond",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible direct albedo",                 &
              "none", c100, c0,                                   &
-             ns1, f_alvdr_nopond)
+             ns1, f_dalvdr_nopond)
       
-      if (f_alidr_nopond(1:1) /= 'x') &
-         call define_hist_field(n_alidr_nopond,"alidr_nopond",   &
+      if (f_dalidr_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalidr_nopond,"dalidr_nopond",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared direct albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alidr_nopond)
+             ns1, f_dalidr_nopond)
       
-      if (f_alvdf_nopond(1:1) /= 'x') &
-         call define_hist_field(n_alvdf_nopond,"alvdf_nopond",   &
+      if (f_dalvdf_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalvdf_nopond,"dalvdf_nopond",   &
              "%",tstr, tcstr,                                    &
              "diagnostic visible diffuse albedo",                &
              "none", c100, c0,                                   &
-             ns1, f_alvdf_nopond)
+             ns1, f_dalvdf_nopond)
       
-      if (f_alidf_nopond(1:1) /= 'x') &
-         call define_hist_field(n_alidf_nopond,"alidf_nopond",   &
+      if (f_dalidf_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalidf_nopond,"dalidf_nopond",   &
              "%",tstr, tcstr,                                    &
              "diagnostic infrared diffuse albedo",               &
              "none", c100, c0,                                   &
-             ns1, f_alidf_nopond)
+             ns1, f_dalidf_nopond)
       
-      if (f_albice_nopond(1:1) /= 'x') &
-         call define_hist_field(n_albice_nopond,"albice_nopond",   &
+      if (f_dalbice_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalbice_nopond,"dalbice_nopond",   &
              "%",tstr, tcstr,                                      &
              "diagnostic bare ice albedo",                         &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albice_nopond)
+             ns1, f_dalbice_nopond)
       
-      if (f_albsno_nopond(1:1) /= 'x') &
-         call define_hist_field(n_albsno_nopond,"albsno_nopond",   &
+      if (f_dalbsno_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalbsno_nopond,"dalbsno_nopond",   &
              "%",tstr, tcstr,                                      &
              "diagnostic snow albedo",                             &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albsno_nopond)
+             ns1, f_dalbsno_nopond)
       
-      if (f_albpnd_nopond(1:1) /= 'x') &
-         call define_hist_field(n_albpnd_nopond,"albpnd_nopond",   &
+      if (f_dalbpnd_nopond(1:1) /= 'x') &
+         call define_hist_field(n_dalbpnd_nopond,"dalbpnd_nopond",   &
              "%",tstr, tcstr,                                      &
              "diagnostic pond albedo",                             &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
-             ns1, f_albpnd_nopond)
+             ns1, f_dalbpnd_nopond)
 #endif
       if (f_alvdr(1:1) /= 'x') &
          call define_hist_field(n_alvdr,"alvdr","%",tstr, tcstr, &
@@ -1791,115 +1764,106 @@
             call accum_hist_field(n_fswint_ai,iblk,fswint(:,:,iblk))
 #endif
 #ifdef AEROFRC
-         if (f_fswabs_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_fswabs_noaero,iblk, &
-                                    fswabs_noaero(:,:,iblk)*workb(:,:))
-         if (f_fswup_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_fswup_noaero,iblk, &
-                     (fsw(:,:,iblk)-fswabs_noaero(:,:,iblk)))
-         if (f_fswsfc_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_fswsfc_noaero,iblk, &
-                                    fswsfc_noaero(:,:,iblk))
-         if (f_fswint_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_fswint_noaero,iblk, &
-                                    fswint_noaero(:,:,iblk))
-         if (f_fswthru_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_fswthru_noaero,iblk, &
-                                    fswthru_noaero(:,:,iblk))
-         if (f_alvdr_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_alvdr_noaero,iblk, &
-                                    alvdr_noaero(:,:,iblk))
-         if (f_alidr_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_alidr_noaero,iblk, &
-                                    alidr_noaero(:,:,iblk))
-         if (f_alvdf_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_alvdf_noaero,iblk, &
-                                    alvdf_noaero(:,:,iblk))
-         if (f_alidf_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_alidf_noaero,iblk, &
-                                    alidf_noaero(:,:,iblk))
-         if (f_albice_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_albice_noaero,iblk, &
-                                    albice_noaero(:,:,iblk))
-         if (f_albsno_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_albsno_noaero,iblk, &
-                                    albsno_noaero(:,:,iblk))
-         if (f_albpnd_noaero(1:1) /= 'x') &
-            call accum_hist_field(n_albpnd_noaero,iblk, &
-                                    albpnd_noaero(:,:,iblk))
+         if (f_dfswabs_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dfswabs_noaero,iblk, &
+                                    dfswabs_noaero(:,:,iblk))
+         if (f_dfswsfc_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dfswsfc_noaero,iblk, &
+                                    dfswsfc_noaero(:,:,iblk))
+         if (f_dfswint_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dfswint_noaero,iblk, &
+                                    dfswint_noaero(:,:,iblk))
+         if (f_dfswthru_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dfswthru_noaero,iblk, &
+                                    dfswthru_noaero(:,:,iblk))
+         if (f_dalvdr_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdr_noaero,iblk, &
+                                    dalvdr_noaero(:,:,iblk))
+         if (f_dalidr_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalidr_noaero,iblk, &
+                                    dalidr_noaero(:,:,iblk))
+         if (f_dalvdf_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdf_noaero,iblk, &
+                                    dalvdf_noaero(:,:,iblk))
+         if (f_dalidf_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalidf_noaero,iblk, &
+                                    dalidf_noaero(:,:,iblk))
+         if (f_dalbice_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalbice_noaero,iblk, &
+                                    dalbice_noaero(:,:,iblk))
+         if (f_dalbsno_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalbsno_noaero,iblk, &
+                                    dalbsno_noaero(:,:,iblk))
+         if (f_dalbpnd_noaero(1:1) /= 'x') &
+            call accum_hist_field(n_dalbpnd_noaero,iblk, &
+                                    dalbpnd_noaero(:,:,iblk))
 #endif
 #ifdef CCSM3FRC
-         if (f_fswabs_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_fswabs_ccsm3,iblk, &
-                                    fswabs_ccsm3(:,:,iblk)*workb(:,:))
-         if (f_fswup_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_fswup_ccsm3,iblk, &
-                     (fsw(:,:,iblk)-fswabs_ccsm3(:,:,iblk)))
-         if (f_fswsfc_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_fswsfc_ccsm3,iblk, &
-                                    fswsfc_ccsm3(:,:,iblk))
-         if (f_fswint_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_fswint_ccsm3,iblk, &
-                                    fswint_ccsm3(:,:,iblk))
-         if (f_fswthru_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_fswthru_ccsm3,iblk, &
-                                    fswthru_ccsm3(:,:,iblk))
-         if (f_alvdr_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_alvdr_ccsm3,iblk, &
-                                    alvdr_ccsm3(:,:,iblk))
-         if (f_alidr_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_alidr_ccsm3,iblk, &
-                                    alidr_ccsm3(:,:,iblk))
-         if (f_alvdf_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_alvdf_ccsm3,iblk, &
-                                    alvdf_ccsm3(:,:,iblk))
-         if (f_alidf_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_alidf_ccsm3,iblk, &
-                                    alidf_ccsm3(:,:,iblk))
-         if (f_albice_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_albice_ccsm3,iblk, &
-                                    albice_ccsm3(:,:,iblk))
-         if (f_albsno_ccsm3(1:1) /= 'x') &
-            call accum_hist_field(n_albsno_ccsm3,iblk, &
-                                    albsno_ccsm3(:,:,iblk))
+         if (f_dfswabs_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dfswabs_ccsm3,iblk, &
+                                    dfswabs_ccsm3(:,:,iblk))
+         if (f_dfswsfc_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dfswsfc_ccsm3,iblk, &
+                                    dfswsfc_ccsm3(:,:,iblk))
+         if (f_dfswint_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dfswint_ccsm3,iblk, &
+                                    dfswint_ccsm3(:,:,iblk))
+         if (f_dfswthru_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dfswthru_ccsm3,iblk, &
+                                    dfswthru_ccsm3(:,:,iblk))
+         if (f_dalvdr_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdr_ccsm3,iblk, &
+                                    dalvdr_ccsm3(:,:,iblk))
+         if (f_dalidr_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalidr_ccsm3,iblk, &
+                                    dalidr_ccsm3(:,:,iblk))
+         if (f_dalvdf_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdf_ccsm3,iblk, &
+                                    dalvdf_ccsm3(:,:,iblk))
+         if (f_dalidf_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalidf_ccsm3,iblk, &
+                                    dalidf_ccsm3(:,:,iblk))
+         if (f_dalbice_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalbice_ccsm3,iblk, &
+                                    dalbice_ccsm3(:,:,iblk))
+         if (f_dalbsno_ccsm3(1:1) /= 'x') &
+            call accum_hist_field(n_dalbsno_ccsm3,iblk, &
+                                    dalbsno_ccsm3(:,:,iblk))
 #endif
 #ifdef PONDFRC
-         if (f_fswabs_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_fswabs_nopond,iblk, &
-                                    fswabs_nopond(:,:,iblk)*workb(:,:))
-         if (f_fswup_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_fswup_nopond,iblk, &
-                     (fsw(:,:,iblk)-fswabs_nopond(:,:,iblk)))
-         if (f_fswsfc_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_fswsfc_nopond,iblk, &
-                                    fswsfc_nopond(:,:,iblk))
-         if (f_fswint_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_fswint_nopond,iblk, &
-                                    fswint_nopond(:,:,iblk))
-         if (f_fswthru_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_fswthru_nopond,iblk, &
-                                    fswthru_nopond(:,:,iblk))
-         if (f_alvdr_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_alvdr_nopond,iblk, &
-                                    alvdr_nopond(:,:,iblk))
-         if (f_alidr_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_alidr_nopond,iblk, &
-                                    alidr_nopond(:,:,iblk))
-         if (f_alvdf_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_alvdf_nopond,iblk, &
-                                    alvdf_nopond(:,:,iblk))
-         if (f_alidf_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_alidf_nopond,iblk, &
-                                    alidf_nopond(:,:,iblk))
-         if (f_albice_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_albice_nopond,iblk, &
-                                    albice_nopond(:,:,iblk))
-         if (f_albsno_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_albsno_nopond,iblk, &
-                                    albsno_nopond(:,:,iblk))
-         if (f_albpnd_nopond(1:1) /= 'x') &
-            call accum_hist_field(n_albpnd_nopond,iblk, &
-                                    albpnd_nopond(:,:,iblk))
+         if (f_dfswabs_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dfswabs_nopond,iblk, &
+                                    dfswabs_nopond(:,:,iblk))
+         if (f_dfswsfc_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dfswsfc_nopond,iblk, &
+                                    dfswsfc_nopond(:,:,iblk))
+         if (f_dfswint_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dfswint_nopond,iblk, &
+                                    dfswint_nopond(:,:,iblk))
+         if (f_dfswthru_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dfswthru_nopond,iblk, &
+                                    dfswthru_nopond(:,:,iblk))
+         if (f_dalvdr_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdr_nopond,iblk, &
+                                    dalvdr_nopond(:,:,iblk))
+         if (f_dalidr_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalidr_nopond,iblk, &
+                                    dalidr_nopond(:,:,iblk))
+         if (f_dalvdf_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalvdf_nopond,iblk, &
+                                    dalvdf_nopond(:,:,iblk))
+         if (f_dalidf_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalidf_nopond,iblk, &
+                                    dalidf_nopond(:,:,iblk))
+         if (f_dalbice_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalbice_nopond,iblk, &
+                                    dalbice_nopond(:,:,iblk))
+         if (f_dalbsno_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalbsno_nopond,iblk, &
+                                    dalbsno_nopond(:,:,iblk))
+         if (f_dalbpnd_nopond(1:1) /= 'x') &
+            call accum_hist_field(n_dalbpnd_nopond,iblk, &
+                                    dalbpnd_nopond(:,:,iblk))
 #endif
          if (f_alvdr(1:1) /= 'x') &
             call accum_hist_field(n_alvdr,  iblk, alvdr(:,:,iblk)*workb(:,:))
@@ -2263,34 +2227,34 @@
                           if (n_albpnd(ns) /= 0) aa(i,j,n_albpnd(ns),iblk) = &
                              aa(i,j,n_albpnd(ns),iblk)*avgct(ns)*ravgctz
 #ifdef AEROFRC
-                          if (n_albice_noaero(ns) /= 0) &
-                             aa(i,j,n_albice_noaero(ns),iblk) = &
-                             aa(i,j,n_albice_noaero(ns),iblk)*avgct(ns)*ravgctz
-                          if (n_albsno_noaero(ns) /= 0) &
-                             aa(i,j,n_albsno_noaero(ns),iblk) = &
-                             aa(i,j,n_albsno_noaero(ns),iblk)*avgct(ns)*ravgctz
-                          if (n_albpnd_noaero(ns) /= 0) &
-                             aa(i,j,n_albpnd_noaero(ns),iblk) = &
-                             aa(i,j,n_albpnd_noaero(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbice_noaero(ns) /= 0) &
+                             aa(i,j,n_dalbice_noaero(ns),iblk) = &
+                             aa(i,j,n_dalbice_noaero(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbsno_noaero(ns) /= 0) &
+                             aa(i,j,n_dalbsno_noaero(ns),iblk) = &
+                             aa(i,j,n_dalbsno_noaero(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbpnd_noaero(ns) /= 0) &
+                             aa(i,j,n_dalbpnd_noaero(ns),iblk) = &
+                             aa(i,j,n_dalbpnd_noaero(ns),iblk)*avgct(ns)*ravgctz
 #endif
 #ifdef CCSM3FRC
-                          if (n_albice_ccsm3(ns) /= 0) &
-                             aa(i,j,n_albice_ccsm3(ns),iblk) = &
-                             aa(i,j,n_albice_ccsm3(ns),iblk)*avgct(ns)*ravgctz
-                          if (n_albsno_ccsm3(ns) /= 0) &
-                             aa(i,j,n_albsno_ccsm3(ns),iblk) = &
-                             aa(i,j,n_albsno_ccsm3(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbice_ccsm3(ns) /= 0) &
+                             aa(i,j,n_dalbice_ccsm3(ns),iblk) = &
+                             aa(i,j,n_dalbice_ccsm3(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbsno_ccsm3(ns) /= 0) &
+                             aa(i,j,n_dalbsno_ccsm3(ns),iblk) = &
+                             aa(i,j,n_dalbsno_ccsm3(ns),iblk)*avgct(ns)*ravgctz
 #endif
 #ifdef PONDFRC
-                          if (n_albice_nopond(ns) /= 0) &
-                             aa(i,j,n_albice_nopond(ns),iblk) = &
-                             aa(i,j,n_albice_nopond(ns),iblk)*avgct(ns)*ravgctz
-                          if (n_albsno_nopond(ns) /= 0) &
-                             aa(i,j,n_albsno_nopond(ns),iblk) = &
-                             aa(i,j,n_albsno_nopond(ns),iblk)*avgct(ns)*ravgctz
-                          if (n_albpnd_nopond(ns) /= 0) &
-                             aa(i,j,n_albpnd_nopond(ns),iblk) = &
-                             aa(i,j,n_albpnd_nopond(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbice_nopond(ns) /= 0) &
+                             aa(i,j,n_dalbice_nopond(ns),iblk) = &
+                             aa(i,j,n_dalbice_nopond(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbsno_nopond(ns) /= 0) &
+                             aa(i,j,n_dalbsno_nopond(ns),iblk) = &
+                             aa(i,j,n_dalbsno_nopond(ns),iblk)*avgct(ns)*ravgctz
+                          if (n_dalbpnd_nopond(ns) /= 0) &
+                             aa(i,j,n_dalbpnd_nopond(ns),iblk) = &
+                             aa(i,j,n_dalbpnd_nopond(ns),iblk)*avgct(ns)*ravgctz
 #endif
                        endif
                     enddo             ! i
