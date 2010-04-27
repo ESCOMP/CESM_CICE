@@ -170,7 +170,7 @@ contains
 
     ! Determine if aerosols are coming from the coupler
     atm_aero = .false.
-!   call seq_infodata_GetData(infodata, atm_aero=atm_aero )
+    call seq_infodata_GetData(infodata, atm_aero=atm_aero )
 
 !   call shr_init_memusage()
 

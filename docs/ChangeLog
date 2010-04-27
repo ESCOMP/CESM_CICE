@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100427
+Originator: dbailey
+Date: Tue Apr 27 2010
+Version: 4.0
+One-line Summary: Fix atm_aero bug.
+CCSM Version compatible with: ccsm4_0_beta51+
+Changes made:
+
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20100416
 Originator: dbailey
 Date: Fri Apr 16 2010
