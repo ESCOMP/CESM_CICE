@@ -5,6 +5,15 @@
 <namelist_definition>
 
 <!----------------------------->
+<!---Derived namelist input---->
+<!----------------------------->
+
+<entry id="cam5" type="logical"  category="cice" group="iceexp" valid_values="">
+Sets up tuning parameters for cice based on the atm mode
+Default: default
+</entry>
+
+<!----------------------------->
 <!---General namelist input---->
 <!----------------------------->
 

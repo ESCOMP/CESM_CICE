@@ -78,9 +78,6 @@ OPTIONS
      -ntasks <n>         Number of MPI tasks.  
      -nthreads <n>       Number of OMP threads per process.  Setting nthreads > 0 implies smp.
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
-     -ntr_pond <0,1>     Turns on pond tracer (valid values are 0,1, default is 1)
-     -ntr_iage <0,1>     Turns on iage tracer (valid values are 0,1, default is 0)
-     -ntr_FY   <0,1>     Turns on FY area tracer (valid values are 0,1, default is 0)
      -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5,6, default is 3)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
@@ -119,10 +116,6 @@ my $commandline = "$cfgdir/configure @ARGV";
 # Parse command-line options.
 my %opts = (
 	    cache     => "config_cache.xml",
-	    ntr_pond  => 1,
-	    ntr_iage  => 1,
-	    ntr_FY    => 1,
-	    ntr_aero  => 3,
 	    );
 GetOptions(
     "cache=s"                   => \$opts{'cache'},
@@ -135,9 +128,6 @@ GetOptions(
     "h|help"                    => \$opts{'help'},
     "hgrid=s"                   => \$opts{'hgrid'},
     "ntr_aero=s"                => \$opts{'ntr_aero'},
-    "ntr_iage=s"                => \$opts{'ntr_iage'},
-    "ntr_FY=s"                  => \$opts{'ntr_FY'},
-    "ntr_pond=s"                => \$opts{'ntr_pond'},
     "ntasks=s"                  => \$opts{'ntasks'},
     "nthreads=s"                => \$opts{'nthreads'},
     "nodecomp!"	                => \$opts{'nodecomp'},
@@ -310,17 +300,14 @@ EOF
 if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 
 # Tracers
-if (defined $opts{'ntr_iage'}) {
-    $cfg_ref->set('ntr_iage', $opts{'ntr_iage'});
-}
-if (defined $opts{'ntr_FY'}) {
-    $cfg_ref->set('ntr_FY', $opts{'ntr_FY'});
-}
-if (defined $opts{'ntr_pond'}) {
-    $cfg_ref->set('ntr_pond', $opts{'ntr_pond'});
-}
 if (defined $opts{'ntr_aero'}) {
     $cfg_ref->set('ntr_aero', $opts{'ntr_aero'});
+} else {
+    if ($cice_mode eq 'prescribed') {
+	$cfg_ref->set('ntr_aero', 0);
+    } else {
+	$cfg_ref->set('ntr_aero', 3);
+    }
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -341,30 +328,6 @@ if (defined $opts{'ntr_aero'}) {$ntr_aero = $opts{'ntr_aero'}};
 if ($ntr_aero gt "6"){ 
     die <<"EOF";
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
-EOF
-}
-
-my $ntr_iage = $cfg_ref->get('ntr_iage');
-if (defined $opts{'ntr_iage'}) {$ntr_iage = $opts{'ntr_iage'}};
-if ($ntr_iage gt "1"){ 
-    die <<"EOF";
-**  ERROR: ntr_iage value of $ntr_iage is invalid, only values of 0 and 1 are supported
-EOF
-}
-
-my $ntr_FY = $cfg_ref->get('ntr_FY');
-if (defined $opts{'ntr_FY'}) {$ntr_FY = $opts{'ntr_FY'}};
-if ($ntr_FY gt "1"){ 
-    die <<"EOF";
-**  ERROR: ntr_FY value of $ntr_FY is invalid, only values of 0 and 1 are supported
-EOF
-}
-
-my $ntr_pond = $cfg_ref->get('ntr_pond');
-if (defined $opts{'ntr_pond'}) {$ntr_pond = $opts{'ntr_pond'}};
-if ($ntr_pond gt "1"){ 
-    die <<"EOF";
-**  ERROR: ntr_pond value of $ntr_pond, is invalid, only values of 0 and 1 are supported
 EOF
 }
 
