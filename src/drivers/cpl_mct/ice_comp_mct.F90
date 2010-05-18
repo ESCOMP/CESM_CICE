@@ -68,7 +68,6 @@ module ice_comp_mct
   use ice_fileunits,   only : nu_diag
   use ice_dyn_evp,     only :  kdyn
   use ice_prescribed_mod
-  use ice_prescaero_mod
   use ice_step_mod
   use CICE_RunMod
   use ice_global_reductions
@@ -154,7 +153,7 @@ contains
     real(r8) :: mrss, mrss0,msize,msize0
 
 ! !REVISION HISTORY:
-! Author: Jacob Sewall
+! Author: Mariana Vertenstein
 !EOP
 !-----------------------------------------------------------------------
 
@@ -169,10 +168,9 @@ contains
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
     ! Determine if aerosols are coming from the coupler
-    atm_aero = .false.
     call seq_infodata_GetData(infodata, atm_aero=atm_aero )
 
-!   call shr_init_memusage()
+    !   call shr_init_memusage()
 
     !---------------------------------------------------------------------------
     ! use infodata to determine type of run
@@ -313,21 +311,19 @@ contains
     call mct_aVect_zero(i2x_i)
 
     !-----------------------------------------------------------------
-    ! Second phase of prescribed ice initialization
+    ! Prescribed ice initialization
     !-----------------------------------------------------------------
 
-    if (prescribed_ice) then
-       call ice_prescribed_init2(ICEID, gsmap_ice, dom_i)
-    end if
+    call ice_prescribed_init(ICEID, gsmap_ice, dom_i)
 
     !-----------------------------------------------------------------
-    ! get ready for coupling
+    ! Get ready for coupling
     !-----------------------------------------------------------------
 
     call coupling_prep
 
     !---------------------------------------------------------------------------
-    ! send initial state to driver
+    ! Fill in export state for driver
     !---------------------------------------------------------------------------
 
     call ice_export_mct (i2x_i)  !Send initial state to driver
@@ -471,18 +467,6 @@ contains
        call t_stopf ('cice_presc')
     endif
     
-    if(prescribed_aero) then  ! read prescribed ice
-       if (first_time) then
-          call t_startf ('cice_presai2')
-          call ice_prescaero_init2(ICEID, gsmap_i, dom_i)
-          call t_stopf ('cice_presai2')
-          first_time = .false.
-       end if
-       call t_startf ('cice_presa')
-       call ice_prescaero_run(idate, sec)
-       call t_stopf ('cice_presa')
-    endif
-
     call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
     call init_flux_ocn        ! initialize ocean fluxes sent to coupler
 
@@ -1120,21 +1104,16 @@ contains
      deallocate(aflds)
 
      !-------------------------------------------------------
-     ! Accept aerosols from coupler when not prescribed.
+     ! Set aerosols from coupler 
      !-------------------------------------------------------
      
-     ! Check for atm_aero flag.
-
-     if (tr_aero .and. first_call) then
-        if (atm_aero) then
-           prescribed_aero = .false.
-        else
-           call ice_prescaero_init(prescribed_aero_in = .true.)
-        end if
-        first_call = .false.
-     endif
-
-      if (tr_aero .and. .not. prescribed_aero) then
+      if (first_call) then
+         if (tr_aero .and. .not. atm_aero) then
+            write(nu_diag,*) 'ice_comp_mct ERROR: atm_aero must be set for tr_aero' 
+            call shr_sys_abort()
+         end if
+	 first_call = .false.
+      end if
 
       n=0
       do iblk = 1, nblocks
@@ -1167,7 +1146,6 @@ contains
 
       enddo        !iblk
 
-     endif
 
      !-----------------------------------------------------------------
      ! rotate zonal/meridional vectors to local coordinates

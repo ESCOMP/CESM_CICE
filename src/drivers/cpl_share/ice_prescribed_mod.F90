@@ -14,6 +14,7 @@
 ! !REVISION HISTORY:
 !  SVN:$Id: ice_prescribed_mod.F90 40 2006-12-01 19:09:30Z eclare $
 !
+! 2010-May-15 - Tony Craig and Mariana Vertenstein - updated to latest streams
 ! 2006-Aug-22 - D. Bailey, E. Hunke, modified to fit with CICE
 ! 2005-May-19 - J. Schramm - first version
 ! 2005-Apr-19 - B. Kauffman, J. Schramm, M. Vertenstein, NCAR - design
@@ -27,12 +28,10 @@ module ice_prescribed_mod
    use shr_strdata_mod
    use shr_dmodel_mod
    use shr_string_mod
-   use shr_stream_mod
    use shr_ncread_mod
    use shr_sys_mod
    use shr_mct_mod
    use mct_mod
-
    use pio
 
    use ice_broadcast
@@ -60,7 +59,6 @@ module ice_prescribed_mod
 ! !PUBLIC MEMBER FUNCTIONS:
 
    public :: ice_prescribed_init      ! initialize input data stream
-   public :: ice_prescribed_init2     ! second phase of initialization
    public :: ice_prescribed_run       ! get time slices and time interp
    public :: ice_prescribed_phys      ! set prescribed ice state and fluxes
 
@@ -83,19 +81,10 @@ module ice_prescribed_mod
    character(len=char_len_long)   :: stream_domAreaName
    character(len=char_len_long)   :: stream_domMaskName
    character(len=char_len_long)   :: stream_domFileName
-   character(len=char_len_long)   :: stream_io_type
-   integer(kind=int_kind)         :: stream_num_iotasks
-   integer(kind=int_kind)         :: stream_io_root
-   integer(kind=int_kind)         :: stream_io_stride
-   character(len=char_len_long)   :: stream_mapread
-   character(len=char_len_long)   :: stream_mapwrite
-   character(len=char_len_long)   :: stream_fillread
-   character(len=char_len_long)   :: stream_fillwrite
 
    type(shr_strdata_type)       :: sdat         ! prescribed data stream
    character(len=char_len_long) :: fldList      ! list of fields in data stream
    real(kind=dbl_kind)          :: ice_cov(nx_block,ny_block,max_blocks) ! ice cover 
-   character(len=*), parameter  :: shr_strdata_unset = 'NOT_SET'
 
     real (kind=dbl_kind), parameter :: &
        cp_sno = 0.0_dbl_kind & ! specific heat of snow                (J/kg/K)
@@ -111,43 +100,50 @@ module ice_prescribed_mod
 
 !=======================================================================
 contains
-!=======================================================================
-!BOP ===================================================================
+!===============================================================================
+!BOP
 !
-! !IROUTINE: ice_prescribed_init --  initialize data stream information
+! !IROUTINE: ice_prescribed_init -  prescribed ice initialization
 !
+! !INTERFACE: 
+ subroutine ice_prescribed_init(compid, gsmap, dom)
+ 
 ! !DESCRIPTION:
-! (1) Initialize data stream information.  
-! (2) Check input data domain - currently supports a regular lat-lon grid
-!     or cpl6 history output.   If input data domain does not match ice
-!     model domain, initialize mapping weights and set 'regrid' to true.
+!    Prescribed ice initialization - needed to 
+!    work with new shr_strdata module derived type 
 !
 ! !REVISION HISTORY:
-!     2005-May-19 - J. Schramm - first version
+!    2009-Oct-12 - M. Vertenstein
 !
-! !INTERFACE: -----------------------------------------------------------
-
-subroutine ice_prescribed_init
-
-! !USES:
-   implicit none
-
 ! !INPUT/OUTPUT PARAMETERS:
+!
+   implicit none
+   integer(kind=int_kind), intent(in) :: compid
+   type(mct_gsMap) :: gsmap
+   type(mct_gGrid) :: dom
 
 !EOP
    !----- Local ------
    integer(kind=int_kind) :: nml_error ! namelist i/o error flag
-   character(*),parameter :: subName = "('ice_prescribed_init')"
-   character(*),parameter :: F00 = "('(ice_prescribed_init) ',4a)"
+   character(len=8)       :: fillalgo
+   character(*),parameter :: subName = "('ice_prescribed_init2')"
+   character(*),parameter :: F00 = "('(ice_prescribed_init2) ',4a)"
 
-   namelist /ice_prescribed_nml/  prescribed_ice, prescribed_ice_fill, &
-	stream_year_first , stream_year_last  , model_year_align, &
-        stream_fldVarName , stream_fldFileName,  &
-        stream_domTvarName, stream_domXvarName, stream_domYvarName, &
-        stream_domAreaName, stream_domMaskName, stream_domFileName, &
-        stream_io_type    , stream_io_root    , stream_io_stride  , stream_num_iotasks, &
-        stream_mapwrite   , stream_mapread  ,   stream_fillwrite  , stream_fillread  
-        
+   namelist /ice_prescribed_nml/  &
+        prescribed_ice,      &
+        prescribed_ice_fill, &
+	stream_year_first ,  &
+        stream_year_last  ,  &
+        model_year_align,    &
+        stream_fldVarName ,  &
+        stream_fldFileName,  &
+        stream_domTvarName,  &
+        stream_domXvarName,  &
+        stream_domYvarName,  &
+        stream_domAreaName,  &
+        stream_domMaskName,  &
+        stream_domFileName
+
    ! default values for namelist
    prescribed_ice         = .false.          ! if true, prescribe ice
    stream_year_first      = 1                ! first year in  pice stream to use
@@ -162,14 +158,6 @@ subroutine ice_prescribed_init
    stream_domMaskName     = 'mask'
    stream_domFileName     =  ' '
    prescribed_ice_fill    = .false.          ! true if pice data fill required
-   stream_io_type         = 'pio_netcdf'     ! values are 'netcdf','pio_netcdf',pio_pnetcdf' 
-   stream_num_iotasks     = 1
-   stream_io_root         = 0
-   stream_io_stride       = 4
-   stream_mapwrite        = trim(shr_strdata_unset)
-   stream_mapread         = trim(shr_strdata_unset)
-   stream_fillwrite       = trim(shr_strdata_unset)
-   stream_fillread        = trim(shr_strdata_unset)
 
    ! read from input file
    call get_fileunit(nu_nml)
@@ -187,14 +175,16 @@ subroutine ice_prescribed_init
       if (nml_error == 0) close(nu_nml)
    endif
    call release_fileunit(nu_nml)
-
    call broadcast_scalar(nml_error,master_task)
-
    if (nml_error /= 0) then
       call abort_ice ('ice: Namelist read error in ice_prescribed_mod')
    endif
 
    call broadcast_scalar(prescribed_ice,master_task)
+
+   ! *** If not prescribed ice then return ***
+   if (.not. prescribed_ice) RETURN
+
    call broadcast_scalar(prescribed_ice_fill,master_task)
    call broadcast_scalar(stream_year_first,master_task)
    call broadcast_scalar(stream_year_last,master_task)
@@ -207,270 +197,54 @@ subroutine ice_prescribed_init
    call broadcast_scalar(stream_domAreaName,master_task)
    call broadcast_scalar(stream_domMaskName,master_task)
    call broadcast_scalar(stream_domFileName,master_task)
-   call broadcast_scalar(stream_io_type,master_task)
-   call broadcast_scalar(stream_io_root,master_task)
-   call broadcast_scalar(stream_io_stride,master_task)
-   call broadcast_scalar(stream_mapwrite,master_task)
-   call broadcast_scalar(stream_mapread,master_task)
-   call broadcast_scalar(stream_fillwrite,master_task)
-   call broadcast_scalar(stream_fillread,master_task)
 
    if (my_task == master_task) then
       write(nu_diag,*) ' '
-      write(nu_diag,*) 'ice_prescribed_nml settings:'
-      write(nu_diag,*) '  prescribed_ice      = ',prescribed_ice
-      write(nu_diag,*) '  stream_year_first   = ',stream_year_first
-      write(nu_diag,*) '  stream_year_last    = ',stream_year_last
-      write(nu_diag,*) '  model_year_align    = ',model_year_align
-      write(nu_diag,*) '  stream_fldVarName   = ',trim(stream_fldVarName)
-      write(nu_diag,*) '  stream_fldFileName  = ',trim(stream_fldFileName)
-      write(nu_diag,*) '  stream_domTvarName  = ',trim(stream_domTvarName)
-      write(nu_diag,*) '  stream_domXvarName  = ',trim(stream_domXvarName)
-      write(nu_diag,*) '  stream_domYvarName  = ',trim(stream_domYvarName)
-      write(nu_diag,*) '  stream_domAreaName  = ',trim(stream_domAreaName)
-      write(nu_diag,*) '  stream_domMaskName  = ',trim(stream_domMaskName)
-      write(nu_diag,*) '  stream_domFileName  = ',trim(stream_domFileName)
-      write(nu_diag,*) '  prescribed_ice_fill = ',prescribed_ice_fill
-      write(nu_diag,*) '  stream_io_type      = ',trim(stream_io_type)
-      write(nu_diag,*) '  stream_num_iotasks  = ',stream_num_iotasks
-      write(nu_diag,*) '  stream_io_root      = ',stream_io_root
-      write(nu_diag,*) '  stream_io_stride    = ',stream_io_stride
-      write(nu_diag,*) '  stream_mapwrite     = ',trim(stream_mapwrite)
-      write(nu_diag,*) '  stream_mapread      = ',trim(stream_mapread)
-      write(nu_diag,*) '  stream_fillwrite    = ',trim(stream_fillwrite)
-      write(nu_diag,*) '  stream_fillread     = ',trim(stream_fillread)
+      write(nu_diag,*) 'This is the prescribed ice coverage option.'
+      write(nu_diag,*) '  stream_year_first  = ',stream_year_first  
+      write(nu_diag,*) '  stream_year_last   = ',stream_year_last   
+      write(nu_diag,*) '  model_year_align   = ',model_year_align   
+      write(nu_diag,*) '  stream_fldVarName  = ',trim(stream_fldVarName)
+      write(nu_diag,*) '  stream_fldFileName = ',trim(stream_fldFileName)
+      write(nu_diag,*) '  stream_domTvarName = ',trim(stream_domTvarName)
+      write(nu_diag,*) '  stream_domXvarName = ',trim(stream_domXvarName)
+      write(nu_diag,*) '  stream_domYvarName = ',trim(stream_domYvarName)
+      write(nu_diag,*) '  stream_domFileName = ',trim(stream_domFileName)
+      write(nu_diag,*) '  prescribed_ice_fill= ',prescribed_ice_fill
       write(nu_diag,*) ' '
    endif
 
- end subroutine ice_prescribed_init
-
-!===============================================================================
-!BOP
-!
-! !IROUTINE: ice_prescribed_init2 - second phase 
-!
-! !INTERFACE: 
- subroutine ice_prescribed_init2(compid, gsmap, dom)
- 
-! !DESCRIPTION:
-!    Second phase of ice prescribed initialization - needed to 
-!    work with new shr_strdata module derived type 
-!
-! !REVISION HISTORY:
-!    2009-Oct-12 - M. Vertenstein
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-    integer(kind=int_kind), intent(in)   :: compid
-    type(mct_gsMap) :: gsmap
-    type(mct_gGrid) :: dom
-
-!EOP
-   !----- Local ------
-   character(*),parameter :: subName = "('ice_prescribed_init2')"
-   character(*),parameter :: F00 = "('(ice_prescribed_init) ',4a)"
-
-   integer(kind=int_kind), pointer :: dof(:)
-   type(mct_sMat):: sMati
-
-   character(len=char_len_long) :: first_data_file     ! first data file in stream
-   character(len=char_len_long) :: domain_info_fn      ! file with domain info
-   character(len=char_len_long) :: data_path           ! path/location of stream data files
-
-   integer(kind=int_kind) :: ncid        ! netcdf file index
-   character(char_len)    :: timeName    ! domain file: time variable name
-   character(char_len)    ::  lonName    ! domain file: lon  variable name
-   character(char_len)    ::  latName    ! domain file: lat  variable name
-   character(char_len)    :: maskName    ! domain file: mask variable name
-   character(char_len)    :: areaName    ! domain file: area variable name
-   logical(kind=log_kind) :: check       ! true if field is found
-
-   !---------------------------------------------------------------------
-   ! Write diagnostic output
-   !---------------------------------------------------------------------
-   if (my_task == master_task) then
-      write(nu_diag,*) ' prescribed_ice            = ', prescribed_ice
-      write(nu_diag,*) ' stream_year_first         = ', stream_year_first
-      write(nu_diag,*) ' stream_year_last          = ', stream_year_last
-      write(nu_diag,*) ' model_year_align          = ', model_year_align
-      write(nu_diag,*) ' prescribed_ice_fill       = ', prescribed_ice_fill
-      write(nu_diag,*) ' This is the prescribed ice option.'
-      write(nu_diag,*) ' Heat and water will not be conserved.'   
-   endif
-
-   !---------------------------------------------------------------------
-   ! Parse info file, initialize sdat datatype and load with info
-   ! Need gsmap and dom to finish initialization
-   !---------------------------------------------------------------------
-   if (trim(stream_io_type) == 'netcdf') then
-      sdat%io_type  = iotype_std_netcdf
-   elseif (trim(stream_io_type) == 'pio_netcdf') then
-      sdat%io_type  = iotype_netcdf
-   elseif (trim(stream_io_type) == 'pio_pnetcdf') then
-      sdat%io_type  = iotype_pnetcdf
-   else
-      write(nu_diag,F00) 'ERROR: unknown io_type, '//trim(stream_io_type)
-      call shr_sys_abort(subName//": unknown io_type, "//trim(stream_io_type))
-   endif
-   if (my_task == master_task) then
-      write(nu_diag,*)' Prescribed cice stream io type is ',trim(stream_io_type)
-   end if
-
-   sdat%dataMode               = 'PRES_ICECOV'
-   sdat%nstreams               = 1  
-   sdat%streams(:)             = shr_strdata_nullstr
-   sdat%streams(1)             = 'ice coverage'
-   sdat%vectors(:)             = shr_strdata_nullstr
-   sdat%fillalgo(:)            = 'nn'
-   sdat%fillmask(:)            = 'nomask'
-   sdat%fillwrit(:)            = trim(shr_strdata_unset)
-   sdat%fillread(:)            = trim(shr_strdata_unset)
-   sdat%mapalgo(:)             = 'bilinear'
-   sdat%mapmask(:)             = 'dstmask'
-   sdat%mapwrit(:)             = trim(shr_strdata_unset)
-   sdat%mapread(:)             = trim(shr_strdata_unset)
-   sdat%tintalgo(:)            = 'linear'
-   sdat%nvectors               = 0
-   sdat%io_stride              = stream_io_stride
-   sdat%io_root                = stream_io_root
-   sdat%num_iotasks            = stream_num_iotasks
-   sdat%num_agg                = 0
-   sdat%lsize                  = mct_gsmap_lsize(gsmap,MPI_COMM_ICE)
-   sdat%nxg                    = nx_global
-   sdat%nyg                    = ny_global
-   sdat%domainfile             = shr_strdata_nullstr
-
-   sdat%stream(1)%init         = .true.
-   sdat%stream(1)%nFiles       = 1
-   sdat%stream(1)%dataSource   = 'cice ifrac/sst file'
-   sdat%stream(1)%fldListFile  = stream_fldVarName
-   sdat%stream(1)%fldListModel = stream_fldVarName
-   sdat%stream(1)%FilePath     = ' '
-   sdat%stream(1)%domFilePath  = ' '
-   sdat%stream(1)%file(1)%name = stream_fldFileName
-   sdat%stream(1)%yearFirst    = stream_year_first 
-   sdat%stream(1)%yearLast     = stream_year_last
-   sdat%stream(1)%yearAlign    = model_year_align
-   sdat%stream(1)%fldListModel = stream_fldVarName
-   sdat%stream(1)%fldListFile  = stream_fldVarName
-   sdat%stream(1)%domTvarName  = stream_domTvarName
-   sdat%stream(1)%domXvarName  = stream_domXvarName
-   sdat%stream(1)%domYvarName  = stream_domYvarName
-   sdat%stream(1)%domAreaName  = stream_domAreaName
-   sdat%stream(1)%domMaskName  = stream_domMaskName
-   sdat%stream(1)%domFileName  = stream_domFileName
-
-   sdat%fillwrit(1) = stream_fillwrite
-   sdat%fillread(1) = stream_fillread
-   sdat%mapwrit(1)  = stream_mapwrite
-   sdat%mapread(1)  = stream_mapread
-
-   !---------------------------------------------------------------------
-   ! Initialize stream input pio subsystem 
-   !---------------------------------------------------------------------
-   call pio_init(my_task, MPI_COMM_ICE, sdat%num_iotasks, sdat%num_agg, sdat%io_stride, &
-                 PIO_REARR_BOX, sdat%pio_subsystem, base=sdat%io_root)
-
-   !---------------------------------------------------------------------
-   ! Initialize model decomp
-   ! Initialize gsmap and model general grid (sdat%gsmap and sdat%grid)
-   !---------------------------------------------------------------------
-   call mct_gsmap_OrderedPoints( gsmap, my_task, dof )
-   call mct_gsMap_init( sdat%gsmap, dof, MPI_COMM_ICE, compid, sdat%lsize, nx_global*ny_global )
-   call mct_ggrid_init( sdat%grid, dom, sdat%lsize)    
-   call mct_aVect_copy( dom%data, sdat%grid%data)
-   deallocate(dof)
-
-   !---------------------------------------------------------------------
-   ! Check that ice cover forcing data exists
-   ! Assumes that one stream that also has one field, ice fraction
-   ! Note: 1 index below refers to the fact that we have only 1 stream
-   !---------------------------------------------------------------------
-   call shr_stream_getDomainInfo(sdat%stream(1), data_path,domain_info_fn, timeName, &
-        lonName, latName, maskName, areaName)
-   call shr_dmodel_readgrid(sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
-        domain_info_fn, compid, MPI_COMM_ICE, '1d', lonName, latName, maskName, areaName)
-
-   !---------------------------------------------------------------------
-   ! Initialize pio decomp
-   !---------------------------------------------------------------------
-   sdat%lsizeR(1) = mct_gsmap_lsize(sdat%gsmapR(1),MPI_COMM_ICE)
-   call mct_gsmap_OrderedPoints(sdat%gsmapR(1), my_task, dof) 
-   call pio_initdecomp(sdat%pio_subsystem, pio_double, &
-        (/sdat%strnxg(1),sdat%strnyg(1)/), dof, sdat%pio_iodesc(1))
-   deallocate(dof)
-  
-   !---------------------------------------------------------------------
-   ! Initialize mapping 
-   !---------------------------------------------------------------------
+   ! Read shr_strdata_nml namelist
    if (prescribed_ice_fill) then
-      sdat%dofill(1) = .true.
+      fillalgo='nn'
    else
-      sdat%dofill(1) = .false.
-   end if
-   if (shr_dmodel_gGridCompare(sdat%gridR(1),sdat%gsmapR(1),sdat%grid,sdat%gsmap, &
-                               shr_dmodel_gGridCompareXYabs,MPI_COMM_ICE,0.01_dbl_kind)) then
-      sdat%domaps(1) = .false.
-   else
-      sdat%domaps(1) = .true.
-   end if
-
-   if (sdat%dofill(1)) then
-      if (trim(sdat%fillread(1)) == trim(shr_strdata_unset)) then
-         call shr_dmodel_mapSet(sdat%sMatPf(1), &
-              sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
-              sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
-              name='mapFill', type='cfill', &
-              algo=trim(sdat%fillalgo(1)),mask=trim(sdat%fillmask(1)),vect='scalar', &
-              compid=compid,mpicom=MPI_COMM_ICE)
-         if (trim(sdat%fillwrit(1)) /= trim(shr_strdata_unset)) then
-            if (my_task == master_task) write(nu_diag,F00)' writing ',trim(sdat%fillwrit(1))
-            call shr_mct_sMatWritednc(sdat%sMatPf(1)%Matrix,sdat%fillwrit(1),compid,MPI_COMM_ICE)
-         end if
-      else
-         if (my_task == master_task) write(nu_diag,F00)' reading ',trim(SDAT%fillread(1))
-         call shr_mct_sMatReaddnc(sMati,SDAT%gsmapR(1),SDAT%gsmapR(1),'src', &
-              filename=trim(SDAT%fillread(1)),mytask=my_task,mpicom=MPI_COMM_ICE)
-         call mct_sMatP_Init(SDAT%sMatPf(1),sMati,SDAT%gsMapR(1),SDAT%gsmapR(1),0, MPI_COMM_ICE, compid)
-         call mct_sMat_Clean(sMati)
-      end if
-   end if
-
-   if (sdat%domaps(1)) then
-      if (trim(sdat%mapread(1)) == trim(shr_strdata_unset)) then
-         if (my_task == master_task) write(nu_diag,F00)' calling shr_dmodel_mapSet for remap'
-         call shr_dmodel_mapSet(sdat%sMatPs(1), &
-              sdat%gridR(1),sdat%gsmapR(1),sdat%strnxg(1),sdat%strnyg(1), &
-              sdat%grid    ,sdat%gsmap    ,sdat%nxg      ,sdat%nyg      , &
-              name='mapScalar', type='remap', &
-              algo=trim(sdat%mapalgo(1)),mask=trim(sdat%mapmask(1)), vect='scalar', &
-              compid=compid,mpicom=MPI_COMM_ICE)
-         if (trim(sdat%mapwrit(1)) /= trim(shr_strdata_unset)) then
-            if (my_task == master_task) write(nu_diag,F00)' writing ',trim(sdat%mapwrit(1))
-            call shr_mct_sMatWritednc(sdat%sMatPs(1)%Matrix,sdat%mapwrit(1),compid,MPI_COMM_ICE)
-         endif
-      else
-         if (my_task == master_task) write(nu_diag,F00)' reading ',trim(sdat%mapread(1))
-         call shr_mct_sMatReaddnc(sMati,sdat%gsmapR(1),sdat%gsmap,'src', &
-              filename=trim(sdat%mapread(1)),mytask=my_task,mpicom=MPI_COMM_ICE)
-         call mct_sMatP_Init(sdat%sMatPs(1),sMati,sdat%gsMapR(1),sdat%gsmap,0, MPI_COMM_ICE, compid)
-         call mct_sMat_Clean(sMati)
-      endif
-   else
-      call mct_rearr_init(SDAT%gsmapR(1), SDAT%gsmap, MPI_COMM_ICE, SDAT%rearrR(1))
-   end if
-   
-   ! --- setup datatypes ---
-   ! TODO check that fldlist only has 1 element - 
-   if (my_task == master_task) then
-      call shr_stream_getModelFieldList(sdat%stream(1),fldList)
+      fillalgo='none'
    endif
-   call shr_mpi_bcast(fldList,MPI_COMM_ICE)
-   call mct_aVect_init(sdat%avs(1)  ,rlist=fldList,lsize=sdat%lsize)
-   call mct_aVect_init(sdat%avFLB(1),rlist=fldList,lsize=sdat%lsize)
-   call mct_aVect_init(sdat%avFUB(1),rlist=fldList,lsize=sdat%lsize)
-   call mct_aVect_init(sdat%avRLB(1),rlist=fldList,lsize=sdat%lsizeR(1))
-   call mct_aVect_init(sdat%avRUB(1),rlist=fldList,lsize=sdat%lsizeR(1))
+
+   call shr_strdata_create(sdat,name="prescribed_ice", &
+        mpicom=MPI_COMM_ICE, compid=compid, &
+        gsmap=gsmap, ggrid=dom,          &
+        nxg=nx_global,nyg=ny_global,     &
+        yearFirst=stream_year_first,     &
+        yearLast=stream_year_last,       &
+        yearAlign=model_year_align,      &
+        offset=0,                        &
+        domFilePath='',                  &
+        domFileName=trim(stream_domFileName), &
+        domTvarName=stream_domTvarName,  &
+        domXvarName=stream_domXvarName,  &
+        domYvarName=stream_domYvarName,  &
+        domAreaName=stream_domAreaName,  &
+        domMaskName=stream_domMaskName,  &
+        filePath='',                     &
+        filename=(/trim(stream_fldFileName)/),     &
+        fldListFile=stream_fldVarName,   &
+        fldListModel=stream_fldVarName,  &
+        fillalgo = trim(fillalgo))
+
+   if (my_task == master_task) then
+      call shr_strdata_print(sdat,'SPRESICE data')
+   endif
 
    !-----------------------------------------------------------------
    ! For one ice category, set hin_max(1) to something big
@@ -479,11 +253,7 @@ subroutine ice_prescribed_init
       hin_max(1) = 999._dbl_kind
    end if
    
-   if (my_task == master_task) then
-      call shr_strdata_print(sdat,'SPRESICE data')
-   endif
-
-end subroutine ice_prescribed_init2
+end subroutine ice_prescribed_init
   
 !=======================================================================
 !BOP ===================================================================
@@ -513,21 +283,17 @@ subroutine ice_prescribed_run(mDateIn, secIn)
 
 !EOP
 
-   integer(kind=int_kind) :: i,j,n,icnt,iblk  ! loop indices and counter
+   integer(kind=int_kind) :: i,j,n,iblk       ! loop indices and counter
    integer(kind=int_kind) :: ilo,ihi,jlo,jhi  ! beginning and end of physical domain
    type (block)           :: this_block
    real(kind=dbl_kind)    :: aice_max         ! maximun ice concentration
    logical, save          :: first_time = .true.
    character(*),parameter :: subName = "('ice_prescribed_run')"
    character(*),parameter :: F00 = "('(ice_prescribed_run) ',a,2g20.13)"
-   logical                :: newdata
-   integer(kind=int_kind) :: nidx	
-   real(kind=dbl_kind)    :: flb,fub          ! factor for lb and ub
  
    !------------------------------------------------------------------------
    ! Interpolate to new ice coverage
    !------------------------------------------------------------------------
-
    call shr_strdata_advance(sdat,mDateIn,SecIn,MPI_COMM_ICE,'cice_pice')
    
    ice_cov(:,:,:) = c0  ! This initializes ghost cells as well 
@@ -555,7 +321,8 @@ subroutine ice_prescribed_run(mDateIn, secIn)
       aice_max = maxval(ice_cov)
 
       if (aice_max > c10) then
-         write(nu_diag,F00) "ERROR: Ice conc data must be in fraction, aice_max= ",aice_max
+         write(nu_diag,F00) "ERROR: Ice conc data must be in fraction, aice_max= ",&
+              aice_max
          call abort_ice(subName)
       end if
       first_time = .false.

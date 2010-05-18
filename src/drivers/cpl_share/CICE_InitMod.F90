@@ -53,8 +53,6 @@
       use ice_transport_driver
       use ice_transport_remap
       use ice_work
-      use ice_prescribed_mod
-      use ice_prescaero_mod
 
       implicit none
       private
@@ -119,8 +117,6 @@
       call calendar(time)       ! determine the initial date
       call init_state           ! initialize the ice state
       call init_transport       ! initialize horizontal transport
-      call ice_prescribed_init
-      call ice_prescaero_init
 
       if (runtype == 'continue') then ! start from core restart file
          ! given by pointer in ice_in

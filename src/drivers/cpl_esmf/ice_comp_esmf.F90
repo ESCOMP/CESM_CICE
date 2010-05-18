@@ -62,7 +62,6 @@ module ice_comp_esmf
   use ice_fileunits,   only : nu_diag
   use ice_dyn_evp,     only : kdyn
   use ice_prescribed_mod
-  use ice_prescaero_mod
   use ice_step_mod
   use CICE_RunMod
   use ice_global_reductions
@@ -523,18 +522,6 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
        call t_stopf ('cice_presc')
     endif
     
-    if(prescribed_aero) then  ! read prescribed ice
-       if (first_time) then
-          call t_startf ('cice_presai2')
-          call ice_prescaero_init2(ICEID, gsmap_i, dom_i)
-          call t_stopf ('cice_presai2')
-          first_time = .false.
-       end if
-       call t_startf ('cice_presa')
-       call ice_prescaero_run(idate, sec)
-       call t_stopf ('cice_presa')
-    endif
-
     call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
     call init_flux_ocn        ! initialize ocean fluxes sent to coupler
 
@@ -1208,21 +1195,16 @@ subroutine ice_import_esmf(array, rc)
      deallocate(aflds)
 
      !-------------------------------------------------------
-     ! Accept aerosols from coupler when not prescribed.
+     ! Set aerosols from coupler 
      !-------------------------------------------------------
      
-     ! Check for special values in coupler input.
-
-     if (tr_aero .and. first_call) then
-        if (atm_aero) then
-           prescribed_aero = .false.
-        else
-           call ice_prescaero_init(prescribed_aero_in = .true.)
-        end if
+      if (first_call) then
+         if (tr_aero .and. .not. atm_aero) then
+            write(nu_diag,*) 'ice_comp_mct ERROR: atm_aero must be set for tr_aero' 
+            call shr_sys_abort()
+         end if
         first_call = .false.
-     endif
-
-      if (tr_aero .and. .not. prescribed_aero) then
+      end if
 
       n=0
       do iblk = 1, nblocks
@@ -1254,8 +1236,6 @@ subroutine ice_import_esmf(array, rc)
          enddo    !j
 
       enddo        !iblk
-
-     endif
 
      !-----------------------------------------------------------------
      ! rotate zonal/meridional vectors to local coordinates

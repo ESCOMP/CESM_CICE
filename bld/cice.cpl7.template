@@ -49,8 +49,6 @@ endif
 # Invoke build-namelist
 #----------------------------
 
-set presaero_type = "-presaero_type $CICE_PRESAERO_TYPE "
-
 set SSTDATA = "FALSE"
 if ($CICE_MODE == "prescribed") then
    if (! $?DOCN_SSTDATA_FILENAME) then
@@ -75,7 +73,7 @@ endif
 
 if ($SSTDATA == "TRUE") then
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-        $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+        -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
         -inputdata $CASEBUILD/cice.input_data_list \
         -namelist "&cice $CICE_NAMELIST_OPTS \
                     stream_fldfilename='$CCSMSSTFN' \
@@ -86,7 +84,7 @@ if ($SSTDATA == "TRUE") then
                     stream_fldvarname='ice_cov' /"  || exit -1
 else
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
          -inputdata $CASEBUILD/cice.input_data_list \
          -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
 endif

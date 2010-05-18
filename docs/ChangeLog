@@ -1,4 +1,24 @@
 ===============================================================
+cice4_0_20100517
+Originator: dbailey
+Date: Mon May 17 2010
+Version: 4.0
+One-line Summary: Remove prescribed aerosols and use new
+                  csm_share for prescribed ice.
+CCSM Version compatible with: ccsm4_0_beta54+
+Changes made:
+
+M      bld/cice.cpl7.template
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+D      src/source/ice_prescaero_mod.F90
+M      src/drivers/cpl_share/CICE_InitMod.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+M      src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20100511
 Originator: dbailey
 Date: Tue May 11 2010
