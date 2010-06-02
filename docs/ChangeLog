@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100602
+Originator: dbailey
+Date: Wed Jun 2 2010
+Version: 4.0
+One-line Summary: Syntax errors in namelist defaults.
+CCSM Version compatible with: ccsm4_0_beta54+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20100517
 Originator: dbailey
 Date: Mon May 17 2010

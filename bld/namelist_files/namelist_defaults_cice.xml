@@ -185,14 +185,13 @@
 <!--------------------------->
 
 <tr_iage> .true. </tr_iage>
-<tr_iage ice_mode='prescribed'> .false </tr_iage>
+<tr_iage cice_mode='prescribed'> .false. </tr_iage>
 
 <tr_FY> .true. </tr_FY>
-<tr_FY ice_mode='prescribed'> .false </tr_FY>
+<tr_FY cice_mode='prescribed'> .false. </tr_FY>
 
 <tr_pond> .true. </tr_pond>
-<tr_pond ice_mode='prescribed'> .false  </tr_pond>
-<tr_pond hgrid='tx0.1v2'      > .false. </tr_pond>
+<tr_pond hgrid='tx0.1v2' > .false. </tr_pond>
 
 <tr_aero> .true. </tr_aero>
 
