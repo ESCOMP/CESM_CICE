@@ -366,7 +366,7 @@ end subroutine
     !-----------------------------------------------------------------
 
     if (prescribed_ice) then
-       call ice_prescribed_init2(ICEID, gsmap_i, dom_i)
+       call ice_prescribed_init(ICEID, gsmap_i, dom_i)
     end if
 
     !-----------------------------------------------------------------
@@ -1052,8 +1052,6 @@ subroutine ice_import_esmf(array, rc)
          workx, worky
     logical (kind=log_kind) :: &
          first_call = .true.
-    logical (kind=log_kind) :: &
-         prescribed_aero_tmp
 
     !-----------------------------------------------------
 

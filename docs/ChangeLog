@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100607
+Originator: mvertens
+Date: Mon Jun 7 2010
+Version: 4.0
+One-line Summary: Fix for ESMF driver.
+CCSM Version compatible with: ccsm4_0_beta54+
+Changes made:
+
+M      src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20100602
 Originator: dbailey
 Date: Wed Jun 2 2010
