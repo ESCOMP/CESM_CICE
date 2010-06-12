@@ -365,9 +365,7 @@ end subroutine
     ! Second phase of prescribed ice initialization
     !-----------------------------------------------------------------
 
-    if (prescribed_ice) then
-       call ice_prescribed_init(ICEID, gsmap_i, dom_i)
-    end if
+    call ice_prescribed_init(ICEID, gsmap_i, dom_i)
 
     !-----------------------------------------------------------------
     ! get ready for coupling
