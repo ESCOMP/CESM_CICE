@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Prescribed Aerosol Namelist</TITLE>
-<META NAME="description" CONTENT="Prescribed Aerosol Namelist">
+<TITLE>Grid Namelist</TITLE>
+<META NAME="description" CONTENT="Grid Namelist">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -27,118 +27,127 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html268"
+<A NAME="tex2html269"
   HREF="node15.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html264"
+<A NAME="tex2html265"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html258"
+<A NAME="tex2html259"
   HREF="node13.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html266"
+<A NAME="tex2html267"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html269"
-  HREF="node15.html">Grid Namelist</A>
-<B>Up:</B> <A NAME="tex2html265"
+<B> Next:</B> <A NAME="tex2html270"
+  HREF="node15.html">Domain Namelist</A>
+<B>Up:</B> <A NAME="tex2html266"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html259"
+<B> Previous:</B> <A NAME="tex2html260"
   HREF="node13.html">Prescribed Ice Namelist</A>
 <BR> <P>
 
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00046000000000000000">
-Prescribed Aerosol Namelist</A>
+Grid Namelist</A>
 </H2>
 
 <P>
-The namelist parameters listed in Table <A HREF="#table:ice_prescraero_nml">6</A> are for
-the prescribed aerosol option. See section on the prescribed aerosols 
-<A HREF="node23.html#prescraero">7</A>. For more information on the aerosols themselves, see the
-scientific reference guide.
+The namelist parameters listed in Table <A HREF="#table:grid_nml">6</A> are for
+grid and mask information.  During execution, the ice model reads grid and 
+land mask information from the files <TT>grid_file</TT> and <TT>kmt_file</TT> that 
+should be located in the executable directory. There are commands in the 
+scripts that copy these files from the input data directory, rename them from 
+<B>global_$ICE_GRID.grid</B> and <B>global_$ICE_GRID.kmt</B> to the
+default filenames shown in Table <A HREF="#table:grid_nml">6</A>.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="table:ice_prescraero_nml"></A>  <A NAME="582"></A>
+  <A NAME="table:grid_nml"></A>  <A NAME="571"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 6:</STRONG>
-Namelist Variables for Prescribed Aerosol Option</CAPTION>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+Namelist Variables for Grid and Mask Information</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Type</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Default Value</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_aero</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn on prescribed ice</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'displaced_pole'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Determines grid type.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>prescribed_aero_fill </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Flag to turn fill option</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_first_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>First year of aerosol deposition data</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_year_last_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Last year of aerosol deposition data</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>model_year_align_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Year in model run that aligns with stream_year_first</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_domfilename_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed aerosol stream data file</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'displaced_pole'</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldfilename_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Prescribed aerosol stream data file</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'tripole'</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>stream_fldvarname_aero </TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Aerosol field names</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'rectangular'</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_format</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>binary</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Grid file format (binary or netCDF)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_file</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'data.domain.grid'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Input filename
+                                           containing grid information.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>kmt_file</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'data.domain.kmt'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Input filename
+                                       containing land mask information.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>kcatbound</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How category boundaries are set (0 or 1)</TD>
 </TR>
 </TABLE>
 </DIV>
 <BR>
 
 <P>
+For coupled runs, supported grids include the <TT>'displaced_pole'</TT> grids 
+(gx3v7 and gx1v6) and the <TT>'tripole'</TT> grids.
+
+<P>
 <HR>
-<A NAME="tex2html268"
+<A NAME="tex2html269"
   HREF="node15.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html264"
+<A NAME="tex2html265"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html258"
+<A NAME="tex2html259"
   HREF="node13.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html266"
+<A NAME="tex2html267"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html269"
-  HREF="node15.html">Grid Namelist</A>
-<B>Up:</B> <A NAME="tex2html265"
+<B> Next:</B> <A NAME="tex2html270"
+  HREF="node15.html">Domain Namelist</A>
+<B>Up:</B> <A NAME="tex2html266"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html259"
+<B> Previous:</B> <A NAME="tex2html260"
   HREF="node13.html">Prescribed Ice Namelist</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

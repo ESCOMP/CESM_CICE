@@ -5,17 +5,17 @@
 \subsection{The Build Environment}
 
 The build and configure environment has changed significantly from previous
-versions of CCSM. The build namelist and configure utilities are based on
+versions of CESM. The build namelist and configure utilities are based on
 the CAM scripts (). 
 
 The \textbf{configure} utility includes setting compile
 time parameters such as the horizontal grid, the sea ice mode (prognostic or
-prescribed), the prescribed aerosol option, tracers, etc. Additional options 
+prescribed), tracers, etc. Additional options 
 can be set using the \textbf{configure} utility such as the decomposition,
-and the number of tasks, but these are typically set via CCSM enviroment
+and the number of tasks, but these are typically set via CESM enviroment
 variables. However, the CAM scripts set some of these explicitly through
 the configure command line. For example one such configure line in the
-CCSM scripts is:
+CESM scripts is:
 
 \begin{verbatim}
 
@@ -38,43 +38,46 @@ This example sets the horizontal grid and the mode (prognostic or prescribed).  
 run time options for the CICE model. This utility sets namelist flags based
 on compile time settings from \textbf{configure} and some standard defaults
 based on horizontal grids and other options. The typical execution during
-the CCSM configure is:
+the CESM configure is:
 
 \begin{verbatim}
 
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
          -inputdata $CASEBUILD/cice.input_data_list \
          -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
 
 \end{verbatim}
 
 Again, the typical usage of the \textbf{build namelist} tool is through
-the CCSM scripts, but can be called via the command line interface.
+the CESM scripts, but can be called via the command line interface.
 
 \subsubsection{CICE Preprocessor Flags}
 
 Preprocessor flags are activated in the form {\tt -Doption} in the 
-{\bf cice.buildexe.csh} script.  The flags specific to the ice model are
+{\bf cice.buildexe.csh} script.  Only advanced users should change
+these options.  See the CESM User's Guide or the CICE reference guide
+for more information on these.  The flags specific to the ice model are:
 
 \begin{verbatim}
-CPPDEFS :=  $(CPPDEFS) -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
+CPPDEFS :=  $(CPPDEFS) -DCESMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
 -DNYGLOB=$() -DNTR_AERO=3 -DBLCKX=$() -DBLCKY=$() -DMXBLCKS=$()
 \end{verbatim}
 
-The options {\tt -DCCSMCOUPLED} and  {\tt -Dcoupled} are set to activate the 
+The options {\tt -DCESMCOUPLED} and  {\tt -Dcoupled} are set to activate the 
 coupling interface.  This will include the source code in 
-{\bf ice\_comp\_mct.F90}, for example.  In coupled runs, the CCSM coupler 
+{\bf ice\_comp\_mct.F90}, for example.  In coupled runs, the CESM coupler 
 multiplies the fluxes by the ice area, so they are divided by the ice area 
 in CICE to get the correct fluxes.
 
-The options {\tt -DBLCKX=\$(NX)} and {\tt -DBLCKY=\$(NY)} set the number of
-processors used in each grid direction.  These values are set automatically
-in the scripts for the coupled model.  Note that {\tt NX} and {\tt NY} must 
-divide evenly into the grid, and are used only for MPI grid decomposition.  
-If {\tt NX} or {\tt NY} do not divide evenly into the grid, the model setup 
-will exit from the setup script and print an error message to the 
-{\bf ice.log*} (standard out) file.
+The options {\tt -DBLCKX=\$(CICE\_BLCKX)} and {\tt -DBLCKY=\$(CICE\_BLCKY)} 
+set the block sizes used in each grid direction.  These values are 
+set automatically in the scripts for the coupled model.  Note that {\tt BLCKX} 
+and {\tt BLCKY} must divide evenly into the grid, and are used only for MPI 
+grid decomposition.  If {\tt BLCX} or {\tt BLCKY} do not divide evenly into 
+the grid, which determines the number of blocks in each direction, the model 
+setup will exit from the setup script and print an error message to the 
+{\bf ice.bldlog*} (build log) file.
 
 The flag {\tt -DMXBLCKS} is essentially the threading option. This controls
 the number of "blocks" per processor. This can describe the number of OpenMP

@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Grid Namelist</TITLE>
-<META NAME="description" CONTENT="Grid Namelist">
+<TITLE>Domain Namelist</TITLE>
+<META NAME="description" CONTENT="Domain Namelist">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -27,127 +27,123 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html280"
+<A NAME="tex2html281"
   HREF="node16.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html276"
+<A NAME="tex2html277"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html270"
+<A NAME="tex2html271"
   HREF="node14.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html278"
+<A NAME="tex2html279"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html281"
-  HREF="node16.html">Domain Namelist</A>
-<B>Up:</B> <A NAME="tex2html277"
+<B> Next:</B> <A NAME="tex2html282"
+  HREF="node16.html">PIO Namelist</A>
+<B>Up:</B> <A NAME="tex2html278"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html271"
-  HREF="node14.html">Prescribed Aerosol Namelist</A>
+<B> Previous:</B> <A NAME="tex2html272"
+  HREF="node14.html">Grid Namelist</A>
 <BR> <P>
 
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00047000000000000000">
-Grid Namelist</A>
+Domain Namelist</A>
 </H2>
 
 <P>
-The namelist parameters listed in Table <A HREF="#table:grid_nml">7</A> are for
-grid and mask information.  During execution, the ice model reads grid and 
-land mask information from the files <TT>grid_file</TT> and <TT>kmt_file</TT> that 
-should be located in the executable directory. There are commands in the 
-scripts that copy these files from the input data directory, rename them from 
-<B>global_$ICE_GRID.grid</B> and <B>global_$ICE_GRID.kmt</B> to the
-default filenames shown in Table <A HREF="#table:grid_nml">7</A>.
+The namelist parameters listed in Table <A HREF="#table:domain_nml">7</A> are for
+computational domain decomposition information. These are generally set in
+the build configure scripts based on the number of processors. See the CESM
+scripts documentation.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="table:grid_nml"></A>  <A NAME="609"></A>
+  <A NAME="table:domain_nml"></A>  <A NAME="592"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 7:</STRONG>
-Namelist Variables for Grid and Mask Information</CAPTION>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Varible</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Type</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Default Value</TD>
+Namelist Variables for Domain Decomposition Information</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Default Value</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_type</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'displaced_pole'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Determines grid type.</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>processor_shape</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'square-pop'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Approximate block shapes</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'displaced_pole'</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ew_boundary_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cyclic'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in E-W direction</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'tripole'</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ns_boundary_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'open'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in N-S direction</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'rectangular'</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_type</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cartesian'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are split onto processors</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_format</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>binary</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Grid file format (binary or netCDF)</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'cartesian'</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>grid_file</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'data.domain.grid'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Input filename
-                                           containing grid information.</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'spacecurve'</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>kmt_file</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>'data.domain.kmt'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Input filename
-                                       containing land mask information.</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'rake'</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>kcatbound</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Integer</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How category boundaries are set (0 or 1)</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'erfc'</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are weighted when using space-filling curves (erfc or file)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght_file</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>''</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>File containing space-filling curve weights when not using erfc weighting</TD>
 </TR>
 </TABLE>
 </DIV>
 <BR>
 
 <P>
-For coupled runs, supported grids include the <TT>'displaced_pole'</TT> grids 
-(gx3v7 and gx1v6) and the <TT>'tripole'</TT> grids.
-
-<P>
 <HR>
-<A NAME="tex2html280"
+<A NAME="tex2html281"
   HREF="node16.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html276"
+<A NAME="tex2html277"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html270"
+<A NAME="tex2html271"
   HREF="node14.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html278"
+<A NAME="tex2html279"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html281"
-  HREF="node16.html">Domain Namelist</A>
-<B>Up:</B> <A NAME="tex2html277"
+<B> Next:</B> <A NAME="tex2html282"
+  HREF="node16.html">PIO Namelist</A>
+<B>Up:</B> <A NAME="tex2html278"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html271"
-  HREF="node14.html">Prescribed Aerosol Namelist</A>
+<B> Previous:</B> <A NAME="tex2html272"
+  HREF="node14.html">Grid Namelist</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

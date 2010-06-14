@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html386"
+<A NAME="tex2html387"
   HREF="node25.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html382"
+<A NAME="tex2html383"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html376"
+<A NAME="tex2html377"
   HREF="node23.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html384"
+<A NAME="tex2html385"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html387"
+<B> Next:</B> <A NAME="tex2html388"
   HREF="node25.html">Output Data</A>
-<B>Up:</B> <A NAME="tex2html383"
+<B>Up:</B> <A NAME="tex2html384"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html377"
+<B> Previous:</B> <A NAME="tex2html378"
   HREF="node23.html">Prescribed Aerosol Mode</A>
 <BR> <P>
 
@@ -71,7 +71,7 @@ places:
 
 <P>
 The number of ice thickness categories is set in 
-<B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B> using the variable 
+<B>$CASE/Buildconf/cice.buildexe.csh</B> using the variable 
 called <TT>$NCAT</TT>.  The default value is 5 categories. <TT>$NCAT</TT> is 
 used to determine the CPP variable setting (NCAT) in 
 <B>ice_model_size.F90</B>. <TT>$RES</TT> is the resolution of the grid, 
@@ -111,15 +111,15 @@ followed:
 
 <UL>
 <LI>Set <TT>$NCAT</TT> to the desired number of categories in 
-<BR>        <B>ccsm3/scripts/$CASE/Buildexe/cice.buildexe.csh</B>.
+<BR>        <B>$CASE/Buildconf/cice.buildexe.csh</B>.
 </LI>
 <LI>Set the namelist variable <TT>dumpfreq = 'm'</TT> in 
-<BR>        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
+<BR>        <B>$CASE/Buildconf/cice.buildnml.csh</B> 
 <BR>
 to print out restart files monthly.
 </LI>
 <LI>Set the namelist variable <TT>restart = .false.</TT> in 
-        <B>ccsm3/scripts/$CASE/Buildnml_Prestage/cice.buildnml.csh</B> 
+        <B>$CASE/Buildconf/cice.buildnml.csh</B> 
 <BR>
 to use the initial conditions within the ice model.
 </LI>
@@ -141,29 +141,29 @@ date and the date inside the file will not be used.
 
 <P>
 <HR>
-<A NAME="tex2html386"
+<A NAME="tex2html387"
   HREF="node25.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html382"
+<A NAME="tex2html383"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html376"
+<A NAME="tex2html377"
   HREF="node23.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html384"
+<A NAME="tex2html385"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html387"
+<B> Next:</B> <A NAME="tex2html388"
   HREF="node25.html">Output Data</A>
-<B>Up:</B> <A NAME="tex2html383"
+<B>Up:</B> <A NAME="tex2html384"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html377"
+<B> Previous:</B> <A NAME="tex2html378"
   HREF="node23.html">Prescribed Aerosol Mode</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

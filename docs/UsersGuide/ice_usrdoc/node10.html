@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html220"
+<A NAME="tex2html221"
   HREF="node11.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html216"
+<A NAME="tex2html217"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html210"
+<A NAME="tex2html211"
   HREF="node9.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html218"
+<A NAME="tex2html219"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html221"
+<B> Next:</B> <A NAME="tex2html222"
   HREF="node11.html">Model Physics</A>
-<B>Up:</B> <A NAME="tex2html217"
+<B>Up:</B> <A NAME="tex2html218"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html211"
+<B> Previous:</B> <A NAME="tex2html212"
   HREF="node9.html">Changing the timestep</A>
 <BR> <P>
 
@@ -87,7 +87,7 @@ information on restart pointer files can be found in section <A HREF="node28.htm
 <P>
 The variables <TT>dumpfreq</TT> and <TT>dumpfreq_n</TT> control the 
 output frequency of the netCDF restart files; writing one restart file per 
-year is the default and is set by the CCSM driver. The default format for
+year is the default and is set by the CESM driver. The default format for
 restart files is now netCDF, but this can be changed to binary through
 the namelist variable, <TT>restart_format</TT>.
 
@@ -102,7 +102,7 @@ be helpful for debugging.
 where the initial condition file, the restart files and the history files will
 be written, respectively.  These values are set at the top of the setup script
 and have been modified from the default values to meet the requirements of the
-CCSM filenaming convention.  This allows each type of output file to be written
+CESM filenaming convention.  This allows each type of output file to be written
 to a separate directory.  If the default values are used, all of the output
 files will be written to the executable directory.
 
@@ -110,13 +110,13 @@ files will be written to the executable directory.
 <TT>incond_file</TT>, <TT>dump_file</TT> and <TT>history_file</TT> are the root
 filenames for the initial condition file, the restart files and the history 
 files, respectively.  These strings have been determined by the requirements 
-of the CCSM filenaming convention, so the default values are set by the CCSM
+of the CESM filenaming convention, so the default values are set by the CESM
 driver.  See <A HREF="node27.html#restart_files">9.2</A> and <A HREF="node29.html#history_files">9.3</A> for an explanation 
 of how the rest of the filename is created.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="ice_nml"></A>  <A NAME="471"></A>
+  <A NAME="ice_nml"></A>  <A NAME="456"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 3:</STRONG>
 Namelist Variables for Model Physics</CAPTION>
@@ -222,7 +222,7 @@ Namelist Variables for Model Physics</CAPTION>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'default' = CCSM3 Shortwave</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'default' = CESM3 Shortwave</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
@@ -232,22 +232,22 @@ Namelist Variables for Model Physics</CAPTION>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicev</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.73</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible ice albedo (CCSM3)</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible ice albedo (CESM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicei</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.33</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared ice albedo (CCSM3)</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared ice albedo (CESM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowv</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.96</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible snow albedo (CCSM3)</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible snow albedo (CESM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowi</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.68</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared snow albedo (CCSM3)</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared snow albedo (CESM3)</TD>
 </TR>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_ice</TT></TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
@@ -280,29 +280,29 @@ Namelist Variables for Model Physics</CAPTION>
 
 <P>
 <HR>
-<A NAME="tex2html220"
+<A NAME="tex2html221"
   HREF="node11.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html216"
+<A NAME="tex2html217"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html210"
+<A NAME="tex2html211"
   HREF="node9.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html218"
+<A NAME="tex2html219"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html221"
+<B> Next:</B> <A NAME="tex2html222"
   HREF="node11.html">Model Physics</A>
-<B>Up:</B> <A NAME="tex2html217"
+<B>Up:</B> <A NAME="tex2html218"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html211"
+<B> Previous:</B> <A NAME="tex2html212"
   HREF="node9.html">Changing the timestep</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

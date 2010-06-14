@@ -2,27 +2,25 @@
 % SVN: $Id: ice_what_is_cice4.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
 
-This User's Guide accompanies the CCSM4 User's Guide, and is intended
+This User's Guide accompanies the CESM1 User's Guide, and is intended
 for those who would like to run CICE coupled, on a supported
 platform, and "out of the box".  Users running CICE fully coupled should first
-look at the CCSM4 User's Guide:\\
+look at the CESM1 User's Guide:\\
 
-\ifpdf
-    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.\\
-\else
-\begin{htmlonly}
-  \htmladdnormallink{http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}
-                    {http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
-\end{htmlonly}
-\begin{latexonly}
-                    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
-\end{latexonly}
-\fi
+%begin{htmlonly}
+   %htmladdnormallink
+%  {http://www.cesm.ucar.edu/models/cesm1.0/cesm\_doc/book1.html}
+%  {../../cesm/cesm\_doc/book1.html}.\\
+%end{htmlonly}
 
-It includes a quick start guide for downloading the CCSM4 source code and 
+%begin{latexonly}
+    {\tt http://www.cesm.ucar.edu/models/cesm1.0/cesm\_doc/book1.html}.\\
+%end{latexonly}
+
+It includes a quick start guide for downloading the CESM1 source code and 
 input datasets, and information on how to configure,
 build and run the model.  The supported configurations and scripts for building
-the fully coupled model are also described in the CCSM4 User's Guide.  The CICE
+the fully coupled model are also described in the CESM1 User's Guide.  The CICE
 User's Guide is intended for users interested in making modifications to the
 ice model scripts or namelists or running the uncoupled ice model.  Users
 interested in modifying the source code should see the CICE Code Reference/
@@ -33,7 +31,7 @@ referred to as the Community Ice CodE.  It is the
 result of a community effort to develop a portable, efficient sea ice model
 that can be run coupled in a global climate model or uncoupled as a stand-alone
 ice model. It has been released as the sea ice component of the Community
-Climate System Model (CCSM), a fully-coupled global climate model that
+Earth System Model (CESM), a fully-coupled global climate model that
 provides simulations of the earths past, present and future climate states.
 CICE4 is supported on high- and low-resolution Greenland Pole
 and tripole grids, which are identical to those used by the Parallel Ocean 
@@ -42,19 +40,15 @@ simulating present-day and future climate scenarios while the low resolution
 option is used for paleoclimate simulations and debugging.  An uncoupled 
 version of CICE is available separately from Los Alamos National Laboratory:\\
 
-\ifpdf
+%begin{htmlonly}
+  %htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
+%                   {http://oceans11.lanl.gov/trac/CICE}.\\
+%end{htmlonly}
+%begin{latexonly}
                     {\tt http://oceans11.lanl.gov/trac/CICE}.\\
-\else
-\begin{htmlonly}
-  \htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
-                    {http://oceans11.lanl.gov/trac/CICE}.
-\end{htmlonly}
-\begin{latexonly}
-                    {\tt http://oceans11.lanl.gov/trac/CICE}.
-\end{latexonly}
-\fi
+%end{latexonly}
 
-It provides a means of running the sea ice model independent of the other CCSM 
+It provides a means of running the sea ice model independent of the other CESM 
 components.  It reads in atmospheric and ocean forcing, which eliminates the 
 need for the flux coupler, and the atmosphere, land and ocean data models.  It 
 can be run on a reduced number of processors, or without MPI (Message Passing 
@@ -101,13 +95,13 @@ CICE4 is an upgraded version of the Community Sea Ice Model, CSIM5, which was
       is available in {\bf ice\_mechred.F90}.
 
 \item A new drivers area has been created for modules that are specific
-      to the CCSM as opposed to the standalone CICE model. The new CCSM
+      to the CESM as opposed to the standalone CICE model. The new CESM
       drivers are contained in the cpl\_mct and cpl\_share subdirectories.
       The ESMF driver (cpl\_esmf) is still under development. The source
       subdirectory now contains driver independent source code for the
       most part.
 
-\item A new bld subdirectory has been introduced which contains CCSM
+\item A new bld subdirectory has been introduced which contains CESM
       specific build and configure scripts. These scripts handle the
       namelist generation, defaults, and configuration details.
 
@@ -116,14 +110,10 @@ CICE4 is an upgraded version of the Community Sea Ice Model, CSIM5, which was
 The CICE source code is based on the Los Alamos sea ice model CICE model version 4.  The main source code is very similar in both versions, but the drivers are significantly different.  If there are some topics that are not covered in the CICE documentation, users are encouraged to look at the CICE documentation \cite{cice08}.  It is available at Los Alamos National Laboratory at: \\
 \\
 
-\ifpdf
-                    {\tt http://oceans11.lanl.gov/trac/CICE}.
-\else
-\begin{htmlonly}
-  \htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
-                    {http://oceans11.lanl.gov/trac/CICE}.
-\end{htmlonly}
-\begin{latexonly}
-                    {\tt http://oceans11.lanl.gov/trac/CICE}.
-\end{latexonly}
-\fi
+%begin{htmlonly}
+  %htmladdnormallink{http://oceans11.lanl.gov/trac/CICE}
+%                   {http://oceans11.lanl.gov/trac/CICE}.
+%end{htmlonly}
+%begin{latexonly}
+                    {\tt http://oceans11.lanl.gov/trac/CICE}.\\
+%end{latexonly}

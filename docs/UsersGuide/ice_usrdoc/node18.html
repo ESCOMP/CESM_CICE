@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Example 1: CCSM Fully Coupled</TITLE>
-<META NAME="description" CONTENT="Example 1: CCSM Fully Coupled">
+<TITLE>Example 1: CESM Fully Coupled</TITLE>
+<META NAME="description" CONTENT="Example 1: CESM Fully Coupled">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html316"
+<A NAME="tex2html317"
   HREF="node19.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html312"
+<A NAME="tex2html313"
   HREF="node17.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html306"
+<A NAME="tex2html307"
   HREF="node17.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html314"
+<A NAME="tex2html315"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html317"
+<B> Next:</B> <A NAME="tex2html318"
   HREF="node19.html">Example 2: History File</A>
-<B>Up:</B> <A NAME="tex2html313"
+<B>Up:</B> <A NAME="tex2html314"
   HREF="node17.html">Example Namelists</A>
-<B> Previous:</B> <A NAME="tex2html307"
+<B> Previous:</B> <A NAME="tex2html308"
   HREF="node17.html">Example Namelists</A>
 <BR> <P>
 
@@ -52,11 +52,11 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <H3><A NAME="SECTION00049100000000000000"></A>
 <A NAME="example1_nml"></A>
 <BR>
-Example 1: CCSM Fully Coupled
+Example 1: CESM Fully Coupled
 </H3>
 
 <P>
-The following example is the namelist used for CCSM fully coupled, or
+The following example is the namelist used for CESM fully coupled, or
 the B configuration.  The variables that are still set to shell script
 variables have been set at the top of <B>cice.buildnml.csh</B>
 or in other scripts.  A completely resolved version of the namelist will
@@ -111,30 +111,13 @@ be written to <B>ice_in</B> in the executable directory.
 &amp;ice_prescribed_nml
  prescribed_ice         = .false.
 /
-&amp;ice_prescaero_nml
- model_year_align_aero          =  1  
- prescribed_aero_fill           = .true. 
- stream_domareaname_aero                = "area"
- stream_domfilename_aero                = '/fis/cgd/cseg/csm/inputdata/ice/cice/
-aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'
- stream_dommaskname_aero                = "mask"
- stream_domtvarname_aero                = "time"
- stream_domxvarname_aero                = "lon"
- stream_domyvarname_aero                = "lat"
- stream_fldfilename_aero                = '/fis/cgd/cseg/csm/inputdata/ice/cice/
-aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc'
- stream_fldvarname_aero         = 'BCPHODRY:BCDEPWET:BCPHIDRY:DSTX01WD:DSTX01DD:
-DSTX02WD:DSTX02DD:DSTX03WD:DSTX03DD:DSTX04WD:DSTX04DD'
- stream_year_first_aero         =  1  
- stream_year_last_aero          =  1  
-/
 </PRE>
 
 <P>
 <BR> <HR>
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

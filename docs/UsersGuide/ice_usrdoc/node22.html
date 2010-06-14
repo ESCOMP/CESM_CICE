@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html362"
+<A NAME="tex2html363"
   HREF="node23.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html358"
+<A NAME="tex2html359"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html352"
+<A NAME="tex2html353"
   HREF="node21.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html360"
+<A NAME="tex2html361"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html363"
+<B> Next:</B> <A NAME="tex2html364"
   HREF="node23.html">Prescribed Aerosol Mode</A>
-<B>Up:</B> <A NAME="tex2html359"
+<B>Up:</B> <A NAME="tex2html360"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html353"
+<B> Previous:</B> <A NAME="tex2html354"
   HREF="node21.html">Run Types</A>
 <BR> <P>
 
@@ -68,7 +68,7 @@ in the sea ice model. This mode is not energy conserving and is mainly
 intended as a testbed for atmospheric sensitivity experiments.
 
 <P>
-The input netCDF file name required for this prescribed mode is set in the CCSM
+The input netCDF file name required for this prescribed mode is set in the CESM
 scripts or via the CICE build-namelist as follows:
 
 <P>
@@ -77,8 +77,8 @@ scripts or via the CICE build-namelist as follows:
         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
         -inputdata $CASEBUILD/cice.input_data_list \
         -namelist "&amp;cice $CICE_NAMELIST_OPTS \
-                    stream_fldfilename='$CCSMSSTFN' \
-                    stream_domfilename='$CCSMSSTFN' \
+                    stream_fldfilename='$CESMSSTFN' \
+                    stream_domfilename='$CESMSSTFN' \
                     stream_year_first=$DOCN_SSTDATA_YEAR_START \
                     stream_year_last=$DOCN_SSTDATA_YEAR_END \
                     model_year_align=$DOCN_SSTDATA_YEAR_START \
@@ -86,7 +86,7 @@ scripts or via the CICE build-namelist as follows:
 </PRE>
 
 <P>
-The variables in upper case letters are set during the CCSM configure step
+The variables in upper case letters are set during the CESM configure step
 and passed through to the CICE namelist. The ice concentration variable is
 assumed to be "ice_cov". There also needs to be a reconizable time axis
 like "days since 0001-01-01" in the netCDF file so that the time interpolation 
@@ -94,29 +94,29 @@ can be handled within the ice model.
 
 <P>
 <HR>
-<A NAME="tex2html362"
+<A NAME="tex2html363"
   HREF="node23.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html358"
+<A NAME="tex2html359"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html352"
+<A NAME="tex2html353"
   HREF="node21.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html360"
+<A NAME="tex2html361"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html363"
+<B> Next:</B> <A NAME="tex2html364"
   HREF="node23.html">Prescribed Aerosol Mode</A>
-<B>Up:</B> <A NAME="tex2html359"
+<B>Up:</B> <A NAME="tex2html360"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html353"
+<B> Previous:</B> <A NAME="tex2html354"
   HREF="node21.html">Run Types</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

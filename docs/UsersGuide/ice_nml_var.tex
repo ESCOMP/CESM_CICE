@@ -1,4 +1,4 @@
-%=======================================================================
+%\\=======================================================================
 % SVN: $Id: ice_nml_var.tex 5 2005-12-12 17:41:05Z mvr $
 %=======================================================================
 % Namelist Variables
@@ -14,11 +14,11 @@ information to the file {\bf ice\_in} in the directory where the model
 executable is located.  Therefore, the namelist will be updated even if the 
 ice model is not recompiled.  The default values of the ice setup, grid, 
 tracer, and physics namelists are set in {\bf ice\_init.F90}.  The prescribed
-ice and aerosol options along with the history namelist variables are set
-in {\bf ice\_prescribed.F90}, {\bf ice\_prescaero.F90}, and 
-{\bf ice\_history.F90} respectively. If they are not set in the namelist 
+ice option along with the history namelist variables are set
+in {\bf ice\_prescribed.F90} and {\bf ice\_history.F90} respectively. 
+If they are not set in the namelist 
 in the script, they will assume the default values listed in 
-Tables \ref{table:setup_nml}-\ref{table:domain_nml}, which list all available 
+Tables \ref{table:setup_nml}-\ref{table:pio_nml}, which list all available 
 namelist parameters.  The default values shown here are
 for the coupled model, which is set up for a production run. Only a few of 
 these variables are required to be set in the namelist; these values are 
@@ -74,21 +74,17 @@ Varible  & Type & Default Value & Description               \\
 
 The main run management namelist options are shown in Table 
 \ref{table:setup_nml}. While additional namelist variables are available in
-the uncoupled version, they are set by the driver in CCSM. Variables set by
+the uncoupled version, they are set by the driver in CESM. Variables set by
 the driver include: {\tt dt}, {\tt runid}, {\tt runtype}, {\tt istep0}, 
 {\tt days\_per\_year}, {\tt restart} and {\tt dumpfreq}. These should be 
-changed in the CCSM configuration files:
+changed in the CESM configuration files:\\
 
-\ifpdf
-  {\tt CCSM scripts (http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm).}
-\else
-\begin{htmlonly}
-  \htmladdnormallink{CCSM scripts}{http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm}.
-\end{htmlonly}
-\begin{latexonly}
-  {\tt CCSM scripts (http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm).}
-\end{latexonly}
-\fi
+%begin{htmlonly}
+  %htmladdnormallink{CESM scripts}{../../cesm/cesm\_doc/book1.html}.\\
+%end{htmlonly}
+%begin{latexonly}
+  {\tt CESM scripts (http://www.cesm.ucar.edu/models/cesm1.0/cesm\_doc/book1.html)}.\\
+%end{latexonly}
 
 \subsection{Changing the timestep}
 \label{setup_nml_mgmt}
@@ -102,10 +98,10 @@ for the transport using the upwind advection scheme is:
 \begin{equation}
   \Delta t < \frac{min(\Delta x, \Delta y)}{4 max(u, v)} .
 \end{equation}
-Maximum values for {\tt dt} for the two standard CCSM POP grids, assuming 
+Maximum values for {\tt dt} for the two standard CESM POP grids, assuming 
 $max(u,v) = 0.5 m/s$, are shown in Table \ref{table:max_dt}.  The default
 timestep for CICE is 30 minutes, which must be equal to the coupling interval
-set in the CCSM configuration files.
+set in the CESM configuration files.
 
 \begin{table}
   \begin{center}
@@ -164,7 +160,7 @@ information on restart pointer files can be found in section \ref{pointer_files}
 
 The variables {\tt dumpfreq} and {\tt dumpfreq\_n} control the 
 output frequency of the netCDF restart files; writing one restart file per 
-year is the default and is set by the CCSM driver. The default format for
+year is the default and is set by the CESM driver. The default format for
 restart files is now netCDF, but this can be changed to binary through
 the namelist variable, {\tt restart\_format}.
 
@@ -177,14 +173,14 @@ be helpful for debugging.
 where the initial condition file, the restart files and the history files will
 be written, respectively.  These values are set at the top of the setup script
 and have been modified from the default values to meet the requirements of the
-CCSM filenaming convention.  This allows each type of output file to be written
+CESM filenaming convention.  This allows each type of output file to be written
 to a separate directory.  If the default values are used, all of the output
 files will be written to the executable directory.
 
 {\tt incond\_file}, {\tt dump\_file} and {\tt history\_file} are the root
 filenames for the initial condition file, the restart files and the history 
 files, respectively.  These strings have been determined by the requirements 
-of the CCSM filenaming convention, so the default values are set by the CCSM
+of the CESM filenaming convention, so the default values are set by the CESM
 driver.  See \ref{restart_files} and \ref{history_files} for an explanation 
 of how the rest of the filename is created.
 
@@ -223,16 +219,16 @@ of how the rest of the filename is created.
           &            &   &   'upwind' = first order advection \\
 
 {\tt shortwave} & Character & 'dEdd' & Shortwave Radiative Transfer Scheme \\
-                &           &        & 'default' = CCSM3 Shortwave \\
+                &           &        & 'default' = CESM3 Shortwave \\
                 &           &        & 'dEdd' = delta-Eddington Shortwave \\
 
-{\tt albicev} &  Double & 0.73 &  Visible ice albedo (CCSM3)\\
+{\tt albicev} &  Double & 0.73 &  Visible ice albedo (CESM3)\\
 
-{\tt albicei} &  Double & 0.33 &  Near-infrared ice albedo (CCSM3)\\
+{\tt albicei} &  Double & 0.33 &  Near-infrared ice albedo (CESM3)\\
 
-{\tt albsnowv} &  Double & 0.96 &  Visible snow albedo (CCSM3)\\
+{\tt albsnowv} &  Double & 0.96 &  Visible snow albedo (CESM3)\\
 
-{\tt albsnowi} &  Double & 0.68 &  Near-infrared snow albedo (CCSM3)\\
+{\tt albsnowi} &  Double & 0.68 &  Near-infrared snow albedo (CESM3)\\
 
 {\tt R\_ice} &  Double & 0.0 &  Base ice grain radius tuning parameter (dEdd)\\
 
@@ -308,7 +304,7 @@ is less diffusive and is computationally efficient for large numbers of
 categories or tracers.  The upwind scheme is also available. The upwind scheme 
 is only first order accurate.
  
-The base values of the snow and ice albedos for the CCSM3 shortwave option
+The base values of the snow and ice albedos for the CESM3 shortwave option
 are set in the namelist.  The ice albedos are those for ice thicker than 
 {\tt ahmax}, which is currently set at 0.5 m.  This thickness is a parameter 
 that can be changed in {\bf ice\_shortwave.F90}. The snow albedos are for 
@@ -383,42 +379,6 @@ the prescribed ice option as used in AMIP and F compset (standalone CAM) runs
   \end{center}
 \end{table}
 
-\subsection{Prescribed Aerosol Namelist}
-
-The namelist parameters listed in Table \ref{table:ice_prescraero_nml} are for
-the prescribed aerosol option. See section on the prescribed aerosols 
-\ref{prescraero}. For more information on the aerosols themselves, see the
-scientific reference guide.
-
-\begin{table}
-  \begin{center}
-  \caption{Namelist Variables for Prescribed Aerosol Option}
-  \label{table:ice_prescraero_nml}
-  \begin{tabular}{p{4.0cm}p{2.0cm}p{3cm}p{6.0cm}} \hline
-  Varible & Type & Default Value & Description               \\
-\hline \hline
-
-{\tt prescribed\_aero} & Logical & .false. &  Flag to turn on prescribed ice \\
-
-{\tt prescribed\_aero\_fill } & Logical & .false. &  Flag to turn fill option \\
-
-{\tt stream\_year\_first\_aero } & Integer & 1 & First year of aerosol deposition data \\
-
-{\tt stream\_year\_last\_aero } & Integer & 1 & Last year of aerosol deposition data \\
-
-{\tt model\_year\_align\_aero } & Integer & 1 & Year in model run that aligns with stream\_year\_first \\
-
-{\tt stream\_domfilename\_aero } & Character & & Prescribed aerosol stream data file \\
-
-{\tt stream\_fldfilename\_aero } & Character & & Prescribed aerosol stream data file \\
-
-{\tt stream\_fldvarname\_aero } & Character & & Aerosol field names \\
-
-  \hline
-  \end{tabular}
-  \end{center}
-\end{table}
-
 \subsection{Grid Namelist}
 
 The namelist parameters listed in Table \ref{table:grid_nml} are for
@@ -464,7 +424,7 @@ For coupled runs, supported grids include the {\tt 'displaced\_pole'} grids
 
 The namelist parameters listed in Table \ref{table:domain_nml} are for
 computational domain decomposition information. These are generally set in
-the build configure scripts based on the number of processors. See the CCSM
+the build configure scripts based on the number of processors. See the CESM
 scripts documentation.
 
 \begin{table}
@@ -495,3 +455,39 @@ scripts documentation.
   \end{center}
 \end{table}
 
+\subsection{PIO Namelist}
+
+The namelist parameters listed in Table \ref{table:pio_nml} are for
+controlling parallel input/output.  Only a brief overview will be
+given here, but more on parallel input/output can be found at:\\
+
+%begin{htmlonly}
+  %htmladdnormallink
+%     {http://web.ncar.teragrid.org/~dennis/pio_doc/html}
+%     {http://web.ncar.teragrid.org/~dennis/pio_doc/html}.\\
+%end{htmlonly}
+%begin{latexonly}
+  {\tt http://web.ncar.teragrid.org/\~{}dennis/pio\_doc/html}.\\
+%end{latexonly}
+
+\begin{table}
+  \begin{center}
+  \caption{Namelist Variables for Parallel I/O}
+  \label{table:pio_nml}
+  \begin{tabular}{p{2.5cm}p{2.5cm}p{3cm}p{6.0cm}} \hline
+  Varible & Type & Default Value & Description               \\
+\hline \hline
+
+{\tt ice\_num\_iotasks} & Integer & -1 & Number of I/O tasks. \\
+                        &         &    & default -1 selects all processors. \\
+
+{\tt ice\_pio\_stride} & Integer & -1 & Stride between I/O tasks. \\
+                        &        &    & -1 selects defaulto stride. \\
+
+{\tt ice\_pio\_type\_name} & Character & netcdf & Underlying library used. \\
+                        &        &     & default is netcdf. \\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}

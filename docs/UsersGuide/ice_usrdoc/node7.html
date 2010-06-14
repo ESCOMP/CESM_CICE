@@ -26,23 +26,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html173"
+<A NAME="tex2html174"
   HREF="node8.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html169"
+<A NAME="tex2html170"
   HREF="node6.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html165"
+<A NAME="tex2html166"
   HREF="node6.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html171"
+<A NAME="tex2html172"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html174"
+<B> Next:</B> <A NAME="tex2html175"
   HREF="node8.html">Namelist Variables</A>
-<B>Up:</B> <A NAME="tex2html170"
+<B>Up:</B> <A NAME="tex2html171"
   HREF="node6.html">The Build Environment</A>
-<B> Previous:</B> <A NAME="tex2html166"
+<B> Previous:</B> <A NAME="tex2html167"
   HREF="node6.html">The Build Environment</A>
 <BR> <P>
 
@@ -54,29 +54,32 @@ CICE Preprocessor Flags</A>
 
 <P>
 Preprocessor flags are activated in the form <TT>-Doption</TT> in the 
-<B>cice.buildexe.csh</B> script.  The flags specific to the ice model are
+<B>cice.buildexe.csh</B> script.  Only advanced users should change
+these options.  See the CESM User's Guide or the CICE reference guide
+for more information on these.  The flags specific to the ice model are:
 
 <P>
 <PRE>
-CPPDEFS :=  $(CPPDEFS) -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
+CPPDEFS :=  $(CPPDEFS) -DCESMCOUPLED -Dcoupled -Dncdf -DNCAT=5 -DNXGLOB=$()
 -DNYGLOB=$() -DNTR_AERO=3 -DBLCKX=$() -DBLCKY=$() -DMXBLCKS=$()
 </PRE>
 
 <P>
-The options <TT>-DCCSMCOUPLED</TT> and  <TT>-Dcoupled</TT> are set to activate the 
+The options <TT>-DCESMCOUPLED</TT> and  <TT>-Dcoupled</TT> are set to activate the 
 coupling interface.  This will include the source code in 
-<B>ice_comp_mct.F90</B>, for example.  In coupled runs, the CCSM coupler 
+<B>ice_comp_mct.F90</B>, for example.  In coupled runs, the CESM coupler 
 multiplies the fluxes by the ice area, so they are divided by the ice area 
 in CICE to get the correct fluxes.
 
 <P>
-The options <TT>-DBLCKX=$(NX)</TT> and <TT>-DBLCKY=$(NY)</TT> set the number of
-processors used in each grid direction.  These values are set automatically
-in the scripts for the coupled model.  Note that <TT>NX</TT> and <TT>NY</TT> must 
-divide evenly into the grid, and are used only for MPI grid decomposition.  
-If <TT>NX</TT> or <TT>NY</TT> do not divide evenly into the grid, the model setup 
-will exit from the setup script and print an error message to the 
-<B>ice.log*</B> (standard out) file.
+The options <TT>-DBLCKX=$(CICE_BLCKX)</TT> and <TT>-DBLCKY=$(CICE_BLCKY)</TT> 
+set the block sizes used in each grid direction.  These values are 
+set automatically in the scripts for the coupled model.  Note that <TT>BLCKX</TT> 
+and <TT>BLCKY</TT> must divide evenly into the grid, and are used only for MPI 
+grid decomposition.  If <TT>BLCX</TT> or <TT>BLCKY</TT> do not divide evenly into 
+the grid, which determines the number of blocks in each direction, the model 
+setup will exit from the setup script and print an error message to the 
+<B>ice.bldlog*</B> (build log) file.
 
 <P>
 The flag <TT>-DMXBLCKS</TT> is essentially the threading option. This controls
@@ -97,29 +100,29 @@ in the source code or look at the <B>*.f90</B> files in the /<B>obj</B> director
 
 <P>
 <HR>
-<A NAME="tex2html173"
+<A NAME="tex2html174"
   HREF="node8.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html169"
+<A NAME="tex2html170"
   HREF="node6.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html165"
+<A NAME="tex2html166"
   HREF="node6.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html171"
+<A NAME="tex2html172"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html174"
+<B> Next:</B> <A NAME="tex2html175"
   HREF="node8.html">Namelist Variables</A>
-<B>Up:</B> <A NAME="tex2html170"
+<B>Up:</B> <A NAME="tex2html171"
   HREF="node6.html">The Build Environment</A>
-<B> Previous:</B> <A NAME="tex2html166"
+<B> Previous:</B> <A NAME="tex2html167"
   HREF="node6.html">The Build Environment</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

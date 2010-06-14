@@ -26,23 +26,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html162"
+<A NAME="tex2html163"
   HREF="node7.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html158"
+<A NAME="tex2html159"
   HREF="node4.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html154"
+<A NAME="tex2html155"
   HREF="node5.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html160"
+<A NAME="tex2html161"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html163"
+<B> Next:</B> <A NAME="tex2html164"
   HREF="node7.html">CICE Preprocessor Flags</A>
-<B>Up:</B> <A NAME="tex2html159"
+<B>Up:</B> <A NAME="tex2html160"
   HREF="node4.html">The CICE Scripts</A>
-<B> Previous:</B> <A NAME="tex2html155"
+<B> Previous:</B> <A NAME="tex2html156"
   HREF="node5.html">Coupled Model Scripts</A>
 <BR> <P>
 
@@ -54,18 +54,18 @@ The Build Environment</A>
 
 <P>
 The build and configure environment has changed significantly from previous
-versions of CCSM. The build namelist and configure utilities are based on
+versions of CESM. The build namelist and configure utilities are based on
 the CAM scripts (). 
 
 <P>
 The <B>configure</B> utility includes setting compile
 time parameters such as the horizontal grid, the sea ice mode (prognostic or
-prescribed), the prescribed aerosol option, tracers, etc. Additional options 
+prescribed), tracers, etc. Additional options 
 can be set using the <B>configure</B> utility such as the decomposition,
-and the number of tasks, but these are typically set via CCSM enviroment
+and the number of tasks, but these are typically set via CESM enviroment
 variables. However, the CAM scripts set some of these explicitly through
 the configure command line. For example one such configure line in the
-CCSM scripts is:
+CESM scripts is:
 
 <P>
 <PRE>
@@ -88,19 +88,19 @@ This example sets the horizontal grid and the mode (prognostic or prescribed).  
 run time options for the CICE model. This utility sets namelist flags based
 on compile time settings from <B>configure</B> and some standard defaults
 based on horizontal grids and other options. The typical execution during
-the CCSM configure is:
+the CESM configure is:
 
 <P>
 <PRE>
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
+         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
          -inputdata $CASEBUILD/cice.input_data_list \
          -namelist "&amp;cice $CICE_NAMELIST_OPTS /" || exit -1
 </PRE>
 
 <P>
 Again, the typical usage of the <B>build namelist</B> tool is through
-the CCSM scripts, but can be called via the command line interface.
+the CESM scripts, but can be called via the command line interface.
 
 <P>
 <BR> <HR>
@@ -108,34 +108,34 @@ the CCSM scripts, but can be called via the command line interface.
 <A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
 <UL>
-<LI><A NAME="tex2html164"
+<LI><A NAME="tex2html165"
   HREF="node7.html">CICE Preprocessor Flags</A>
 </UL>
 <!--End of Table of Child-Links-->
 <HR>
-<A NAME="tex2html162"
+<A NAME="tex2html163"
   HREF="node7.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html158"
+<A NAME="tex2html159"
   HREF="node4.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html154"
+<A NAME="tex2html155"
   HREF="node5.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html160"
+<A NAME="tex2html161"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html163"
+<B> Next:</B> <A NAME="tex2html164"
   HREF="node7.html">CICE Preprocessor Flags</A>
-<B>Up:</B> <A NAME="tex2html159"
+<B>Up:</B> <A NAME="tex2html160"
   HREF="node4.html">The CICE Scripts</A>
-<B> Previous:</B> <A NAME="tex2html155"
+<B> Previous:</B> <A NAME="tex2html156"
   HREF="node5.html">Coupled Model Scripts</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

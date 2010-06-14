@@ -11,7 +11,7 @@ $external_labels{$key} = "$URL/" . q|node13.html|;
 $noresave{$key} = "$nosave";
 
 $key = q/table:grid_nml/;
-$external_labels{$key} = "$URL/" . q|node15.html|; 
+$external_labels{$key} = "$URL/" . q|node14.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/table:tracer_nml/;
@@ -36,6 +36,10 @@ $noresave{$key} = "$nosave";
 
 $key = q/history/;
 $external_labels{$key} = "$URL/" . q|node29.html|; 
+$noresave{$key} = "$nosave";
+
+$key = q/table:pio_nml/;
+$external_labels{$key} = "$URL/" . q|node16.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/pointer_files/;
@@ -103,7 +107,7 @@ $external_labels{$key} = "$URL/" . q|node29.html|;
 $noresave{$key} = "$nosave";
 
 $key = q/table:domain_nml/;
-$external_labels{$key} = "$URL/" . q|node16.html|; 
+$external_labels{$key} = "$URL/" . q|node15.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/cite_bitz01/;
@@ -165,20 +169,16 @@ $key = q/table:ice_prescribed_nml/;
 $external_latex_labels{$key} = q|5|; 
 $noresave{$key} = "$nosave";
 
-$key = q/table:ice_prescraero_nml/;
-$external_latex_labels{$key} = q|6|; 
-$noresave{$key} = "$nosave";
-
 $key = q/history_files/;
 $external_latex_labels{$key} = q|9.3|; 
 $noresave{$key} = "$nosave";
 
 $key = q/table:grid_nml/;
-$external_latex_labels{$key} = q|7|; 
+$external_latex_labels{$key} = q|6|; 
 $noresave{$key} = "$nosave";
 
 $key = q/table:domain_nml/;
-$external_latex_labels{$key} = q|8|; 
+$external_latex_labels{$key} = q|7|; 
 $noresave{$key} = "$nosave";
 
 $key = q/table:tracer_nml/;
@@ -211,6 +211,10 @@ $noresave{$key} = "$nosave";
 
 $key = q/pointer_files/;
 $external_latex_labels{$key} = q|9.2|; 
+$noresave{$key} = "$nosave";
+
+$key = q/table:pio_nml/;
+$external_latex_labels{$key} = q|8|; 
 $noresave{$key} = "$nosave";
 
 $key = q/restart_files/;

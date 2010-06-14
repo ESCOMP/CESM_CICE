@@ -7,8 +7,8 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>Domain Namelist</TITLE>
-<META NAME="description" CONTENT="Domain Namelist">
+<TITLE>PIO Namelist</TITLE>
+<META NAME="description" CONTENT="PIO Namelist">
 <META NAME="keywords" CONTENT="ice_usrdoc">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
@@ -27,121 +27,108 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html292"
+<A NAME="tex2html293"
   HREF="node17.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html288"
+<A NAME="tex2html289"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html282"
+<A NAME="tex2html283"
   HREF="node15.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html290"
+<A NAME="tex2html291"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html293"
+<B> Next:</B> <A NAME="tex2html294"
   HREF="node17.html">Example Namelists</A>
-<B>Up:</B> <A NAME="tex2html289"
+<B>Up:</B> <A NAME="tex2html290"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html283"
-  HREF="node15.html">Grid Namelist</A>
+<B> Previous:</B> <A NAME="tex2html284"
+  HREF="node15.html">Domain Namelist</A>
 <BR> <P>
 
 <!--End of Navigation Panel-->
 
 <H2><A NAME="SECTION00048000000000000000">
-Domain Namelist</A>
+PIO Namelist</A>
 </H2>
 
 <P>
-The namelist parameters listed in Table <A HREF="#table:domain_nml">8</A> are for
-computational domain decomposition information. These are generally set in
-the build configure scripts based on the number of processors. See the CCSM
-scripts documentation.
+The namelist parameters listed in Table <A HREF="#table:pio_nml">8</A> are for
+controlling parallel input/output.  Only a brief overview will be
+given here, but more on parallel input/output can be found at:
 
 <P>
+<A NAME="tex2html14"
+  HREF="http://web.ncar.teragrid.org/~dennis/pio_doc/html">http://web.ncar.teragrid.org/~dennis/pio_doc/html</A>.
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="table:domain_nml"></A>  <A NAME="630"></A>
+
+<A NAME="table:pio_nml"></A>  <A NAME="614"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
 <CAPTION><STRONG>Table 8:</STRONG>
-Namelist Variables for Domain Decomposition Information</CAPTION>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Varible</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Default Value</TD>
+Namelist Variables for Parallel I/O</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Varible</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Default Value</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Description</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>processor_shape</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'square-pop'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Approximate block shapes</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>ice_num_iotasks</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>-1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Number of I/O tasks.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ew_boundary_type</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cyclic'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in E-W direction</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>default -1 selects all processors.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>ns_boundary_type</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'open'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Boundary conditions in N-S direction</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>ice_pio_stride</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>-1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Stride between I/O tasks.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_type</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'cartesian'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are split onto processors</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>-1 selects defaulto stride.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'cartesian'</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71><TT>ice_pio_type_name</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>netcdf</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>Underlying library used.</TD>
 </TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'spacecurve'</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>'rake'</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>'erfc'</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>How blocks are weighted when using space-filling curves (erfc or file)</TD>
-</TR>
-<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113><TT>distribution_wght_file</TT></TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>''</TD>
-<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>File containing space-filling curve weights when not using erfc weighting</TD>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=71>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=170>default is netcdf.</TD>
 </TR>
 </TABLE>
 </DIV>
 <BR>
     <HR>
-<A NAME="tex2html292"
+<A NAME="tex2html293"
   HREF="node17.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html288"
+<A NAME="tex2html289"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html282"
+<A NAME="tex2html283"
   HREF="node15.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html290"
+<A NAME="tex2html291"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html293"
+<B> Next:</B> <A NAME="tex2html294"
   HREF="node17.html">Example Namelists</A>
-<B>Up:</B> <A NAME="tex2html289"
+<B>Up:</B> <A NAME="tex2html290"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html283"
-  HREF="node15.html">Grid Namelist</A>
+<B> Previous:</B> <A NAME="tex2html284"
+  HREF="node15.html">Domain Namelist</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>

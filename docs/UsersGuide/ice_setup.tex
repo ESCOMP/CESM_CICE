@@ -3,11 +3,11 @@
 %=======================================================================
 
 The setup scripts for the coupled model are 
-located in {\bf ccsm4/scripts}. The directory structure of CICE4
-within CCSM is shown below.
+located in {\bf cesm1/scripts}. The directory structure of CICE4
+within CESM is shown below.
 
 \begin{verbatim}
-                                   ccsm4         (main directory)
+                                   cesm1         (main directory)
                                      |
                                      |
                        models--------+--------- scripts
@@ -36,25 +36,22 @@ within CCSM is shown below.
 \subsection{Coupled Model Scripts}
 \label{coupled_scripts}
 
-The CCSM4 scripts have been significantly upgraded from CCSM3 and are
+The CESM1 scripts have been significantly upgraded from CCSM3 and are
 based on a completely different design philosophy.  The new scripts will
 generate a set of "resolved scripts" for a specific configuration determined
 by the user. The configuration includes components, resolution, run type, and
 machine. The run and setup scripts that were previously in the {\bf /scripts}
-directory for CCSM3 are now generated automatically.  See the CCSM4 User's 
+directory for CCSM3 are now generated automatically.  See the CESM1 User's 
 Guide for information on how to use the new scripts:\\
 
-\ifpdf
-                    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.\\
-\else
-\begin{htmlonly}
-  \htmladdnormallink{http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}
-                    {http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
-\end{htmlonly}
-\begin{latexonly}
-                    {\tt http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm\_doc/book1.html}.
-\end{latexonly}
-\fi
+%begin{htmlonly}
+  %htmladdnormallink
+%     {http://www.cesm.ucar.edu/models/cesm1.0/cesm\_doc/book1.html}
+%     {../../cesm/cesm\_doc/book1.html}.\\
+%end{htmlonly}
+%begin{latexonly}
+      {\tt http://www.cesm.ucar.edu/models/cesm1.0/cesm\_doc/book1.html}.\\
+%end{latexonly}
 
 The file that contains the ice model namelist is now located in 
 {\bf \$CASE/Buildconf}. The

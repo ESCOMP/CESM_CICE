@@ -11,7 +11,7 @@ places:
   \end{itemize}
 
 The number of ice thickness categories is set in 
-{\bf ccsm3/scripts/\$CASE/Buildexe/cice.buildexe.csh} using the variable 
+{\bf \$CASE/Buildconf/cice.buildexe.csh} using the variable 
 called {\tt \$NCAT}.  The default value is 5 categories. {\tt \$NCAT} is 
 used to determine the CPP variable setting (NCAT) in 
 {\bf ice\_model\_size.F90}. {\tt \$RES} is the resolution of the grid, 
@@ -43,12 +43,12 @@ followed:
 
 \begin{itemize}
   \item Set {\tt \$NCAT} to the desired number of categories in \\
-        {\bf ccsm3/scripts/\$CASE/Buildexe/cice.buildexe.csh}.
+        {\bf \$CASE/Buildconf/cice.buildexe.csh}.
   \item Set the namelist variable {\tt dumpfreq = 'm'} in \\
-        {\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage/cice.buildnml.csh} \\
+        {\bf \$CASE/Buildconf/cice.buildnml.csh} \\
         to print out restart files monthly.
   \item Set the namelist variable {\tt restart = .false.} in 
-        {\bf ccsm3/scripts/\$CASE/Buildnml\_Prestage/cice.buildnml.csh} \\
+        {\bf \$CASE/Buildconf/cice.buildnml.csh} \\
         to use the initial conditions within the ice model.
   \item Run the model to equilibrium. 
   \item The last restart file can be used as an initial condition file.

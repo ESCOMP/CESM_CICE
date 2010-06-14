@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html374"
+<A NAME="tex2html375"
   HREF="node24.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html370"
+<A NAME="tex2html371"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html364"
+<A NAME="tex2html365"
   HREF="node22.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html372"
+<A NAME="tex2html373"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html375"
+<B> Next:</B> <A NAME="tex2html376"
   HREF="node24.html">Changing the Number of</A>
-<B>Up:</B> <A NAME="tex2html371"
+<B>Up:</B> <A NAME="tex2html372"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html365"
+<B> Previous:</B> <A NAME="tex2html366"
   HREF="node22.html">Prescribed Ice Mode</A>
 <BR> <P>
 
@@ -56,34 +56,13 @@ Prescribed Aerosol Mode
 </H1>
   
 <P>
-The prescribed aerosol mode is a functionality feature that is needed to
-handle prescribed aerosol deposition on the sea ice. This functionality
-will eventually be handled within CAM or datm. For more information on the 
-aerosols themselves, see the scientific reference guide.
-
-<P>
-The input netCDF file name required for this prescribed aerosol mode is set 
-in the CCSM scripts or via the CICE build-namelist as follows:
-
-<P>
-<PRE>
-  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-         $presaero_type -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-         -inputdata $CASEBUILD/cice.input_data_list \
-         -namelist "&amp;cice $CICE_NAMELIST_OPTS /" || exit -1
-</PRE>
-
-<P>
-The flag "presaero_type" determines whether the dataset represents
-climatological aerosol deposition for 2000 (data_clim_2000), 1850
-(data_clim_1850) or a transient aerosol deposition dataset say for
-the 20th century.
+As of CESM version 1, prescribed aerosols are now handled within CAM or DATM. 
 
 <P>
 <BR> <HR>
 <ADDRESS>
 <I>David Bailey <BR>
-2010-01-07</I>
+2010-05-28</I>
 </ADDRESS>
 </BODY>
 </HTML>
