@@ -143,8 +143,6 @@
 !    msize0,' MB (highwater) ',mrss0,' MB (usage)'
 !     endif
 
-      ltime = time/int(secday)
-
       if (my_task == master_task) then
          call construct_filename(ncfile(ns),'nc',ns)
          
@@ -183,7 +181,7 @@
       ! define dimensions
       !-----------------------------------------------------------------
 
-      if (hist_avg) then
+      if (hist_avg .and. histfreq(ns) /= '1') then
          status = pio_def_dim(File,'d2',2, boundid)
       endif
       
@@ -210,7 +208,7 @@
          status = pio_put_att(File,varid,'calendar','noleap')
       endif
       
-      if (hist_avg) then
+      if (hist_avg .and. histfreq(ns) /= '1') then
          status = pio_put_att(File,varid,'bounds','time_bounds')
       endif
 
@@ -218,7 +216,7 @@
       ! Define attributes for time bounds if hist_avg is true
       !-----------------------------------------------------------------
 
-      if (hist_avg) then
+      if (hist_avg .and. histfreq(ns) /= '1') then
          dimid2(1) = boundid
          dimid2(2) = timid
          status = pio_def_var(File,'time_bounds',pio_real,dimid2,varid)
@@ -397,7 +395,7 @@
             !-----------------------------------------------------------------
             ! Add cell_methods attribute to variables if averaged
             !-----------------------------------------------------------------
-            if (hist_avg) then
+            if (hist_avg .and. histfreq(ns) /= '1') then
                if (TRIM(avail_hist_fields(n)%vname)/='sig1' &
                .or.TRIM(avail_hist_fields(n)%vname)/='sig2') then
                   status = pio_put_att(File,varid,'cell_methods','time: mean')
@@ -476,7 +474,7 @@
       ! write time_bounds info
       !-----------------------------------------------------------------
 
-      if (hist_avg) then
+      if (hist_avg .and. histfreq(ns) /= '1') then
          status = pio_inq_varid(File,'time_bounds',varid)
 	 time_bounds=(/time_beg(ns),time_end(ns)/)
          status = pio_put_var(File,varid,time_bounds) 

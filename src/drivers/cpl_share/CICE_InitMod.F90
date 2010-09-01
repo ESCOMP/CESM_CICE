@@ -96,6 +96,7 @@
 !     local temporary variables
 
       character(len=char_len_long) :: fname
+      integer  (kind=int_kind)     :: ltmp
 
       call init_communicate( mpicom_ice ) ! initial setup for message passing
       call init_fileunits       ! set unit numbers (including nu_diag)
@@ -128,7 +129,8 @@
          call calendar(time)          ! For continuation runs.
       else if (restart) then          
          ! ice_ic = core restart file or 'default' or 'none'
-         if (index(ice_ic,'nc') == 0) then
+         ltmp = len_trim(ice_ic)
+         if (ice_ic(ltmp-2:ltmp) /= '.nc') then
             call restartfile (ice_ic)      
          else
             call restartfile (usepio=.true., ice_ic=ice_ic)

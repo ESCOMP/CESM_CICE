@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20100901
+Originator: dbailey
+Date: Wed Sep 01 2010
+Version: 4.0
+One-line Summary: Fix for instantaneous output and recognition
+                  of binary initial file.
+CCSM Version compatible with: cesm1_0_beta06+
+Changes made:
+
+M      src/source/ice_history_fields.F90
+M      src/drivers/cpl_share/CICE_InitMod.F90
+M      src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20100611
 Originator: mvertens
 Date: Mon Jun 11 2010

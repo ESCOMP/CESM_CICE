@@ -265,7 +265,9 @@
         else
 
          if (hist_avg) then
-          if (histfreq(ns).eq.'h'.or.histfreq(ns).eq.'H') then
+          if (histfreq(ns).eq.'1') then
+           ! do nothing
+          elseif (histfreq(ns).eq.'h'.or.histfreq(ns).eq.'H') then
            ! do nothing
           elseif (new_year) then
            iyear = iyear - 1
