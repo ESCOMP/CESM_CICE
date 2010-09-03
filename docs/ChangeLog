@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20100903
+Originator: dbailey
+Date: Fri Sep 03 2010
+Version: 4.0
+One-line Summary: Fix for daily radiation diagnostic fields.
+CCSM Version compatible with: cesm1_0_beta06+
+Changes made:
+
+M      src/source/ice_history.F90
+
+===============================================================
 cice4_0_20100901
 Originator: dbailey
 Date: Wed Sep 01 2010

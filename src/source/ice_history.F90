@@ -228,6 +228,38 @@
            f_fsalt,     f_fsalt_ai , &
            f_fhocn,     f_fhocn_ai , &
            f_fswthru,   f_fswthru_ai,&
+#if (defined AEROFRC) || (defined CCSM3FRC) || (defined PONDFRC)
+           f_fswsfc_ai, f_fswint_ai ,&
+#endif
+#ifdef AEROFRC
+           f_dfswabs_noaero, &
+           f_dfswsfc_noaero, &
+           f_dfswint_noaero, &
+           f_dfswthru_noaero, &
+           f_dalvdr_noaero , f_dalidr_noaero, &
+           f_dalvdf_noaero , f_dalidf_noaero, &
+           f_dalbice_noaero, f_dalbsno_noaero, &
+           f_dalbpnd_noaero,                   &
+#endif
+#ifdef CCSM3FRC
+           f_dfswabs_ccsm3, &
+           f_dfswsfc_ccsm3, &
+           f_dfswint_ccsm3, &
+           f_dfswthru_ccsm3, &
+           f_dalvdr_ccsm3 , f_dalidr_ccsm3, &
+           f_dalvdf_ccsm3 , f_dalidf_ccsm3, &
+           f_dalbice_ccsm3, f_dalbsno_ccsm3, &
+#endif
+#ifdef PONDFRC
+           f_dfswabs_nopond, &
+           f_dfswsfc_nopond, &
+           f_dfswint_nopond, &
+           f_dfswthru_nopond, &
+           f_dalvdr_nopond , f_dalidr_nopond, &
+           f_dalvdf_nopond , f_dalidf_nopond, &
+           f_dalbice_nopond, f_dalbsno_nopond, &
+           f_dalbpnd_nopond,                   &
+#endif
            f_strairx,   f_strairy  , &
            f_strtltx,   f_strtlty  , &
            f_strcorx,   f_strcory  , &
