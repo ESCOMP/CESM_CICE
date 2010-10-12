@@ -35,8 +35,9 @@ module ice_comp_mct
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-			      alvdr, alidr, alvdf, alidf, tref, qref, flat,    &
-			      fsens, flwout, evap, fswabs, fhocn, fswthru,     &
+			      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
+                              flat, fsens, flwout, evap, fswabs, fhocn, &
+                              fswthru,     &
 		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
 		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
 		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
@@ -821,7 +822,6 @@ contains
      ,  tauya &
      ,  tauxo &      ! ice/ocean stress
      ,  tauyo &
-     ,  sicthk &     ! needed for cam/som only 
      ,  ailohi       ! fractional ice area
 
     real (kind=dbl_kind) :: &
@@ -841,9 +841,6 @@ contains
        do j = 1, ny_block
        do i = 1, nx_block
              
-          ! sea-ice thickness needed for cam-som only
-          sicthk(i,j,iblk) = vice(i,j,iblk)/(aice(i,j,iblk)+puny)
-
           ! ice fraction
           ailohi(i,j,iblk) = min(aice(i,j,iblk), c1)
 
@@ -912,7 +909,6 @@ contains
             n = n+1
 
             !-------states-------------------- 
-            i2x_i%rAttr(index_i2x_Si_sicthk,n)    = sicthk(i,j,iblk) ! (needed by CAM/SOM only)
             i2x_i%rAttr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
 
             if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then
@@ -922,6 +918,7 @@ contains
                i2x_i%rAttr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
+!              i2x_i%rAttr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &

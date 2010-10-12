@@ -168,6 +168,7 @@
          flat    , & ! latent heat flux   (W/m^2)
          fswabs  , & ! shortwave flux absorbed in ice and ocean (W/m^2)
          flwout  , & ! outgoing longwave radiation (W/m^2)
+         Uref    , & ! 10m reference wind speed (m/s)
          Tref    , & ! 2m atm reference temperature (K)
          Qref    , & ! 2m atm reference spec humidity (kg/kg)
          evap        ! evaporative water flux (kg/m^2/s)
@@ -285,6 +286,7 @@
          alidr_ocn   , & ! near-ir, direct   (fraction)
          alvdf_ocn   , & ! visible, diffuse  (fraction)
          alidf_ocn   , & ! near-ir, diffuse  (fraction)
+         Uref_ocn    , & ! 2m reference wind speed (m/s)
          Tref_ocn    , & ! 2m atm reference temperature (K)
          Qref_ocn        ! 2m atm reference spec humidity (kg/kg)
 
@@ -463,6 +465,7 @@
       flwout  (:,:,:) = -stefan_boltzmann*Tffresh**4   
                         ! in case atm model diagnoses Tsfc from flwout
       evap    (:,:,:) = c0
+      Uref    (:,:,:) = c0
       Tref    (:,:,:) = c0
       Qref    (:,:,:) = c0
       alvdr   (:,:,:) = c0
@@ -585,6 +588,7 @@
 #endif
       flwout  (:,:,:) = c0
       evap    (:,:,:) = c0
+      Uref    (:,:,:) = c0
       Tref    (:,:,:) = c0
       Qref    (:,:,:) = c0
 
@@ -776,6 +780,7 @@
                                dfswintn_nopond,  dfswthrun_nopond,    &
 #endif
                                evapn,                &
+                               Urefn,                &
                                Trefn,    Qrefn,      &
                                freshn,   fsaltn,     &
                                fhocnn,   fswthrun,   &
@@ -799,6 +804,7 @@
                                dfswint_nopond, dfswthru_nopond, &
 #endif
                                evap,                 & 
+                               Uref,                 &
                                Tref,     Qref,       &
                                fresh,    fsalt,      &
                                fhocn,    fswthru,    &
@@ -864,6 +870,7 @@
 #endif
           flwoutn , & ! upwd lw emitted heat flx        (W/m**2)
           evapn   , & ! evaporation                     (kg/m2/s)
+          Urefn   , & ! wind speed reference level  (m/s)
           Trefn   , & ! air tmp reference level         (K)
           Qrefn   , & ! air sp hum reference level      (kg/kg)
           freshn  , & ! fresh water flux to ocean       (kg/m2/s)
@@ -910,6 +917,7 @@
 #endif
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
+          Uref    , & ! wind speed reference level      (m/s)
           Tref    , & ! air tmp reference level         (K)
           Qref    , & ! air sp hum reference level      (kg/kg)
           fresh   , & ! fresh water flux to ocean       (kg/m2/s)
@@ -973,6 +981,7 @@
          flwout   (i,j)  = flwout  (i,j) &
              + (flwoutn(i,j) - (c1-emissivity)*flw(i,j))*aicen(i,j)
          evap     (i,j)  = evap    (i,j) + evapn   (i,j)*aicen(i,j)
+         Uref     (i,j)  = Uref    (i,j) + Urefn   (i,j)*aicen(i,j)
          Tref     (i,j)  = Tref    (i,j) + Trefn   (i,j)*aicen(i,j)
          Qref     (i,j)  = Qref    (i,j) + Qrefn   (i,j)*aicen(i,j)
 
@@ -1013,10 +1022,12 @@
                                tmask,              &
                                aice,     Tf,       &
                                Tair,     Qa,       &
+                               wind,               &
                                strairxT, strairyT, &
                                fsens,    flat,     &
                                fswabs,   flwout,   &
                                evap,               &
+                               Uref,               &
                                Tref,     Qref,     &
                                fresh,    fsalt,    &
                                fhocn,    fswthru,  &
@@ -1044,6 +1055,7 @@
           intent(in):: &
           aice    , & ! fractional ice area
           Tf      , & ! freezing temperature            (C)
+          wind    , & ! wind speed                      (m/s)
           Tair    , & ! surface air temperature         (K)
           Qa          ! sfc air specific humidity       (kg/kg)
 
@@ -1056,6 +1068,7 @@
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
+          Uref    , & ! wind speed reference level      (m/s)
           Tref    , & ! air tmp reference level         (K)
           Qref    , & ! air sp hum reference level      (kg/kg)
           fresh   , & ! fresh water flux to ocean       (kg/m2/s)
@@ -1093,6 +1106,7 @@
             fswabs  (i,j) = fswabs  (i,j) * ar
             flwout  (i,j) = flwout  (i,j) * ar
             evap    (i,j) = evap    (i,j) * ar
+            Uref    (i,j) = Uref    (i,j) * ar
             Tref    (i,j) = Tref    (i,j) * ar
             Qref    (i,j) = Qref    (i,j) * ar
             fresh   (i,j) = fresh   (i,j) * ar
@@ -1113,6 +1127,7 @@
             flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0
+            Uref    (i,j) = wind(i,j)
             Tref    (i,j) = Tair(i,j)
             Qref    (i,j) = Qa  (i,j)
             fresh   (i,j) = c0

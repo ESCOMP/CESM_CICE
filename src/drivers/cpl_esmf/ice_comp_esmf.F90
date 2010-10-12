@@ -29,8 +29,9 @@ module ice_comp_esmf
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-    	                      alvdr, alidr, alvdf, alidf, tref, qref, flat,    &
-			      fsens, flwout, evap, fswabs, fhocn, fswthru,     &
+    	                      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
+                              flat, fsens, flwout, evap, fswabs, fhocn, &
+                              fswthru,     &
 		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
 		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
 		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
@@ -1002,6 +1003,7 @@ subroutine ice_export_esmf(array, rc )
                fptr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
                fptr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
                fptr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
+               fptr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
                fptr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
                                               / ailohi(i,j,iblk)
             

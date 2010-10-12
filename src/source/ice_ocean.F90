@@ -164,6 +164,7 @@
                                       rhoa       (:,:,iblk), &
                                       strairx_ocn(:,:,iblk), & 
                                       strairy_ocn(:,:,iblk), & 
+                                      Uref_ocn   (:,:,iblk), &
                                       Tref_ocn   (:,:,iblk), & 
                                       Qref_ocn   (:,:,iblk), & 
                                       delt       (:,:),      &    

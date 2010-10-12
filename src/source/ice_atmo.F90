@@ -57,6 +57,7 @@
                                       wind,     zlvl,     &  
                                       Qa,       rhoa,     &
                                       strx,     stry,     &   
+                                      Uref,               &
                                       Tref,     Qref,     &
                                       delt,     delq,     &
                                       lhcoef,   shcoef)
@@ -109,6 +110,7 @@
          stry         ! y surface stress (N)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out) :: &
+         Uref     , & ! reference height wind speed (m/s)
          Tref     , & ! reference height temperature  (K)
          Qref     , & ! reference height specific humidity (kg/kg)
          delt     , & ! potential T difference   (K)
@@ -185,6 +187,7 @@
 
       do j = 1, ny_block
       do i = 1, nx_block
+         Uref(i,j) = c0
          Tref(i,j) = c0
          Qref(i,j) = c0
          delt(i,j) = c0
@@ -356,7 +359,7 @@
          lhcoef(i,j) = rhoa(i,j) * ustar(ij) * Lheat  * re(ij)
 
       !------------------------------------------------------------
-      ! Compute diagnostics: 2m ref T & Q
+      ! Compute diagnostics: 2m ref T & Q and 10m wind speed.
       !------------------------------------------------------------
          hol(ij)  = hol(ij)*zTrf/zlvl(i,j)
          xqq      = max( c1, sqrt(abs(c1-c16*hol(ij))) )
@@ -370,6 +373,7 @@
                   * (alz(ij) + al2 - psixh(ij) + psix2)
          Qref(i,j)= Qa(i,j) - delq(i,j)*fac
 
+         Uref(i,j)= vmag(ij) * rd(ij) / rdn(ij)
       enddo                     ! ij
 
       end subroutine atmo_boundary_layer

@@ -235,12 +235,12 @@ Default: TRUE
 <!---Domain information    ---->
 <!----------------------------->
 
-<entry id="processor_shape" type="char*80"  category="cice" group="domain_nml" valid_values="slenderX1,slenderX2,square-ice,square-pop">
+<entry id="processor_shape" type="char*80"  category="cice" group="domain_nml" valid_values="slenderX1,slenderX2,square-ice,square-pop,blocks">
 method to use for distributing blocks
 Default: square-pop
 </entry>
 
-<entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,balanced,spacecurve,DECOMPTYPE">
+<entry id="distribution_type" type="char*80"  category="cice" group="domain_nml" valid_values="cartesian,rake,spacecurve,roundrobin,DECOMPTYPE">
 method to use for distributing blocks
 Default: cartesian
 </entry>

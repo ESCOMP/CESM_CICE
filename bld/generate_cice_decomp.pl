@@ -383,6 +383,30 @@ sub CalcDecompInfo {
 	  }
       }
 
+      # fv 4x5
+      if ($nlats == 46 && $nlons == 72) {
+	  if ($nprocs >= 4 && $nprocs <= 9) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 23;
+	      $decomp{'maxblocks'} = 18;
+	  }
+	  if ($nprocs >= 10 && $nprocs <= 36) {
+	      $decomp{'bsize_x'} = 4;
+	      $decomp{'bsize_y'} = 23;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 37 && $nprocs <= 72) {
+	      $decomp{'bsize_x'} = 2;
+	      $decomp{'bsize_y'} = 23;
+	      $decomp{'maxblocks'} = 4;
+	  }
+	  if ($nprocs >= 73 && $nprocs <= 144) {
+	      $decomp{'bsize_x'} = 1;
+	      $decomp{'bsize_y'} = 23;
+	      $decomp{'maxblocks'} = 4;
+          }
+      }
+
       # T170
       if ($nlats == 256 && $nlons == 612) {
 	  if ($nprocs >= 16 && $nprocs <= 64) {
@@ -487,7 +511,7 @@ sub CalcDecompInfo {
   if ($set == 2) {
     $decomp{'nlats'}      = $nlats;
     $decomp{'nlons'}      = $nlons;
-    $decomp{'decomptype'} = "spacecurve";
+    $decomp{'decomptype'} = "roundrobin";
   }
 
   return(%decomp);
