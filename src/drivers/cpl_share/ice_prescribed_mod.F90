@@ -72,9 +72,11 @@ module ice_prescribed_mod
    integer(kind=int_kind)         :: stream_year_first   ! first year in stream to use
    integer(kind=int_kind)         :: stream_year_last    ! last year in stream to use
    integer(kind=int_kind)         :: model_year_align    ! align stream_year_first 
-                                                       ! with this model year
+                                                         ! with this model year
+   integer(SHR_KIND_IN),parameter :: nFilesMaximum = 100 ! max number of files
+
    character(len=char_len_long)   :: stream_fldVarName
-   character(len=char_len_long)   :: stream_fldFileName
+   character(len=char_len_long)   :: stream_fldFileName(nFilesMaximum)
    character(len=char_len_long)   :: stream_domTvarName
    character(len=char_len_long)   :: stream_domXvarName
    character(len=char_len_long)   :: stream_domYvarName
@@ -118,6 +120,7 @@ contains
 ! !INPUT/OUTPUT PARAMETERS:
 !
    implicit none
+   include 'mpif.h'
    integer(kind=int_kind), intent(in) :: compid
    type(mct_gsMap) :: gsmap
    type(mct_gGrid) :: dom
@@ -125,6 +128,7 @@ contains
 !EOP
    !----- Local ------
    integer(kind=int_kind) :: nml_error ! namelist i/o error flag
+   integer(kind=int_kind) :: n, nFile, ierr   
    character(len=8)       :: fillalgo
    character(*),parameter :: subName = "('ice_prescribed_init2')"
    character(*),parameter :: F00 = "('(ice_prescribed_init2) ',4a)"
@@ -150,7 +154,7 @@ contains
    stream_year_last       = 1                ! last  year in  pice stream to use
    model_year_align       = 1                ! align stream_year_first with this model year
    stream_fldVarName      = 'ice_cov'
-   stream_fldFileName     = ' '
+   stream_fldFileName(:)  = ' '
    stream_domTvarName     = 'time'
    stream_domXvarName     = 'lon'
    stream_domYvarName     = 'lat'
@@ -190,13 +194,19 @@ contains
    call broadcast_scalar(stream_year_last,master_task)
    call broadcast_scalar(model_year_align,master_task)
    call broadcast_scalar(stream_fldVarName,master_task)
-   call broadcast_scalar(stream_fldFileName,master_task)
    call broadcast_scalar(stream_domTvarName,master_task)
    call broadcast_scalar(stream_domXvarName,master_task)
    call broadcast_scalar(stream_domYvarName,master_task)
    call broadcast_scalar(stream_domAreaName,master_task)
    call broadcast_scalar(stream_domMaskName,master_task)
    call broadcast_scalar(stream_domFileName,master_task)
+   call mpi_bcast(stream_fldFileName, len(stream_fldFileName(1))*NFilesMaximum, &
+        MPI_CHARACTER, 0, MPI_COMM_ICE, ierr)
+
+   nFile = 0
+   do n=1,nFilesMaximum
+      if (stream_fldFileName(n) /= ' ') nFile = nFile + 1
+   end do
 
    if (my_task == master_task) then
       write(nu_diag,*) ' '
@@ -205,7 +215,9 @@ contains
       write(nu_diag,*) '  stream_year_last   = ',stream_year_last   
       write(nu_diag,*) '  model_year_align   = ',model_year_align   
       write(nu_diag,*) '  stream_fldVarName  = ',trim(stream_fldVarName)
-      write(nu_diag,*) '  stream_fldFileName = ',trim(stream_fldFileName)
+      do n = 1,nFile
+         write(nu_diag,*) '  stream_fldFileName = ',trim(stream_fldFileName(n)),n
+      end do
       write(nu_diag,*) '  stream_domTvarName = ',trim(stream_domTvarName)
       write(nu_diag,*) '  stream_domXvarName = ',trim(stream_domXvarName)
       write(nu_diag,*) '  stream_domYvarName = ',trim(stream_domYvarName)
@@ -237,7 +249,7 @@ contains
         domAreaName=stream_domAreaName,  &
         domMaskName=stream_domMaskName,  &
         filePath='',                     &
-        filename=(/trim(stream_fldFileName)/),     &
+        filename=stream_fldFileName(1:nFile), &
         fldListFile=stream_fldVarName,   &
         fldListModel=stream_fldVarName,  &
         fillalgo = trim(fillalgo))

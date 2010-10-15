@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20101015
+Originator: dbailey
+Date: Fri Oct 15 2010
+Version: 4.0
+One-line Summary: New multiple input functionality for
+                  prescribed ice.
+CCSM Version compatible with: cesm1_0_beta06+
+Changes made:
+
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+===============================================================
 cice4_0_20101012
 Originator: dbailey
 Date: Tue Oct 12 2010
