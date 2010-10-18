@@ -918,7 +918,7 @@ contains
                i2x_i%rAttr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
-!              i2x_i%rAttr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
+               i2x_i%rAttr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
                i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &

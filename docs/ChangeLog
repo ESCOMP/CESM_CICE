@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20101018
+Originator: dbailey
+Date: Mon Oct 18 2010
+Version: 4.0
+One-line Summary: Turn on u10 in ice_export_mct.
+CCSM Version compatible with: cesm1_0_beta06+
+Changes made:
+
+M      src/drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20101015
 Originator: dbailey
 Date: Fri Oct 15 2010
