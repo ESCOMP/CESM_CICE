@@ -1,4 +1,26 @@
 ===============================================================
+cice4_0_20101019
+Originator: dbailey
+Date: Tue Oct 19 2010
+Version: 4.0
+One-line Summary: Remove sicthk from ESMF driver.
+CCSM Version compatible with: cesm1_0_beta06+
+Changes made:
+
+Also commit some updated documentation.
+
+M      src/drivers/cpl_esmf/ice_comp_esmf.F90
+M      docs/UsersGuide/ice_usrdoc/node9.html
+M      docs/UsersGuide/ice_usrdoc/node30.html
+M      docs/UsersGuide/ice_usrdoc/node32.html
+A      docs/UsersGuide/ice_usrdoc/node42.html
+M      docs/UsersGuide/ice_usrdoc/node34.html
+M      docs/UsersGuide/ice_usrdoc/node8.html
+M      docs/UsersGuide/ice_usrdoc/node11.html
+A      docs/UsersGuide/ice_usrdoc/node41.html
+
+
+===============================================================
 cice4_0_20101018
 Originator: dbailey
 Date: Mon Oct 18 2010

@@ -895,7 +895,6 @@ subroutine ice_export_esmf(array, rc )
      ,  tauya &
      ,  tauxo &      ! ice/ocean stress
      ,  tauyo &
-     ,  sicthk &     ! needed for cam/som only 
      ,  ailohi       ! fractional ice area
 
     real (kind=dbl_kind) :: workx, worky           ! tmps for converting grid
@@ -920,9 +919,6 @@ subroutine ice_export_esmf(array, rc )
        do j = 1, ny_block
        do i = 1, nx_block
              
-          ! sea-ice thickness needed for cam-som only
-          sicthk(i,j,iblk) = vice(i,j,iblk)/(aice(i,j,iblk)+puny)
-
           ! ice fraction
           ailohi(i,j,iblk) = min(aice(i,j,iblk), c1)
 
@@ -991,7 +987,6 @@ subroutine ice_export_esmf(array, rc )
             n = n+1
 
             !-------states-------------------- 
-            fptr(index_i2x_Si_sicthk,n)    = sicthk(i,j,iblk) ! (needed by CAM/SOM only)
             fptr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
 
             if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then

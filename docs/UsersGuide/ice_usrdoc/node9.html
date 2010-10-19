@@ -71,23 +71,43 @@ for the transport using the upwind advection scheme is:
 \Delta t < \frac{min(\Delta x, \Delta y)}{4 max(u, v)} .
 \end{equation}
  -->
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP>
-<I>&#916;t</I> &lt; <IMG
- ALIGN="MIDDLE" BORDER="0" SRC="img1.png"
- ALT="$\displaystyle {\frac{{min(\Delta x, \Delta y)}}{{4 max(u, v)}}}$">.
+<TABLE WIDTH=100% ALIGN="CENTER">
+<TR>
+<TD ALIGN="CENTER" NOWRAP WIDTH=45%>
 </TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(1)</TD></TR>
+<TD ALIGN="CENTER" NOWRAP WIDTH=10%>
+<I>min</I>(<I>&#916;x</I>, <I>&#916;y</I>)
+</TD>
+<TD ALIGN="CENTER" NOWRAP WIDTH=45%>
+</TD>
+<TR>
+<TD ALIGN="RIGHT" NOWRAP WIDTH=45%>
+<I>&#916;t</I> &lt; 
+</TD>
+<TD ALIGN="CENTER" NOWRAP WIDTH=10%>
+<hr width=100>
+</TD>
+<TD ALIGN="RIGHT" WIDTH=45%>
+(1)</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER" NOWRAP WIDTH=45%>
+</TD>
+<TD ALIGN="CENTER" NOWRAP WIDTH=10%>
+<I>4 max</I>(<I>u</I>, <I>v</I>)
+</TD>
+<TD ALIGN="CENTER" NOWRAP WIDTH=45%>
+</TD>
+</TR>
 </TABLE>
-<tex2html_verbatim_mark>mathend000#
+<tex2html_verbatim_mark>
 </DIV>
 Maximum values for <TT>dt</TT> for the two standard CESM POP grids, assuming 
 <!-- MATH
  $max(u,v) = 0.5 m/s$
  -->
 <I>max</I>(<I>u</I>, <I>v</I>) = 0.5<I>m</I>/<I>s</I>
-<tex2html_verbatim_mark>mathend000#, are shown in Table <A HREF="#table:max_dt">2</A>.  The default
+<tex2html_verbatim_mark>, are shown in Table <A HREF="#table:max_dt">2</A>.  The default
 timestep for CICE is 30 minutes, which must be equal to the coupling interval
 set in the CESM configuration files.
 
@@ -102,12 +122,12 @@ Maximum values for ice model timestep <TT>dt</TT></CAPTION>
  $min(\Delta x, \Delta y)$
  -->
 <I>min</I>(<I>&#916;x</I>, <I>&#916;y</I>)
-<tex2html_verbatim_mark>mathend000#</TD>
+<tex2html_verbatim_mark></TD>
 <TD ALIGN="LEFT"><!-- MATH
  $max \Delta t$
  -->
 <I>max&#916;t</I>
-<tex2html_verbatim_mark>mathend000#</TD>
+<tex2html_verbatim_mark></TD>
 </TR>
 <TR><TD ALIGN="LEFT">gx3v5</TD>
 <TD ALIGN="LEFT">28845.9 m</TD>
