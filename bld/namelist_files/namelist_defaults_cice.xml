@@ -17,6 +17,7 @@
 <!-- grid_nml settings ------>
 <!--------------------------->
 
+<grid_type hgrid="512x1024"  >'latlon'       </grid_type> 
 <grid_type hgrid="128x256"   >'latlon'       </grid_type> 
 <grid_type hgrid="64x128"    >'latlon'       </grid_type> 
 <grid_type hgrid="48x96"     >'latlon'       </grid_type> 
@@ -34,6 +35,7 @@
 <grid_type hgrid="tx1v1"     >'tripole'      </grid_type> 
 <grid_type                   >'displaced_pole'</grid_type> 
 
+<grid_format hgrid="512x1024"  >'nc' </grid_format> 
 <grid_format hgrid="128x256"   >'nc' </grid_format> 
 <grid_format hgrid="64x128"    >'nc' </grid_format> 
 <grid_format hgrid="48x96"     >'nc' </grid_format> 
@@ -50,6 +52,7 @@
 <grid_format hgrid="tx1v1"     >'bin'</grid_format> 
 <grid_format                   >'bin'</grid_format> 
 
+<grid_file hgrid="512x1024"   >'atm/cam/ocnfrac/domain.camocn.512x1024_USGS_080530.nc'   </grid_file> 
 <grid_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </grid_file> 
 <grid_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </grid_file> 
 <grid_file hgrid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_gx3v7_100114.nc'    </grid_file> 
@@ -70,6 +73,7 @@
 <grid_file hgrid="tx0.1v2"   >'ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8'</grid_file> 
 <grid_file hgrid="tx1v1"     >'ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8'</grid_file>
 
+<kmt_file hgrid="512x1024"   >'atm/cam/ocnfrac/domain.camocn.512x1024_USGS_080530.nc'   </kmt_file> 
 <kmt_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
 <kmt_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </kmt_file> 
 <kmt_file hgrid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_gx3v7_100114.nc'    </kmt_file> 
@@ -250,6 +254,13 @@
 <stream_year_first  hgrid="128x256"  > 0 </stream_year_first>
 <stream_year_last   hgrid="128x256"  > 0 </stream_year_last>
 <model_year_align   hgrid="128x256"  > 1 </model_year_align>
+
+<stream_domfilename hgrid="512x1024"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_512x1024_clim_c070927.nc'</stream_domfilename>
+<stream_fldfilename hgrid="512x1024"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_512x1024_clim_c070927.nc'</stream_fldfilename>
+<stream_fldvarname  hgrid="512x1024"  > 'ice_cov' </stream_fldvarname>
+<stream_year_first  hgrid="512x1024"  > 0 </stream_year_first>
+<stream_year_last   hgrid="512x1024"  > 0 </stream_year_last>
+<model_year_align   hgrid="512x1024"  > 1 </model_year_align>
 
 <stream_domfilename hgrid="10x15"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_domfilename>
 <stream_fldfilename hgrid="10x15"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_10x15_clim_c050526.nc'</stream_fldfilename>
