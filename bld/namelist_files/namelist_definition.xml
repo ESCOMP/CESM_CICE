@@ -189,25 +189,6 @@ snow grain radius tunable parameter for dEdd albedo
 </entry>
 
 <!----------------------------->
-<!---PIO information       ---->
-<!----------------------------->
-
-<entry id="ice_num_iotasks" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
-number of io tasks (set based on io_stride value when initialized < 0)
-Default: -1
-</entry>
-
-<entry id="ice_pio_stride" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
-stride of io tasks (set based on num_iotasks value when initialized < 0)
-Default: -1
-</entry>
-
-<entry id="ice_pio_type_name" type="character*8"  category="cice" group="ice_pio_nml" valid_values="netcdf,pnetcdf">
-pio type 
-Default: 'netcdf'
-</entry>
-
-<!----------------------------->
 <!---Tracer information    ---->
 <!----------------------------->
 
@@ -331,25 +312,6 @@ Default: 1
 <entry id="prescribed_ice_fill" type="logical"  category="cice" group="ice_prescribed_nml" valid_values="">
 true => pice data fill required
 Default: FALSE
-</entry>
-
-<!----------------------------->
-<!---pio information        --->
-<!----------------------------->
-
-<entry id="ice_num_iotasks" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
-Number of output io tasks
-Default: -1 
-</entry>
-
-<entry id="ice_pio_stride" type="integer"  category="cice" group="ice_pio_nml" valid_values="">
-Stride of io output
-Default: -1 
-</entry>
-
-<entry id="ice_pio_type_name" type="char*80"  category="cice" group="ice_pio_nml" valid_values="netcdf,pnetcdf">
-Type of io output
-Default: netcdf 
 </entry>
 
 <!----------------------------->

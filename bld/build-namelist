@@ -420,14 +420,6 @@ if ($cice_mode eq 'prescribed') {
     add_default($nl, 'stream_year_last'  );
 }
 
-##################################
-# namelist group: ice_pio_nml    #
-##################################
-
-add_default($nl, 'ice_num_iotasks');
-add_default($nl, 'ice_pio_stride');
-add_default($nl, 'ice_pio_type_name');
-
 ######################################
 # namelist group: ice_fields_nml     #
 ######################################
@@ -489,7 +481,7 @@ add_default($nl, 'f_hisnap');
 
 # Sea ice component 
 my @groups = qw(setup_nml grid_nml ice_nml tracer_nml domain_nml ice_prescribed_nml 
-		icefields_nml ice_pio_nml);
+		icefields_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }

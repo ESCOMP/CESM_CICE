@@ -1,4 +1,33 @@
 ===============================================================
+cice4_0_20101109
+Originator: dbailey
+Date: Tue Nov 09 2010
+Version: 4.0
+One-line Summary: Updates to PIO.
+CCSM Version compatible with: cesm1_0_beta10+
+Changes made:
+
+Note these changes rely on pio1_2_1 and subsequent changes to scripts,
+csm_share, driver, etc.
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_definition.xml
+M      bld/namelist_files/namelist_defaults_cice.xml
+M      src/drivers/cpl_share/ice_pio.F90
+M      src/drivers/cpl_share/ice_prescribed_mod.F90
+
+===============================================================
+cice4_0_20101101
+Originator: dbailey
+Date: Mon Nov 01 2010
+Version: 4.0
+One-line Summary: New FV grid.
+CCSM Version compatible with: cesm1_0_beta10+
+Changes made:
+
+M      bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20101019
 Originator: dbailey
 Date: Tue Oct 19 2010

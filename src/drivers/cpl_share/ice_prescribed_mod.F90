@@ -109,7 +109,7 @@ contains
 !
 ! !INTERFACE: 
  subroutine ice_prescribed_init(compid, gsmap, dom)
- 
+   use seq_io_mod, only : seq_io_getiotype, seq_io_getiosys
 ! !DESCRIPTION:
 !    Prescribed ice initialization - needed to 
 !    work with new shr_strdata module derived type 
@@ -252,7 +252,10 @@ contains
         filename=stream_fldFileName(1:nFile), &
         fldListFile=stream_fldVarName,   &
         fldListModel=stream_fldVarName,  &
+        pio_subsystem=seq_io_getiosys('ICE'),&
+        pio_iotype=seq_io_getiotype('ICE'),&
         fillalgo = trim(fillalgo))
+
 
    if (my_task == master_task) then
       call shr_strdata_print(sdat,'SPRESICE data')
@@ -264,7 +267,6 @@ contains
    if (ncat == 1) then
       hin_max(1) = 999._dbl_kind
    end if
-   
 end subroutine ice_prescribed_init
   
 !=======================================================================
@@ -306,6 +308,7 @@ subroutine ice_prescribed_run(mDateIn, secIn)
    !------------------------------------------------------------------------
    ! Interpolate to new ice coverage
    !------------------------------------------------------------------------
+
    call shr_strdata_advance(sdat,mDateIn,SecIn,MPI_COMM_ICE,'cice_pice')
    
    ice_cov(:,:,:) = c0  ! This initializes ghost cells as well 

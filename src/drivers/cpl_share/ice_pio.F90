@@ -46,12 +46,11 @@ module ice_pio
   end interface
 
   public ice_pio_init
-  public ice_pio_finalize
   public ice_pio_initdecomp
 
   ! !PUBLIC DATA MEMBERS
 
-  integer, public :: ice_pio_stride, ice_num_iotasks, ice_pio_root, ice_pio_type
+  type(iosystem_desc_t), pointer, public :: ice_pio_subsystem
 
   !EOP
 
@@ -59,7 +58,6 @@ module ice_pio
   ! Local data
   !----------------------------------------------------------------------------
 
-  type(iosystem_desc_t) :: ice_pio_subsystem
 
 !===============================================================================
 
@@ -68,26 +66,15 @@ contains
 !===============================================================================
 !BOP
 !
-! !IROUTINE: ice_pio_finalize - finalize io for input or output
-!
-! !INTERFACE: 
-   subroutine ice_pio_finalize
-   
-     integer  :: ierr
-
-     call pio_finalize(ice_pio_subsystem,ierr)
-
-   end subroutine ice_pio_finalize
-!===============================================================================
-!BOP
-!
 ! !IROUTINE: ice_pio_init - initialize io for input or output
 !
 ! !INTERFACE: 
    subroutine ice_pio_init(mode, filename, File, clobber, cdf64)
+     use seq_io_mod,       only: seq_io_getiosys, seq_io_getiotype
+     
 !
 ! !DESCRIPTION:
-!    Read the pio_inparm namelist and initialize the io subsystem
+!    Initialize the io subsystem
 !
 ! !REVISION HISTORY:
 !    2009-Feb-17 - J. Edwards - initial version
@@ -106,8 +93,7 @@ contains
    integer (int_kind) :: &
       nml_error          ! namelist read error flag
 
-   character(len=16)  :: ice_pio_type_name
-
+   integer :: pio_iotype
    logical :: exists
    logical :: lclobber
    logical :: lcdf64
@@ -116,60 +102,12 @@ contains
    character(*),parameter :: subName = '(ice_pio_wopen) '
    logical, save :: first_call = .true.
 
-   !  Input namelist
-    
-   namelist /ice_pio_nml/    &
-        ice_num_iotasks, &
-        ice_pio_stride,  &
-        ice_pio_type_name 
 
-   ice_pio_root      =  1  ! defaulted to 1
-
-   ice_num_iotasks   = -1  ! set based on io_stride value when initialized < 0
-   ice_pio_stride    = -1  ! set based on num_iotasks value when initialized < 0
-   ice_pio_type_name = 'netcdf'
-
-   if (my_task == master_task) then
-      call get_fileunit(nu_nml)
-      open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
-      if (nml_error /= 0) then
-         nml_error = -1
-      else
-         nml_error =  1
-      endif
-      do while (nml_error > 0)
-         read(nu_nml, nml=ice_pio_nml,iostat=nml_error)
-	 if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
-      end do
-      if (nml_error == 0) close(nu_nml)
-      call ice_pio_set_params(ice_pio_type_name)
-      call release_fileunit(nu_nml)
-
-      write(nu_diag,*) 'CICE PIO parameter settings...'
-      write(nu_diag,*) '  ice_pio_stride    = ',ice_pio_stride
-      write(nu_diag,*) '  ice_num_iotasks   = ',ice_num_iotasks
-      write(nu_diag,*) '  ice pio_type_name = ',ice_pio_type_name
-      call shr_sys_flush(nu_diag) 
-   endif
-
-   call broadcast_scalar(nml_error, master_task)
-   if (nml_error /= 0) then
-      call abort_ice('ice: error reading pio_nml')
-   endif
-
-   call broadcast_scalar(ice_num_iotasks, master_task)
-   call broadcast_scalar(ice_pio_root,    master_task)
-   call broadcast_scalar(ice_pio_stride,  master_task)
-   call broadcast_scalar(ice_pio_type,    master_task)
-
-   if (first_call) then	
-      call pio_init(my_task, MPI_COMM_ICE, ice_num_iotasks, &
-           ice_pio_root, ice_pio_stride, PIO_REARR_BOX, ice_pio_subsystem)
-      first_call = .false.
-   end if
+   ice_pio_subsystem => seq_io_getiosys('ICE')
+   pio_iotype = seq_io_getiotype('ICE')
 
    if (present(mode) .and. present(filename) .and. present(File)) then
-
+      
       if (trim(mode) == 'write') then
          lclobber = .false.
          if (present(clobber)) lclobber=clobber
@@ -184,12 +122,12 @@ contains
                if (lclobber) then
                   nmode = pio_clobber
                   if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
-                  status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
+                  status = pio_createfile(ice_pio_subsystem, File, pio_iotype, trim(filename), nmode)
                   if (my_task == master_task) then
                      write(nu_diag,*) subname,' create file ',trim(filename)
                   end if
                else
-                  status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_write)
+                  status = pio_openfile(ice_pio_subsystem, File, pio_iotype, trim(filename), pio_write)
                   if (my_task == master_task) then
                      write(nu_diag,*) subname,' open file ',trim(filename)
                   end if
@@ -197,7 +135,7 @@ contains
             else
                nmode = pio_noclobber
                if (lcdf64) nmode = ior(nmode,PIO_64BIT_OFFSET)
-               status = pio_createfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), nmode)
+               status = pio_createfile(ice_pio_subsystem, File, pio_iotype, trim(filename), nmode)
                if (my_task == master_task) then
                   write(nu_diag,*) subname,' create file ',trim(filename)
                end if
@@ -210,7 +148,7 @@ contains
       if (trim(mode) == 'read') then
          inquire(file=trim(filename),exist=exists)
          if (exists) then
-            status = pio_openfile(ice_pio_subsystem, File, ice_pio_type, trim(filename), pio_nowrite)
+            status = pio_openfile(ice_pio_subsystem, File, pio_iotype, trim(filename), pio_nowrite)
          else
             if(my_task==master_task) then
                write(nu_diag,*) 'ice_pio_ropen ERROR: file invalid ',trim(filename)
@@ -222,78 +160,6 @@ contains
    end if
 
  end subroutine ice_pio_init
-
-!===============================================================================
-!BOP
-!
-! !IROUTINE: ice_pio_set_params - set pio parameters
-!
-! !INTERFACE: 
-    subroutine ice_pio_set_params(ice_pio_type_name)
-!
-! !DESCRIPTION:
-!    Set the pio parameters for the subsystem
-!
-! !USES:
-!
-   use shr_string_mod,only: shr_string_toUpper
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-   implicit none
-   character(len=*), intent(in) :: ice_pio_type_name
-!
-!EOP
-!
-   character(len=16) :: tmpname
-   integer (kind=int_kind) :: npes
-
-   tmpname = shr_string_toupper(ice_pio_type_name)
-
-   if (trim(tmpname) == 'NETCDF') then
-      ice_pio_type = iotype_netcdf
-   else if (trim(tmpname) == 'PNETCDF') then
-      ice_pio_type = iotype_pnetcdf
-   else
-      if (my_task == master_task) then
-         write(nu_diag,*)' Bad io_type argument - using iotype_netcdf'
-      end if
-      ice_pio_type = iotype_netcdf
-   end if
-
-   npes = get_num_procs()
-   if      (ice_pio_stride>0 .and. ice_num_iotasks<0) then
-      ice_num_iotasks = npes/ice_pio_stride
-   else if (ice_num_iotasks>0 .and. ice_pio_stride<0) then
-      ice_pio_stride = npes/ice_num_iotasks
-   else if (ice_num_iotasks<0 .and. ice_pio_stride<0) then
-      ice_pio_stride = max(min(npes,4),npes/8)
-      ice_num_iotasks = npes/ice_pio_stride
-   end if
-
-   if (ice_pio_root<0) then
-      ice_pio_root = 1
-   endif
-   ice_pio_root = min(ice_pio_root,npes-1)
-   
-    if(ice_pio_root + (ice_pio_stride)*(ice_num_iotasks-1) >= npes .or. &
-       ice_pio_stride<=0 .or. ice_num_iotasks<=0 .or. ice_pio_root < 0 .or. &
-       ice_pio_root > npes-1) then
-       if (my_task == master_task) then
-          write(nu_diag,*)&
-               'ice_pio_stride or ice_num_iotasks out of bounds, resetting to defaults ',&
-               ice_pio_stride, ice_num_iotasks, ice_pio_root
-       end if
-       ice_pio_stride = max(1,npes/4)
-       ice_num_iotasks = npes/ice_pio_stride
-       ice_pio_root = min(1,npes-1)
-    end if
-    if (my_task == master_task) then
-       write(nu_diag,*)'Using io_type=',tmpname,' stride=',ice_pio_stride,&
-            ' iotasks=',ice_num_iotasks,' root=',ice_pio_root
-    end if
-
-   end subroutine ice_pio_set_params
 
 !================================================================================
 

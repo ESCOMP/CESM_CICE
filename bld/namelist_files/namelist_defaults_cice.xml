@@ -181,13 +181,6 @@
 <lcdf64>.true. </lcdf64>
 
 <!--------------------------->
-<!-- PIO namelist-        --->
-<!--------------------------->
-<ice_num_iotasks   > -1       </ice_num_iotasks>
-<ice_pio_stride    > -1       </ice_pio_stride >
-<ice_pio_type_name > 'netcdf' </ice_pio_type_name>
-
-<!--------------------------->
 <!-- Tracer namelist- --->
 <!--------------------------->
 
