@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20101201
+Originator: dbailey
+Date: Wed Dec 01 2010
+Version: 4.0
+One-line Summary: Change to gx1v6 ocnfrac file for 0.23x0.31.
+CCSM Version compatible with: cesm1_0_beta10+
+Changes made:
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20101109
 Originator: dbailey
 Date: Tue Nov 09 2010
