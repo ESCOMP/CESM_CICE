@@ -52,6 +52,7 @@ module ice_comp_esmf
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
                               get_daycal, leap_year_count
+  use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
                              write_numIceCells, accum_numIceCells2
@@ -196,6 +197,16 @@ end subroutine
 
    ! Determine if aerosols are coming through the coupler
    call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+   ! Determine orbital parameters
+   call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     !---------------------------------------------------------------------------
@@ -474,6 +485,16 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
 
     call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+   ! Determine orbital parameters
+   call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     !-------------------------------------------------------------------
     ! get import state

@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20101207
+Originator: dbailey
+Date: Tue Dec 07 2010
+Version: 4.0
+One-line Summary: Receive orbital parameters from driver.
+CCSM Version compatible with: cesm1_0_beta11+
+Changes made:
+
+This will be answer changing as the default year was previously
+1950 in the ice, while the driver uses 1990.
+
+M       src/source/ice_shortwave.F90
+M       src/drivers/cpl_share/CICE_InitMod.F90
+M       src/drivers/cpl_mct/ice_comp_mct.F90
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20101201
 Originator: dbailey
 Date: Wed Dec 01 2010

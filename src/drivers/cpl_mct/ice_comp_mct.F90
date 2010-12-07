@@ -58,6 +58,7 @@ module ice_comp_mct
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
                               get_daycal, leap_year_count
+  use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
  			      write_numIceCells, accum_numIceCells2
@@ -170,6 +171,10 @@ contains
 
     ! Determine if aerosols are coming from the coupler
     call seq_infodata_GetData(infodata, atm_aero=atm_aero )
+
+    ! Determine orbital parameters
+    call seq_infodata_GetData(infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
+                              orb_lambm0=lambm0, orb_obliqr=obliqr)
 
     !   call shr_init_memusage()
 
@@ -422,11 +427,15 @@ contains
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (nu_diag)
    
-    ! Determine time of next atmospheric shortwave calculation
-
     call seq_cdata_setptrs(cdata_i, infodata=infodata, dom=dom_i, &
          gsMap=gsMap_i)
+
+    ! Determine time of next atmospheric shortwave calculation
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+
+    ! Determine orbital parameters
+    call seq_infodata_GetData(infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
+                              orb_lambm0=lambm0, orb_obliqr=obliqr)
 
     !-------------------------------------------------------------------
     ! get import state
