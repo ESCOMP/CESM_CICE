@@ -44,7 +44,7 @@ module ice_prescribed_mod
    use ice_blocks,     only : nx_block, ny_block
    use ice_domain,     only : nblocks, distrb_info, blocks_ice
    use ice_grid,       only : TLAT,TLON,hm,tmask
-   use ice_calendar,   only : idate, sec
+   use ice_calendar,   only : idate, sec, calendar_type
    use ice_itd,        only : ilyr1, slyr1, hin_max
    use ice_read_write
 
@@ -254,7 +254,8 @@ contains
         fldListModel=stream_fldVarName,  &
         pio_subsystem=seq_io_getiosys('ICE'),&
         pio_iotype=seq_io_getiotype('ICE'),&
-        fillalgo = trim(fillalgo))
+        fillalgo = trim(fillalgo),       &
+        calendar = trim(calendar_type))
 
 
    if (my_task == master_task) then

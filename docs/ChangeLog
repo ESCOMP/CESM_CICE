@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20110109
+Originator: tcraig
+Date: Sun Jan 09 2011
+Version: 4.0
+One-line Summary: Add calendar_type to ice_prescribed_mod.
+CCSM Version compatible with: cesm1_0_beta11+
+Changes made:
+
+M       src/drivers/cpl_share/ice_prescribed_mod.F90
+
+===============================================================
 cice4_0_20101207
 Originator: dbailey
 Date: Tue Dec 07 2010
