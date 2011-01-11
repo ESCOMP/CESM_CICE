@@ -176,6 +176,8 @@ end subroutine
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
     integer            :: mpicom_loc, mpicom_vm, gsize
+
+    character(ESMF_MAXSTR) :: convCIM, purpComp
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall, Fei Liu
 !EOP
@@ -398,6 +400,49 @@ end subroutine
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_AttributeSet(export_state, name="ice_ny", value=ny_global, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    convCIM  = "CIM 1.0"
+    purpComp = "Model Component Simulation Description"
+
+    call ESMF_AttributeAdd(comp,  &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+
+    call ESMF_AttributeSet(comp, "ShortName", "CICE", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "LongName", &
+                           "Community Ice CodE", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "Description", &
+                  "CICE4 is the latest version of the Los Alamos Sea Ice " // &
+                  "Model, sometimes referred to as the Community Ice " // &
+                  "CodE.  It is the result of a community effort to  " // &
+                  "develop a portable, efficient sea ice model that can " // &
+                  "be run coupled in a global climate model or uncoupled " // &
+                  "as a stand-alone ice model.  It has been released as " // &
+                  "the sea ice component of the Community Earth System " // &
+                  "Model (CESM), a fully-coupled global climate model " // &
+                  "that provides simulations of the earths past, present " // &
+                  "and future climate states.  CICE4 is supported on " // &
+                  "high- and low-resolution Greenland Pole and tripole " // &
+                  "grids, which are identical to those used by the " // &
+                  "Parallel Ocean Program (POP) ocean model.  The high " // &
+                  "resolution version is best suited for simulating " // &
+                  "present-day and future climate scenarios while the low " // &
+                  "resolution option is used for paleoclimate simulations " // &
+                  "and debugging.", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ReleaseDate", "2010", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ModelType", "Sea Ice", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+
+    call ESMF_AttributeSet(comp, "Name", "someone", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "EmailAddress", &
+                           "someone@someplace", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
 
     call t_stopf ('cice_esmf_init')
 

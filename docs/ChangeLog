@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20110111
+Originator: tcraig
+Date: Tue Jan 11 2011
+Version: 4.0
+One-line Summary: New ESMF interfaces.
+CCSM Version compatible with: cesm1_0_beta14+
+Changes made:
+
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+M       src/drivers/cpl_esmf/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20110109
 Originator: tcraig
 Date: Sun Jan 09 2011

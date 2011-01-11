@@ -38,12 +38,15 @@ contains
 
 !===============================================================================
 
-subroutine ice_register(ice_petlist)
+subroutine ice_register(ice_petlist, ccsmComp, localComp)
 
    implicit none
 
-   integer, pointer :: ice_petlist(:)
-   integer          :: rc
+   integer, pointer                  :: ice_petlist(:)
+   type(ESMF_CplComp)                :: ccsmComp
+   type(ESMF_GridComp),intent(inout) :: localComp
+
+   integer            :: rc
 
    ice_comp = ESMF_GridCompCreate(name="ice_comp", petList=ice_petlist, rc=rc)
    if(rc /= 0) call shr_sys_abort('failed to create ice comp')
@@ -53,6 +56,10 @@ subroutine ice_register(ice_petlist)
    if(rc /= 0) call shr_sys_abort('failed to create import ice state')
    export_state = ESMF_StateCreate("ice export", ESMF_STATE_EXPORT, rc=rc)
    if(rc /= 0) call shr_sys_abort('failed to create export ice state')
+
+   call ESMF_AttributeLink(ccsmComp, ice_comp, rc=rc)
+
+   localComp = ice_comp
 
 end subroutine
 
