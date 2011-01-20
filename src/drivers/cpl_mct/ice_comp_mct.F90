@@ -23,7 +23,6 @@ module ice_comp_mct
 #endif
 
   use seq_flds_mod
-  use seq_flds_indices
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
   use seq_infodata_mod,only : seq_infodata_type, seq_infodata_getdata,       &
 		              seq_infodata_putdata, seq_infodata_start_type_cont, &
@@ -34,6 +33,7 @@ module ice_comp_mct
                               seq_timemgr_stopalarmison
   use perf_mod,        only : t_startf, t_stopf
 
+  use ice_cpl_indices
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
 			      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
                               flat, fsens, flwout, evap, fswabs, fhocn, &
@@ -158,6 +158,12 @@ contains
 ! Author: Mariana Vertenstein
 !EOP
 !-----------------------------------------------------------------------
+
+    !--------------------------------------------------------------------------
+    ! Determine attribute vector indices
+    !--------------------------------------------------------------------------
+
+    call ice_cpl_indices_set()
 
     !---------------------------------------------------------------------------
     ! Set cdata pointers

@@ -1,4 +1,17 @@
 ===============================================================
+cice4_0_20110120
+Originator: tcraig
+Date: Thu Jan 20 2011
+Version: 4.0
+One-line Summary: New cpl indices.
+CCSM Version compatible with: cesm1_0_beta15+
+Changes made:
+
+A       src/drivers/cpl_share/ice_cpl_indices.F90
+M       src/drivers/cpl_mct/ice_comp_mct.F90
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20110111
 Originator: tcraig
 Date: Tue Jan 11 2011

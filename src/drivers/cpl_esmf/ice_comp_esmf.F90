@@ -17,7 +17,6 @@ module ice_comp_esmf
   use esmf_mod
 
   use seq_flds_mod
-  use seq_flds_indices
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
   use seq_comm_mct,    only : ICEID
   use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
@@ -28,6 +27,7 @@ module ice_comp_esmf
                               seq_infodata_start_type_brnch, seq_infodata_start_type_start
   use perf_mod,        only : t_startf, t_stopf
 
+  use ice_cpl_indices
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
     	                      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
                               flat, fsens, flwout, evap, fswabs, fhocn, &
@@ -182,6 +182,12 @@ end subroutine
 ! Author: Jacob Sewall, Fei Liu
 !EOP
 !-----------------------------------------------------------------------
+
+   !---------------------------------------------------------------------------
+   ! Determine attribute vector indices
+   !---------------------------------------------------------------------------
+ 
+   call ice_cpl_indices_set()
 
    rc = ESMF_SUCCESS
 
