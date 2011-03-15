@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20110315
+Originator: dbailey
+Date: Tue Mar 15 2011
+Version: 4.0
+One-line Summary: New FV lowres settings.
+CCSM Version compatible with: cesm1_0_beta15+
+Changes made:
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       bld/generate_cice_decomp.pl
+
+===============================================================
 cice4_0_20110120
 Originator: tcraig
 Date: Thu Jan 20 2011

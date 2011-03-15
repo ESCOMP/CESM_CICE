@@ -25,7 +25,7 @@
 <grid_type hgrid="8x16"      >'latlon'       </grid_type>
 <grid_type hgrid="4x5"       >'latlon'       </grid_type> 
 <grid_type hgrid="10x15"     >'latlon'       </grid_type> 
-<grid_type hgrid="2.5x3.3"   >'latlon'       </grid_type> 
+<grid_type hgrid="2.5x3.33"  >'latlon'       </grid_type>
 <grid_type hgrid="1.9x2.5"   >'latlon'       </grid_type> 
 <grid_type hgrid="2x2.5"     >'latlon'       </grid_type> 
 <grid_type hgrid="0.9x1.25"  >'latlon'       </grid_type> 
@@ -43,7 +43,7 @@
 <grid_format hgrid="8x16"      >'nc' </grid_format>
 <grid_format hgrid="4x5"       >'nc' </grid_format> 
 <grid_format hgrid="10x15"     >'nc' </grid_format> 
-<grid_format hgrid="2.5x3.3"   >'nc' </grid_format> 
+<grid_format hgrid="2.5x3.33"  >'nc' </grid_format>
 <grid_format hgrid="1.9x2.5"   >'nc' </grid_format> 
 <grid_format hgrid="0.9x1.25"  >'nc' </grid_format> 
 <grid_format hgrid="0.47x0.63" >'nc' </grid_format> 
@@ -60,7 +60,7 @@
 <grid_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </grid_file>
 <grid_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_gx3v7_100120.nc'      </grid_file> 
 <grid_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </grid_file> 
-<grid_file hgrid="2.5x3.3"   >'atm/cam/ocnfrac/domain.camocn.2.5x3.33_gx3v7_100120.nc' </grid_file> 
+<grid_file hgrid="2.5x3.33"  >'atm/cam/ocnfrac/domain.camocn.fv2.5x3.33_gx3v7_110223.nc' </grid_file>
 <grid_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </grid_file> 
 <grid_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </grid_file> 
 <grid_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</grid_file> 
@@ -81,7 +81,7 @@
 <kmt_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </kmt_file>
 <kmt_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_gx3v7_100120.nc'      </kmt_file> 
 <kmt_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </kmt_file> 
-<kmt_file hgrid="2.5x3.3"   >'atm/cam/ocnfrac/domain.camocn.2.5x3.33_gx3v7_100120.nc' </kmt_file> 
+<kmt_file hgrid="2.5x3.33"  >'atm/cam/ocnfrac/domain.camocn.fv2.5x3.33_gx3v7_110223.nc' </kmt_file>
 <kmt_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </kmt_file> 
 <kmt_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </kmt_file> 
 <kmt_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</kmt_file> 
@@ -269,12 +269,12 @@
 <stream_year_last   hgrid="4x5"  > 0 </stream_year_last>
 <model_year_align   hgrid="4x5"  > 1 </model_year_align>
 
-<stream_domfilename hgrid="2.5x3.3"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_domfilename>
-<stream_fldfilename hgrid="2.5x3.3"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_fldfilename>
-<stream_fldvarname  hgrid="2.5x3.3"  > 'ice_cov' </stream_fldvarname>
-<stream_year_first  hgrid="2.5x3.3"  > 0 </stream_year_first>
-<stream_year_last   hgrid="2.5x3.3"  > 0 </stream_year_last>
-<model_year_align   hgrid="2.5x3.3"  > 1 </model_year_align>
+<stream_domfilename hgrid="2.5x3.33" > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_domfilename>
+<stream_fldfilename hgrid="2.5x3.33" > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_fldfilename>
+<stream_fldvarname  hgrid="2.5x3.33" > 'ice_cov' </stream_fldvarname>
+<stream_year_first  hgrid="2.5x3.33 > 0 </stream_year_first>
+<stream_year_last   hgrid="2.5x3.33 > 0 </stream_year_last>
+<model_year_align   hgrid="2.5x3.33 > 1 </model_year_align>
 
 <stream_domfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_domfilename>
 <stream_fldfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_fldfilename>

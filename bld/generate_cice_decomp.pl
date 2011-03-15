@@ -383,6 +383,16 @@ sub CalcDecompInfo {
 	  }
       }
 
+      # fv 2.5x3.33
+      if ($nlats == 72 && $nlons == 108) {
+          if ($nprocs >= 10 && $nprocs <= 64) {
+              $decomp{'bsize_x'} = 18;
+              $decomp{'bsize_y'} = 9;
+              $decomp{'maxblocks'} = 4;
+          }
+
+      }
+
       # fv 4x5
       if ($nlats == 46 && $nlons == 72) {
 	  if ($nprocs >= 4 && $nprocs <= 9) {
