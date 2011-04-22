@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20110422
+Originator: dbailey
+Date: Fri Apr 22 2011
+Version: 4.0
+One-line Summary: ESMF interface updates.
+CCSM Version compatible with: cesm1_0_beta17+
+Changes made:
+
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+M       src/drivers/cpl_esmf/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20110315
 Originator: dbailey
 Date: Tue Mar 15 2011
