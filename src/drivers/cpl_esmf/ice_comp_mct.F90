@@ -49,15 +49,16 @@ subroutine ice_register(ice_petlist, ccsmComp, localComp)
    integer            :: rc
 
    ice_comp = ESMF_GridCompCreate(name="ice_comp", petList=ice_petlist, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create ice comp')
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create ice comp')
    call ESMF_GridCompSetServices(ice_comp, ice_register_esmf, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to register ice comp')
-   import_state = ESMF_StateCreate("ice import", ESMF_STATE_IMPORT, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create import ice state')
-   export_state = ESMF_StateCreate("ice export", ESMF_STATE_EXPORT, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create export ice state')
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to register ice comp')
+   import_state = ESMF_StateCreate(name="ice import", statetype=ESMF_STATE_IMPORT, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create import ice state')
+   export_state = ESMF_StateCreate(name="ice export", statetype=ESMF_STATE_EXPORT, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create export ice state')
 
    call ESMF_AttributeLink(ccsmComp, ice_comp, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to link attributes')
 
    localComp = ice_comp
 

@@ -115,13 +115,13 @@ subroutine ice_register_esmf(comp, rc)
     ! Register the callback routines.
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETINIT, &
-      ice_init_esmf, ESMF_SINGLEPHASE, rc)
+      ice_init_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETRUN, &
-      ice_run_esmf, ESMF_SINGLEPHASE, rc)
+      ice_run_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETFINAL, &
-      ice_final_esmf, ESMF_SINGLEPHASE, rc)
+      ice_final_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
 end subroutine
