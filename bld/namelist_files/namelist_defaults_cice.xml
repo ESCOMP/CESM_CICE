@@ -272,9 +272,9 @@
 <stream_domfilename hgrid="2.5x3.33" > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_domfilename>
 <stream_fldfilename hgrid="2.5x3.33" > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_2.5x3.33_clim_pi_c091020.nc'</stream_fldfilename>
 <stream_fldvarname  hgrid="2.5x3.33" > 'ice_cov' </stream_fldvarname>
-<stream_year_first  hgrid="2.5x3.33 > 0 </stream_year_first>
-<stream_year_last   hgrid="2.5x3.33 > 0 </stream_year_last>
-<model_year_align   hgrid="2.5x3.33 > 1 </model_year_align>
+<stream_year_first  hgrid="2.5x3.33" > 0 </stream_year_first>
+<stream_year_last   hgrid="2.5x3.33" > 0 </stream_year_last>
+<model_year_align   hgrid="2.5x3.33" > 1 </model_year_align>
 
 <stream_domfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_domfilename>
 <stream_fldfilename hgrid="1.9x2.5"  > 'ocn/docn7/SSTDATA/sst_HadOIBl_bc_1.9x2.5_clim_c061031.nc'</stream_fldfilename>

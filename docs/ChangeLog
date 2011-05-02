@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20110502
+Originator: mvertens
+Date: Mon May 2 2011
+Version: 4.0
+One-line Summary: bug fix introduced in cice4_0_20110315
+CCSM Version compatible with: cesm1_0_beta17+
+Changes made:
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+	
+===============================================================
 cice4_0_20110422
 Originator: dbailey
 Date: Fri Apr 22 2011
