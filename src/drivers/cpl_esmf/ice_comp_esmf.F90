@@ -51,7 +51,7 @@ module ice_comp_esmf
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
-                              get_daycal, leap_year_count
+                              get_daycal, leap_year_count, nyr
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
@@ -166,6 +166,8 @@ end subroutine
     character(len=32)  :: starttype          ! infodata start type
     integer            :: start_ymd          ! Start date (YYYYMMDD)
     integer            :: start_tod          ! start time of day (s)
+    integer            :: curr_ymd           ! Current date (YYYYMMDD)
+    integer            :: curr_tod           ! Current time of day (s)
     integer            :: ref_ymd            ! Reference date (YYYYMMDD)
     integer            :: ref_tod            ! reference time of day (s)
     integer            :: iyear              ! yyyy
@@ -178,6 +180,7 @@ end subroutine
     integer            :: mpicom_loc, mpicom_vm, gsize
 
     character(ESMF_MAXSTR) :: convCIM, purpComp
+
 ! !REVISION HISTORY:
 ! Author: Jacob Sewall, Fei Liu
 !EOP
@@ -296,11 +299,12 @@ end subroutine
     !   - time determined from iyear, month and mday
     !   - istep0 and istep1 are set to 0 
 
-    if (runtype == 'initial') then
-       call seq_timemgr_EClockGetData(EClock, &
-            start_ymd=start_ymd, start_tod=start_tod,       &
-            ref_ymd=ref_ymd, ref_tod=ref_tod)
+    call seq_timemgr_EClockGetData(EClock, &
+         start_ymd=start_ymd, start_tod=start_tod,       &
+         curr_ymd=curr_ymd,   curr_tod=curr_tod,         &
+         ref_ymd=ref_ymd, ref_tod=ref_tod)
 
+    if (runtype == 'initial') then
        if (ref_ymd /= start_ymd .or. ref_tod /= start_tod) then
           if (my_task == master_task) then
              write(nu_diag,*) 'ice_comp_esmf: ref_ymd ',ref_ymd, &
@@ -320,8 +324,9 @@ end subroutine
                '(ice_init_esmf) resetting idate to match sync clock'
        end if
 
-       idate = start_ymd
+       idate = curr_ymd
        iyear = (idate/10000)                     ! integer year of basedate
+       nyr   = iyear+1
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
@@ -337,9 +342,9 @@ end subroutine
     end if
     call calendar(time)     ! update calendar info
  
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     ! Initialize distgrids, domains, and arrays
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
 
     call t_startf ('cice_esmf_init')
 
@@ -500,6 +505,8 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     logical :: stop_now      ! .true. ==> stop at the end of this run phase
     integer :: ymd           ! Current date (YYYYMMDD)
     integer :: tod           ! Current time of day (sec)
+    integer :: curr_ymd      ! Current date (YYYYMMDD)
+    integer :: curr_tod      ! Current time of day (s)
     integer :: yr_sync       ! Sync current year
     integer :: mon_sync      ! Sync current month
     integer :: day_sync      ! Sync current day
@@ -546,6 +553,11 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call seq_timemgr_EClockGetData(EClock, &
+         curr_ymd=curr_ymd,   curr_tod=curr_tod)
+
+    nyr = (curr_ymd/10000)+1
 
     !-------------------------------------------------------------------
     ! get import state

@@ -30,6 +30,8 @@
       use ice_communicate, only: my_task, master_task
       use ice_blocks
       use ice_boundary
+      use ice_calendar, only: sec, month, mday, nyr, istep0, istep1, &
+                              time, time_forc, idate, year_init, calendar
       use ice_read_write
       use ice_fileunits
       use ice_timers
@@ -126,8 +128,6 @@
       use ice_domain_size
       use ice_flux
       use ice_grid
-      use ice_calendar, only: sec, month, mday, nyr, istep1, &
-                              time, time_forc, idate, year_init
       use ice_state
       use ice_dyn_evp
       use ice_blocks, only : block, get_block, nx_block, ny_block
@@ -271,8 +271,6 @@
       use ice_domain_size
       use ice_flux
       use ice_grid
-      use ice_calendar, only: sec, month, mday, nyr, istep1, &
-                              time, time_forc, idate, year_init
       use ice_state
       use ice_dyn_evp
       use ice_blocks, only : block, get_block, nx_block, ny_block
@@ -288,8 +286,7 @@
       integer (kind=int_kind) :: &
           i, j, k, n, it, iblk, & ! counting indices
           ilo, ihi, jlo, jhi,   & ! counting indices
-          lon, lat,             & ! global indices
-          iyear, imonth, iday     ! year, month, day
+          lon, lat                ! global indices
 
       character(len=char_len_long) :: filename
 
@@ -333,6 +330,10 @@
       status = pio_put_att(File,pio_global,'istep1',istep1)
       status = pio_put_att(File,pio_global,'time',time)
       status = pio_put_att(File,pio_global,'time_forc',time_forc)
+      status = pio_put_att(File,pio_global,'nyr',nyr)
+      status = pio_put_att(File,pio_global,'month',month)
+      status = pio_put_att(File,pio_global,'mday',mday)
+      status = pio_put_att(File,pio_global,'sec',sec)
 
       status = pio_def_dim(File,'ni',nx_global,dimid_ni)
       status = pio_def_dim(File,'nj',ny_global,dimid_nj)
@@ -564,10 +565,8 @@
       endif
 
       if (tr_iage) then
-         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
          status = pio_inq_varid(File,'iage',varid)
          call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_iage,:,:), status, fillval=c0)
-         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       endif
 
       if (tr_FY) then
@@ -664,7 +663,6 @@
       use ice_boundary
       use ice_domain_size
       use ice_domain
-      use ice_calendar, only: istep0, istep1, time, time_forc, calendar
       use ice_flux
       use ice_state
       use ice_grid, only: tmask, umask, grid_type
@@ -1052,7 +1050,6 @@
       use ice_boundary
       use ice_domain_size
       use ice_domain
-      use ice_calendar, only: istep0, istep1, time, time_forc, calendar
       use ice_flux
       use ice_state
       use ice_grid, only: tmask, umask, grid_type
@@ -1069,8 +1066,7 @@
       integer (kind=int_kind) :: &
           i, j, k, n, it, iblk, & ! counting indices
           ilo, ihi, jlo, jhi,   & ! counting indices
-          lon, lat,             & ! global indices
-          iyear, imonth, iday     ! year, month, day
+          lon, lat                ! global indices
 
       character(len=char_len_long) :: &
          filename, filename0
@@ -1133,6 +1129,14 @@
       status = pio_get_att(File, pio_global, 'istep1', istep1)
       status = pio_get_att(File, pio_global, 'time', time)
       status = pio_get_att(File, pio_global, 'time_forc', time_forc)
+      call pio_seterrorhandling(File, PIO_BCAST_ERROR)
+      status = pio_get_att(File, pio_global, 'nyr', nyr)
+      if (status == PIO_noerr) then
+         status = pio_get_att(File, pio_global, 'month', month)
+         status = pio_get_att(File, pio_global, 'mday', mday)
+         status = pio_get_att(File, pio_global, 'sec', sec)
+      endif
+      call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
       
       if (my_task == master_task) then
          write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc

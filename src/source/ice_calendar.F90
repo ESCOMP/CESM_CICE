@@ -25,6 +25,7 @@
       use ice_constants
       use ice_domain_size, only: max_nstrm
       use ice_exit, only: abort_ice
+      use ice_fileunits
 !
 !EOP
 !
@@ -163,20 +164,22 @@
                                         ! end of dt
       tday = (time-sec)/secday + c1     ! absolute day number
 
-      !(The following leap-year code is repeated in the calendar subroutine below)
-      if (calendar_type == "GREGORIAN") then 	
-         ! divide the number of days by the number of days in 400 years (the length of a leap-year cycle)
-         nyr = int((tday-c1)*real(400.,kind=dbl_kind)/(400*365 + 97 )) + 1
-      else
+      if (calendar_type /= "GREGORIAN") then 	
          nyr = int((tday-c1)/dayyr) + 1    ! year number
       endif
+
+      ! reset the number of leap days: this is necessary to add one one
+      ! the year turns from a leap-year to a non-leap year
+      nleaps = leap_year_count(nyr+year_init-1)
 
       ! get the daycal variable, which is dependant on calendar and days_per_year
       call get_daycal(year=nyr+year_init-1,days_per_year_in=days_per_year,&
            daycal_out=daycal,daymo_out=daymo)
 
       ! subtract the number of days in prior years from the number of days to get the number of days this year
-      yday = tday-nleaps - (nyr-1)*dayyr    ! days that have passed this year
+      yday = tday-real(nleaps,kind=dbl_kind)-real(nyr-1,kind=dbl_kind)*dayyr    ! days that have passed this year
+
+      write(nu_diag,*) 'tday,nleaps,nyr,yday',tday,nleaps,nyr,yday
 
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
@@ -238,15 +241,9 @@
                                         ! end of dt
       tday = (ttime-sec)/secday + c1    ! absolute day number
       
-      !(The following leap-year code is repeated in the init_calendar subroutine above)
-      if (calendar_type == "GREGORIAN") then 	
-         ! divide the number of days by the number of days in 400 years (the length of a leap-year cycle)
-         nyr = int((tday-c1)*real(400.,kind=dbl_kind)/(400*365 + 97 )) + 1
-         
-      else
+      if (calendar_type /= "GREGORIAN") then 	
          nyr = int((tday-c1)/dayyr) + 1    ! year number
       endif
-
 
       ! reset the number of leap days: this is necessary to add one one
       ! the year turns from a leap-year to a non-leap year
@@ -257,8 +254,9 @@
            daycal_out=daycal) 
 
       ! subtract the number of days in prior years from the number of days to get the number of days this year
-      yday = tday-nleaps - (nyr-1)*dayyr    ! days that have passed this year
+      yday = tday-real(nleaps,kind=dbl_kind)-real(nyr-1,kind=dbl_kind)*dayyr    ! days that have passed this year
 
+      write(nu_diag,*) 'tday,nleaps,nyr,yday',tday,nleaps,nyr,yday
 
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
@@ -448,7 +446,7 @@
               leap_year_count = 0
               write(6,*) 'WARNING: leap_year_count for year ',Y,'assumes no leap years before year 0'
            else
-              leap_year_count  = ( (Y-1)/4 - (Y-1)/100 + (Y-1)/400 ) + 1   ! +1 for year 0
+              leap_year_count  = ( (Y-1)/4 - (Y-1)/100 + (Y-1)/400 ) + 1
            endif
         else
            leap_year_count = 0
@@ -460,8 +458,6 @@
         return
 
       end function leap_year_count
-
-
 
       end module ice_calendar
 

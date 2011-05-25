@@ -57,7 +57,7 @@ module ice_comp_mct
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
-                              get_daycal, leap_year_count
+                              get_daycal, leap_year_count, nyr
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
@@ -141,6 +141,8 @@ contains
     character(len=32)  :: starttype          ! infodata start type
     integer            :: start_ymd          ! Start date (YYYYMMDD)
     integer            :: start_tod          ! start time of day (s)
+    integer            :: curr_ymd           ! Current date (YYYYMMDD)
+    integer            :: curr_tod           ! Current time of day (s)
     integer            :: ref_ymd            ! Reference date (YYYYMMDD)
     integer            :: ref_tod            ! reference time of day (s)
     integer            :: iyear              ! yyyy
@@ -257,11 +259,12 @@ contains
     !   - time determined from iyear, month and mday
     !   - istep0 and istep1 are set to 0 
 
-    if (runtype == 'initial') then
-       call seq_timemgr_EClockGetData(EClock, &
-            start_ymd=start_ymd, start_tod=start_tod,       &
-            ref_ymd=ref_ymd, ref_tod=ref_tod)
+    call seq_timemgr_EClockGetData(EClock,               &
+         start_ymd=start_ymd, start_tod=start_tod,       &
+         curr_ymd=curr_ymd,   curr_tod=curr_tod,         &
+         ref_ymd=ref_ymd,     ref_tod=ref_tod)
 
+    if (runtype == 'initial') then
        if (ref_ymd /= start_ymd .or. ref_tod /= start_tod) then
           if (my_task == master_task) then
              write(nu_diag,*) 'ice_comp_mct: ref_ymd ',ref_ymd, &
@@ -281,8 +284,9 @@ contains
                '(ice_init_mct) resetting idate to match sync clock'
        end if
 
-       idate = start_ymd
+       idate = curr_ymd
        iyear = (idate/10000)                     ! integer year of basedate
+       nyr   = iyear+1
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
@@ -403,6 +407,8 @@ contains
     integer :: day_sync      ! Sync current day
     integer :: tod_sync      ! Sync current time of day (sec)
     integer :: ymd_sync      ! Current year of sync clock
+    integer :: curr_ymd           ! Current date (YYYYMMDD)
+    integer :: curr_tod           ! Current time of day (s)
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
     integer :: n
@@ -442,6 +448,12 @@ contains
     ! Determine orbital parameters
     call seq_infodata_GetData(infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
                               orb_lambm0=lambm0, orb_obliqr=obliqr)
+
+    ! Get clock information
+    call seq_timemgr_EClockGetData(EClock,               &
+         curr_ymd=curr_ymd,   curr_tod=curr_tod)
+
+    nyr = (curr_ymd/10000)+1           ! integer year of basedate
 
     !-------------------------------------------------------------------
     ! get import state
