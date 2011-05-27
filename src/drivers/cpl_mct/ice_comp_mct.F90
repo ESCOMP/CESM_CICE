@@ -57,7 +57,7 @@ module ice_comp_mct
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
-                              get_daycal, leap_year_count, nyr
+                              get_daycal, leap_year_count, nyr, new_year
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
@@ -146,6 +146,7 @@ contains
     integer            :: ref_ymd            ! Reference date (YYYYMMDD)
     integer            :: ref_tod            ! reference time of day (s)
     integer            :: iyear              ! yyyy
+    integer            :: nyrp               ! yyyy
     integer            :: dtime              ! time step
     integer            :: shrlogunit,shrloglev ! old values
     integer            :: iam,ierr
@@ -286,7 +287,9 @@ contains
 
        idate = curr_ymd
        iyear = (idate/10000)                     ! integer year of basedate
+       nyrp  = nyr
        nyr   = iyear+1
+       if (nyr /= nyrp) new_year = .true.
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
@@ -411,7 +414,7 @@ contains
     integer :: curr_tod           ! Current time of day (s)
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
-    integer :: n
+    integer :: n, nyrp
     type(mct_gGrid)        , pointer :: dom_i
     type(seq_infodata_type), pointer :: infodata   
     type(mct_gsMap)        , pointer :: gsMap_i
@@ -453,7 +456,9 @@ contains
     call seq_timemgr_EClockGetData(EClock,               &
          curr_ymd=curr_ymd,   curr_tod=curr_tod)
 
+    nyrp  = nyr
     nyr = (curr_ymd/10000)+1           ! integer year of basedate
+    if (nyr /= nyrp) new_year = .true.
 
     !-------------------------------------------------------------------
     ! get import state

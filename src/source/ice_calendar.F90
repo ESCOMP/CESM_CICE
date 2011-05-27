@@ -179,8 +179,6 @@
       ! subtract the number of days in prior years from the number of days to get the number of days this year
       yday = tday-real(nleaps,kind=dbl_kind)-real(nyr-1,kind=dbl_kind)*dayyr    ! days that have passed this year
 
-      write(nu_diag,*) 'tday,nleaps,nyr,yday',tday,nleaps,nyr,yday
-
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
       enddo
@@ -256,15 +254,12 @@
       ! subtract the number of days in prior years from the number of days to get the number of days this year
       yday = tday-real(nleaps,kind=dbl_kind)-real(nyr-1,kind=dbl_kind)*dayyr    ! days that have passed this year
 
-      write(nu_diag,*) 'tday,nleaps,nyr,yday',tday,nleaps,nyr,yday
-
       do k = 1, 12
         if (yday > real(daycal(k),kind=dbl_kind)) month = k
       enddo
       mday = int(yday) - daycal(month)  ! day of the month 
 
       hour = int((ttime-dt)/c3600) + c1 ! hour  
-
 
       elapsed_months = (nyr - 1)*12 + month - 1
       elapsed_days = int(tday) - 1 
