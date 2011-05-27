@@ -224,7 +224,8 @@
          elapsed_months             , & ! since beginning this run
          elapsed_hours                  ! since beginning this run
 
-      nyrp=nyr
+!     Handled in driver.
+!     nyrp=nyr
       monthp=month
       mdayp=mday
       hourp=hour
@@ -241,6 +242,7 @@
       
       if (calendar_type /= "GREGORIAN") then 	
          nyr = int((tday-c1)/dayyr) + 1    ! year number
+         if (nyr   /= nyrp)   new_year = .true.
       endif
 
       ! reset the number of leap days: this is necessary to add one one
@@ -271,7 +273,6 @@
       if (istep >= npt+1)  stop_now = 1
 #endif
 
-      if (nyr   /= nyrp)   new_year = .true.
       if (month /= monthp) new_month = .true.
       if (mday  /= mdayp)  new_day = .true.
       if (hour  /= hourp)  new_hour = .true.
