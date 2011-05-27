@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20110527
+Originator: dbailey
+Date: Fri May 27 2011
+Version: 4.0
+One-line Summary: Year changeover bug.
+CCSM Version compatible with: cesm1_0_beta19+
+Changes made:
+
+M       source/ice_calendar.F90
+M       drivers/cpl_mct/ice_comp_mct.F90
+
+===============================================================
 cice4_0_20110525
 Originator: dbailey
 Date: Wed May 25 2011
