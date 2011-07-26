@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html233"
+<A NAME="tex2html226"
   HREF="node12.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html229"
+<A NAME="tex2html222"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html223"
+<A NAME="tex2html216"
   HREF="node10.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html231"
+<A NAME="tex2html224"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html234"
+<B> Next:</B> <A NAME="tex2html227"
   HREF="node12.html">Tracer Namelist</A>
-<B>Up:</B> <A NAME="tex2html230"
+<B>Up:</B> <A NAME="tex2html223"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html224"
+<B> Previous:</B> <A NAME="tex2html217"
   HREF="node10.html">Writing Output</A>
 <BR> <P>
 
@@ -55,7 +55,7 @@ Model Physics</A>
 
 <P>
 The namelist variables for the ice model physics are listed in Table 
-<A HREF="node10.html#ice_nml">3</A>.  <TT>restart</TT> is almost always true since most
+<A HREF="#ice_nml">3</A>.  <TT>restart</TT> is almost always true since most
 run types begin by reading in a binary restart file.  See section 
 <A HREF="node21.html#runtypes">5</A> for a description of the run types and about using
 restart files and internally generated model data as initial conditions.
@@ -142,7 +142,7 @@ categories or tracers.  The upwind scheme is also available. The upwind scheme
 is only first order accurate.
 
 <P>
-The base values of the snow and ice albedos for the CESM3 shortwave option
+The base values of the snow and ice albedos for the CCSM3 shortwave option
 are set in the namelist.  The ice albedos are those for ice thicker than 
 <TT>ahmax</TT>, which is currently set at 0.5 m.  This thickness is a parameter 
 that can be changed in <B>ice_shortwave.F90</B>. The snow albedos are for 
@@ -157,30 +157,251 @@ tunable through adjustments to the snow grain radius, <TT>R_snw</TT>,
 temperature to transition to melting snow, and maximum snow grain radius.
 
 <P>
-<HR>
-<A NAME="tex2html233"
+<BR>  <DIV ALIGN="CENTER">
+  <A NAME="ice_nml"></A>  <A NAME="477"></A>
+<TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
+<CAPTION><STRONG>Table:</STRONG>
+Namelist Variables for Model Physics (ice_nml)</CAPTION>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>Variable Name</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>CESM-CAM4 gx3 dipole-grid default</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>CESM-CAM4 gx1 dipole-grid default</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>CESM-CAM5 gx1 dipole-grid default</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Description</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>ndte</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Number of sub-cycles in EVP dynamics.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>kcolumn</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Column model flag.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0 = off</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1 = column model (not tested or supported)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>kitd</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Determines ITD conversion</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0 = delta scheme</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1 = linear remapping</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>kdyn</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Determines ice dynamics</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0 = No ice dynamics</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1 = Elastic viscous plastic dynamics</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>kstrength</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Integer</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Determines pressure formulation</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>0 = (<A
+ HREF="node40.html#hibl79">Hibler(1979)</A>) parameterization</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>1 = (<A
+ HREF="node40.html#roth75b">Rothrock(1975)</A>) parameterization</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>evp_damping</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Logical</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>.false.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>If true, use damping procedure
+                                             in evp dynamics (not supported).</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>advection</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>remap</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>remap</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>remap</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Determines horizontal
+                                               advection scheme.</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'remap' = incremental remapping</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'upwind' = first order advection</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>shortwave</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Character</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>dEdd</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>dEdd</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>dEdd</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Shortwave Radiative Transfer Scheme</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'default' = CCSM3 Shortwave</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>'dEdd' = delta-Eddington Shortwave</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicev</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.73</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.73</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.73</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible ice albedo (CCSM3)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albicei</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.33</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.33</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.33</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared ice albedo (CCSM3)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowv</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.96</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.96</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.96</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Visible snow albedo (CCSM3)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>albsnowi</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.68</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.68</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.68</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Near-infrared snow albedo (CCSM3)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_ice</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base ice tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_pnd</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>0.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base pond tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>R_snw</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>-1.5</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>-2.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1.75</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Base snow grain radius tuning parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>dT_mlt_in</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1.5</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>2.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1.0</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Snow melt onset temperature parameter (dEdd)</TD>
+</TR>
+<TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85><TT>rsnw_mlt_in</TT></TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Double</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1500.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>2000.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=85>1000.</TD>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH=184>Snow melt maximum radius (dEdd)</TD>
+</TR>
+</TABLE>
+</DIV>
+<BR><HR>
+<A NAME="tex2html226"
   HREF="node12.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html229"
+<A NAME="tex2html222"
   HREF="node8.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html223"
+<A NAME="tex2html216"
   HREF="node10.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html231"
+<A NAME="tex2html224"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html234"
+<B> Next:</B> <A NAME="tex2html227"
   HREF="node12.html">Tracer Namelist</A>
-<B>Up:</B> <A NAME="tex2html230"
+<B>Up:</B> <A NAME="tex2html223"
   HREF="node8.html">Namelist Variables</A>
-<B> Previous:</B> <A NAME="tex2html224"
+<B> Previous:</B> <A NAME="tex2html217"
   HREF="node10.html">Writing Output</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-05-28</I>
+2011-07-26</I>
 </ADDRESS>
 </BODY>
 </HTML>

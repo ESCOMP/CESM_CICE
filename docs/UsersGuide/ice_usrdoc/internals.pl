@@ -19,7 +19,7 @@ $ref_files{$key} = "$dir".q|node12.html|;
 $noresave{$key} = "$nosave";
 
 $key = q/ice_nml/;
-$ref_files{$key} = "$dir".q|node10.html|; 
+$ref_files{$key} = "$dir".q|node11.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/ncat/;
@@ -136,6 +136,10 @@ $noresave{$key} = "$nosave";
 
 $key = q/namelist/;
 $ref_files{$key} = "$dir".q|node8.html|; 
+$noresave{$key} = "$nosave";
+
+$key = q/table:ice_pio_nml/;
+$ref_files{$key} = "$dir".q|node16.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/example1_nml/;

@@ -1,4 +1,64 @@
 ===============================================================
+cice4_0_20110726
+Originator: dbailey
+Date: Tue Jul 26 2011
+Version: 4.0
+One-line Summary: Update documentation only.
+CCSM Version compatible with: cesm1_0_beta19+
+Changes made:
+
+M       docs/UsersGuide/ice_usrdoc/node7.html
+M       docs/UsersGuide/ice_usrdoc/node9.html
+M       docs/UsersGuide/ice_usrdoc/WARNINGS
+M       docs/UsersGuide/ice_usrdoc/node10.html
+M       docs/UsersGuide/ice_usrdoc/node20.html
+M       docs/UsersGuide/ice_usrdoc/node12.html
+M       docs/UsersGuide/ice_usrdoc/node30.html
+M       docs/UsersGuide/ice_usrdoc/node22.html
+M       docs/UsersGuide/ice_usrdoc/node40.html
+M       docs/UsersGuide/ice_usrdoc/node14.html
+M       docs/UsersGuide/ice_usrdoc/node32.html
+M       docs/UsersGuide/ice_usrdoc/node24.html
+M       docs/UsersGuide/ice_usrdoc/node16.html
+M       docs/UsersGuide/ice_usrdoc/node34.html
+M       docs/UsersGuide/ice_usrdoc/node26.html
+M       docs/UsersGuide/ice_usrdoc/node36.html
+M       docs/UsersGuide/ice_usrdoc/node18.html
+M       docs/UsersGuide/ice_usrdoc/node28.html
+M       docs/UsersGuide/ice_usrdoc/node38.html
+M       docs/UsersGuide/ice_usrdoc/node2.html
+M       docs/UsersGuide/ice_usrdoc/node4.html
+M       docs/UsersGuide/ice_usrdoc/labels.pl
+M       docs/UsersGuide/ice_usrdoc/node6.html
+M       docs/UsersGuide/ice_usrdoc/node8.html
+M       docs/UsersGuide/ice_usrdoc/ice_usrdoc.html
+M       docs/UsersGuide/ice_usrdoc/images.log
+M       docs/UsersGuide/ice_usrdoc/node11.html
+M       docs/UsersGuide/ice_usrdoc/node21.html
+M       docs/UsersGuide/ice_usrdoc/node31.html
+M       docs/UsersGuide/ice_usrdoc/node13.html
+M       docs/UsersGuide/ice_usrdoc/node23.html
+M       docs/UsersGuide/ice_usrdoc/node41.html
+M       docs/UsersGuide/ice_usrdoc/node15.html
+M       docs/UsersGuide/ice_usrdoc/node33.html
+M       docs/UsersGuide/ice_usrdoc/node25.html
+M       docs/UsersGuide/ice_usrdoc/node17.html
+M       docs/UsersGuide/ice_usrdoc/node35.html
+M       docs/UsersGuide/ice_usrdoc/node27.html
+M       docs/UsersGuide/ice_usrdoc/node19.html
+M       docs/UsersGuide/ice_usrdoc/node37.html
+M       docs/UsersGuide/ice_usrdoc/node29.html
+M       docs/UsersGuide/ice_usrdoc/images.tex
+M       docs/UsersGuide/ice_usrdoc/node39.html
+M       docs/UsersGuide/ice_usrdoc/internals.pl
+M       docs/UsersGuide/ice_usrdoc/node1.html
+M       docs/UsersGuide/ice_usrdoc/index.html
+M       docs/UsersGuide/ice_usrdoc/node3.html
+M       docs/UsersGuide/ice_usrdoc/images.pdf
+M       docs/UsersGuide/ice_usrdoc/node5.html
+M       docs/UsersGuide/ice_nml_var.tex
+
+===============================================================
 cice4_0_20110528
 Originator: dbailey
 Date: Sat May 28 2011

@@ -19,7 +19,7 @@ $external_labels{$key} = "$URL/" . q|node12.html|;
 $noresave{$key} = "$nosave";
 
 $key = q/ice_nml/;
-$external_labels{$key} = "$URL/" . q|node10.html|; 
+$external_labels{$key} = "$URL/" . q|node11.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/ncat/;
@@ -136,6 +136,10 @@ $noresave{$key} = "$nosave";
 
 $key = q/namelist/;
 $external_labels{$key} = "$URL/" . q|node8.html|; 
+$noresave{$key} = "$nosave";
+
+$key = q/table:ice_pio_nml/;
+$external_labels{$key} = "$URL/" . q|node16.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/example1_nml/;

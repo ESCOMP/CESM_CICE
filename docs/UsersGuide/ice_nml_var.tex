@@ -18,16 +18,16 @@ ice option along with the history namelist variables are set
 in {\bf ice\_prescribed.F90} and {\bf ice\_history.F90} respectively. 
 If they are not set in the namelist 
 in the script, they will assume the default values listed in 
-Tables \ref{table:setup_nml}-\ref{table:pio_nml}, which list all available 
+Tables \ref{table:setup_nml}-\ref{table:ice_pio_nml}, which list all available 
 namelist parameters.  The default values shown here are
 for the coupled model, which is set up for a production run. Only a few of 
 these variables are required to be set in the namelist; these values are 
 noted in the paragraphs below.  An example of the default namelist is shown in 
 Section \ref{example1_nml}.
 
-\begin{table}[ht]
+\begin{table}[hb]
   \begin{center}
-  \caption{Namelist Variables for Run Management}
+  \caption{Namelist Variables for Run Management (setup_nml)}
   \label{table:setup_nml}
    \begin{tabular}{p{2.0cm}p{2.0cm}p{4.0cm}p{6.5cm}} \hline
 Varible  & Type & Default Value & Description               \\
@@ -184,67 +184,6 @@ of the CESM filenaming convention, so the default values are set by the CESM
 driver.  See \ref{restart_files} and \ref{history_files} for an explanation 
 of how the rest of the filename is created.
 
-\begin{table}
-  \begin{center}
-  \caption{Namelist Variables for Model Physics}
-  \label{ice_nml}
-  \begin{tabular}{p{3cm}p{2.0cm}p{3cm}p{6.5cm}} \hline
-  Varible Name & Type & Default Value & Description               \\
-\hline \hline
-
-{\tt ndte} & Integer & 1 & Number of sub-cycles in EVP dynamics. \\
-
-{\tt kcolumn} &  Integer & 0 & Column model flag. \\
-        &          &   & 0 = off \\
-        &          &   & 1 = column model (not tested or supported)\\
-
-{\tt kitd} &  Integer & 1 & Determines ITD conversion \\
-     &          &   & 0 = delta scheme \\
-     &          &   & 1 = linear remapping \\
-
-{\tt kdyn} &  Integer & 1 & Determines ice dynamics \\
-     &          &   & 0 = No ice dynamics\\
-     &          &   & 1 = Elastic viscous plastic dynamics\\
-
-{\tt kstrength} &  Integer & 1 &  Determines pressure formulation \\
-          &          &   &  0 = \cite{hibl79} parameterization \\
-          &          &   &  1 = \cite{roth75b} parameterization \\
-
-{\tt evp\_damping} &  Logical & .false. & If true, use damping procedure
-                                             in evp dynamics (not supported). \\
-
-{\tt advection} &  Character & 'remap' &  Determines horizontal
-                                               advection scheme. \\
-          &            &   &  'remap' = incremental remapping \\
-          &            &   &   'upwind' = first order advection \\
-
-{\tt shortwave} & Character & 'dEdd' & Shortwave Radiative Transfer Scheme \\
-                &           &        & 'default' = CESM3 Shortwave \\
-                &           &        & 'dEdd' = delta-Eddington Shortwave \\
-
-{\tt albicev} &  Double & 0.73 &  Visible ice albedo (CESM3)\\
-
-{\tt albicei} &  Double & 0.33 &  Near-infrared ice albedo (CESM3)\\
-
-{\tt albsnowv} &  Double & 0.96 &  Visible snow albedo (CESM3)\\
-
-{\tt albsnowi} &  Double & 0.68 &  Near-infrared snow albedo (CESM3)\\
-
-{\tt R\_ice} &  Double & 0.0 &  Base ice grain radius tuning parameter (dEdd)\\
-
-{\tt R\_pnd} &  Double & 1.5 &  Base snow grain radius tuning parameter (dEdd)\\
-
-{\tt R\_snw} &  Double & 0.0 &  Base pond grain radius tuning parameter (dEdd)\\
-
-{\tt dT\_mlt\_in} &  Double & 1.5 & Snow melt onset temperature parameter (dEdd)\\
-
-{\tt rsnw\_mlt\_in} &  Double & 1500.0 & Snow melt maximum radius (dEdd)\\
-
-  \hline
-  \end{tabular}
-  \end{center}
-\end{table}
-
 \subsection{Model Physics}
 
 The namelist variables for the ice model physics are listed in Table 
@@ -304,7 +243,7 @@ is less diffusive and is computationally efficient for large numbers of
 categories or tracers.  The upwind scheme is also available. The upwind scheme 
 is only first order accurate.
  
-The base values of the snow and ice albedos for the CESM3 shortwave option
+The base values of the snow and ice albedos for the CCSM3 shortwave option
 are set in the namelist.  The ice albedos are those for ice thicker than 
 {\tt ahmax}, which is currently set at 0.5 m.  This thickness is a parameter 
 that can be changed in {\bf ice\_shortwave.F90}. The snow albedos are for 
@@ -316,6 +255,66 @@ optical properties of snow, sea ice, and melt ponds. These albedos are
 tunable through adjustments to the snow grain radius, {\tt R\_snw}, 
 temperature to transition to melting snow, and maximum snow grain radius.
 
+\begin{table}[hb]
+  \begin{center}
+  \caption{Namelist Variables for Model Physics (ice_nml)}
+  \label{ice_nml}
+  \begin{tabular}{p{3cm}p{2cm}p{3cm}p{3cm}p{3cm}p{6.5cm}} \hline
+  Variable Name & Type & CESM-CAM4 gx3 dipole-grid default & CESM-CAM4 gx1 dipole-grid default & CESM-CAM5 gx1 dipole-grid default & Description              \\
+\hline \hline
+
+{\tt ndte} & Integer & 1 & 1 & 1 & Number of sub-cycles in EVP dynamics. \\
+
+{\tt kcolumn} &  Integer & 0 & 0 & 0 & Column model flag. \\
+              &          &   &   &   & 0 = off  \\
+              &          &   &   &   & 1 = column model (not tested or supported)\\
+
+{\tt kitd} &  Integer & 1 & 1 & 1 & Determines ITD conversion \\
+           &          &   &   &   & 0 = delta scheme \\
+           &          &   &   &   & 1 = linear remapping \\
+
+{\tt kdyn} &  Integer & 1 & 1 & 1 & Determines ice dynamics \\
+           &          &   &   &   & 0 = No ice dynamics\\
+           &          &   &   &   & 1 = Elastic viscous plastic dynamics\\
+
+{\tt kstrength} &  Integer & 1 & 1 & 1 & Determines pressure formulation \\
+                &          &   &   &   & 0 = \cite{hibl79} parameterization \\
+                &          &   &   &   & 1 = \cite{roth75b} parameterization \\
+
+{\tt evp\_damping} &  Logical & .false. & .false. & .false. & If true, use damping procedure
+                                             in evp dynamics (not supported). \\
+
+{\tt advection} &  Character & remap & remap & remap & Determines horizontal
+                                               advection scheme. \\
+                &            &       &       &       & 'remap' = incremental remapping \\
+                &            &       &       &       & 'upwind' = first order advection \\
+
+{\tt shortwave} & Character & dEdd & dEdd & dEdd & Shortwave Radiative Transfer Scheme \\
+                &           &      &      &      & 'default' = CCSM3 Shortwave \\
+                &           &      &      &      & 'dEdd' = delta-Eddington Shortwave \\
+
+{\tt albicev} &  Double & 0.73 & 0.73 & 0.73 & Visible ice albedo (CCSM3)\\
+
+{\tt albicei} &  Double & 0.33 & 0.33 & 0.33 & Near-infrared ice albedo (CCSM3)\\
+
+{\tt albsnowv} & Double & 0.96 & 0.96 & 0.96 & Visible snow albedo (CCSM3)\\
+
+{\tt albsnowi} & Double & 0.68 & 0.68 & 0.68 & Near-infrared snow albedo (CCSM3)\\
+
+{\tt R\_ice} & Double & 0.0 & 0.0 & 0.0 & Base ice tuning parameter (dEdd)\\
+
+{\tt R\_pnd} & Double & 0.0 & 0.0 & 0.0 & Base pond tuning parameter (dEdd)\\
+
+{\tt R\_snw} & Double & -1.5 & -2.0 & 1.75 & Base snow grain radius tuning parameter (dEdd)\\
+
+{\tt dT\_mlt\_in} & Double & 1.5 & 2.0 & 1.0 & Snow melt onset temperature parameter (dEdd)\\
+
+{\tt rsnw\_mlt\_in} & Double & 1500. & 2000. & 1000. & Snow melt maximum radius (dEdd)\\
+
+  \hline
+  \end{tabular}
+  \end{center}
+\end{table}
 \subsection{Tracer Namelist}
 
 The namelist parameters listed in Table \ref{table:tracer_nml} are for
@@ -323,7 +322,7 @@ adding tracers. See section on tracers.
 
 \begin{table}
   \begin{center}
-  \caption{Namelist Variables for Tracers}
+  \caption{Namelist Variables for Tracers (tracer_nml)}
   \label{table:tracer_nml}
   \begin{tabular}{p{2.5cm}p{2.5cm}p{3cm}p{6.0cm}} \hline
   Varible & Type & Default Value & Description               \\
@@ -352,7 +351,7 @@ the prescribed ice option as used in AMIP and F compset (standalone CAM) runs
 
 \begin{table}
   \begin{center}
-  \caption{Namelist Variables for Prescribed Ice Option}
+  \caption{Namelist Variables for Prescribed Ice Option (ice_prescribed_nml)}
   \label{table:ice_prescribed_nml}
   \begin{tabular}{p{4.0cm}p{2.0cm}p{3cm}p{6.0cm}} \hline
   Varible & Type & Default Value & Description               \\
@@ -391,7 +390,7 @@ default filenames shown in Table \ref{table:grid_nml}.
 
 \begin{table}
   \begin{center}
-  \caption{Namelist Variables for Grid and Mask Information}
+  \caption{Namelist Variables for Grid and Mask Information (grid_nml)}
   \label{table:grid_nml}
   \begin{tabular}{p{2.5cm}p{2.5cm}p{3cm}p{6.0cm}} \hline
   Varible & Type & Default Value & Description               \\
@@ -429,7 +428,7 @@ scripts documentation.
 
 \begin{table}
   \begin{center}
-  \caption{Namelist Variables for Domain Decomposition Information}
+  \caption{Namelist Variables for Domain Decomposition Information (domain_nml)}
   \label{table:domain_nml}
   \begin{tabular}{p{4.0cm}p{2cm}p{2cm}p{6.0cm}} \hline
   Varible & Type & Default Value & Description               \\
@@ -457,7 +456,7 @@ scripts documentation.
 
 \subsection{PIO Namelist}
 
-The namelist parameters listed in Table \ref{table:pio_nml} are for
+The namelist parameters listed in Table \ref{table:ice_pio_nml} are for
 controlling parallel input/output.  Only a brief overview will be
 given here, but more on parallel input/output can be found at:\\
 
@@ -472,8 +471,8 @@ given here, but more on parallel input/output can be found at:\\
 
 \begin{table}
   \begin{center}
-  \caption{Namelist Variables for Parallel I/O}
-  \label{table:pio_nml}
+  \caption{Namelist Variables for Parallel I/O (ice_pio_nml)}
+  \label{table:ice_pio_nml}
   \begin{tabular}{p{2.5cm}p{2.5cm}p{3cm}p{6.0cm}} \hline
   Varible & Type & Default Value & Description               \\
 \hline \hline

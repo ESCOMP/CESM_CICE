@@ -27,23 +27,23 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 
 <BODY BGCOLOR=white LINK=BLUE VLINK=PURPLE>
 
-<A NAME="tex2html186"
+<A NAME="tex2html179"
   HREF="node9.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html182"
+<A NAME="tex2html175"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html176"
+<A NAME="tex2html169"
   HREF="node7.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html184"
+<A NAME="tex2html177"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html187"
+<B> Next:</B> <A NAME="tex2html180"
   HREF="node9.html">Changing the timestep</A>
-<B>Up:</B> <A NAME="tex2html183"
+<B>Up:</B> <A NAME="tex2html176"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html177"
+<B> Previous:</B> <A NAME="tex2html170"
   HREF="node7.html">CICE Preprocessor Flags</A>
 <BR> <P>
 
@@ -72,7 +72,7 @@ ice option along with the history namelist variables are set
 in <B>ice_prescribed.F90</B> and <B>ice_history.F90</B> respectively. 
 If they are not set in the namelist 
 in the script, they will assume the default values listed in 
-Tables <A HREF="#table:setup_nml">1</A>-<A HREF="node16.html#table:pio_nml">8</A>, which list all available 
+Tables <A HREF="#table:setup_nml">1</A>-<A HREF="node16.html#table:ice_pio_nml"><IMG  ALIGN="BOTTOM" BORDER="1" ALT="[*]" SRC="crossref.png"></A>, which list all available 
 namelist parameters.  The default values shown here are
 for the coupled model, which is set up for a production run. Only a few of 
 these variables are required to be set in the namelist; these values are 
@@ -81,10 +81,10 @@ Section <A HREF="node18.html#example1_nml">3.9.1</A>.
 
 <P>
 <BR>  <DIV ALIGN="CENTER">
-  <A NAME="table:setup_nml"></A>   <A NAME="371"></A>
+  <A NAME="table:setup_nml"></A>   <A NAME="359"></A>
 <TABLE CELLPADDING=3 BORDER="1" ALIGN="CENTER">
-<CAPTION><STRONG>Table 1:</STRONG>
-Namelist Variables for Run Management</CAPTION>
+<CAPTION><STRONG>Table:</STRONG>
+Namelist Variables for Run Management (setup_nml)</CAPTION>
 <TR><TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Varible</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=57>Type</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=113>Default Value</TD>
@@ -205,64 +205,62 @@ the uncoupled version, they are set by the driver in CESM. Variables set by
 the driver include: <TT>dt</TT>, <TT>runid</TT>, <TT>runtype</TT>, <TT>istep0</TT>, 
 <TT>days_per_year</TT>, <TT>restart</TT> and <TT>dumpfreq</TT>. These should be 
 changed in the CESM configuration files:
-
+<BR>
 <P>
-<A NAME="tex2html6"
-  HREF="../../ccsm/ccsm_doc/book1.html">CESM scripts</A>.
 <BR> <HR>
 <!--Table of Child-Links-->
 <A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
 
 <UL>
-<LI><A NAME="tex2html188"
+<LI><A NAME="tex2html181"
   HREF="node9.html">Changing the timestep</A>
-<LI><A NAME="tex2html189"
+<LI><A NAME="tex2html182"
   HREF="node10.html">Writing Output</A>
-<LI><A NAME="tex2html190"
+<LI><A NAME="tex2html183"
   HREF="node11.html">Model Physics</A>
-<LI><A NAME="tex2html191"
+<LI><A NAME="tex2html184"
   HREF="node12.html">Tracer Namelist</A>
-<LI><A NAME="tex2html192"
+<LI><A NAME="tex2html185"
   HREF="node13.html">Prescribed Ice Namelist</A>
-<LI><A NAME="tex2html193"
+<LI><A NAME="tex2html186"
   HREF="node14.html">Grid Namelist</A>
-<LI><A NAME="tex2html194"
+<LI><A NAME="tex2html187"
   HREF="node15.html">Domain Namelist</A>
-<LI><A NAME="tex2html195"
+<LI><A NAME="tex2html188"
   HREF="node16.html">PIO Namelist</A>
-<LI><A NAME="tex2html196"
+<LI><A NAME="tex2html189"
   HREF="node17.html">Example Namelists</A>
 <UL>
-<LI><A NAME="tex2html197"
+<LI><A NAME="tex2html190"
   HREF="node18.html">Example 1: CESM Fully Coupled</A>
-<LI><A NAME="tex2html198"
+<LI><A NAME="tex2html191"
   HREF="node19.html">Example 2: History File Namelist</A>
 </UL></UL>
 <!--End of Table of Child-Links-->
 <HR>
-<A NAME="tex2html186"
+<A NAME="tex2html179"
   HREF="node9.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
-<A NAME="tex2html182"
+<A NAME="tex2html175"
   HREF="ice_usrdoc.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
-<A NAME="tex2html176"
+<A NAME="tex2html169"
   HREF="node7.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A> 
-<A NAME="tex2html184"
+<A NAME="tex2html177"
   HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.png"></A>  <BR>
-<B> Next:</B> <A NAME="tex2html187"
+<B> Next:</B> <A NAME="tex2html180"
   HREF="node9.html">Changing the timestep</A>
-<B>Up:</B> <A NAME="tex2html183"
+<B>Up:</B> <A NAME="tex2html176"
   HREF="ice_usrdoc.html">ice_usrdoc</A>
-<B> Previous:</B> <A NAME="tex2html177"
+<B> Previous:</B> <A NAME="tex2html170"
   HREF="node7.html">CICE Preprocessor Flags</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I>David Bailey <BR>
-2010-05-28</I>
+2011-07-26</I>
 </ADDRESS>
 </BODY>
 </HTML>
