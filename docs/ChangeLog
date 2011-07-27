@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20110727
+Originator: dbailey
+Date: Wed Jul 27 2011
+Version: 4.0
+One-line Summary: New year bug with non-Gregorian cases.
+CCSM Version compatible with: cesm1_0_beta22+
+Changes made:
+
+M       src/source/ice_calendar.F90
+
+===============================================================
 cice4_0_20110726
 Originator: dbailey
 Date: Tue Jul 26 2011
