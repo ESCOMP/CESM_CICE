@@ -111,16 +111,40 @@ cat >! $CASEBUILD/cice.buildnml.csh << EOF1
 
 set exedir = \$RUNDIR; cd \$exedir
 
-cat >! ice_in << EOF
+set default_ice_in_filename = "ice_in"
+
+set ice_inst_counter = 1
+
+while (\$ice_inst_counter <= \$NINST_ICE)
+
+    set ice_in_filename = \$default_ice_in_filename
+
+    if (\$NINST_ICE > 1) then
+        set ice_inst_string = \$ice_inst_counter
+        if (\$ice_inst_counter <= 999) set ice_inst_string = 0\$ice_inst_string
+        if (\$ice_inst_counter <=  99) set ice_inst_string = 0\$ice_inst_string
+        if (\$ice_inst_counter <=   9) set ice_inst_string = 0\$ice_inst_string
+        set ice_in_filename = \${default_ice_in_filename}_\${ice_inst_string}
+    endif
+
+    cat >! \$ice_in_filename << EOF
 EOF1
+
 cat ice_in >> $CASEBUILD/cice.buildnml.csh || exit -1
+
 cat >> $CASEBUILD/cice.buildnml.csh << EOF1
+
 EOF
+
+    @ ice_inst_counter = \$ice_inst_counter + 1
+
+end
+
 EOF1
 
-# Delete copy of ice_in.
+# Remove temporary namelist in the iceconf directory
 
-/bin/rm -f $CASEBUILD/ciceconf/ice_in
+#/bin/rm -f $CASEBUILD/ciceconf/ice_in
 
 #--------------------------------------------------------------------
 # Create cice.buildexe.csh

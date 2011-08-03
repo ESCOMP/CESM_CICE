@@ -191,7 +191,11 @@
       restart_file = 'iced'  ! restart file name prefix
       restart_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf)
       lcdf64       = .false. ! 64 bit offset for netCDF
+#ifdef CCSMCOUPLED
+      pointer_file = 'rpointer.ice' // trim(inst_suffix)
+#else
       pointer_file = 'ice.restart_file'
+#endif
       ice_ic       = 'default'      ! latitude and sst-dependent
       grid_format  = 'bin'          ! file format ('bin'=binary or 'nc'=netcdf)
       grid_type    = 'rectangular'  ! define rectangular grid internally
@@ -283,6 +287,9 @@
 
       call get_fileunit(nu_nml)
 
+#ifdef CCSMCOUPLED
+      nml_filename  = 'ice_in'//trim(inst_suffix)
+#endif
       if (my_task == master_task) then
          open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
          if (nml_error /= 0) then
@@ -319,26 +326,26 @@
       !-----------------------------------------------------------------
 
 #ifdef CCSMCOUPLED
-      ! Note that diag_file is not utilized in CCSMCOUPLED mode
+      ! Note in CCSMCOUPLED mode diag_file is not utilized and
+      ! runid and runtype are obtained from the driver, not from the namelist
+
       if (my_task == master_task) then
-         inquire(file='ice_modelio.nml',exist=exists)
+         history_file  = trim(runid) // ".cice" // trim(inst_suffix) //".h"
+         restart_file  = trim(runid) // ".cice" // trim(inst_suffix) //".r"
+         incond_file   = trim(runid) // ".cice" // trim(inst_suffix) //".i."
+         inquire(file='ice_modelio.nml'//trim(inst_suffix),exist=exists)
          if (exists) then
             nu_diag = shr_file_getUnit()
-            call shr_file_setIO('ice_modelio.nml',nu_diag)
+            call shr_file_setIO('ice_modelio.nml'//trim(inst_suffix),nu_diag)
          end if
-
-      ! Note in CCSMCOUPLED mode the runid and runtype flag are obtained from
-      ! the sequential driver - not from the cice namelist
-         history_file  = trim(runid) // ".cice.h"
-         restart_file  = trim(runid) // ".cice.r"
-         incond_file   = trim(runid) // ".cice.i."
       end if
-
-      if (trim(ice_ic) /= 'default' .and. trim(ice_ic) /= 'none') &
-          restart = .true.
+      if (trim(ice_ic) /= 'default' .and. trim(ice_ic) /= 'none') then
+         restart = .true.
+      end if
 #else
       if (trim(diag_type) == 'file') call get_fileunit(nu_diag)
 #endif
+
 
       if (my_task == master_task) then
          if (trim(diag_type) == 'file') then
@@ -432,7 +439,6 @@
 !     call broadcast_array(histfreq_n(:),       master_task)
       call broadcast_scalar(hist_avg,           master_task)
       call broadcast_scalar(history_dir,        master_task)
-      call broadcast_scalar(history_file,       master_task)
       call broadcast_scalar(write_ic,           master_task)
       call broadcast_scalar(incond_dir,         master_task)
       call broadcast_scalar(incond_file,        master_task)
@@ -443,7 +449,9 @@
       call broadcast_scalar(restart_dir,        master_task)
       call broadcast_scalar(restart_format,     master_task)
       call broadcast_scalar(lcdf64,             master_task)
+#ifndef CCSM_COUPLED
       call broadcast_scalar(pointer_file,       master_task)
+#endif
       call broadcast_scalar(grid_format,        master_task)
       call broadcast_scalar(grid_type,          master_task)
       call broadcast_scalar(grid_file,          master_task)

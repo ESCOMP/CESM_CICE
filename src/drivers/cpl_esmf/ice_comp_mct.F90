@@ -105,7 +105,7 @@ end subroutine
 
    ! Copy infodata to state
 
-   call esmfshr_infodata_infodata2state(infodata,export_state,rc=rc)
+   call esmfshr_infodata_infodata2state(infodata,export_state,ID=ICEID,rc=rc)
    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
    if (phase > 1) then
@@ -116,7 +116,8 @@ end subroutine
    endif
 
    ! call into ESMF init method
-   call ESMF_GridCompInitialize(ice_comp, importState=import_state, exportState=export_state, clock=EClock, userRc=urc, rc=rc)
+   call ESMF_GridCompInitialize(ice_comp, importState=import_state, exportState=export_state, &
+        clock=EClock, userRc=urc, rc=rc)
    if(urc /= ESMF_SUCCESS) call ESMF_Finalize(rc=urc, terminationflag=ESMF_ABORT)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
@@ -177,11 +178,12 @@ subroutine ice_run_mct( EClock, cdata, x2d, d2x)
    type(seq_infodata_type), pointer :: infodata
    type(ESMF_Array)                 :: d2xa,x2da
    integer                          :: rc, urc
+   integer                          :: ICEID
    !----------------------------------------------------------------------------
 
-   call seq_cdata_setptrs(cdata, infodata=infodata)
+   call seq_cdata_setptrs(cdata, ID=ICEID, infodata=infodata)
 
-   call esmfshr_infodata_infodata2state(infodata, export_state, rc=rc)
+   call esmfshr_infodata_infodata2state(infodata, export_state, ID=ICEID, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
    ! copy values to x2d
@@ -190,7 +192,8 @@ subroutine ice_run_mct( EClock, cdata, x2d, d2x)
    call mct2esmf_copy(x2d, x2da, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-   call ESMF_GridCompRun(ice_comp, importState=import_state, exportState=export_state, clock=EClock, userRc=urc, rc=rc)
+   call ESMF_GridCompRun(ice_comp, importState=import_state, exportState=export_state, &
+        clock=EClock, userRc=urc, rc=rc)
    if(urc /= ESMF_SUCCESS) call ESMF_Finalize(rc=urc, terminationflag=ESMF_ABORT)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
    
@@ -217,7 +220,8 @@ subroutine ice_final_mct( )
    ! Finalize routine 
    !----------------------------------------------------------------------------
     
-   call ESMF_GridCompFinalize(ice_comp, importState=import_state, exportState=export_state, userRc=urc, rc=rc)
+   call ESMF_GridCompFinalize(ice_comp, importState=import_state, exportState=export_state, &
+        userRc=urc, rc=rc)
    if(urc /= ESMF_SUCCESS) call ESMF_Finalize(rc=urc, terminationflag=ESMF_ABORT)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 

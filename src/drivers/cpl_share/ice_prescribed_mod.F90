@@ -252,8 +252,8 @@ contains
         filename=stream_fldFileName(1:nFile), &
         fldListFile=stream_fldVarName,   &
         fldListModel=stream_fldVarName,  &
-        pio_subsystem=seq_io_getiosys('ICE'),&
-        pio_iotype=seq_io_getiotype('ICE'),&
+        pio_subsystem=seq_io_getiosys(inst_name), &
+        pio_iotype=seq_io_getiotype(inst_name),   &
         fillalgo = trim(fillalgo),       &
         calendar = trim(calendar_type))
 

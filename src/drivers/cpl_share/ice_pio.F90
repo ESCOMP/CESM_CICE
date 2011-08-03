@@ -103,8 +103,8 @@ contains
    logical, save :: first_call = .true.
 
 
-   ice_pio_subsystem => seq_io_getiosys('ICE')
-   pio_iotype = seq_io_getiotype('ICE')
+   ice_pio_subsystem => seq_io_getiosys(inst_name)
+   pio_iotype =  seq_io_getiotype(inst_name)
 
    if (present(mode) .and. present(filename) .and. present(File)) then
       

@@ -18,13 +18,13 @@ module ice_comp_esmf
 
   use seq_flds_mod
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
-  use seq_comm_mct,    only : ICEID
   use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
                               seq_timemgr_restartalarmison, &
 		              seq_timemgr_eclockdateinsync, &
                               seq_timemgr_stopalarmison
   use seq_infodata_mod,only : seq_infodata_start_type_cont, &
                               seq_infodata_start_type_brnch, seq_infodata_start_type_start
+  use seq_comm_mct,    only : seq_comm_suffix, seq_comm_inst, seq_comm_name
   use perf_mod,        only : t_startf, t_stopf
 
   use ice_cpl_indices
@@ -44,9 +44,9 @@ module ice_comp_esmf
   use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info, profile_barrier
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
-                      grid_type, t2ugrid_vector
+                              grid_type, t2ugrid_vector
   use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-                     field_loc_center, field_type_scalar, field_type_vector, c100
+                              field_loc_center, field_type_scalar, field_type_vector, c100
   use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
@@ -55,19 +55,18 @@ module ice_comp_esmf
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
-                             write_numIceCells, accum_numIceCells2
+                              write_numIceCells, accum_numIceCells2
 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
-!  use ice_init
   use ice_boundary,    only : ice_HaloUpdate 
   use ice_scam,        only : scmlat, scmlon, single_column
-  use ice_fileunits,   only : nu_diag
+  use ice_fileunits,   only : nu_diag, inst_index, inst_name, inst_suffix
   use ice_dyn_evp,     only : kdyn
   use ice_prescribed_mod
   use ice_step_mod
-  use CICE_RunMod
   use ice_global_reductions
   use ice_broadcast
+  use CICE_RunMod
 
   use esmfshr_mod
 
@@ -178,11 +177,12 @@ end subroutine
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
     integer            :: mpicom_loc, mpicom_vm, gsize
+    integer            :: ICEID       ! cesm ID value
 
     character(ESMF_MAXSTR) :: convCIM, purpComp
 
 ! !REVISION HISTORY:
-! Author: Jacob Sewall, Fei Liu
+! Author: Fei Liu
 !EOP
 !-----------------------------------------------------------------------
 
@@ -201,6 +201,11 @@ end subroutine
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
    call MPI_Comm_dup(mpicom_vm, mpicom_loc, rc)
    if(rc /= 0) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+   ! Initialize cice id
+   
+   call ESMF_AttributeGet(export_state, name="ID", value=ICEID, rc=rc)
+   if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
    ! Determine time of next atmospheric shortwave calculation
    call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
@@ -266,6 +271,10 @@ end subroutine
     ! Initialize cice because grid information is needed for
     ! creation of GSMap_ice.  cice_init also sets time manager info
     !=============================================================
+
+    inst_name   = seq_comm_name(ICEID)
+    inst_index  = seq_comm_inst(ICEID)
+    inst_suffix = seq_comm_suffix(ICEID)
 
     call t_startf ('cice_init')
     call cice_init( mpicom_loc )
@@ -1473,21 +1482,11 @@ end subroutine ice_domain_esmf
 ! !INTERFACE:
   character(len=char_len_long) function restart_filename( yr_spec, mon_spec, day_spec, sec_spec )
 !
-! !DESCRIPTION: Create a filename from a filename specifyer. Interpret filename specifyer 
-! string with: 
-! %c for case, 
-! %t for optional number argument sent into function
-! %y for year
-! %m for month
-! %d for day
-! %s for second
-! %% for the "%" character
-! If the filename specifyer has spaces " ", they will be trimmed out
-! of the resulting filename.
+! !DESCRIPTION: 
+! Create a restart filename 
 !
 ! !USES:
-  use ice_restart, only: runid
-  implicit none
+  use ice_restart, only : restart_file
 !
 ! !INPUT/OUTPUT PARAMETERS:
   integer         , intent(in)  :: yr_spec         ! Simulation year
@@ -1502,76 +1501,25 @@ end subroutine ice_domain_esmf
   integer             :: month     ! Simulation month
   integer             :: day       ! Simulation day
   integer             :: ncsec     ! Seconds into current simulation day
-  character(len=char_len_long) :: string    ! Temporary character string 
-  character(len=char_len_long) :: format    ! Format character string 
-  character(len=char_len_long) :: filename_spec = '%c.cice.r.%y-%m-%d-%s' ! ice restarts
+  character(len=char_len_long) :: rdate ! char date for restart filename
 
   !-----------------------------------------------------------------
   ! Determine year, month, day and sec to put in filename
   !-----------------------------------------------------------------
-
-  if ( len_trim(filename_spec) == 0 )then
-     call shr_sys_abort ('restart_filename: filename specifier is empty')
-  end if
-  if ( index(trim(filename_spec)," ") /= 0 )then
-     call shr_sys_abort ('restart_filename: filename specifier can not contain a space:'//trim(filename_spec))
-  end if
 
   year  = yr_spec
   month = mon_spec
   day   = day_spec
   ncsec = sec_spec
 
-  ! Go through each character in the filename specifyer and interpret if special string
-
-  i = 1
-  restart_filename = ''
-  do while ( i <= len_trim(filename_spec) )
-     if ( filename_spec(i:i) == "%" )then
-        i = i + 1
-        select case( filename_spec(i:i) )
-        case( 'c' )   ! runid
-           string = trim(runid)
-        case( 'y' )   ! year
-           if ( year > 99999   ) then
-              format = '(i6.6)'
-           else if ( year > 9999    ) then
-              format = '(i5.5)'
-           else
-              format = '(i4.4)'
-           end if
-           write(string,format) year
-        case( 'm' )   ! month
-           write(string,'(i2.2)') month
-        case( 'd' )   ! day
-           write(string,'(i2.2)') day
-        case( 's' )   ! second
-           write(string,'(i5.5)') ncsec
-        case( '%' )   ! percent character
-           string = "%"
-        case default
-           call shr_sys_abort ('restart_filename: Invalid expansion character: '//filename_spec(i:i))
-        end select
-     else
-        n = index( filename_spec(i:), "%" )
-        if ( n == 0 ) n = len_trim( filename_spec(i:) ) + 1
-        if ( n == 0 ) exit 
-        string = filename_spec(i:n+i-2)
-        i = n + i - 2
-     end if
-     if ( len_trim(restart_filename) == 0 )then
-        restart_filename = trim(string)
-     else
-        if ( (len_trim(restart_filename)+len_trim(string)) >= char_len_long )then
-           call shr_sys_abort ('restart_filename Resultant filename too long')
-        end if
-        restart_filename = trim(restart_filename) // trim(string)
-     end if
-     i = i + 1
-  end do
-  if ( len_trim(restart_filename) == 0 )then
-     call shr_sys_abort ('restart_filename: Resulting filename is empty')
+  if ( year > 99999   ) then
+     write(rdate,'(i6.6,"-",i2.2,"-",i2.2,"-",i5.5)') year,month,mday,ncsec
+  else if ( year > 9999    ) then
+     write(rdate,'(i5.5,"-",i2.2,"-",i2.2,"-",i5.5)') year,month,mday,ncsec
+  else
+     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') year,month,mday,ncsec
   end if
+  restart_filename = trim(restart_file) // "." // trim(rdate) 
 
 end function restart_filename
 

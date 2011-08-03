@@ -319,7 +319,6 @@ add_default($nl, 'histfreq');
 add_default($nl, 'histfreq_n');
 add_default($nl, 'hist_avg');
 add_default($nl, 'diagfreq');
-add_default($nl, 'pointer_file');
 add_default($nl, 'lcdf64');
 
 ##################################

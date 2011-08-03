@@ -71,7 +71,7 @@
       integer (kind=int_kind) :: &
          diag_level         ! per-processor diagnostics level
 
-      character (6), parameter :: &
+      character (11) :: &
          nml_filename = 'ice_in' ! namelist input file name
 
       integer (kind=int_kind), parameter :: &
@@ -88,6 +88,14 @@
 
       logical (kind=log_kind), dimension(ice_IOUnitsMaxUnits) :: &
          ice_IOUnitsInUse   ! flag=.true. if unit currently open
+
+#ifdef CCSMCOUPLED
+      ! instance control
+      integer (kind=int_kind), public :: inst_index
+      character(len=16)      , public :: inst_name
+      character(len=16)      , public :: inst_suffix
+#endif
+
 !EOC
 !=======================================================================
 

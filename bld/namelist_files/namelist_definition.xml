@@ -111,13 +111,6 @@ diagnostic output frequency (10 = once per 10 dt)
 Default: 48
 </entry>
 
-<!---Restart output     ---->
-
-<entry id="pointer_file" type="char*80"  category="cice" group="setup_nml" valid_values="">
-ice restart pointer file
-Default: rpointer.ice
-</entry>
-
 <!---64 bit offset      ---->
 
 <entry id="lcdf64" type="logical"  category="cice" group="setup_nml" valid_values="">

@@ -174,9 +174,6 @@
 
 <diagfreq> 24   </diagfreq>
 
-<!--- restart information --->
-<pointer_file>rpointer.ice</pointer_file>
-
 <!--- 64 bit offset --->
 <lcdf64>.true. </lcdf64>
 
