@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20110808
+Originator: mvertens
+Date: Wed Aug 8 2011
+Version: 4.0
+One-line Summary: Addition fix to new year bug fix for non-gregorian case
+CCSM Version compatible with: cesm1_1_beta02+ 
+Changes made:
+
+History file name was not being triggered correctly in non-gregorian case
+
+M       src/source/ice_calendar.F90
+M       src/drivers/cpl_mct/ice_comp_mct.F90
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+	
+===============================================================
 cice4_0_20110803
 Originator: mvertens
 Date: Wed Aug 3 2011

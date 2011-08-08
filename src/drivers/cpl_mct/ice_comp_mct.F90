@@ -291,9 +291,10 @@ contains
 
        idate = curr_ymd
        iyear = (idate/10000)                     ! integer year of basedate
-       nyrp  = nyr
-       nyr   = iyear+1
-       if (nyr /= nyrp) new_year = .true.
+       if (calendar_type .eq. "GREGORIAN") then 	
+          nyr = iyear+1
+          new_year = .false.
+       end if
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
@@ -458,11 +459,17 @@ contains
 
     ! Get clock information
     call seq_timemgr_EClockGetData(EClock,               &
-         curr_ymd=curr_ymd,   curr_tod=curr_tod)
+         curr_ymd=curr_ymd, curr_tod=curr_tod)
 
-    nyrp  = nyr
-    nyr = (curr_ymd/10000)+1           ! integer year of basedate
-    if (nyr /= nyrp) new_year = .true.
+    if (calendar_type .eq. "GREGORIAN") then 	
+       nyrp = nyr
+       nyr = (curr_ymd/10000)+1           ! integer year of basedate
+       if (nyr /= nyrp) then
+          new_year = .true.
+       else
+          new_year = .false.
+       end if
+    end if
 
     !-------------------------------------------------------------------
     ! get import state

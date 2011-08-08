@@ -51,7 +51,7 @@ module ice_comp_esmf
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
                               calendar_type, nextsw_cday, days_per_year,&
-                              get_daycal, leap_year_count, nyr
+                              get_daycal, leap_year_count, nyr, new_year
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
   use ice_probability, only : init_numIceCells, print_numIceCells,  &
@@ -170,6 +170,7 @@ end subroutine
     integer            :: ref_ymd            ! Reference date (YYYYMMDD)
     integer            :: ref_tod            ! reference time of day (s)
     integer            :: iyear              ! yyyy
+    integer            :: nyrp               ! yyyy
     integer            :: dtime              ! time step
     integer            :: shrlogunit,shrloglev ! old values
     integer            :: iam,ierr
@@ -335,7 +336,10 @@ end subroutine
 
        idate = curr_ymd
        iyear = (idate/10000)                     ! integer year of basedate
-       nyr   = iyear+1
+       if (calendar_type .eq. "GREGORIAN") then 	
+          nyr = iyear+1
+          new_year = .false.
+       end if
        month = (idate-iyear*10000)/100           ! integer month of basedate
        mday  =  idate-iyear*10000-month*100-1    ! day of month of basedate
                                                  ! (starts at 0)
@@ -523,7 +527,7 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     integer :: ymd_sync      ! Current year of sync clock
     integer :: shrlogunit,shrloglev ! old values
     integer :: lbnum
-    integer :: n
+    integer :: n, nyrp
     character(len=char_len_long) :: string1, string2
     character(len=char_len_long) :: fname
     character(len=*), parameter  :: SubName = "ice_run_esmf"
@@ -566,7 +570,15 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call seq_timemgr_EClockGetData(EClock, &
          curr_ymd=curr_ymd,   curr_tod=curr_tod)
 
-    nyr = (curr_ymd/10000)+1
+    if (calendar_type .eq. "GREGORIAN") then 	
+       nyrp = nyr
+       nyr = (curr_ymd/10000)+1           ! integer year of basedate
+       if (nyr /= nyrp) then
+          new_year = .true.
+       else
+          new_year = .false.
+       end if
+    end if
 
     !-------------------------------------------------------------------
     ! get import state

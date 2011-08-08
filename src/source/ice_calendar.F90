@@ -224,12 +224,12 @@
          elapsed_months             , & ! since beginning this run
          elapsed_hours                  ! since beginning this run
 
-!     Handled in driver.
-!     nyrp=nyr
+      ! nyrp and new_year are Handled in driver for gregorian calendar
+      if (calendar_type /= "GREGORIAN") nyrp=nyr
       monthp=month
       mdayp=mday
       hourp=hour
-      new_year=.false.
+      if (calendar_type /= "GREGORIAN") new_year=.false.
       new_month=.false.
       new_day=.false.
       new_hour=.false.
@@ -433,7 +433,7 @@
       integer function leap_year_count(Y)
         ! counts the number of leap years since year 1
 
-! Input/output paramters
+        ! Input/output paramters
         integer, intent(in) :: Y
 
 
@@ -441,7 +441,8 @@
            ! count the number of leap years before Y
            if ( Y .lt. 0 ) then
               leap_year_count = 0
-              write(6,*) 'WARNING: leap_year_count for year ',Y,'assumes no leap years before year 0'
+              write(6,*) 'WARNING: leap_year_count for year ',Y,&
+                   'assumes no leap years before year 0'
            else
               leap_year_count  = ( (Y-1)/4 - (Y-1)/100 + (Y-1)/400 ) + 1
            endif
