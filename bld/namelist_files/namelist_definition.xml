@@ -25,61 +25,24 @@ Default: 'default'
 
 <!---Time steps---->
 
+<entry id="days_per_year" type="real"  category="cice" group="setup_nml" valid_values="">
+Days per year
+Default: 365
+</entry>
+
+<entry id="year_init" type="integer"  category="cice" group="setup_nml" valid_values="">
+Initial year.
+Default: 0
+</entry>
+
 <entry id="dt" type="real"  category="cice" group="setup_nml" valid_values="">
 time step, s
 Default: 3600
 </entry>
 
-<entry id="ndte" type="integer"  category="cice" group="ice_nml" valid_values="">
-subcycles per dynamics timestep
-Default: 120
-</entry>
-
 <entry id="xndt_dyn" type="real"  category="cice" group="setup_nml" valid_values="">
 number of dynamic time steps per thermodynamic time step
 Default: 1.0
-</entry>
-
-<!---Parameterizations  ---->
-
-<entry id="advection" type="char*80"  category="cice" group="ice_nml" valid_values="">
-incremental remapping transport scheme
-Default: 'remap'
-</entry>
-
-<entry id="evp_damping" type="logical"  category="cice" group="ice_nml" valid_values="">
-if true, use damping procedure in evp dynamics
-Default: false
-</entry>
-
-<entry id="kcatbound" type="integer"  category="cice" group="grid_nml" valid_values="">
-category boundary formula (0 = old, 1 = new)
-Default: 0
-</entry>
-
-<entry id="kstrength" type="integer"  category="cice" group="ice_nml" valid_values="">
-1 = Rothrock 75 strength, 0 = Hibler 79
-Default: 1
-</entry>
-
-<entry id="kdyn" type="integer"  category="cice" group="ice_nml" valid_values="">
-type of dynamics (1 = evp)
-Default: 1
-</entry>
-
-<entry id="kitd" type="integer"  category="cice" group="ice_nml" valid_values="">
-type of itd conversions (0 = delta, 1 = linear)
-Default: 1
-</entry>
-
-<entry id="krdg_partic" type="integer"  category="cice" group="ice_nml" valid_values="">
-1 = new participation, 0 = Thorndike et al 75
-Default: 1
-</entry>
-
-<entry id="krdg_redist" type="integer"  category="cice" group="ice_nml" valid_values="">
-1 = new redistribution, 0 = Hibler 80
-Default: 1
 </entry>
 
 <!---History output     ---->
@@ -139,6 +102,58 @@ input file for CICE grid info
 <entry id="kmt_file" type="char*256"  category="cice" group="grid_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
+</entry>
+
+<entry id="kcatbound" type="integer"  category="cice" group="grid_nml" valid_values="">
+category boundary formula (0 = old, 1 = new)
+Default: 0
+</entry>
+
+<!---Parameterizations  ---->
+
+<entry id="kitd" type="integer"  category="cice" group="ice_nml" valid_values="">
+type of itd conversions (0 = delta, 1 = linear)
+Default: 1
+</entry>
+
+<entry id="kdyn" type="integer"  category="cice" group="ice_nml" valid_values="">
+type of dynamics (1 = evp)
+Default: 1
+</entry>
+
+<entry id="ndte" type="integer"  category="cice" group="ice_nml" valid_values="">
+subcycles per dynamics timestep
+Default: 120
+</entry>
+
+<entry id="evp_damping" type="logical"  category="cice" group="ice_nml" valid_values="">
+if true, use damping procedure in evp dynamics
+Default: false
+</entry>
+
+<entry id="yield_curve" type="char*80"  category="cice" group="ice_nml" valid_values="">
+Yield curve.
+Default: ellipse
+</entry>
+
+<entry id="kstrength" type="integer"  category="cice" group="ice_nml" valid_values="">
+1 = Rothrock 75 strength, 0 = Hibler 79
+Default: 1
+</entry>
+
+<entry id="krdg_partic" type="integer"  category="cice" group="ice_nml" valid_values="">
+1 = new participation, 0 = Thorndike et al 75
+Default: 1
+</entry>
+
+<entry id="krdg_redist" type="integer"  category="cice" group="ice_nml" valid_values="">
+1 = new redistribution, 0 = Hibler 80
+Default: 1
+</entry>
+
+<entry id="advection" type="char*80"  category="cice" group="ice_nml" valid_values="">
+incremental remapping transport scheme
+Default: 'remap'
 </entry>
 
 <!---Ice albedos    ---->
@@ -311,49 +326,166 @@ Default: FALSE
 <!-- History output namelist -->
 <!----------------------------->
 
+<entry id="f_hi" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_hs" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fs" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_Tsfc" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_aice" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_uvel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_vvel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_transix" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_transiy" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_qi" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_qs" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fswdn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fswup" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_flwdn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_snow" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_snow_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_rain" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_rain_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_aero_atm" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_aero_ocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
 <entry id="f_sst" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
+Default: mxxxx
 </entry>
 <entry id="f_sss" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
+Default: mxxxx
 </entry>
 <entry id="f_uocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
+Default: mxxxx
 </entry>
 <entry id="f_vocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
+Default: mxxxx
 </entry>
 <entry id="f_frzmlt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
-</entry>
-<entry id="f_strtltx" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
-</entry>
-<entry id="f_strtlty" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: TRUE
-</entry>
-<entry id="f_mlt_onset" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
-</entry>
-<entry id="f_frz_onset" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: xxxxx
-</entry>
-<entry id="f_icepresent" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_aicen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fswfac" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_vicen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fswabs" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_vicen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fswabs_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_fsalt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_alidr" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_fsalt_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_alvdr" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_alidf" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_alvdf" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_albice" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_albsno" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_albpnd" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_coszen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_flat" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_flat_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fsens" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fsens_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_flwup" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_flwup_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_evap" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_evap_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_Tair" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_Tref" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_Qref" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_congel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_frazil" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_snoice" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_meltt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_melts" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_meltb" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_meltl" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
 <entry id="f_fresh" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
@@ -362,28 +494,22 @@ Default: mxxxx
 <entry id="f_fresh_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
+<entry id="f_fsalt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fsalt_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
 <entry id="f_fhocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: TRUE
+Default: mxxxx
 </entry>
 <entry id="f_fhocn_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_dvidtt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fswthru" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_dvidtd" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: mxxxx
-</entry>
-<entry id="f_daidtt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: mxxxx
-</entry>
-<entry id="f_daidtd" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: mxxxx
-</entry>
-<entry id="f_sig1" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: mxxxx
-</entry>
-<entry id="f_sig2" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_fswthru_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
 <entry id="f_strairx" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
@@ -391,6 +517,12 @@ Default: mxxxx
 </entry>
 <entry id="f_strairy" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
+</entry>
+<entry id="f_strtltx" type="char*5"  category="cice"  group="icefields_nml" v*80alid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_strtlty" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: TRUE
 </entry>
 <entry id="f_strcorx" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
@@ -422,50 +554,104 @@ Default: mxxxx
 <entry id="f_shear" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_congel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sig1" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_snoice" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_sig2" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_meltt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dvidtt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_meltb" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dvidtd" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_meltl" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_daidtt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_uvel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_daidtd" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_vvel" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_mlt_onset" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_frz_onset" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_dardg1dt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_frazil" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dardg2dt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_apondn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_dvirdgdt" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_faero_atm" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_iage" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_faero_ocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_ardg" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_aero" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_vrdg" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_alvl" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_vlvl" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
 <entry id="f_FY" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
-Default: mdxxx
+Default: mxxxx
+</entry>
+<entry id="f_aeron" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_aero" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_apondn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_apond" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
 </entry>
 <entry id="f_aisnap" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mdxxx
 </entry>
 <entry id="f_hisnap" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mdxxx
+</entry>
+<entry id="f_aicen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_vicen" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_trsig" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_icepresent" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fsurf_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fcondtop_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: mxxxx
+</entry>
+<entry id="f_fsurfn_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_fcondtopn_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_fmelttn_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
+</entry>
+<entry id="f_flatn_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+Default: xxxxx
 </entry>
 
 </namelist_definition>

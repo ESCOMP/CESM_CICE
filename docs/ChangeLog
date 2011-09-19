@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20111119
+Originator: dbailey
+Date: Mon Sep 19 2011
+Version: 4.0
+One-line Summary: Add additional fields to namelist_definition.xml
+                  so user_nl_cice has more options.
+CCSM Version compatible with: cesm1_1_beta02+ 
+Changes made:
+
+M       bld/namelist_files/namelist_definition.xml
+
+===============================================================
 cice4_0_20110808
 Originator: mvertens
 Date: Wed Aug 8 2011
