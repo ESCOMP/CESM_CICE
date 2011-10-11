@@ -7,7 +7,6 @@ if !(-d $CASEBUILD/ciceconf) mkdir $CASEBUILD/ciceconf
 # Invoke cice configure
 #--------------------------------------------------------------------
 
-
 set hgrid = "-hgrid $ICE_GRID"
 if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
 
@@ -49,44 +48,63 @@ endif
 # Invoke build-namelist
 #----------------------------
 
-set SSTDATA = "FALSE"
 if ($CICE_MODE == "prescribed") then
-   if (! $?DOCN_SSTDATA_FILENAME) then
-      echo "DOCN_SSTDATA_FILENAME must be defined for cice prescribed mode"
-      exit -1
-   endif  
-   if ($DOCN_SSTDATA_FILENAME   != 'UNSET' && \
-       $DOCN_SSTDATA_YEAR_START != '-999'  && \
-       $DOCN_SSTDATA_YEAR_END   != '-999' ) then
-       set SSTDATA = "TRUE"
+   if ($SSTICE_GRID_FILENAME == 'UNSET') then
+      echo "SSTICE_GRID_FILENAME must be set for cice prescribed mode"; exit -1
    endif
-   set CCSMSSTFN = $DOCN_SSTDATA_FILENAME
-   if ($SSTDATA == 'TRUE') then
-      if ($DOCN_SSTDATA_FILENAME =~ $DIN_LOC_ROOT*) then
-         set num = `echo $DIN_LOC_ROOT | wc -c `
-         set dd = `echo $DOCN_SSTDATA_FILENAME | cut -c $num-`
-         if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
-         set CCSMSSTFN = '$DIN_LOC_ROOT'"/$dd"
-      endif
+   if ($SSTICE_DATA_FILENAME == 'UNSET') then
+      echo "SSTICE_DATA_FILENAME must be set for cice prescribed mode"; exit -1
    endif
-endif
+   if ($SSTICE_YEAR_ALIGN == '-999') then
+      echo "SSTICE_YEAR_ALIGN must be set for cice prescribed mode"; exit -1
+   endif
+   if ($SSTICE_YEAR_START == '-999') then
+      echo "SSTICE_YEAR_START must be set for cice prescribed mode"; exit -1
+   endif 
+   if ($SSTICE_YEAR_END == '-999') then
+      echo "SSTICE_YEAR_END must be set for cice prescribed mode"; exit -1
+   endif
+   set SSTDATA = $SSTICE_DATA_FILENAME
+   if ($SSTICE_DATA_FILENAME =~ $DIN_LOC_ROOT*) then
+      set num = `echo $DIN_LOC_ROOT | wc -c `
+      set dd = `echo $SSTICE_DATA_FILENAME | cut -c $num-`
+      if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
+      set SSTDATA = '$DIN_LOC_ROOT'"/$dd"
+   endif
+   set SSTGRID = $SSTICE_GRID_FILENAME
+   if ($SSTICE_GRID_FILENAME =~ $DIN_LOC_ROOT*) then
+      set num = `echo $DIN_LOC_ROOT | wc -c `
+      set dd = `echo $SSTICE_GRID_FILENAME | cut -c $num-`
+      if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
+      set SSTGRID = '$DIN_LOC_ROOT'"/$dd"
+   endif
+   if ($SSTICE_STREAM == 'CAMDATA') then    
+      set stream_domxvarname = "xc"  
+      set stream_domyvarname = "yc"  
+   else         
+      set stream_domxvarname = "lon"  
+      set stream_domyvarname = "lat"  
+   endif
 
-if ($SSTDATA == "TRUE") then
-  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
+   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
         -inputdata $CASEBUILD/cice.input_data_list \
         -namelist "&cice $CICE_NAMELIST_OPTS \
-                    stream_fldfilename='$CCSMSSTFN' \
-                    stream_domfilename='$CCSMSSTFN' \
-                    stream_year_first=$DOCN_SSTDATA_YEAR_START \
-                    stream_year_last=$DOCN_SSTDATA_YEAR_END \
-                    model_year_align=$DOCN_SSTDATA_YEAR_START \
+                    stream_fldfilename='$SSTDATA' \
+                    stream_domfilename='$SSTGRID' \
+                    stream_year_first=$SSTICE_YEAR_START \
+                    stream_year_last=$SSTICE_YEAR_END \
+                    stream_domxvarname='$stream_domxvarname' \
+                    stream_domyvarname='$stream_domyvarname' \
+                    model_year_align=$SSTICE_YEAR_ALIGN \
                     stream_fldvarname='ice_cov' /"  || exit -1
 else
+
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
          -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
          -inputdata $CASEBUILD/cice.input_data_list \
          -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
+
 endif
 
 sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3

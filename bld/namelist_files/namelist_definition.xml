@@ -380,10 +380,10 @@ Default: mxxxx
 <entry id="f_rain_ai" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_aero_atm" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_faero_atm" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
-<entry id="f_aero_ocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
+<entry id="f_faero_ocn" type="char*5"  category="cice"  group="icefields_nml" valid_values="">
 Default: mxxxx
 </entry>
 <entry id="f_sst" type="char*5"  category="cice"  group="icefields_nml" valid_values="">

@@ -1075,7 +1075,7 @@
          ! Check for consistency
          if (my_task == master_task) then
             if (nx_global /= ni .and. ny_global /= nj) then
-              call abort_ice ('latlongrid: ni,ny not equal to nx_global,ny_global')
+              call abort_ice ('latlongrid: ni,nj not equal to nx_global,ny_global')
             end if
          end if
 
@@ -1140,9 +1140,13 @@
          do j = jlo, jhi
          do i = ilo, ihi
 
-            uarea(i,j,iblk)     = p25*  &
+            if (ny_global == 1) then
+               uarea(i,j,iblk)  = tarea(i,j,  iblk)
+            else
+               uarea(i,j,iblk)  = p25*  &
                                  (tarea(i,j,  iblk) + tarea(i+1,j,  iblk) &
                                 + tarea(i,j+1,iblk) + tarea(i+1,j+1,iblk))
+            endif
             tarear(i,j,iblk)   = c1/tarea(i,j,iblk)
             uarear(i,j,iblk)   = c1/uarea(i,j,iblk)
             tinyarea(i,j,iblk) = puny*tarea(i,j,iblk)
@@ -1150,7 +1154,11 @@
             if (single_column) then
                ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/nj)  
             else
-               ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+               if (ny_global == 1) then
+                  ULAT  (i,j,iblk) = TLAT(i,j,iblk)
+               else
+                  ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+               endif
             endif
             ULON  (i,j,iblk) = c0
             ANGLE (i,j,iblk) = c0                             
@@ -1582,8 +1590,12 @@
 
          do j = jlo, jhi
          do i = ilo, ihi
-            uvm(i,j,iblk) = min (hm(i,j,  iblk), hm(i+1,j,  iblk), &
-                                 hm(i,j+1,iblk), hm(i+1,j+1,iblk))
+            if (ny_global == 1) then
+               uvm(i,j,iblk) =      hm(i,j,  iblk)
+            else
+               uvm(i,j,iblk) = min (hm(i,j,  iblk), hm(i+1,j,  iblk), &
+                                    hm(i,j+1,iblk), hm(i+1,j+1,iblk))
+            endif
          enddo
          enddo
       enddo

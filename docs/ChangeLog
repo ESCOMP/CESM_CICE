@@ -1,4 +1,25 @@
 ===============================================================
+cice4_0_20111011
+Originator: mvertens
+Date: Mon Oct 11 2011
+Version: 4.0
+One-line Summary: Put in compatibility with new scripts 
+          	 (scripts4_111011) and capability to run 
+		 prescribed cice on unstructured grid 
+	
+CCSM Version compatible with: cesm1_1_beta04+ 
+
+Note this tag will not work with scripts tags that are before 
+scripts4_110111	
+	
+M       /bld/cice.cpl7.template
+M       /bld/namelist_files/namelist_definition.xml
+M       /bld/namelist_files/namelist_defaults_cice.xml
+M       /bld/generate_cice_decomp.pl
+M       /src/source/ice_grid.F90
+	
+	
+===============================================================
 cice4_0_20111119
 Originator: dbailey
 Date: Mon Sep 19 2011
