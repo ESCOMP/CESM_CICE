@@ -1,4 +1,12 @@
 ===============================================================
+cice4_0_20111020
+Originator: tcraig
+Date: Thu Oct 20 2011
+Version: 4.0
+One-line Summary: fix mpas120 block size setting
+
+M       bld/generate_cice_decomp.pl
+===============================================================
 cice4_0_20111011
 Originator: mvertens
 Date: Mon Oct 11 2011

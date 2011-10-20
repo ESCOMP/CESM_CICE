@@ -294,15 +294,15 @@ sub CalcDecompInfo {
 
       # mpas120
       if ($nlats == 1 && $nlons == 28993) {
-         if ($nprocs >= 1 && $nprocs <= 80) {
+         if ($nprocs >= 1 && $nprocs <= 79) {
              $decomp{'bsize_x'} = 367;
              $decomp{'bsize_y'} = 1;
          }
-         if ($nprocs >= 79 && $nprocs <= 368) {
+         if ($nprocs >= 80 && $nprocs <= 367) {
              $decomp{'bsize_x'} = 79;
              $decomp{'bsize_y'} = 1;
          }
-         if ($nprocs >= 367) {
+         if ($nprocs >= 368) {
              $decomp{'bsize_x'} = 1;
              $decomp{'bsize_y'} = 1;
          }
