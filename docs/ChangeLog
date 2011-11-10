@@ -1,4 +1,39 @@
 ===============================================================
+cice4_0_2011110920
+Originator: mvertens
+Date: Wed Nov 09 2011
+Version: 4.0
+One-line Summary: simplified prescribed ice capability
+CCSM Version compatible with: cesm1_1_beta06+ 
+	
+- these changes are dependent on scripts4_111109 usage
+- removed all references to cam grid from namelist_defaults_cice.xml
+- added namelist for stream_mapread to ice_prescribed_mod.F90
+- removed all references to cam grid from generate_cice_decomp.pl
+  if a cartesian decomp does not work for the grid and number of
+  procs - then a roundrobin distribution will be used with 1 block
+  per gridcell - this is only valid in prescribed mode and not used
+  for any grid that matches gx* or tx*	
+- leveraged new variables in config_grid.xml to call build_namelist
+  for prescribed mode
+        -namelist "&cice $CICE_NAMELIST_OPTS \
+		    grid_type='latlon' \
+		    grid_format='nc' \
+		    grid_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
+	            kmt_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
+                    stream_fldfilename='$SSTDATA' \
+                    stream_domfilename='$SSTGRID' \
+	            ...
+	
+M       bld/cice.cpl7.template
+M       bld/build-namelist
+D       bld/cice.template.streams.xml
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       bld/generate_cice_decomp.pl
+M       src/drivers/cpl_share/ice_prescribed_mod.F90
+	
+===============================================================
 cice4_0_20111020
 Originator: tcraig
 Date: Thu Oct 20 2011

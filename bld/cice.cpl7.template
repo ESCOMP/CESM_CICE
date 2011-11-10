@@ -10,10 +10,8 @@ if !(-d $CASEBUILD/ciceconf) mkdir $CASEBUILD/ciceconf
 set hgrid = "-hgrid $ICE_GRID"
 if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
 
-set mode = "-cice_mode $CICE_MODE"
-
 cd $CASEBUILD/ciceconf || exit -1
-$CODEROOT/ice/cice/bld/configure $hgrid $mode -nodecomp $CICE_CONFIG_OPTS || exit -1
+$CODEROOT/ice/cice/bld/configure $hgrid -cice_mode $CICE_MODE -nodecomp $CICE_CONFIG_OPTS || exit -1
 
 #----------------------------
 # Create ccsm_namelist file
@@ -49,6 +47,7 @@ endif
 #----------------------------
 
 if ($CICE_MODE == "prescribed") then
+
    if ($SSTICE_GRID_FILENAME == 'UNSET') then
       echo "SSTICE_GRID_FILENAME must be set for cice prescribed mode"; exit -1
    endif
@@ -90,14 +89,22 @@ if ($CICE_MODE == "prescribed") then
         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
         -inputdata $CASEBUILD/cice.input_data_list \
         -namelist "&cice $CICE_NAMELIST_OPTS \
+		    grid_type='latlon' \
+		    grid_format='nc' \
+		    grid_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
+	            kmt_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
+                    model_year_align=$SSTICE_YEAR_ALIGN \
                     stream_fldfilename='$SSTDATA' \
                     stream_domfilename='$SSTGRID' \
                     stream_year_first=$SSTICE_YEAR_START \
                     stream_year_last=$SSTICE_YEAR_END \
+                    stream_fldvarname='ice_cov' \
+                    stream_domtvarname='time' \
                     stream_domxvarname='$stream_domxvarname' \
                     stream_domyvarname='$stream_domyvarname' \
-                    model_year_align=$SSTICE_YEAR_ALIGN \
-                    stream_fldvarname='ice_cov' /"  || exit -1
+                    stream_domareaname='area' \
+                    stream_dommaskname='mask' \
+                    stream_mapread='NOT_SET' /"  || exit -1
 else
 
   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \

@@ -302,6 +302,11 @@ Default: mask
 domain file name
 </entry>
 
+<entry id="stream_mapread" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values="">
+Map file to read to map stream data to domain data
+Default: NOT_SET
+</entry>
+
 <entry id="stream_year_first" type="integer"  category="cice" group="ice_prescribed_nml" valid_values="">
 first year in stream to use
 Default: 1

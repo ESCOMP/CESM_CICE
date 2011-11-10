@@ -10,82 +10,20 @@
 
 <dt> 3600 </dt> 
 
-<xndt_dyn                    > 1.0 </xndt_dyn>
-<xndt_dyn hgrid="tx0.1v2"    > 3.0 </xndt_dyn>
+<xndt_dyn                   > 1.0 </xndt_dyn>
+<xndt_dyn hgrid="tx0.1v2"   > 3.0 </xndt_dyn>
 
 <!--------------------------->
 <!-- grid_nml settings ------>
 <!--------------------------->
 
-<grid_type hgrid="512x1024"  >'latlon'       </grid_type> 
-<grid_type hgrid="128x256"   >'latlon'       </grid_type> 
-<grid_type hgrid="64x128"    >'latlon'       </grid_type> 
-<grid_type hgrid="48x96"     >'latlon'       </grid_type> 
-<grid_type hgrid="32x64"     >'latlon'       </grid_type>
-<grid_type hgrid="8x16"      >'latlon'       </grid_type>
-<grid_type hgrid="4x5"       >'latlon'       </grid_type> 
-<grid_type hgrid="10x15"     >'latlon'       </grid_type> 
-<grid_type hgrid="2.5x3.33"  >'latlon'       </grid_type>
-<grid_type hgrid="1.9x2.5"   >'latlon'       </grid_type> 
-<grid_type hgrid="0.9x1.25"  >'latlon'       </grid_type> 
-<grid_type hgrid="0.47x0.63" >'latlon'       </grid_type> 
-<grid_type hgrid="0.23x0.31" >'latlon'       </grid_type> 
-<grid_type hgrid="ne30np4"   >'latlon'       </grid_type> 
-<grid_type hgrid="mp120v1"   >'latlon'       </grid_type> 
-<grid_type hgrid="tx0.1v2"   >'tripole'      </grid_type> 
-<grid_type hgrid="tx1v1"     >'tripole'      </grid_type> 
-<grid_type                   >'displaced_pole'</grid_type> 
+<grid_type hgrid="tx0.1v2"  >'tripole'      </grid_type> 
+<grid_type hgrid="tx1v1"    >'tripole'      </grid_type> 
+<grid_type                  >'displaced_pole'</grid_type> 
 
-<grid_format hgrid="512x1024"  >'nc' </grid_format> 
-<grid_format hgrid="128x256"   >'nc' </grid_format> 
-<grid_format hgrid="64x128"    >'nc' </grid_format> 
-<grid_format hgrid="48x96"     >'nc' </grid_format> 
-<grid_format hgrid="32x64"     >'nc' </grid_format>
-<grid_format hgrid="8x16"      >'nc' </grid_format>
-<grid_format hgrid="4x5"       >'nc' </grid_format> 
-<grid_format hgrid="10x15"     >'nc' </grid_format> 
-<grid_format hgrid="2.5x3.33"  >'nc' </grid_format>
-<grid_format hgrid="1.9x2.5"   >'nc' </grid_format> 
-<grid_format hgrid="0.9x1.25"  >'nc' </grid_format> 
-<grid_format hgrid="0.47x0.63" >'nc' </grid_format> 
-<grid_format hgrid="0.23x0.31" >'nc' </grid_format> 
-<grid_format hgrid="ne30np4"   >'nc' </grid_format> 
-<grid_format hgrid="mp120v1"   >'nc' </grid_format> 
-<grid_format hgrid="tx0.1v2"   >'bin'</grid_format> 
-<grid_format hgrid="tx1v1"     >'bin'</grid_format> 
-<grid_format                   >'bin'</grid_format> 
-
-<grid_file hgrid="512x1024"  >'atm/cam/ocnfrac/domain.camocn.512x1024_USGS_080530.nc'   </grid_file> 
-<grid_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </grid_file> 
-<grid_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </grid_file> 
-<grid_file hgrid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_gx3v7_100114.nc'    </grid_file> 
-<grid_file hgrid="32x64"     >'atm/cam/ocnfrac/domain.camocn.32x64_USGS_070807.nc'     </grid_file>
-<grid_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </grid_file>
-<grid_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_gx3v7_100120.nc'      </grid_file> 
-<grid_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </grid_file> 
-<grid_file hgrid="2.5x3.33"  >'atm/cam/ocnfrac/domain.camocn.fv2.5x3.33_gx3v7_110223.nc' </grid_file>
-<grid_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </grid_file> 
-<grid_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </grid_file> 
-<grid_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</grid_file> 
-<grid_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v6_101108.nc'</grid_file> 
-<grid_file hgrid="ne30np4"   >'atm/cam/ocnfrac/domain.camocn.ne30np4_gx1v6_110905.nc'  </grid_file> 
-<grid_file hgrid="mp120v1"   >'atm/cam/ocnfrac/domain.camocn.mp120v1.111004.nc         </grid_file> 
-
-<kmt_file hgrid="512x1024"  >'atm/cam/ocnfrac/domain.camocn.512x1024_USGS_080530.nc'  </kmt_file> 
-<kmt_file hgrid="128x256"   >'atm/cam/ocnfrac/domain.camocn.128x256_USGS_070807.nc'   </kmt_file> 
-<kmt_file hgrid="64x128"    >'atm/cam/ocnfrac/domain.camocn.64x128_USGS_070807.nc'    </kmt_file> 
-<kmt_file hgrid="48x96"     >'atm/cam/ocnfrac/domain.camocn.48x96_gx3v7_100114.nc'    </kmt_file> 
-<kmt_file hgrid="32x64"     >'atm/cam/ocnfrac/domain.camocn.32x64_USGS_070807.nc'     </kmt_file>
-<kmt_file hgrid="8x16"      >'atm/cam/ocnfrac/domain.camocn.8x16_USGS_070807.nc       </kmt_file>
-<kmt_file hgrid="4x5"       >'atm/cam/ocnfrac/domain.camocn.4x5_gx3v7_100120.nc'      </kmt_file> 
-<kmt_file hgrid="10x15"     >'atm/cam/ocnfrac/domain.camocn.10x15_USGS_070807.nc'     </kmt_file> 
-<kmt_file hgrid="2.5x3.33"  >'atm/cam/ocnfrac/domain.camocn.fv2.5x3.33_gx3v7_110223.nc' </kmt_file>
-<kmt_file hgrid="1.9x2.5"   >'atm/cam/ocnfrac/domain.camocn.1.9x2.5_gx1v6_090403.nc'  </kmt_file> 
-<kmt_file hgrid="0.9x1.25"  >'atm/cam/ocnfrac/domain.camocn.0.9x1.25_gx1v6_090403.nc' </kmt_file> 
-<kmt_file hgrid="0.47x0.63" >'atm/cam/ocnfrac/domain.camocn.0.47x0.63_gx1v6_090408.nc'</kmt_file> 
-<kmt_file hgrid="0.23x0.31" >'atm/cam/ocnfrac/domain.camocn.0.23x0.31_gx1v6_101108.nc'</kmt_file> 
-<kmt_file hgrid="ne30np4"   >'atm/cam/ocnfrac/domain.camocn.ne30np4_gx1v6_110905.nc'  </kmt_file> 
-<kmt_file hgrid="mp120v1"   >'atm/cam/ocnfrac/domain.camocn.mp120v1.111004.nc         </kmt_file> 
+<grid_format hgrid="tx0.1v2">'bin'</grid_format> 
+<grid_format hgrid="tx1v1"  >'bin'</grid_format> 
+<grid_format                >'bin'</grid_format> 
 
 <grid_file hgrid="gx1v6"    >'ocn/pop/gx1v6/grid/horiz_grid_20010402.ieeer8'</grid_file> 
 <grid_file hgrid="gx1v5"    >'ocn/pop/gx1v5/grid/horiz_grid_20010402.ieeer8'</grid_file> 

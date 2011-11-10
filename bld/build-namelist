@@ -406,6 +406,7 @@ if ($cice_mode ne 'prognostic' && $cice_mode ne 'thermo_only') {
 }
 if ($cice_mode eq 'prescribed') {
     add_default($nl, 'prescribed_ice_fill', 'val'=>'.false.') ;
+    add_default($nl, 'stream_mapread', 'val'=>'NOT_SET') ;
     add_default($nl, 'model_year_align');
     add_default($nl, 'stream_domtvarname');
     add_default($nl, 'stream_domxvarname');

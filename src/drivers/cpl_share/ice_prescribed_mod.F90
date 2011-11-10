@@ -68,12 +68,11 @@ module ice_prescribed_mod
 
 !EOP
 
-   logical(kind=log_kind)         :: prescribed_ice_fill ! true if data fill required
+   integer(SHR_KIND_IN),parameter :: nFilesMaximum = 100 ! max number of files
    integer(kind=int_kind)         :: stream_year_first   ! first year in stream to use
    integer(kind=int_kind)         :: stream_year_last    ! last year in stream to use
    integer(kind=int_kind)         :: model_year_align    ! align stream_year_first 
                                                          ! with this model year
-   integer(SHR_KIND_IN),parameter :: nFilesMaximum = 100 ! max number of files
 
    character(len=char_len_long)   :: stream_fldVarName
    character(len=char_len_long)   :: stream_fldFileName(nFilesMaximum)
@@ -83,6 +82,8 @@ module ice_prescribed_mod
    character(len=char_len_long)   :: stream_domAreaName
    character(len=char_len_long)   :: stream_domMaskName
    character(len=char_len_long)   :: stream_domFileName
+   character(len=char_len_long)   :: stream_mapread
+   logical(kind=log_kind)         :: prescribed_ice_fill        ! true if data fill required
 
    type(shr_strdata_type)       :: sdat         ! prescribed data stream
    character(len=char_len_long) :: fldList      ! list of fields in data stream
@@ -135,10 +136,9 @@ contains
 
    namelist /ice_prescribed_nml/  &
         prescribed_ice,      &
-        prescribed_ice_fill, &
+        model_year_align,    &
 	stream_year_first ,  &
         stream_year_last  ,  &
-        model_year_align,    &
         stream_fldVarName ,  &
         stream_fldFileName,  &
         stream_domTvarName,  &
@@ -146,7 +146,9 @@ contains
         stream_domYvarName,  &
         stream_domAreaName,  &
         stream_domMaskName,  &
-        stream_domFileName
+        stream_domFileName,  &
+        stream_mapread,      &
+        prescribed_ice_fill
 
    ! default values for namelist
    prescribed_ice         = .false.          ! if true, prescribe ice
@@ -160,7 +162,8 @@ contains
    stream_domYvarName     = 'lat'
    stream_domAreaName     = 'area'
    stream_domMaskName     = 'mask'
-   stream_domFileName     =  ' '
+   stream_domFileName     = ' '
+   stream_mapread         = 'NOT_SET'
    prescribed_ice_fill    = .false.          ! true if pice data fill required
 
    ! read from input file
@@ -189,10 +192,9 @@ contains
    ! *** If not prescribed ice then return ***
    if (.not. prescribed_ice) RETURN
 
-   call broadcast_scalar(prescribed_ice_fill,master_task)
+   call broadcast_scalar(model_year_align,master_task)
    call broadcast_scalar(stream_year_first,master_task)
    call broadcast_scalar(stream_year_last,master_task)
-   call broadcast_scalar(model_year_align,master_task)
    call broadcast_scalar(stream_fldVarName,master_task)
    call broadcast_scalar(stream_domTvarName,master_task)
    call broadcast_scalar(stream_domXvarName,master_task)
@@ -200,6 +202,8 @@ contains
    call broadcast_scalar(stream_domAreaName,master_task)
    call broadcast_scalar(stream_domMaskName,master_task)
    call broadcast_scalar(stream_domFileName,master_task)
+   call broadcast_scalar(stream_mapread,master_task)
+   call broadcast_scalar(prescribed_ice_fill,master_task)
    call mpi_bcast(stream_fldFileName, len(stream_fldFileName(1))*NFilesMaximum, &
         MPI_CHARACTER, 0, MPI_COMM_ICE, ierr)
 
@@ -207,6 +211,13 @@ contains
    do n=1,nFilesMaximum
       if (stream_fldFileName(n) /= ' ') nFile = nFile + 1
    end do
+
+   ! Read shr_strdata_nml namelist
+   if (prescribed_ice_fill) then
+      fillalgo='nn'
+   else
+      fillalgo='none'
+   endif
 
    if (my_task == master_task) then
       write(nu_diag,*) ' '
@@ -222,15 +233,9 @@ contains
       write(nu_diag,*) '  stream_domXvarName = ',trim(stream_domXvarName)
       write(nu_diag,*) '  stream_domYvarName = ',trim(stream_domYvarName)
       write(nu_diag,*) '  stream_domFileName = ',trim(stream_domFileName)
-      write(nu_diag,*) '  prescribed_ice_fill= ',prescribed_ice_fill
+      write(nu_diag,*) '  stream_mapread     = ',trim(stream_mapread)
+      write(nu_diag,*) '  stream_fillalgo    = ',trim(fillalgo)
       write(nu_diag,*) ' '
-   endif
-
-   ! Read shr_strdata_nml namelist
-   if (prescribed_ice_fill) then
-      fillalgo='nn'
-   else
-      fillalgo='none'
    endif
 
    call shr_strdata_create(sdat,name="prescribed_ice", &
@@ -254,9 +259,9 @@ contains
         fldListModel=stream_fldVarName,  &
         pio_subsystem=seq_io_getiosys(inst_name), &
         pio_iotype=seq_io_getiotype(inst_name),   &
-        fillalgo = trim(fillalgo),       &
-        calendar = trim(calendar_type))
-
+        fillalgo=trim(fillalgo),       &
+        calendar=trim(calendar_type),  &
+        mapread=trim(stream_mapread))
 
    if (my_task == master_task) then
       call shr_strdata_print(sdat,'SPRESICE data')
