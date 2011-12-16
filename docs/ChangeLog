@@ -1,4 +1,14 @@
 ===============================================================
+cice4_0_20111215
+Originator: tcraig
+Date: Fri Dec 16 2011
+Version: 4.0
+One-line Summary: fix to generate decomp error message introduced in 2011109
+CCSM Version compatible with: cesm1_1_beta06+
+
+M       bld/generate_cice_decomp.pl
+	
+===============================================================
 cice4_0_20111109
 Originator: mvertens
 Date: Wed Nov 09 2011

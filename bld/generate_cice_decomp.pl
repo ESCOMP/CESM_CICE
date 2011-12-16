@@ -262,7 +262,7 @@ sub CalcDecompInfo {
   if ($set == 0) {
       my $pattern = "^gx*|^tx*/";
       if ($res =~ /$pattern/) {
-	  print" resolution matches gx or tx - no round robin used \n";
+#	  print" resolution matches gx or tx - no round robin used \n";
 	  # do nothing
       } else {
 	  $opts{'nproc'} = $opts{'nproc'} / $opts{'thrds'};
