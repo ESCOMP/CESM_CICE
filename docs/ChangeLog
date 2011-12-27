@@ -1,3 +1,26 @@
+
+===============================================================
+cice4_0_20111226
+Originator: mvertens
+Date: Fri Dec 26 2011
+Version: 4.0
+One-line Summary: update of generate_cice_decomp to work with 
+   prime factors as well as 1 block per gridcell	
+CCSM Version compatible with: cesm1_1_beta08+
+	
+M       bld/cice_decomp.xml
+M       bld/generate_cice_decomp.pl
+	
+A set of prime factors (ICE_PRIMEFACS) is introduec config_definitinon.xml. 
+If those are defined for a grid (in config_grid.xml)- then cice 
+will use them to generate the decomp. If they are not defined for the grid, 
+then cice will go back to 1 gridcell/block for grid/processor combinations 
+where cartesian or spacecurve do not work. Both are roundrobin.
+Also verified that bit-for-bit answers are obtained if you use the 
+largest prime-factor setting for the block size and the use a lot more 
+processors then you need. So this still permits you to use whatever 
+processor number you want - but gives you a choice of decompositions.  
+	
 ===============================================================
 cice4_0_20111215
 Originator: tcraig

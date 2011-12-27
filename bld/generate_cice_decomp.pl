@@ -31,8 +31,21 @@ my $cwd = getcwd();  # current working directory
 my $cfgdir;
 my $utilroot = $ENV{'UTILROOT'};
 
-if ($ProgDir) { $cfgdir = $ProgDir; }
-else { $cfgdir = $cwd; }
+my $primefactors = $ENV{'ICE_DOMAIN_PRIMEFACS'};
+my @primefactors;
+my $use_primefactors;
+if ($primefactors) {
+    $use_primefactors = 1;
+    @primefactors = split(',', $primefactors);
+} else {
+    $use_primefactors = 0;
+}
+
+if ($ProgDir) { 
+    $cfgdir = $ProgDir; 
+} else { 
+    $cfgdir = $cwd; 
+}
 
 # Horizontal grid and spectral resolution parameters.
 my $horiz_grid_file = 'config_grid.xml';
@@ -73,7 +86,6 @@ EOF
 require Decomp::Config;
 
 #-----------------------------------------------------------------------------------------------
-my $model    = "cice";
 my $platform = "XT";
 my $res      = "gx1v6";
 my $output   = "all";
@@ -83,19 +95,18 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
-     -res <resolution>    (or -r)   Horizontal resolution (gx1v6 etc.). (default $res))
-     -model <model>       (or -m)   Model type (pop or cice).	        (default $model)
-     -platform <platform> (or -p)   Platform type (XT etc.).		(defualt $platform)
-     -nproc <number>      (or -n)   Number of processors to use.	(required)
-     -thrds <number>      (or -t)   Number of threads per processsor    (default 1)
+     -nproc <number>      (or -n)   Number of processors to use.	
+                                    (required)
+     -res <resolution>    (or -r)   Horizontal resolution (gx1v6 etc.). 
+                                    (default $res))
+     -thrds <number>      (or -t)   Number of threads per processsor    
+                                    (default 1)
      -output <type>	  (or -o)   Either output: all, maxblocks, bsize-x, bsize-y, or decomptype
-			  (default: $output)
-     -spacecurve          (or -s)   Forces spacecurve computation if the decomposition is not in the xml file        
-                                    (default is off)
+			            (default: $output)
 
 EXAMPLES
 
-   $ProgName -res gx1v6 -model cice -platform XT -nproc 80 -output maxblocks
+   $ProgName -res gx1v6 -nproc 80 -output maxblocks
 
    will return a single value -- the optimum max number of blocks to use.
 
@@ -106,8 +117,6 @@ EOF
 
   my %opts = (
                 res        => $res,
-                model      => "cice",
-                platform   => $platform,
                 nproc      => undef,
                 thrds      => 1,
                 output     => $output,
@@ -115,18 +124,20 @@ EOF
                 help       => 0,
                 file       => "$cfgdir/cice_decomp.xml",
                 spacecurve => 0,
+                model      => "cice",
+                platform   => "unset",
            );
 
   my $cmdline = @ARGV;
   GetOptions( 
               "r|res=s"      => \$opts{'res'},
-              "m|model=s"    => \$opts{'model'},
-              "p|platform=s" => \$opts{'platform'},
               "n|nproc=i"    => \$opts{'nproc'},
               "t|thrds=i"    => \$opts{'thrds'},
               "o|output=s"   => \$opts{'output'},
               "h|elp"        => \$opts{'help'},
-              "s|spacecurve" => \$opts{'spacecurve'},
+              "m|model=s"    => \$opts{'model'},     #no longer needed
+              "s|spacecurve" => \$opts{'spacecurve'},#no longer needed
+              "p|platform=s" => \$opts{'platform'},  #no longer needed
           ) or usage();
 
   # Check for unparsed arguments
@@ -215,8 +226,6 @@ sub CalcDecompInfo {
 
   my %opts   = %$opts_ref;
   my $nprocs = $opts{'nproc'};
-  my $model  = "cice";
-  my $spacecurve = $opts{'spacecurve'};
 
   my ($maxblocks,$bsize_x,$bsize_y,$decomptype);
   my %decomp;
@@ -232,23 +241,21 @@ sub CalcDecompInfo {
   my $bscore = $nlons * $nlats * $nprocs ;
 
   # cartesian decomp
-  if (!$spacecurve) {
-      $nn = 0;
-      do {
-	  $nn = $nn + 1;
-	  $ny = $nn;
-	  $nx = int($nprocs/$ny);
-	  if ($ny * $nx == $nprocs &&
-	      $nlats % $ny == 0 &&
-	      $nlons % $nx == 0) {
-	      $nprocsx = $nx;
-	      $nprocsy = $ny;
-	      $set = 1;
-	      $done = 1;
-	  }
-	  # print "debug $nn $nx $ny $nprocsx $nprocsy $nscore $bscore $set \n";  
-      } until ($done == 1 || $nn == $nprocs);
-  }
+  $nn = 0;
+  do {
+      $nn = $nn + 1;
+      $ny = $nn;
+      $nx = int($nprocs/$ny);
+      if ($ny * $nx == $nprocs &&
+	  $nlats % $ny == 0 &&
+	  $nlons % $nx == 0) {
+	  $nprocsx = $nx;
+	  $nprocsy = $ny;
+	  $set = 1;
+	  $done = 1;
+      }
+      # print "debug $nn $nx $ny $nprocsx $nprocsy $nscore $bscore $set \n";  
+  } until ($done == 1 || $nn == $nprocs);
   if ($set == 1) {
       $decomp{'nlats'}      = $nlats;
       $decomp{'nlons'}      = $nlons;
@@ -262,7 +269,7 @@ sub CalcDecompInfo {
   if ($set == 0) {
       my $pattern = "^gx*|^tx*/";
       if ($res =~ /$pattern/) {
-#	  print" resolution matches gx or tx - no round robin used \n";
+          # print" resolution matches gx or tx - no round robin used \n";
 	  # do nothing
       } else {
 	  $opts{'nproc'} = $opts{'nproc'} / $opts{'thrds'};
@@ -270,10 +277,24 @@ sub CalcDecompInfo {
 	  $decomp{'nlons'}      = $nlons;
 	  $decomp{'nlats'}      = $nlats;
 	  $decomp{'decomptype'} = "roundrobin";
-	  $decomp{'bsize_x'}    = 1;
-	  $decomp{'bsize_y'}    = 1;
-	  $decomp{'maxblocks'}  = int( ($nlons*$nlats) / ($decomp{'bsize_x'}*$nprocs) ) + 1;
-	  $set = 3;
+	  if ($use_primefactors) {
+	      my $number=0;
+	      my $number_old=0;
+	      my $number_max=0; 
+	      foreach $number (@primefactors) {
+		  if ($nprocs >= $number){
+		      if ($number > $number_old) {$number_max = $number};
+		      $number_old           = $number; 
+		      $decomp{'bsize_x'}    = $number_max;
+		      $decomp{'bsize_y'}    = 1;
+		      $decomp{'maxblocks'}  = 1;
+		  }
+	      } 
+	  } else {
+	      $decomp{'bsize_x'}    = 1;
+	      $decomp{'bsize_y'}    = 1;
+	      $decomp{'maxblocks'}  = int( ($nlons*$nlats) / ($decomp{'bsize_x'}*$nprocs) ) + 1;
+	  }
       }
   }
 
