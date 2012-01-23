@@ -627,6 +627,9 @@
       stats                   ! if true, print statistics for node
                               !   and block times for this timer
 
+   double precision MPI_WTIME
+   external MPI_WTIME
+
 !EOP
 !BOC
 !-----------------------------------------------------------------------
@@ -639,15 +642,14 @@
       n,icount,        & ! dummy loop index and counter
       nBlocks            
 
-   logical (log_kind) :: &
-      lrestart_timer     ! flag to restart timer if timer is running
-                         ! when this routine is called
-
    real (dbl_kind) :: &
       local_time,       &! temp space for holding local timer results
       min_time,         &! minimum accumulated time
       max_time,         &! maximum accumulated time
       mean_time          ! mean    accumulated time
+
+   real (dbl_kind) :: &
+      cycles1, cycles2   ! temps to hold cycle info before correction
 
    character (41), parameter :: &
       timer_format = "('Timer ',i3,': ',a20,f11.2,' seconds')"
@@ -661,23 +663,26 @@
 !-----------------------------------------------------------------------
 !
 !  if timer has been defined, check to see whether it is currently
-!  running.  If it is, stop the timer and print the info.
+!  running.  If it is, update to current running time and print the info
+!  (without stopping the timer). 
 !
 !-----------------------------------------------------------------------
 
    if (all_timers(timer_id)%in_use) then
-      if (all_timers(timer_id)%node_started) then
-        call ice_timer_stop(timer_id)
-        lrestart_timer = .true.
-      else
-        lrestart_timer = .false.
-      endif
 
       !*** Find max node time and print that time as default timer
       !*** result
 
       if (my_task < all_timers(timer_id)%num_nodes) then
-         local_time = all_timers(timer_id)%node_accum_time
+
+         if (all_timers(timer_id)%node_started) then
+            cycles2 = MPI_WTIME()
+            cycles1 = all_timers(timer_id)%node_cycles1
+            local_time = all_timers(timer_id)%node_accum_time + &
+                         clock_rate*(cycles2 - cycles1)
+         else
+            local_time = all_timers(timer_id)%node_accum_time
+         endif
       else
          local_time = c0
       endif
@@ -744,7 +749,6 @@
       endif
       endif
 
-      if (lrestart_timer) call ice_timer_start(timer_id)
    else
       call abort_ice &
                  ('ice_timer_print: attempt to print undefined timer')

@@ -14,7 +14,7 @@ module ice_comp_esmf
   use shr_sys_mod,  only : shr_sys_abort, shr_sys_flush
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
 		           shr_file_setloglevel, shr_file_setlogunit
-  use esmf_mod
+  use esmf
 
   use seq_flds_mod
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
@@ -113,15 +113,15 @@ subroutine ice_register_esmf(comp, rc)
     print *, "In ice register routine"
     ! Register the callback routines.
 
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETINIT, &
-      ice_init_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETRUN, &
-      ice_run_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-    call ESMF_GridCompSetEntryPoint(comp, ESMF_SETFINAL, &
-      ice_final_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
+      ice_init_esmf, phase=1, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
+      ice_run_esmf, phase=1, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
+      ice_final_esmf, phase=1, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
 end subroutine
 
@@ -177,7 +177,7 @@ end subroutine
     integer            :: lbnum
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
-    integer            :: mpicom_loc, mpicom_vm, gsize
+    integer            :: mpicom_loc, mpicom_vm, gsize, ICEID
     integer            :: ICEID       ! cesm ID value
 
     character(ESMF_MAXSTR) :: convCIM, purpComp
@@ -197,34 +197,37 @@ end subroutine
 
    ! duplicate the mpi communicator from the current VM 
    call ESMF_VMGetCurrent(vm, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_VMGet(vm, mpiCommunicator=mpicom_vm, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call MPI_Comm_dup(mpicom_vm, mpicom_loc, rc)
-   if(rc /= 0) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= 0) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    ! Initialize cice id
    
    call ESMF_AttributeGet(export_state, name="ID", value=ICEID, rc=rc)
-   if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    ! Determine time of next atmospheric shortwave calculation
    call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    ! Determine if aerosols are coming through the coupler
    call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+   call ESMF_AttributeGet(export_state, name="ID", value=ICEID, rc=rc)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    ! Determine orbital parameters
    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     !---------------------------------------------------------------------------
     ! use infodata to determine type of run
@@ -237,15 +240,15 @@ end subroutine
     scmlon = -999.
 
     call ESMF_AttributeGet(export_state, name="case_name", value=runid, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeGet(export_state, name="single_column", value=single_column, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeGet(export_state, name="scmlat", value=scmlat, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeGet(export_state, name="scmlon", value=scmlon, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeGet(export_state, name="start_type", value=starttype, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        runtype = "initial"
@@ -364,40 +367,40 @@ end subroutine
     ! Initialize ice distgrid
 
     distgrid = ice_DistGrid_esmf(gsize,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="gsize", value=gsize, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Initialize ice domain (needs ice initialization info)
 
     dom = mct2esmf_init(distgrid, attname=seq_flds_dom_fields, name="domain", rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ice_domain_esmf(dom, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Inialize input/output arrays
     d2x = mct2esmf_init(distgrid, attname=seq_flds_i2x_fields, name="d2x", rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
  
     x2d = mct2esmf_init(distgrid, attname=seq_flds_x2i_fields, name="x2d", rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
  
-    call ESMF_StateAdd(export_state, dom, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_StateAdd(export_state, (/dom/), rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ESMF_StateAdd(export_state, d2x, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_StateAdd(export_state, (/d2x/), rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
  
-    call ESMF_StateAdd(import_state, x2d, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_StateAdd(import_state, (/x2d/), rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call esmf2mct_init(distgrid,ICEID,gsmap_i,MPI_COMM_ICE,gsize=gsize,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call esmf2mct_init(dom,dom_i,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call esmf2mct_copy(dom, dom_i%data, rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     !-----------------------------------------------------------------
     ! Second phase of prescribed ice initialization
@@ -416,16 +419,16 @@ end subroutine
     !---------------------------------------------------------------------------
 
     call ice_export_esmf (d2x, rc=rc)  !Send initial state to driver
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ESMF_AttributeSet(export_state, name="ice_prognostic", value=.true., rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="ice_nx", value=nx_global, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="ice_ny", value=ny_global, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    convCIM  = "CIM 1.0"
+    convCIM  = "CIM"
     purpComp = "Model Component Simulation Description"
 
     call ESMF_AttributeAdd(comp,  &
@@ -460,13 +463,13 @@ end subroutine
     call ESMF_AttributeSet(comp, "ModelType", "Sea Ice", &
                            convention=convCIM, purpose=purpComp, rc=rc)
 
-    call ESMF_AttributeSet(comp, "Name", "someone", &
-                           convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "EmailAddress", &
-                           "someone@someplace", &
-                           convention=convCIM, purpose=purpComp, rc=rc)
-    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
-                           convention=convCIM, purpose=purpComp, rc=rc)
+!    call ESMF_AttributeSet(comp, "Name", "someone", &
+!                           convention=convCIM, purpose=purpComp, rc=rc)
+!    call ESMF_AttributeSet(comp, "EmailAddress", &
+!                           "someone@someplace", &
+!                           convention=convCIM, purpose=purpComp, rc=rc)
+!    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
+!                           convention=convCIM, purpose=purpComp, rc=rc)
 
     call t_stopf ('cice_esmf_init')
 
@@ -555,17 +558,17 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     ! Determine time of next atmospheric shortwave calculation
 
     call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
    ! Determine orbital parameters
    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
-   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call seq_timemgr_EClockGetData(EClock, &
          curr_ymd=curr_ymd,   curr_tod=curr_tod)
@@ -588,10 +591,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call ice_timer_start(timer_cplrecv)
 
     call ESMF_StateGet(import_state, itemName="x2d", array=x2d, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_import_esmf(x2d, rc=rc )
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_import')
@@ -802,10 +805,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call ice_timer_start(timer_cplsend)
 
     call ESMF_StateGet(export_state, itemName="d2x", array=d2x, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_export_esmf (d2x, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_export')
@@ -892,11 +895,11 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
     ! Destroy ESMF objects
 
     call esmfshr_util_StateArrayDestroy(export_state,"d2x",rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call esmfshr_util_StateArrayDestroy(export_state,"domain",rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call esmfshr_util_StateArrayDestroy(import_state,"x2d",rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
 end subroutine ice_final_esmf
 
@@ -975,7 +978,7 @@ function ice_DistGrid_esmf(gsize,rc)
     enddo        !iblk
    
     ice_DistGrid_esmf = mct2esmf_init(gindex, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     deallocate(gindex)
 
@@ -1012,7 +1015,7 @@ subroutine ice_export_esmf(array, rc )
     rc = ESMF_SUCCESS
 
     call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     flag=.false.
 
@@ -1171,7 +1174,7 @@ subroutine ice_import_esmf(array, rc)
     rc = ESMF_SUCCESS
     
     call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Use aflds to gather the halo updates of multiple fields
     ! Need to separate the scalar from the vector halo updates
@@ -1445,19 +1448,19 @@ subroutine ice_domain_esmf( dom, rc )
     rc = ESMF_SUCCESS
 
     call ESMF_ArrayGet(dom, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Fill in correct values for domain components
     klon  = esmfshr_util_ArrayGetIndex(dom,'lon ',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     klat  = esmfshr_util_ArrayGetIndex(dom,'lat ',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     karea = esmfshr_util_ArrayGetIndex(dom,'area',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     kmask = esmfshr_util_ArrayGetIndex(dom,'mask',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     kfrac = esmfshr_util_ArrayGetIndex(dom,'frac',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     fptr(:,:) = -9999.0_R8
     n=0

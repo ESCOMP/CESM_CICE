@@ -17,9 +17,9 @@ module ice_comp_mct
 		           shr_file_setloglevel, shr_file_setlogunit
   use mct_mod
 #ifdef USE_ESMF_LIB
-  use esmf_mod
+  use esmf
 #else
-  use esmf_mod, only: ESMF_clock
+  use esmf, only: ESMF_clock
 #endif
 
   use seq_flds_mod
@@ -748,7 +748,7 @@ contains
 ! !IROUTINE: ice_final_mct
 !
 ! !INTERFACE:
-  subroutine ice_final_mct( )
+  subroutine ice_final_mct( EClock, cdata_i, x2i_i, i2x_i )
 !
 ! !DESCRIPTION:
 ! Finalize CICE
@@ -759,6 +759,11 @@ contains
 !BOP
 !
 ! !ARGUMENTS:
+
+    type(ESMF_Clock),intent(in)    :: EClock
+    type(seq_cdata), intent(inout) :: cdata_i
+    type(mct_aVect), intent(inout) :: x2i_i
+    type(mct_aVect), intent(inout) :: i2x_i
 !
 ! !REVISION HISTORY:
 !

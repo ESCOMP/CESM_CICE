@@ -26,7 +26,7 @@
 !
       use ice_kinds_mod
 #ifdef USE_ESMF
-      use esmf_mod
+      use esmf
       use CICE_InitMod
       use CICE_RunMod
       use CICE_FinalMod

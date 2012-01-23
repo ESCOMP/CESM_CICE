@@ -1,4 +1,19 @@
+===============================================================
+cice4_0_20120123
+Originator: tcraig
+Date: Mon Jan 23 2012
+Version: 4.0
+One-line Summary: update esmf to 520r, add support for multi-instance
+	runs with esmf coupling interfaces, update timer implementation
+	from pw to fix issue when writing timer info during run.
+CCSM Version compatible with: cesm1_1_beta09+
 
+M       src/mpi/ice_timers.F90
+MM      src/drivers/cpl_mct/ice_comp_mct.F90
+M       src/drivers/cice4/CICE_ComponentMod.F90
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+M       src/drivers/cpl_esmf/ice_comp_mct.F90
+	
 ===============================================================
 cice4_0_20111226
 Originator: mvertens
