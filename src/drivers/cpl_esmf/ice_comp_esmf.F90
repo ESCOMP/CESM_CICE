@@ -177,7 +177,7 @@ end subroutine
     integer            :: lbnum
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
-    integer            :: mpicom_loc, mpicom_vm, gsize, ICEID
+    integer            :: mpicom_loc, mpicom_vm, gsize
     integer            :: ICEID       ! cesm ID value
 
     character(ESMF_MAXSTR) :: convCIM, purpComp

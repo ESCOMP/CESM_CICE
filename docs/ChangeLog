@@ -1,4 +1,14 @@
 ===============================================================
+cice4_0_20120131
+Originator: tcraig
+Date: Tue Jan 31 2012
+Version: 4.0
+One-line Summary: minor fix for intel compiler, duplicate variable definition
+CCSM Version compatible with: cesm1_1_beta09+
+
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+	
+===============================================================
 cice4_0_20120123
 Originator: tcraig
 Date: Mon Jan 23 2012
