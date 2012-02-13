@@ -114,7 +114,6 @@
       call init_coupler_flux    ! initialize fluxes exchanged with coupler
       call init_thermo_vertical ! initialize vertical thermodynamics
       call init_itd             ! initialize ice thickness distribution
-      call calendar(time)       ! determine the initial date
       call init_state           ! initialize the ice state
       call init_transport       ! initialize horizontal transport
 

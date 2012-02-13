@@ -726,8 +726,6 @@
          write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
       endif
       
-      call calendar(time)
-      
       call broadcast_scalar(istep0,master_task)
       
       istep1 = istep0
@@ -1141,8 +1139,6 @@
       if (my_task == master_task) then
          write(nu_diag,*) 'Restart read at istep=',istep0,time,time_forc
       endif
-      
-      call calendar(time)
       
       istep1 = istep0
 

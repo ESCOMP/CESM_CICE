@@ -241,7 +241,6 @@
       tday = (ttime-sec)/secday + c1    ! absolute day number
       
       if (calendar_type /= "GREGORIAN") then 	
-         nyrp = nyr
          nyr = int((tday-c1)/dayyr) + 1    ! year number
          if (nyr   /= nyrp)   new_year = .true.
       endif
