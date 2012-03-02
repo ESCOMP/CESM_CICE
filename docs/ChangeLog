@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20120301
+Originator: mvertens
+Date: Fri Mar 01 2012
+Version: 4.0
+One-line Summary: New cice.cpl7.template where build-namelist
+	is called directly from the cice.buildnml.csh and
+	all user changes to in cice_user_nl 
+CCSM Version compatible with: cesm1_1_beta11+
+
+M       bld/cice.cpl7.template
+	
+===============================================================
 cice4_0_20120210
 Originator: dbailey
 Date: Fri Feb 10 2012
