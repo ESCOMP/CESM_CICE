@@ -4,178 +4,169 @@ if !(-d $CASEBUILD) mkdir $CASEBUILD
 if !(-d $CASEBUILD/ciceconf) mkdir $CASEBUILD/ciceconf
 
 #--------------------------------------------------------------------
-# Invoke cice configure
+# Invoke cice configure - output will go in $CASEBUILD/ciceconf 
 #--------------------------------------------------------------------
 
 set hgrid = "-hgrid $ICE_GRID"
 if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
 
 cd $CASEBUILD/ciceconf || exit -1
-$CODEROOT/ice/cice/bld/configure $hgrid -cice_mode $CICE_MODE -nodecomp $CICE_CONFIG_OPTS || exit -1
+$CODEROOT/ice/cice/bld/configure $hgrid \
+    -cice_mode $CICE_MODE \
+    -nodecomp $CICE_CONFIG_OPTS || exit -1
 
-#----------------------------
-# Create ccsm_namelist file
-#----------------------------
+#--------------------------------------------------------------------
+# Create cice.buildnml.csh
+#--------------------------------------------------------------------
 
-set ice_ic = 'default'
-if ($RUN_TYPE == startup) then
-  if ($ICE_GRID =~ *gx* && $CICE_MODE != prescribed) then
-     set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.0001-01-01.${ICE_GRID}_20080212
-  endif 
-else if ($RUN_TYPE == branch || $RUN_TYPE == hybrid) then
-  set ice_ic = ${RUN_REFCASE}.cice.r.${RUN_REFDATE}-00000.nc
+# copy necessary files to $CASEROOT/Tools/Templates/
+if ($NINST_ICE > 1) then
+   set inst_counter = 1
+   set inst_string = ""
+   while ($inst_counter <= $NINST_ICE)
+      set inst_string = $inst_counter
+      if ($inst_counter <= 999) setenv inst_string = "0$inst_string"
+      if ($inst_counter <=  99) setenv inst_string = "0$inst_string"
+      if ($inst_counter <=   9) setenv inst_string = "0$inst_string"
+      cp $CODEROOT/ice/cice/bld/user_nl_cice $CASEROOT/user_nl_cice${inst_string}
+      @ inst_counter = $inst_counter + 1
+   end 
+else
+   cp $CODEROOT/ice/cice/bld/user_nl_cice $CASEROOT/user_nl_cice
 endif
 
-cat >! $CASEBUILD/ciceconf/ccsm_namelist << EOF1
- &ice_nml
- ice_ic = '$ice_ic'
- /
- &domain_nml
- distribution_type = 'DECOMPTYPE'
- / 
-EOF1
+# create cice.buildnml.csh
+cat >! $CASEBUILD/cice.buildnml.csh << EOF1
+#! /bin/csh -f 
 
-# Allow the user to supply namelist values by putting them in the file
-# $CASEROOT/user_nl_cice.  The file should contain a valid namelist, just like
-# any file that supplies user input to build-namelist via the -infile argument.
-if (-f $CASEROOT/user_nl_cice) then
-   cat $CASEROOT/user_nl_cice >> $CASEBUILD/ciceconf/ccsm_namelist || exit -1
-endif
-
-#----------------------------
-# Invoke build-namelist
-#----------------------------
-
-if ($CICE_MODE == "prescribed") then
-
-   if ($SSTICE_GRID_FILENAME == 'UNSET') then
+if (\$CICE_MODE == "prescribed") then
+   # Error checks
+   if (\$SSTICE_GRID_FILENAME == 'UNSET') then
       echo "SSTICE_GRID_FILENAME must be set for cice prescribed mode"; exit -1
    endif
-   if ($SSTICE_DATA_FILENAME == 'UNSET') then
+   if (\$SSTICE_DATA_FILENAME == 'UNSET') then
       echo "SSTICE_DATA_FILENAME must be set for cice prescribed mode"; exit -1
    endif
-   if ($SSTICE_YEAR_ALIGN == '-999') then
+   if (\$SSTICE_YEAR_ALIGN == '-999') then
       echo "SSTICE_YEAR_ALIGN must be set for cice prescribed mode"; exit -1
    endif
-   if ($SSTICE_YEAR_START == '-999') then
+   if (\$SSTICE_YEAR_START == '-999') then
       echo "SSTICE_YEAR_START must be set for cice prescribed mode"; exit -1
    endif 
-   if ($SSTICE_YEAR_END == '-999') then
+   if (\$SSTICE_YEAR_END == '-999') then
       echo "SSTICE_YEAR_END must be set for cice prescribed mode"; exit -1
    endif
-   set SSTDATA = $SSTICE_DATA_FILENAME
-   if ($SSTICE_DATA_FILENAME =~ $DIN_LOC_ROOT*) then
-      set num = `echo $DIN_LOC_ROOT | wc -c `
-      set dd = `echo $SSTICE_DATA_FILENAME | cut -c $num-`
-      if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
-      set SSTDATA = '$DIN_LOC_ROOT'"/$dd"
-   endif
-   set SSTGRID = $SSTICE_GRID_FILENAME
-   if ($SSTICE_GRID_FILENAME =~ $DIN_LOC_ROOT*) then
-      set num = `echo $DIN_LOC_ROOT | wc -c `
-      set dd = `echo $SSTICE_GRID_FILENAME | cut -c $num-`
-      if ($dd =~ /*) set dd = `echo $dd | cut -c 2-`
-      set SSTGRID = '$DIN_LOC_ROOT'"/$dd"
-   endif
-   if ($SSTICE_STREAM == 'CAMDATA') then    
+   if (\$SSTICE_STREAM == 'CAMDATA') then    
       set stream_domxvarname = "xc"  
       set stream_domyvarname = "yc"  
    else         
       set stream_domxvarname = "lon"  
       set stream_domyvarname = "lat"  
    endif
-
-   $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-        -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-        -inputdata $CASEBUILD/cice.input_data_list \
-        -namelist "&cice $CICE_NAMELIST_OPTS \
-		    grid_type='latlon' \
-		    grid_format='nc' \
-		    grid_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
-	            kmt_file='$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE' \
-                    model_year_align=$SSTICE_YEAR_ALIGN \
-                    stream_fldfilename='$SSTDATA' \
-                    stream_domfilename='$SSTGRID' \
-                    stream_year_first=$SSTICE_YEAR_START \
-                    stream_year_last=$SSTICE_YEAR_END \
-                    stream_fldvarname='ice_cov' \
-                    stream_domtvarname='time' \
-                    stream_domxvarname='$stream_domxvarname' \
-                    stream_domyvarname='$stream_domyvarname' \
-                    stream_domareaname='area' \
-                    stream_dommaskname='mask' \
-                    stream_mapread='NOT_SET' /"  || exit -1
-else
-
-  $CODEROOT/ice/cice/bld/build-namelist -config config_cache.xml \
-         -csmdata \$DIN_LOC_ROOT -infile ccsm_namelist \
-         -inputdata $CASEBUILD/cice.input_data_list \
-         -namelist "&cice $CICE_NAMELIST_OPTS /" || exit -1
-
 endif
 
-sed -e 's#DECOMPTYPE#\$CICE_DECOMPTYPE#' ice_in >! ice_in.tmp || exit 3
-mv ice_in.tmp ice_in
-
-#----------------------------
-# Append ice_ic to cice.input_data_list
-#----------------------------
-
-if ($RUN_TYPE != 'branch' && $RUN_TYPE != 'hybrid' && ${ice_ic} != 'default') then
-cat >> $CASEBUILD/cice.input_data_list << EOF1
-ice_ic = ${ice_ic}
-EOF1
-endif
-
-#----------------------------
-# Create cice.buildnml.csh
-#----------------------------
-
-cat >! $CASEBUILD/cice.buildnml.csh << EOF1
-#! /bin/csh -f 
-
-set exedir = \$RUNDIR; cd \$exedir
-
+cd \$CASEBUILD/ciceconf || exit -1 
 set default_ice_in_filename = "ice_in"
 
-set ice_inst_counter = 1
+# Loop over ice instances
+set inst_counter = 1
+while (\$inst_counter <= \$NINST_ICE)
 
-while (\$ice_inst_counter <= \$NINST_ICE)
+if (\$NINST_ICE > 1) then
+   set inst_string = \$inst_counter
+   if (\$inst_counter <= 999) set inst_string = 0\$inst_string
+   if (\$inst_counter <=  99) set inst_string = 0\$inst_string
+   if (\$inst_counter <=   9) set inst_string = 0\$inst_string
+   set inst_string = "_\${inst_string}"    
+else
+   set inst_string = ""       
+endif
+set ice_in_filename = \${default_ice_in_filename}\${inst_string}
 
-    set ice_in_filename = \$default_ice_in_filename
+set ice_ic = 'default'
+if (\$RUN_TYPE == startup) then
+  if (\$ICE_GRID =~ *gx* && \$CICE_MODE != prescribed) then
+     set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.0001-01-01.\${ICE_GRID}_20080212
+  endif 
+else if (\$RUN_TYPE == branch || \$RUN_TYPE == hybrid) then
+  set ice_ic = \${RUN_REFCASE}.cice\${inst_string}.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc
+endif
 
-    if (\$NINST_ICE > 1) then
-        set ice_inst_string = \$ice_inst_counter
-        if (\$ice_inst_counter <= 999) set ice_inst_string = 0\$ice_inst_string
-        if (\$ice_inst_counter <=  99) set ice_inst_string = 0\$ice_inst_string
-        if (\$ice_inst_counter <=   9) set ice_inst_string = 0\$ice_inst_string
-        set ice_in_filename = \${default_ice_in_filename}_\${ice_inst_string}
-    endif
+cat >! \$CASEBUILD/ciceconf/cesm_namelist << EOF2
+&ice_inparm
+ ice_ic = '\$ice_ic'
+ distribution_type = '\$CICE_DECOMPTYPE'
+EOF2
+if (\$CICE_MODE == "prescribed") then
+cat >> \$CASEBUILD/ciceconf/cesm_namelist << EOF2
+ grid_type = 'latlon' 
+ grid_format = 'nc' 
+ grid_file = '\$ICE_DOMAIN_PATH/\$ICE_DOMAIN_FILE' 
+ kmt_file = '\$ICE_DOMAIN_PATH/\$ICE_DOMAIN_FILE' 
+ model_year_align = \$SSTICE_YEAR_ALIGN 
+ stream_fldfilename = '\$SSTICE_DATA_FILENAME' 
+ stream_domfilename = '\$SSTICE_GRID_FILENAME' 
+ stream_year_first = \$SSTICE_YEAR_START 
+ stream_year_last = \$SSTICE_YEAR_END 
+ stream_fldvarname ='ice_cov' 
+ stream_domtvarname ='time' 
+ stream_domxvarname ='\$stream_domxvarname' 
+ stream_domyvarname ='\$stream_domyvarname' 
+ stream_domareaname ='area' 
+ stream_dommaskname ='mask' 
+ stream_mapread ='NOT_SET' 
+EOF2
+endif
+if (-e \$CASEROOT/user_nl_cice\${inst_string}) then
+  \$UTILROOT/Tools/user_nl_add -user_nl_file \$CASEROOT/user_nl_cice\${inst_string} >> \$CASEBUILD/ciceconf/cesm_namelist 
+endif
+cat  >> \$CASEBUILD/ciceconf/cesm_namelist <<EOF2
+/
+EOF2
 
-    cat >! \$ice_in_filename << EOF
-EOF1
+#-------------------------------------
+# Call cice build-namelist - create input data list
+#-------------------------------------
 
-cat ice_in >> $CASEBUILD/cice.buildnml.csh || exit -1
+if (-e \$CASEBUILD/cice.input_data_list) then
+  rm \$CASEBUILD/cice.input_data_list
+endif
 
-cat >> $CASEBUILD/cice.buildnml.csh << EOF1
+\$CODEROOT/ice/cice/bld/build-namelist -infile \$CASEBUILD/ciceconf/cesm_namelist \
+    -csmdata \$DIN_LOC_ROOT  \
+    -inputdata \$CASEBUILD/cice.input_data_list \
+    -namelist "&cice \$CICE_NAMELIST_OPTS/" \
+    -config config_cache.xml || exit -1
 
-EOF
+# Append ice_ic to cice.input_data_list
+if (\$RUN_TYPE != 'branch' && \$RUN_TYPE != 'hybrid' && \${ice_ic} != 'default') then
+cat >> \$CASEBUILD/cice.input_data_list << EOF2
+ice_ic = \${ice_ic}
+EOF2
+endif
 
-    @ ice_inst_counter = \$ice_inst_counter + 1
+#-------------------------------------
+# Copy resolved namelist to $CASEROOT/CaseDocs and $RUNDIR
+#-------------------------------------
+
+if (\$?DOCDIR) then # only set in preview_namelists utility		    
+  cp \$CASEBUILD/ciceconf/ice_in \$CASEROOT/CaseDocs/\$ice_in_filename || exit -1
+endif
+if (-d \${RUNDIR}) then
+  cp \$CASEBUILD/ciceconf/ice_in \${RUNDIR}/\$ice_in_filename || exit -2
+endif
+
+@ inst_counter = \$inst_counter + 1
 
 end
 
 EOF1
 
-# Remove temporary namelist in the iceconf directory
-
-#/bin/rm -f $CASEBUILD/ciceconf/ice_in
-
 #--------------------------------------------------------------------
 # Create cice.buildexe.csh
 #--------------------------------------------------------------------
 
-cat >! $CASEBUILD/cice.buildexe.csh << EOF2
+cat >! $CASEBUILD/cice.buildexe.csh << EOF1
 #! /bin/csh -f 
 
 set objdir = \$OBJROOT/ice/obj; cd \$objdir
@@ -185,11 +176,11 @@ if (\$COMP_INTERFACE == 'MCT' ) set comp = mct
 if (\$COMP_INTERFACE == 'ESMF') set comp = esmf
 
 \cat >! .tmp << EOF; cmp -s .tmp Filepath || mv -f .tmp Filepath 
-EOF2
+EOF1
 
 cat $CASEBUILD/ciceconf/Filepath >> $CASEBUILD/cice.buildexe.csh
 
-cat >> $CASEBUILD/cice.buildexe.csh << EOF2
+cat >> $CASEBUILD/cice.buildexe.csh << EOF1
 EOF
 
 # Check for recompile if BLCKX, BLCKY or MXBLCKS changes
@@ -216,5 +207,5 @@ mv \$objdir/iceres.new \$objdir/iceres.old
 
 wait 
 exit 0
-EOF2
+EOF1
 

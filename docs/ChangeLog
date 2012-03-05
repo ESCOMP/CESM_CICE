@@ -1,4 +1,21 @@
 ===============================================================
+cice4_0_20120305
+Originator: mvertens
+Date: Fri Mar 01 2012
+Version: 4.0
+One-line Summary: New cice.cpl7.template where build-namelist
+	is called directly from the cice.buildnml.csh and
+	all user changes go in cice_user_nl 
+CCSM Version compatible with: cesm1_1_beta11+
+
+M       bld/cice.cpl7.template
+A       bld/user_nl_cice
+
+Note that cice's build-namelist will create all of the user_nl_cice
+files (including those for multiple instances) at cesm, 
+and therefore, cice configure time	
+
+===============================================================
 cice4_0_20120301
 Originator: mvertens
 Date: Fri Mar 01 2012
@@ -8,7 +25,7 @@ One-line Summary: New cice.cpl7.template where build-namelist
 	all user changes to in cice_user_nl 
 CCSM Version compatible with: cesm1_1_beta11+
 
-M       bld/cice.cpl7.template
+BUG - only ChangeLog was committed here	
 	
 ===============================================================
 cice4_0_20120210
