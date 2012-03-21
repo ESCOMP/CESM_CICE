@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20120321
+Originator: mvertens
+Date: Mon Mar 21 2012
+Version: 4.0
+One-line Summary: Additional fix to cice.cpl7.template for multi-instance code
+	
+M bld/cice.cpl7.template 
+
+===============================================================
 cice4_0_20120312
 Originator: mvertens
 Date: Mon Mar 12 2012

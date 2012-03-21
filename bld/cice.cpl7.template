@@ -25,9 +25,10 @@ if ($NINST_ICE > 1) then
    set inst_string = ""
    while ($inst_counter <= $NINST_ICE)
       set inst_string = $inst_counter
-      if ($inst_counter <= 999) setenv inst_string  "0$inst_string"
-      if ($inst_counter <=  99) setenv inst_string  "0$inst_string"
-      if ($inst_counter <=   9) setenv inst_string  "0$inst_string"
+      if ($inst_counter <= 999) set inst_string = "0$inst_string"
+      if ($inst_counter <=  99) set inst_string = "0$inst_string"
+      if ($inst_counter <=   9) set inst_string = "0$inst_string"
+      set inst_string = _${inst_string}
       cp $CODEROOT/ice/cice/bld/user_nl_cice $CASEROOT/user_nl_cice${inst_string}
       @ inst_counter = $inst_counter + 1
    end 
@@ -89,7 +90,11 @@ if (\$RUN_TYPE == startup) then
      set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.0001-01-01.\${ICE_GRID}_20080212
   endif 
 else if (\$RUN_TYPE == branch || \$RUN_TYPE == hybrid) then
-  set ice_ic = \${RUN_REFCASE}.cice\${inst_string}.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc
+  if (-e \${RUN_REFCASE}.cice\${inst_string}.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc) then
+    set ice_ic = \${RUN_REFCASE}.cice\${inst_string}.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc
+  else 
+    set ice_ic = \${RUN_REFCASE}.cice.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc
+  endif 
 endif
 
 cat >! \$CASEBUILD/ciceconf/cesm_namelist << EOF2
