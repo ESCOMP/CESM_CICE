@@ -287,14 +287,13 @@ sub CalcDecompInfo {
 		      $number_old           = $number; 
 		      $decomp{'bsize_x'}    = $number_max;
 		      $decomp{'bsize_y'}    = 1;
-		      $decomp{'maxblocks'}  = 1;
 		  }
 	      } 
 	  } else {
 	      $decomp{'bsize_x'}    = 1;
 	      $decomp{'bsize_y'}    = 1;
-	      $decomp{'maxblocks'}  = int( ($nlons*$nlats) / ($decomp{'bsize_x'}*$nprocs) ) + 1;
 	  }
+	  $decomp{'maxblocks'}  = int( ($nlons*$nlats) / ($decomp{'bsize_x'}*$nprocs) ) + 1;
       }
   }
 

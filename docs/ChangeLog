@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20120326
+Originator: mvertens
+Date: Mon Mar 26 2012
+Version: 4.0
+One-line Summary: Fix for decomp generation for ne30 etc. in prescribed mode
+	
+
+M       bld/cice.cpl7.template
+M       bld/generate_cice_decomp.pl
+	
+Also modified cice.cpl7.template to not replace user_nl_cice 	
+after configure -cleanall is invoked
+	
+===============================================================
 cice4_0_20120321
 Originator: mvertens
 Date: Mon Mar 21 2012
