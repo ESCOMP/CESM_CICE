@@ -644,7 +644,6 @@ sub check_input_files {
 
 		if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        $pathname =~ s:$inputdata_rootdir::;
                         print OUTFILE "$var = $pathname\n";
                     }
                     else {
@@ -665,7 +664,6 @@ sub check_input_files {
 		    $rootdir =~ s/['"]//g;
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
-                        $pathname =~ s:$inputdata_rootdir::;
                         print OUTFILE "$var = $pathname\n";
                     }
                     else {
