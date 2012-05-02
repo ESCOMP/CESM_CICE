@@ -80,7 +80,8 @@
           atm_data_format, ocn_data_format, &
           sss_data_type,   sst_data_type, ocn_data_dir, &
           oceanmixed_file, restore_sst,   trestore 
-      use ice_grid, only: grid_file, kmt_file, grid_type, grid_format
+      use ice_grid, only: grid_file, kmt_file, grid_type, grid_format, &
+                          gridcpl_file
       use ice_mechred, only: kstrength, krdg_partic, krdg_redist
       use ice_dyn_evp, only: ndte, kdyn, evp_damping, yield_curve
       use ice_shortwave, only: albicev, albicei, albsnowv, albsnowi, &
@@ -133,7 +134,7 @@
 
       namelist /grid_nml/ &
         grid_format,    grid_type,       grid_file,     kmt_file,       &
-        kcatbound
+        kcatbound, gridcpl_file
 
       namelist /ice_nml/ &
         kitd,           kdyn,            ndte,                          &
@@ -201,6 +202,7 @@
       grid_type    = 'rectangular'  ! define rectangular grid internally
       grid_file    = 'unknown_grid_file'
       kmt_file     = 'unknown_kmt_file'
+      gridcpl_file = 'unknown_gridcpl_file'
 
       kitd = 1           ! type of itd conversions (0 = delta, 1 = linear)
       kcatbound = 1      ! category boundary formula (0 = old, 1 = new)
@@ -457,6 +459,7 @@
       call broadcast_scalar(grid_file,          master_task)
       call broadcast_scalar(kmt_file,           master_task)
       call broadcast_scalar(kitd,               master_task)
+      call broadcast_scalar(gridcpl_file,       master_task)
       call broadcast_scalar(kcatbound,          master_task)
       call broadcast_scalar(kdyn,               master_task)
       call broadcast_scalar(xndt_dyn,           master_task)
@@ -585,6 +588,9 @@
                                trim(grid_file)
             write(nu_diag,*) ' kmt_file                  = ', &
                                trim(kmt_file)
+            write(nu_diag,*) ' gridcpl_file              = ', &
+                               trim(gridcpl_file)
+
          endif
 
          write(nu_diag,1020) ' kitd                      = ', kitd

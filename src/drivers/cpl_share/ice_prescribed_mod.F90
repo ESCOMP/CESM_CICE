@@ -68,7 +68,7 @@ module ice_prescribed_mod
 
 !EOP
 
-   integer(SHR_KIND_IN),parameter :: nFilesMaximum = 100 ! max number of files
+   integer(SHR_KIND_IN),parameter :: nFilesMaximum = 400 ! max number of files
    integer(kind=int_kind)         :: stream_year_first   ! first year in stream to use
    integer(kind=int_kind)         :: stream_year_last    ! last year in stream to use
    integer(kind=int_kind)         :: model_year_align    ! align stream_year_first 

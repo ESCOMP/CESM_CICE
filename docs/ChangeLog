@@ -1,4 +1,23 @@
 ===============================================================
+cice4_0_20120502
+Originator: tcraig
+Date: Wed May 2 2012
+Version: 4.0
+One-line Summary: support for gridcpl_file (distinct coupling grid)
+	and support for some new resolutions/streams
+
+M       bld/cice.cpl7.template
+M       bld/configure
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_init.F90
+M       src/source/ice_domain.F90
+M       src/source/ice_grid.F90
+M       src/source/ice_atmo.F90
+MM      src/drivers/cpl_share/ice_prescribed_mod.F90
+MM      src/drivers/cpl_mct/ice_comp_mct.F90
+===============================================================
 cice4_0_20120329
 Originator: mvertens
 Date: Mon Mar 29 2012

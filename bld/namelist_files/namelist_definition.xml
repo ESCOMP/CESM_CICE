@@ -99,6 +99,11 @@ Default: 'bin'
 input file for CICE grid info
 </entry>
 
+<entry id="gridcpl_file" type="char*256"  category="cice" group="grid_nml" valid_values=""
+       input_pathname="abs" >
+input file for CICE coupling grid info
+</entry>
+
 <entry id="kmt_file" type="char*256"  category="cice" group="grid_nml" valid_values=""
        input_pathname="abs" >
 input file for CICE grid info
@@ -267,7 +272,7 @@ ifrac variable name on sst/ifrac dataset
 Default: 'ice_cov'
 </entry>
 
-<entry id="stream_fldfilename" type="char*256"  category="cice" group="ice_prescribed_nml" valid_values=""
+<entry id="stream_fldfilename" type="char*256(400)"  category="cice" group="ice_prescribed_nml" valid_values=""
        input_pathname="abs" >
 file name containing sst/ifrac data 
 </entry>

@@ -329,6 +329,7 @@ add_default($nl, 'grid_type');
 add_default($nl, 'grid_format');
 add_default($nl, 'grid_file');
 add_default($nl, 'kmt_file');
+add_default($nl, 'gridcpl_file');
 add_default($nl, 'kcatbound');
 
 ##################################
@@ -642,7 +643,10 @@ sub check_input_files {
 		# Need to strip the quotes
 		$pathname =~ s/['"]//g;
 
-		if ($input_pathname_type eq 'abs') {
+                if ($pathname =~ m/unknown.+/) {
+                   # skip file
+                }
+		elsif ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
                         print OUTFILE "$var = $pathname\n";
                     }
@@ -705,7 +709,12 @@ sub set_abs_filepath {
 
     my $out = $filepath;
     unless ( $filepath =~ /^\// ) {  # unless $filepath starts with a /
-	$out = "$rootdir/$filepath"; # prepend the root directory
+        if ($filepath =~ m/unknown.+/ ) {
+           $out = "$filepath";
+        }
+        else {
+           $out = "$rootdir/$filepath"; # prepend the root directory
+        }
     }
     return $out;
 }

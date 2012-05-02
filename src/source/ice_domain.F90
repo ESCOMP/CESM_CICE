@@ -284,6 +284,7 @@
      endif
      write(nu_diag,'(a26,i6)') '  max_blocks =            ', max_blocks
      write(nu_diag,'(a26,i6,/)')'  Number of ghost cells:  ', nghost
+     call flush_fileunit(nu_diag)
    endif
 
 !----------------------------------------------------------------------

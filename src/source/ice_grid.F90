@@ -49,6 +49,7 @@
          grid_format  , & ! file format ('bin'=binary or 'nc'=netcdf)
          grid_file    , & !  input file for POP grid info
          kmt_file     , & !  input file for POP grid info
+         gridcpl_file , & !  input file for POP coupling grid info
          grid_type        !  current options are rectangular (default),
                           !  displaced_pole, tripole, panarctic
 

@@ -68,7 +68,8 @@
 ! temperature and humidity. NOTE: \\
 ! (1) all fluxes are positive downward,  \\
 ! (2) here, tstar = (WT)/U*, and qstar = (WQ)/U*,  \\
-! (3) wind speeds should all be above a minimum speed (eg. 1.0 m/s). \\
+! (3a) wind speeds should all be above a minimum speed (eg. 1.0 m/s). \\
+! (3b) (wind-ice) speeds should all be above a minimum speed (eg. 1.0 m/s). \\
 !
 ! ASSUME:
 !  The saturation humidity of air at T(K): qsat(T)  (kg/m**3)
@@ -215,6 +216,9 @@
             i = indxi(ij)
             j = indxj(ij)
             vmag(ij) = max(umin, wind(i,j))
+!---------- (3b) option by Andrew Roberts
+!            vmag(ij)   = max(umin, sqrt( (uatm(i,j)-uvel(i,j))**2 + (vatm(i,j)-vvel(i,j))**2) )
+!---------- (3b) option end
             rdn(ij)  = vonkar/log(zref/iceruf) ! neutral coefficient
          enddo   ! ij
 
@@ -227,6 +231,9 @@
             i = indxi(ij)
             j = indxj(ij)
             vmag(ij) = max(umin, wind(i,j))
+!---------- (3b) option by Andrew Roberts
+!            vmag(ij)   = max(umin, sqrt( (uatm(i,j)-uvel(i,j))**2 + (vatm(i,j)-vvel(i,j))**2) )
+!---------- (3b) option end
             rdn(ij)  = sqrt(0.0027_dbl_kind/vmag(ij) &
                     + .000142_dbl_kind + .0000764_dbl_kind*vmag(ij))
          enddo   ! ij

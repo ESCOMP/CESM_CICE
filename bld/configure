@@ -598,6 +598,17 @@ sub set_horiz_grid
     $cfg_ref->set('nlat', $a{'ny'});
     $cfg_ref->set('nlon', $a{'nx'});
 
+    # Need to override for extended grid configurations
+    if ($hgrid =~ 'ar9v2') {
+       $cfg_ref->set('nlat', 720);
+       $cfg_ref->set('nlon', 1280);
+    }
+    # Need to override for extended grid configurations
+    if ($hgrid =~ 'ar9v4') {
+       $cfg_ref->set('nlat', 720);
+       $cfg_ref->set('nlon', 1280);
+    }
+
     # Override resolution settings to configure for SCAM mode.  The override is needed
     # because in SCAM mode the -hgrid option is used to specify the resolution of default
     # datasets from which single data columns are extracted.

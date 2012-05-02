@@ -51,7 +51,7 @@ module ice_comp_mct
   use ice_domain,      only : nblocks, blocks_ice, halo_info, distrb_info, profile_barrier
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
- 		              grid_type, t2ugrid_vector
+ 		              grid_type, t2ugrid_vector, gridcpl_file
   use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
 		              field_loc_center, field_type_scalar, field_type_vector, c100
   use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
@@ -94,6 +94,9 @@ module ice_comp_mct
   private :: ice_import_mct
   private :: ice_SetGSMap_mct
   private :: ice_domain_mct
+  private :: ice_setdef_mct
+  private :: ice_coffset_mct
+  private :: ice_setcoupling_mct
 
 !
 ! !PRIVATE VARIABLES
@@ -101,6 +104,15 @@ module ice_comp_mct
   integer (kind=int_kind) :: ICEID       
 
   logical (kind=log_kind) :: atm_aero
+
+  !--- for coupling on other grid from gridcpl_file ---
+  type(mct_gsMap) :: gsMap_iloc  ! local gsmaps
+  type(mct_gGrid) :: dom_iloc                 ! local domain
+  type(mct_aVect) :: x2i_iloc, i2x_iloc
+  type(mct_rearr) :: rearr_ice2iloc
+  type(mct_rearr) :: rearr_iloc2ice
+  integer         :: nxcpl, nycpl  ! size of coupling grid
+  logical         :: other_cplgrid    ! using different coupling grid
 
 !=======================================================================
 
@@ -135,7 +147,12 @@ contains
     type(mct_gsMap)             , pointer :: gsMap_ice
     type(mct_gGrid)             , pointer :: dom_i
     type(seq_infodata_type)     , pointer :: infodata   ! Input init object
-    integer                               :: lsize
+    integer                               :: lsize,lsize_loc
+    integer                               :: xoff,yoff
+    integer                               :: nxg,nyg
+    integer                               :: k
+ 
+    type(mct_gsMap) :: gsmap_extend  ! local gsmaps
 
     character(len=256) :: drvarchdir         ! driver archive directory
     character(len=32)  :: starttype          ! infodata start type
@@ -156,6 +173,7 @@ contains
     integer            :: mpicom_loc  ! temporary mpicom
 
     real(r8) :: mrss, mrss0,msize,msize0
+    character(len=*), parameter  :: SubName = "ice_init_mct"
 
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -319,12 +337,42 @@ contains
 
     ! Initialize ice gsMap
 
-    call ice_SetGSMap_mct( MPI_COMM_ICE, ICEID, GSMap_ice ) 	
-    lsize = mct_gsMap_lsize(gsMap_ice, MPI_COMM_ICE)
+    if (trim(gridcpl_file) == 'unknown_gridcpl_file') then
+       call ice_SetGSMap_mct( MPI_COMM_ICE, ICEID, GSMap_ice ) 
+       lsize = mct_gsMap_lsize(gsMap_ice, MPI_COMM_ICE)
+       call ice_domain_mct( lsize, gsMap_ice, dom_i )
+       other_cplgrid = .false.
+       nxg = nx_global
+       nyg = ny_global
+    else
+       call ice_SetGSMap_mct( MPI_COMM_ICE, ICEID, GSMap_iloc ) 
+       lsize_loc = mct_gsMap_lsize(gsMap_iloc, MPI_COMM_ICE)
+       call ice_domain_mct( lsize_loc, gsMap_iloc, dom_iloc )
+ 
+       call ice_setcoupling_mct(MPI_COMM_ICE, ICEID, gsmap_ice, dom_i)
+       lsize = mct_gsMap_lsize(gsMap_ice, MPI_COMM_ICE)
+ 
+       call ice_coffset_mct(xoff,yoff,gsmap_iloc,dom_iloc,gsmap_ice,dom_i,MPI_COMM_ICE)
+ 
+       call ice_SetGSMap_mct( MPI_COMM_ICE, ICEID, gsmap_extend, xoff, yoff, nxcpl, nycpl)
+       if (lsize_loc /= mct_gsmap_lsize(gsmap_extend,MPI_COMM_ICE)) then
+          write(nu_diag,*) subname,' :: gsmap_extend extended ',lsize_loc, &
+             mct_gsmap_lsize(gsmap_extend,MPI_COMM_ICE)
+          call shr_sys_abort(subname//' :: error in gsmap_extend extended')
+       endif
 
-    ! Initialize mct ice domain (needs ice initialization info)
-
-    call ice_domain_mct( lsize, gsMap_ice, dom_i )
+       call mct_rearr_init(gsmap_ice, gsmap_extend, MPI_COMM_ICE, rearr_ice2iloc)
+       call mct_rearr_init(gsmap_extend, gsmap_ice, MPI_COMM_ICE, rearr_iloc2ice)
+       call mct_aVect_init(x2i_iloc, rList=seq_flds_x2i_fields, lsize=lsize_loc)
+       call mct_aVect_zero(x2i_iloc)
+       call mct_aVect_init(i2x_iloc, rList=seq_flds_i2x_fields, lsize=lsize_loc)
+       call mct_aVect_zero(i2x_iloc)
+       call mct_gsmap_clean(gsmap_extend)
+ 
+       other_cplgrid = .true.
+       nxg = nxcpl
+       nyg = nycpl
+    endif
 
     ! Inialize mct attribute vectors
 
@@ -338,7 +386,11 @@ contains
     ! Prescribed ice initialization
     !-----------------------------------------------------------------
 
-    call ice_prescribed_init(ICEID, gsmap_ice, dom_i)
+    if (other_cplgrid) then
+       call ice_prescribed_init(ICEID, gsmap_iloc, dom_iloc)
+    else
+       call ice_prescribed_init(ICEID, gsmap_ice, dom_i)
+    endif
 
     !-----------------------------------------------------------------
     ! Get ready for coupling
@@ -350,9 +402,15 @@ contains
     ! Fill in export state for driver
     !---------------------------------------------------------------------------
 
-    call ice_export_mct (i2x_i)  !Send initial state to driver
+    if (other_cplgrid) then
+       call ice_export_mct (i2x_iloc)  !Send initial state to driver
+       call ice_setdef_mct ( i2x_i )
+       call mct_rearr_rearrange(i2x_iloc, i2x_i, rearr_iloc2ice)
+    else
+       call ice_export_mct (i2x_i)  !Send initial state to driver
+    endif
     call seq_infodata_PutData( infodata, ice_prognostic=.true., &
-      ice_nx = nx_global, ice_ny = ny_global )
+      ice_nx = nxg, ice_ny = nyg )
     call t_stopf ('cice_mct_init')
 
     !---------------------------------------------------------------------------
@@ -477,7 +535,12 @@ contains
     
     call t_startf ('cice_import')
     call ice_timer_start(timer_cplrecv)
-    call ice_import_mct( x2i_i )
+    if (other_cplgrid) then
+       call mct_rearr_rearrange(x2i_i, x2i_iloc, rearr_ice2iloc)
+       call ice_import_mct( x2i_iloc )
+    else
+       call ice_import_mct( x2i_i )
+    endif
     call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_import')
  
@@ -685,7 +748,13 @@ contains
     
     call t_startf ('cice_export')
     call ice_timer_start(timer_cplsend)
-    call ice_export_mct ( i2x_i )
+    if (other_cplgrid) then
+       call ice_export_mct ( i2x_iloc )
+       call ice_setdef_mct ( i2x_i )
+       call mct_rearr_rearrange(i2x_iloc, i2x_i, rearr_iloc2ice)
+    else
+       call ice_export_mct ( i2x_i )
+    endif
     call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_export')
     
@@ -774,7 +843,7 @@ contains
 
 !===============================================================================
 
-  subroutine ice_SetGSMap_mct( mpicom, ID, gsMap_ice )
+  subroutine ice_SetGSMap_mct( mpicom, ID, gsMap_ice, xoff, yoff, nxgin, nygin )
 
     !-------------------------------------------------------------------
     !
@@ -784,6 +853,10 @@ contains
     integer        , intent(in)    :: mpicom
     integer        , intent(in)    :: ID
     type(mct_gsMap), intent(inout) :: gsMap_ice
+    integer,optional, intent(in)   :: xoff   ! x offset
+    integer,optional, intent(in)   :: yoff   ! y offset
+    integer,optional, intent(in)   :: nxgin ! global size
+    integer,optional, intent(in)   :: nygin ! global size
     !
     ! Local variables
     !
@@ -792,6 +865,7 @@ contains
     integer     :: lon
     integer     :: i, j, iblk, n, gi
     integer     :: lsize,gsize
+    integer     :: lxoff,lyoff,nxg,nyg
     integer     :: ier
     integer     :: ilo, ihi, jlo, jhi ! beginning and end of physical domain
     type(block) :: this_block         ! block information for current block
@@ -801,6 +875,25 @@ contains
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used
     ! in SCRIP
+
+    lxoff = 1
+    lyoff = 1
+    if (present(xoff)) then
+       lxoff = xoff
+    endif
+    if (present(yoff)) then
+       lyoff = yoff
+    endif
+
+    nxg = nx_global
+    nyg = ny_global
+    if (present(nxgin)) then
+       nxg = nxgin
+    endif
+    if (present(nygin)) then
+       nyg = nygin
+    endif
+    gsize = nxg*nyg
 
     ! number the local grid
 
@@ -820,10 +913,6 @@ contains
     enddo        !iblk
     lsize = n
 
-! not valid for padded decomps
-!    lsize = block_size_x*block_size_y*nblocks
-    gsize = nx_global*ny_global
-
     allocate(gindex(lsize),stat=ier)
     n=0
     do iblk = 1, nblocks
@@ -836,9 +925,9 @@ contains
        do j = jlo, jhi
           do i = ilo, ihi
              n = n+1
-             lon = this_block%i_glob(i)
-             lat = this_block%j_glob(j)
-             gi = (lat-1)*nx_global + lon
+             lon = this_block%i_glob(i) + lxoff - 1
+             lat = this_block%j_glob(j) + lyoff - 1
+             gi = (lat-1)*nxg + lon
              gindex(n) = gi
           enddo !i
        enddo    !j
@@ -1015,8 +1104,6 @@ contains
          workx, worky
     logical (kind=log_kind) :: &
          first_call = .true.
-    logical (kind=log_kind) :: &
-         prescribed_aero_tmp
 
     !-----------------------------------------------------
 
@@ -1425,6 +1512,269 @@ contains
 
   end subroutine ice_domain_mct
 
+!=======================================================================
+  subroutine ice_setdef_mct( i2x_i )   
+
+    implicit none
+
+    !-----------------------------------------------------
+    type(mct_aVect)   , intent(inout) :: i2x_i
+
+    !-----------------------------------------------------
+
+    call mct_aVect_zero(i2x_i)
+
+! tcraig : this is where observations could be read in
+
+  end subroutine ice_setdef_mct
+
+!=======================================================================
+  subroutine ice_coffset_mct(xoff,yoff,gsmap_a,dom_a,gsmap_b,dom_b,mpicom_i)
+    implicit none
+
+    integer        , intent(out)   :: xoff
+    integer        , intent(out)   :: yoff
+    type(mct_gsmap), intent(in)    :: gsmap_a
+    type(mct_ggrid), intent(in)    :: dom_a
+    type(mct_gsmap), intent(in)    :: gsmap_b
+    type(mct_ggrid), intent(in)    :: dom_b
+    integer        , intent(in)    :: mpicom_i
+
+    type(mct_aVect) :: ava
+    type(mct_aVect) :: avag
+    integer :: k1,k2,k
+    integer :: npt
+    integer :: noff,noffg
+    real(dbl_kind) :: x1,y1,x2,y2
+    real(dbl_kind) :: dist,distmin,distming
+    integer :: lsizea,lsizeb
+    integer :: iam,ierr
+    integer, pointer :: ipoints(:)
+    character(len=*),parameter :: subname = "ice_coffset_mct"
+
+    call mpi_comm_rank(mpicom_i,iam,ierr)
+
+    lsizea = mct_aVect_lsize(dom_a%data)
+    lsizeb = mct_aVect_lsize(dom_b%data)
+
+    !--- compute lon/lat at dom_a (local) point (1,1)
+
+    call mct_aVect_init(ava,rList='lon:lat',lsize=lsizea)
+    call mct_aVect_copy(dom_a%data,ava,'lon:lat')
+    call mct_aVect_gather(ava,avag,gsmap_a,0,mpicom_i)
+
+    if (iam == 0) then
+       k1 = mct_aVect_indexRA(avag,'lon',dieWith=subname//'_avag')
+       k2 = mct_aVect_indexRA(avag,'lat',dieWith=subname//'_avag')
+       npt = 1   ! actual corner points screwed up by U average/wraparound
+       npt = nx_global + 2  ! use global point (2,2)
+       x1 = mod(avag%rAttr(k1,npt)+360.0_r8,360.0_r8)
+       y1 = avag%rAttr(k2,npt)
+    endif
+
+    call mct_aVect_clean(avag)
+    call mct_aVect_clean(ava)
+
+    call shr_mpi_bcast(x1,mpicom_i)
+    call shr_mpi_bcast(y1,mpicom_i)
+
+    !--- find x1,y1 point in dom_b (extended grid)
+
+    noff = -1
+    noffg = -1
+
+    call mct_gsMap_orderedPoints(gsMap_b, iam, ipoints)
+    if (size(ipoints) /= lsizeb) then
+       write(nu_diag,*) subname,' size ipoints = ',size(ipoints),lsizeb
+       call shr_sys_abort(subname//' :: error size of ipoints')
+    endif
+
+    k1 = mct_aVect_indexRA(dom_b%data,'lon',dieWith=subname//'_domb')
+    k2 = mct_aVect_indexRA(dom_b%data,'lat',dieWith=subname//'_domb')
+    distmin = 1.0e36
+    do k = 1,lsizeb
+       x2 = mod(dom_b%data%rAttr(k1,k)+360.0_r8,360.0_r8)
+       y2 = dom_b%data%rAttr(k2,k)
+       dist = abs((x1-x2)*(x1-x2))+abs((y1-y2)*(y1-y2))
+       if (dist < distmin) then
+          distmin = dist
+          noff = ipoints(k)
+       endif
+       dist = abs((x1-x2-360.0_r8)*(x1-x2-360.0_r8))+abs((y1-y2)*(y1-y2))
+       if (dist < distmin) then
+          distmin = dist
+          noff = ipoints(k)
+       endif
+       dist = abs((x1-x2+360.0_r8)*(x1-x2+360.0_r8))+abs((y1-y2)*(y1-y2))
+       if (dist < distmin) then
+          distmin = dist
+          noff = ipoints(k)
+       endif
+    enddo
+
+    deallocate(ipoints)
+
+    call shr_mpi_min(distmin,distming,mpicom_i,'distmin',all=.true.)
+
+    if (distming /= distmin) then
+       noff = -1
+    endif
+
+    call shr_mpi_max(noff,noffg,mpicom_i,'noffg',all=.true.)
+
+    ! subtract extra -1 and -nxcpl for point (2,2)
+    xoff = mod(noffg-1-1,nxcpl) + 1
+    yoff = (noffg-1-nxcpl)/nxcpl + 1
+
+    if (iam == 0) then
+       write(nu_diag,*) subname,' :: x1,y1  = ',x1,y1
+       write(nu_diag,*) subname,' :: offset = ',noffg,xoff,yoff
+       call shr_sys_flush(nu_diag)
+    endif
+
+    if (noffg < 1) then
+       call shr_sys_abort(subname//' :: noffg lt 1')
+    endif
+
+  end subroutine ice_coffset_mct
+!=======================================================================
+  subroutine ice_setcoupling_mct(mpicom_i, ICEID, gsmap_i, dom_i)
+
+    implicit none
+    include 'netcdf.inc'
+
+    integer        , intent(in)    :: mpicom_i
+    integer        , intent(in)    :: ICEID
+    type(mct_gsmap), intent(inout) :: gsmap_i
+    type(mct_ggrid), intent(inout) :: dom_i
+
+    integer :: n     ! counter
+    integer :: iam   ! pe rank
+    integer :: npes  ! number of pes
+    integer :: ierr  ! error code
+    integer :: rcode ! error code
+    integer :: nx,ny ! grid size
+    integer :: gsize ! global size
+    integer :: lsize ! local size
+    integer, pointer :: start(:),length(:),pe_loc(:)
+    integer, pointer :: idata(:)
+    real(dbl_kind),pointer :: data(:)
+    type(mct_avect) :: avg, av1
+    integer :: fid,did,vid
+    character(len=8) :: avfld,dofld
+    character(len=*), parameter  :: SubName = "ice_setcoupling_mct"
+
+    call MPI_comm_rank(mpicom_i,iam,ierr)
+    call MPI_comm_size(mpicom_i,npes,ierr)
+
+    allocate(start(npes),length(npes),pe_loc(npes))
+
+    if (iam == 0) then
+       rcode = nf_open(gridcpl_file(1:len_trim(gridcpl_file)),NF_NOWRITE,fid)
+       rcode = nf_inq_dimid (fid, 'ni', did)
+       rcode = nf_inq_dimlen(fid, did, nx)
+       rcode = nf_inq_dimid (fid, 'nj', did)
+       rcode = nf_inq_dimlen(fid, did, ny)
+       gsize = nx*ny
+       nxcpl = nx
+       nycpl = ny
+
+       length = gsize / npes
+       do n = 1,npes
+          if (n <= mod(gsize,npes)) length(n) = length(n) + 1
+       enddo
+
+       start(1) = 1
+       pe_loc(1) = 0
+       do n = 2,npes    
+          pe_loc(n) = n-1
+          start(n) = start(n-1) + length(n-1)
+       enddo
+       if ((start(npes) + length(npes) - 1) /= gsize) then
+          write(nu_diag,*) &
+            subname,' gsize, start, length = ',gsize,start(npes),length(npes)
+          call shr_sys_flush(nu_diag)
+          call shr_sys_abort( SubName//":: decomp inconsistent")
+       endif
+
+       write(nu_diag,*) subname,' read ',trim(gridcpl_file)
+       write(nu_diag,*) subname,' size ',nx,ny,gsize
+    endif
+
+    call shr_mpi_bcast(nxcpl,mpicom_i)
+    call shr_mpi_bcast(nycpl,mpicom_i)
+    call shr_mpi_bcast(gsize,mpicom_i)
+    call mct_gsmap_init(gsmap_i,npes,start,length,pe_loc,0,mpicom_i,ICEID,gsize)
+    deallocate(start,length,pe_loc)
+
+    lsize = mct_gsmap_lsize(gsmap_i,mpicom_i)
+    call mct_gGrid_init( GGrid=dom_i, CoordChars=trim(seq_flds_dom_coord), &
+       OtherChars=trim(seq_flds_dom_other), lsize=lsize )
+    call mct_aVect_zero(dom_i%data)
+
+    ! Determine global gridpoint number attribute, GlobGridNum, which is set automatically by MCT
+
+    call mct_gsMap_orderedPoints(gsMap_i, my_task, idata)
+    call mct_gGrid_importIAttr(dom_i,'GlobGridNum',idata,lsize)
+    deallocate(idata)
+
+    ! Initialize attribute vector with special value
+
+    allocate(data(lsize))
+    data(:) = -9999.0_R8 
+    call mct_gGrid_importRAttr(dom_i,"lat"  ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_i,"lon"  ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_i,"area" ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_i,"aream",data,lsize) 
+    data(:) = 0.0_R8     
+    call mct_gGrid_importRAttr(dom_i,"mask",data,lsize) 
+    call mct_gGrid_importRAttr(dom_i,"frac",data,lsize) 
+    deallocate(data)
+
+    ! Read domain arrays
+
+    if (iam == 0) then
+       call mct_avect_init(avg,rList='fld',lsize=gsize)
+    endif
+
+    do n = 1,5
+
+       if (n == 1) avfld = 'lat'
+       if (n == 1) dofld = 'yc'
+       if (n == 2) avfld = 'lon'
+       if (n == 2) dofld = 'xc'
+       if (n == 3) avfld = 'area'
+       if (n == 3) dofld = 'area'
+       if (n == 4) avfld = 'frac'
+       if (n == 4) dofld = 'frac'
+       if (n == 5) avfld = 'mask'
+       if (n == 5) dofld = 'mask'
+       if (iam == 0) then
+          rcode = nf_inq_varid(fid,trim(dofld),vid)
+          if (n == 5) then
+             allocate(idata(gsize))
+             rcode = nf_get_var_int(fid,vid,idata)
+             avg%rAttr(1,:) = idata
+             deallocate(idata)
+          else
+             rcode = nf_get_var_double(fid,vid,avg%rAttr(1,:))
+          endif
+       endif
+
+       call mct_aVect_scatter(avg,av1,gsmap_i,0,mpicom_i)
+       call mct_aVect_copy(av1,dom_i%data,'fld',avfld)
+
+       if (iam == 0) then
+          call mct_avect_clean(av1)
+       endif
+
+    enddo
+
+    if (iam == 0) then
+       call mct_avect_clean(avg)
+    endif
+
+  end subroutine ice_setcoupling_mct
 !=======================================================================
 ! BOP
 !

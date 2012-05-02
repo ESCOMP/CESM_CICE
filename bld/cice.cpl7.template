@@ -64,6 +64,9 @@ if (\$CICE_MODE == "prescribed") then
    if (\$SSTICE_STREAM == 'CAMDATA') then    
       set stream_domxvarname = "xc"  
       set stream_domyvarname = "yc"  
+   else if (\$SSTICE_STREAM == 'WRFDATA') then    
+      set stream_domxvarname = "xc"  
+      set stream_domyvarname = "yc"  
    else         
       set stream_domxvarname = "lon"  
       set stream_domyvarname = "lat"  
@@ -92,6 +95,12 @@ set ice_ic = 'default'
 if (\$RUN_TYPE == startup) then
   if (\$ICE_GRID =~ *gx* && \$CICE_MODE != prescribed) then
      set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.0001-01-01.\${ICE_GRID}_20080212
+  endif 
+  if ($ICE_GRID =~ *ar9v3 && $CICE_MODE != prescribed) then
+     set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.1989-09-01.ar9v3_20110824.nc
+  endif 
+  if ($ICE_GRID =~ *ar9v4 && $CICE_MODE != prescribed) then
+     set ice_ic = \$DIN_LOC_ROOT/ice/cice/iced.1989-09-01.ar9v3_20110824.nc
   endif 
 else if (\$RUN_TYPE == branch || \$RUN_TYPE == hybrid) then
   if (-e \${RUN_REFCASE}.cice\${inst_string}.r.\${RUN_REFDATE}-\${RUN_REFTOD}.nc) then

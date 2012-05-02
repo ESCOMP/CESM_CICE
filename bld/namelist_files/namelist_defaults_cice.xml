@@ -32,12 +32,28 @@
 <grid_file hgrid="tx0.1v2"  >'ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8'</grid_file> 
 <grid_file hgrid="tx1v1"    >'ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8'</grid_file>
 
+<grid_file hgrid="ar9v1"     >'ice/cice/ar9v1_20090521.grid'       </grid_file>
+<grid_file hgrid="ar9v2"     >'ice/cice/ar9v1_20090521.grid'       </grid_file>
+<grid_file hgrid="ar9v3"     >'ice/cice/ar9v3_20101118.grid'       </grid_file>
+<grid_file hgrid="ar9v4"     >'ice/cice/ar9v3_20101118.grid'       </grid_file>
+<grid_file hgrid="us20"      >'ice/cice/domain.ocn.us20.20110426.nc'</grid_file> 
+
 <kmt_file hgrid="gx1v6"     >'ocn/pop/gx1v6/grid/topography_20090204.ieeei4'</kmt_file> 
 <kmt_file hgrid="gx1v5"     >'ocn/pop/gx1v5/grid/topography_20061229.ieeei4'</kmt_file> 
 <kmt_file hgrid="gx3v5"     >'ocn/pop/gx3v5/grid/topography_20040323.ieeei4'</kmt_file> 
 <kmt_file hgrid="gx3v7"     >'ocn/pop/gx3v7/grid/topography_20100105.ieeei4'</kmt_file> 
 <kmt_file hgrid="tx0.1v2"   >'ocn/pop/tx0.1v2/grid/topography_200709.ieeei4'</kmt_file> 
 <kmt_file hgrid="tx1v1"     >'ocn/pop/tx1v1/grid/topography_20050510.ieeei4'</kmt_file>
+
+<kmt_file hgrid="ar9v1"     >'ice/cice/ar9v1_20090520.kmt'       </kmt_file>
+<kmt_file hgrid="ar9v2"     >'ice/cice/ar9v1_20090520.kmt'       </kmt_file>
+<kmt_file hgrid="ar9v3"     >'ice/cice/ar9v3_20100622.kmt'       </kmt_file>
+<kmt_file hgrid="ar9v4"     >'ice/cice/ar9v3_20110106.kmt'       </kmt_file>
+<kmt_file hgrid="us20"      >'ice/cice/domain.ocn.us20.20110426.nc'</kmt_file> 
+
+<gridcpl_file               >'unknown_gridcpl_file'                </gridcpl_file>
+<gridcpl_file hgrid="ar9v2" >'ice/cice/domain.ocn.ar9v2.090614.nc' </gridcpl_file>
+<gridcpl_file hgrid="ar9v4" >'ice/cice/domain.ocn.ar9v4.100920.nc' </gridcpl_file>
 
 <kcatbound> 0 </kcatbound>
 
