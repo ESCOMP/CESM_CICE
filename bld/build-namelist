@@ -56,9 +56,11 @@ OPTIONS
                            a string containing FORTRAN namelist syntax, e.g.,
                               -namelist "&ice_nml dt=1800 /"
      -silent [-s]          Turns on silent mode - only fatal messages issued.
-     -test                 Enable checking that input datasets exist on local filesystem.
      -verbose              Turn on verbose echoing of informational messages.
      -version [or -v]      Echo the SVN tag name used to check out this CICE distribution.
+     -caseroot             CASEROOT directory variable
+     -scriptsroot          SCRIPTSROOT directory variable
+     -inst_string          INST_STRING variable
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
@@ -90,29 +92,32 @@ my $cfg_cache = "config_cache.xml";       # Default name of configuration cache 
 my $outdirname = ".";                     # Default name of output directory name
 
 #-----------------------------------------------------------------------------------------------
-
 # Process command-line options.
 
-my %opts = ( config         => $cfg_cache,
-	     csmdata        => undef,
-	     help           => 0,
-	     dir            => $outdirname,
-	     silent         => 0,
-	     test           => 0,
+my %opts = ( config      => $cfg_cache,
+	     csmdata     => undef,
+	     help        => 0,
+	     dir         => $outdirname,
+	     silent      => 0,
+	     caseroot    => undef,
+	     scriptsroot => undef,
+	     inst_string => undef,
 	    );
 
 GetOptions(
-    "config=s"                  => \$opts{'config'},
-    "csmdata=s"                 => \$opts{'csmdata'},
-    "d|dir=s"                   => \$opts{'dir'},
-    "h|help"                    => \$opts{'help'},
-    "infile=s"                  => \$opts{'infile'},
-    "inputdata=s"               => \$opts{'inputdata'},
-    "namelist=s"                => \$opts{'namelist'},
-    "s|silent"                  => \$opts{'silent'},
-    "test"                      => \$opts{'test'},
-    "v|verbose"                 => \$opts{'verbose'},
-    "version"                   => \$opts{'version'},
+    "config=s"      => \$opts{'config'},
+    "csmdata=s"     => \$opts{'csmdata'},
+    "d|dir=s"       => \$opts{'dir'},
+    "h|help"        => \$opts{'help'},
+    "infile=s"      => \$opts{'infile'},
+    "inputdata=s"   => \$opts{'inputdata'},
+    "namelist=s"    => \$opts{'namelist'},
+    "s|silent"      => \$opts{'silent'},
+    "v|verbose"     => \$opts{'verbose'},
+    "version"       => \$opts{'version'},
+    "caseroot=s"    => \$opts{'caseroot'},
+    "scriptsroot=s" => \$opts{'scriptsroot'},
+    "inst_string=s" => \$opts{'inst_string'},	   
 )  or usage();
 
 # Give usage message.
@@ -145,27 +150,14 @@ EOF
 
 if ($print>=2) { print "Using CICE configuration cache file $opts{'config'}$eol"; }
 
-# Check that the CCSM inputdata root directory has been specified.  This must be
-# a local or nfs mounted directory.
-my $inputdata_rootdir = undef;
-if (defined($opts{'csmdata'})) {
-    $inputdata_rootdir = $opts{'csmdata'};
+my $CASEROOT;
+my $SCRIPTSROOT;      
+my $INST_STRING;
+if ( defined $opts{'caseroot'} ) {
+    $CASEROOT    = $opts{'caseroot'}; 
+    $SCRIPTSROOT = $opts{'scriptsroot'};       
+    $INST_STRING = $opts{'inst_string'}; 
 }
-elsif (defined $ENV{'CSMDATA'}) {
-    $inputdata_rootdir = $ENV{'CSMDATA'};
-}
-else {
-    die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
-	" or by the CSMDATA environment variable. :";
-}
-
-if ($opts{'test'}) {
-    (-d $inputdata_rootdir)  or  die <<"EOF";
-** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
-EOF
-}
-
-if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
 
 # Validate some of the commandline option values.
 validate_options("commandline", \%opts);
@@ -234,7 +226,6 @@ require Build::NamelistDefaults;
 require Build::Namelist;
 
 #-----------------------------------------------------------------------------------------------
-
 # Create a configuration object from the CICE config_cache.xml file. 
 my $cfg = Build::Config->new($opts{'config'});
 
@@ -252,11 +243,6 @@ my $defaults = Build::NamelistDefaults->new($nl_defaults_file, $cfg);
 my $nl = Build::Namelist->new();
 
 #-----------------------------------------------------------------------------------------------
-
-# Some regular expressions...
-###my $TRUE  = qr/\.true\./i;
-###my $FALSE = qr/\.false\./i;
-# **N.B.** the use of qr// for precompiling regexps isn't supported until perl 5.005.
 my $TRUE  = '\.true\.';
 my $FALSE = '\.false\.';
 
@@ -305,7 +291,75 @@ if (defined $opts{'infile'}) {
 }
 
 #-----------------------------------------------------------------------------------------------
+# Get cice mode - not that cice_mode must be a configure time option since it sets
+# NCAT which is a CPP variable
 
+my $cice_mode = $cfg->get('cice_mode');
+if ($cice_mode ne 'prognostic' && $cice_mode ne 'thermo_only') {
+    add_default($nl, 'prescribed_ice', 'val'=>'.true.');
+} else {
+    add_default($nl, 'prescribed_ice', 'val'=>'.false.');
+}
+
+#-----------------------------------------------------------------------------------------------
+# Determine xml variables
+
+my $inputdata_rootdir = undef;
+my $ICE_GRID;
+my $ICE_DOMAIN_PATH; 
+my $ICE_DOMAIN_FILE;
+my $RUN_TYPE;
+my $RUN_REFCASE;
+my $RUN_REFDATE;
+my $RUN_REFTOD;
+my $SSTICE_GRID_FILENAME;
+my $SSTICE_DATA_FILENAME;
+my $SSTICE_YEAR_ALIGN;   
+my $SSTICE_YEAR_START;   
+my $SSTICE_YEAR_END;     
+my $SSTICE_STREAM;       
+my %xmlvars = ();
+if ( defined $opts{'caseroot'} ) {
+    foreach my $file qw(env_case.xml env_conf.xml env_run.xml env_build.xml) {
+	my $xml  = XML::Lite->new( "${CASEROOT}/$file" );
+	my @e = $xml->elements_by_name('entry');
+	while ( my $e = shift @e ) {
+	    my %a = $e->get_attributes();
+	    $xmlvars{$a{'id'}} = $a{'value'};
+	}
+    }
+    foreach my $attr (keys %xmlvars) {
+	if ( $xmlvars{$attr} =~ m/\$/ ) {$xmlvars{$attr} = expand_env_xml($xmlvars{$attr});}
+	if ( $xmlvars{$attr} =~ m/\$/ ) {$xmlvars{$attr} = expand_env_xml($xmlvars{$attr});}
+    }
+    
+    $ICE_GRID        = $xmlvars{'ICE_GRID'};
+    $ICE_DOMAIN_PATH = $xmlvars{'ICE_DOMAIN_PATH'};
+    $ICE_DOMAIN_FILE = $xmlvars{'ICE_DOMAIN_FILE'};
+    $RUN_TYPE        = $xmlvars{'RUN_TYPE'};
+    $RUN_REFCASE     = $xmlvars{'RUN_REFCASE'};
+    $RUN_REFDATE     = $xmlvars{'RUN_REFDATE'};
+    $RUN_REFTOD      = $xmlvars{'RUN_REFTOD'};
+    if ($cice_mode eq 'prescribed') {
+	$SSTICE_GRID_FILENAME = $xmlvars{'SSTICE_GRID_FILENAME'};
+	$SSTICE_DATA_FILENAME = $xmlvars{'SSTICE_DATA_FILENAME'};
+	$SSTICE_YEAR_ALIGN    = $xmlvars{'SSTICE_YEAR_ALIGN'};
+	$SSTICE_YEAR_START    = $xmlvars{'SSTICE_YEAR_START'};
+	$SSTICE_YEAR_END      = $xmlvars{'SSTICE_YEAR_END'};
+	$SSTICE_STREAM        = $xmlvars{'SSTICE_STREAM'};
+    }
+
+    # Check that the CCSM inputdata root directory has been specified.  This must be
+    # a local or nfs mounted directory.
+    if (defined($opts{'csmdata'})) {
+	$inputdata_rootdir = $opts{'csmdata'};
+    } else {
+	$inputdata_rootdir = $xmlvars{'DIN_LOC_ROOT_CSMDATA'};
+    }
+}
+if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # Add default values for required namelist variables that have not been previously set.
 # This is done either by using the namelist default object, or directly with inline logic.
 
@@ -313,7 +367,27 @@ if (defined $opts{'infile'}) {
 # namelist group: setup_nml      #
 ##################################
 
-add_default($nl, 'ice_ic');
+if ( defined $opts{'caseroot'} ) {
+    if ( $RUN_TYPE eq 'startup' && $cice_mode ne 'prescribed') {
+	add_default($nl, 'ice_ic');
+    }
+    if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {	
+	add_default($nl, 'ice_ic', 'val'=>"default", 'noprepend'=>"1");
+    }
+    if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
+	my $ice_ic;
+	if (-e "${RUN_REFCASE}.cice${INST_STRING}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc") {
+	    $ice_ic = "${RUN_REFCASE}.cice${INST_STRING}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
+	} else {
+	    $ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
+	}
+	add_default($nl, 'ice_ic', 'val'=>"$ice_ic", 'noprepend'=>"1");
+    }
+} else {
+    # This is used for cam mode only
+    add_default($nl, 'ice_ic', 'val'=>'default', 'noprepend'=>"1");
+}
+
 add_default($nl, 'xndt_dyn');
 add_default($nl, 'histfreq');
 add_default($nl, 'histfreq_n');
@@ -325,10 +399,17 @@ add_default($nl, 'lcdf64');
 # namelist group: grid_nml       #
 ##################################
 
-add_default($nl, 'grid_type');
-add_default($nl, 'grid_format');
-add_default($nl, 'grid_file');
-add_default($nl, 'kmt_file');
+if ($cice_mode eq 'prescribed') {
+    add_default($nl, 'grid_type',  'val'=>'latlon');
+    add_default($nl, 'grid_format','val'=>'nc');
+    add_default($nl, 'grid_file',  'val'=>"$ICE_DOMAIN_PATH/${ICE_DOMAIN_FILE}" );
+    add_default($nl, 'kmt_file',   'val'=>"$ICE_DOMAIN_PATH/${ICE_DOMAIN_FILE}" );
+} else {
+    add_default($nl, 'grid_type');
+    add_default($nl, 'grid_format');
+    add_default($nl, 'grid_file');
+    add_default($nl, 'kmt_file');
+}
 add_default($nl, 'gridcpl_file');
 add_default($nl, 'kcatbound');
 
@@ -383,10 +464,15 @@ if ($ntr_aero gt "0") {
 ##################################
 
 add_default($nl, 'processor_shape');
-add_default($nl, 'distribution_type');
-my $distribution_type = $nl->get_value('distribution_type');
-if ($distribution_type =~ 'spacecurve') {
-  add_default($nl, 'distribution_wght');
+
+if (defined $xmlvars{'CICE_DECOMPTYPE'}) {
+    add_default($nl, 'distribution_type', 'val'=>"$xmlvars{'CICE_DECOMPTYPE'}");
+} else {
+    add_default($nl, 'distribution_type');
+    my $distribution_type = $nl->get_value('distribution_type');
+    if ($distribution_type =~ 'spacecurve') {
+	add_default($nl, 'distribution_wght'); 
+    }
 }
 my $distribution_wght = $nl->get_value('distribution_wght');
 if ($distribution_wght =~ 'file') {
@@ -399,26 +485,61 @@ add_default($nl, 'ns_boundary_type');
 # namelist group: ice_prescribed_nml #
 ######################################
 
-my $cice_mode = $cfg->get('cice_mode');
-if ($cice_mode ne 'prognostic' && $cice_mode ne 'thermo_only') {
-    add_default($nl, 'prescribed_ice', 'val'=>'.true.');
-} else {
-    add_default($nl, 'prescribed_ice', 'val'=>'.false.');
-}
 if ($cice_mode eq 'prescribed') {
+    if ( defined $opts{'caseroot'} ) {
+	if ($SSTICE_GRID_FILENAME eq 'UNSET') {
+	    die "SSTICE_GRID_FILENAME must be set for cice prescribed mode \n";
+	}
+	if ($SSTICE_DATA_FILENAME eq 'UNSET') {
+	    die "SSTICE_DATA_FILENAME must be set for cice prescribed mode \n"; 
+	}
+	if ($SSTICE_YEAR_ALIGN eq '-999') {
+	    die "SSTICE_YEAR_ALIGN must be set for cice prescribed mode \n"; 
+	}
+	if ($SSTICE_YEAR_START eq '-999') {
+	    die "SSTICE_YEAR_START must be set for cice prescribed mode \n"; 
+	} 
+	if ($SSTICE_YEAR_END eq '-999') {
+	    die "SSTICE_YEAR_END must be set for cice prescribed mode \n"; 
+	}
+	my $stream_domxvarname;
+	my $stream_domyvarname;
+	if ($SSTICE_STREAM eq 'CAMDATA') {
+	    $stream_domxvarname = "xc";  
+	    $stream_domyvarname = "yc";
+	} elsif ($SSTICE_STREAM eq 'WRFDATA') {
+	    $stream_domxvarname = "xc";  
+	    $stream_domyvarname = "yc";
+	} else {       
+	    $stream_domxvarname = "lon";  
+	    $stream_domyvarname = "lat";
+	}
+	add_default($nl, 'model_year_align',  'val'=>"$SSTICE_YEAR_ALIGN");
+	add_default($nl, 'stream_domtvarname','val'=>"time");
+	add_default($nl, 'stream_domxvarname','val'=>"$stream_domxvarname");
+	add_default($nl, 'stream_domyvarname','val'=>"$stream_domyvarname");
+	add_default($nl, 'stream_domareaname','val'=>"area");
+	add_default($nl, 'stream_dommaskname','val'=>"mask");
+	add_default($nl, 'stream_domfilename','val'=>"$SSTICE_GRID_FILENAME");
+	add_default($nl, 'stream_fldvarname' ,'val'=>"ice_cov");
+	add_default($nl, 'stream_fldfilename','val'=>"$SSTICE_DATA_FILENAME");
+	add_default($nl, 'stream_year_first' ,'val'=>"$SSTICE_YEAR_START");
+	add_default($nl, 'stream_year_last'  ,'val'=>"$SSTICE_YEAR_END");
+    } else {
+	add_default($nl, 'model_year_align');
+	add_default($nl, 'stream_domtvarname');
+	add_default($nl, 'stream_domxvarname');
+	add_default($nl, 'stream_domyvarname');
+	add_default($nl, 'stream_domareaname'); 
+	add_default($nl, 'stream_dommaskname');
+	add_default($nl, 'stream_domfilename');
+	add_default($nl, 'stream_fldvarname' );
+	add_default($nl, 'stream_fldfilename');
+	add_default($nl, 'stream_year_first' );
+	add_default($nl, 'stream_year_last'  );
+    }
     add_default($nl, 'prescribed_ice_fill', 'val'=>'.false.') ;
     add_default($nl, 'stream_mapread', 'val'=>'NOT_SET') ;
-    add_default($nl, 'model_year_align');
-    add_default($nl, 'stream_domtvarname');
-    add_default($nl, 'stream_domxvarname');
-    add_default($nl, 'stream_domyvarname');
-    add_default($nl, 'stream_domareaname'); 
-    add_default($nl, 'stream_dommaskname');
-    add_default($nl, 'stream_domfilename');
-    add_default($nl, 'stream_fldvarname' );
-    add_default($nl, 'stream_fldfilename');
-    add_default($nl, 'stream_year_first' );
-    add_default($nl, 'stream_year_last'  );
 }
 
 ######################################
@@ -478,7 +599,7 @@ add_default($nl, 'f_aisnap');
 add_default($nl, 'f_hisnap');
 
 #-----------------------------------------------------------------------------------------------
-# Write output files
+# Write cice namelist file 
 
 # Sea ice component 
 my @groups = qw(setup_nml grid_nml ice_nml tracer_nml domain_nml ice_prescribed_nml 
@@ -488,19 +609,18 @@ $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# Test that input files exist locally.
-if ($opts{'test'}) {
-    print "Checking whether input datasets exist locally...$eol";
-    check_input_files($nl);
-}
-
-# Output input dataset list.
+# Write cice input dataset list.
 if ($opts{'inputdata'}) {
-    check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+    check_input_files($nl, $inputdata_rootdir, $opts{'inputdata'});
 }
 
 
+#===============================================================================================
+#===============================================================================================
 # END OF MAIN SCRIPT
+#===============================================================================================
+#===============================================================================================
+
 #===============================================================================================
 
 sub add_default {
@@ -517,6 +637,10 @@ sub add_default {
 # defaults object.  If no default value is found this method throws an exception
 # unless the 'nofail' option is set true.
 #
+# Additional optional keyword=>value pairs may be specified.  If the keyword 'val' is
+# not present, then any other keyword=>value pairs that are specified will be used to
+# match attributes in the defaults file.
+#
 # Example 1: Specify the default value $val for the namelist variable $var in namelist
 #            object $nl:
 #
@@ -530,12 +654,13 @@ sub add_default {
 #
 # ***** N.B. ***** This routine assumes the following variables are in package main::
 #  $definition        -- the namelist definition object
-#  $defaults          -- the namelist defaults object
 #  $inputdata_rootdir -- CCSM inputdata root directory
 
     my $nl = shift;     # namelist object
     my $var = shift;    # name of namelist variable
     my %opts = @_;      # options
+
+    my $val = undef;
 
     # Query the definition to find which group the variable belongs to.  Exit if not found.
     my $group = $definition->get_group_name($var);
@@ -544,68 +669,83 @@ sub add_default {
 	die "$ProgName - ERROR: variable \"$var\" not found in namelist definition file $fname.\n";
     }
 
-    # check whether the variable has a value in the namelist object -- if so then skip to end
-    my $val = $nl->get_variable_value($group, $var);
-    if (! defined $val) {
+    # check whether the variable has a value in the namelist object -- if so then return
+    $val = $nl->get_variable_value($group, $var);
+    if (defined $val) {return;}
 
-       # Look for a specified value in the options hash
-
-       if (defined $opts{'val'}) {
-	   $val = $opts{'val'};
-       }
-       # or else get a value from namelist defaults object.
-       # Note that if the 'val' key isn't in the hash, then just pass anything else
-       # in %opts to the get_value method to be used as attributes that are matched
-       # when looking for default values.
-       else {
-	   $val = $defaults->get_value($var, \%opts);
-
-           # Truncate model_version appropriately
-   
-           if ( $var eq "model_version" ) {
-               $val =~ /(URL: https:\/\/[a-zA-Z0-9._-]+\/)([a-zA-Z0-9\/._-]+)(\/bld\/.+)/;
-               $val = $2;
-           }
-       }
-
-       # if no value is found then exit w/ error (unless 'nofail' option set)
-       unless ($val) {
-	   unless ($opts{'nofail'}) {
-	       die "$ProgName - No default value found for $var.\n"  
-	   }
-	   else {
-	       return;
-	   }
-       }
-
-       # query the definition to find out if the variable is an input pathname
-       my $is_input_pathname = $definition->is_input_pathname($var);
-
-       # The default values for input pathnames are relative.  If the namelist
-       # variable is defined to be an absolute pathname, then prepend
-       # the CCSM inputdata root directory.
-       if (not defined $opts{'no_abspath'}) {
-	   if (defined $opts{'set_abspath'}) {
-	       $val = set_abs_filepath($val, $opts{'set_abspath'});
-	   } else {
-	       if ($is_input_pathname eq 'abs') {
-		   $val = set_abs_filepath($val, $inputdata_rootdir);
-	       }
-	   }
-       }
-
-       # query the definition to find out if the variable takes a string value.
-       # The returned string length will be >0 if $var is a string, and 0 if not.
-       my $str_len = $definition->get_str_len($var);
-
-       # If the variable is a string, then add quotes if they're missing
-       if ($str_len > 0) {
-	   $val = quote_string($val);
-       }
-
-       # set the value in the namelist
-       $nl->set_variable_value($group, $var, $val);
+    # Look for a specified value in the options hash
+    if (defined $opts{'val'}) {
+	$val = $opts{'val'};
     }
+    # or else get a value from namelist defaults object.
+    # Note that if the 'val' key isn't in the hash, then just pass anything else
+    # in %opts to the get_value method to be used as attributes that are matched
+    # when looking for default values.
+    else {
+	$val = get_default_value($var, \%opts);
+    }
+
+    # if no value is found then exit w/ error (unless 'nofail' option set)
+    unless (defined $val) {
+	unless ($opts{'nofail'}) {
+	    print "$ProgName - ERROR: No default value found for $var\n".
+		"user defined attributes:\n";
+	    foreach my $key (keys(%opts)) {
+		if ($key ne 'nofail' and $key ne 'val') {
+		    print "key=$key  val=$opts{$key}\n";
+		}
+	    }
+	    die;
+	}
+	else {
+	    return;
+	}
+    }
+
+    # query the definition to find out if the variable is an input pathname
+    my $is_input_pathname = $definition->is_input_pathname($var);
+
+    # The default values for input pathnames are relative.  If the namelist
+    # variable is defined to be an absolute pathname, then prepend
+    # the CCSM inputdata root directory.
+    # TODO: unless ignore_abs is passed as argument - and filename is not equal to 'default'  
+    if ($is_input_pathname eq 'abs') {
+	unless ($opts{'noprepend'}){
+	    if ($val ne 'default') {
+		$val = set_abs_filepath($val, $inputdata_rootdir);
+	    }
+	}
+    }
+
+    # query the definition to find out if the variable takes a string value.
+    # The returned string length will be >0 if $var is a string, and 0 if not.
+    my $str_len = $definition->get_str_len($var);
+
+    # If the variable is a string, then add quotes if they're missing
+    if ($str_len > 0) {
+	$val = quote_string($val);
+    }
+
+    # set the value in the namelist
+    $nl->set_variable_value($group, $var, $val);
+}
+
+#-----------------------------------------------------------------------------------------------
+
+sub get_default_value {
+
+# Return a default value for the requested variable.
+# Return undef if no default found.
+#
+# ***** N.B. ***** This routine assumes the following variables are in package main::
+#  $defaults          -- the namelist defaults object
+#  $uc_defaults       -- the use CASE defaults object
+
+    my $var_name    = lc(shift);   # name of namelist variable (CASE insensitive interface)
+    my $usr_att_ref = shift;       # reference to hash containing user supplied attributes
+
+    # Check in the namelist defaults
+    return $defaults->get_value($var_name, $usr_att_ref);
 
 }
 
@@ -619,10 +759,10 @@ sub check_input_files {
 # ***** N.B. ***** This routine assumes the following variables are in package main::
 #  $definition        -- the namelist definition object
 
-    my $nl = shift;     # namelist object
-    my $inputdata_rootdir = shift;    # if false prints test, else creates inputdata file
-    my $outfile = shift;
-    open(OUTFILE, ">>$outfile") if defined $inputdata_rootdir;
+    my $nl = shift;                 # namelist object
+    my $inputdata_rootdir = shift;  # inputdata root directory
+    my $outfile = shift;            # output file
+    open(OUTFILE, ">$outfile") if defined $inputdata_rootdir;
 
     # Look through all namelist groups
     my @groups = $nl->get_group_names();
@@ -641,43 +781,34 @@ sub check_input_files {
 		# Get pathname of input dataset
 		my $pathname = $nl->get_variable_value($group, $var);
 		# Need to strip the quotes
-		$pathname =~ s/['"]//g;
+		$pathname =~ s/[\'\"]//g;
 
                 if ($pathname =~ m/unknown.+/) {
                    # skip file
                 }
+		elsif ($input_pathname_type eq 'stream') {
+		    if ($pathname =~ m/.*(,).*/) {
+			my @paths = split ",", $pathname, -1;   # The -1 prevents split from stripping trailing nulls
+			foreach my $path (@paths) {
+			    print OUTFILE "$var = $path\n";
+			}
+		    } else {
+			print OUTFILE "$var = $pathname\n";
+		    }			    
+		    
+		} 
 		elsif ($input_pathname_type eq 'abs') {
-                    if ($inputdata_rootdir) {
-                        print OUTFILE "$var = $pathname\n";
-                    }
-                    else {
-		        if (-e $pathname) {  # use -e rather than -f since the absolute pathname
-			                     # might be a directory
-			    print "OK -- found $var = $pathname\n";
-		        }
-		        else {
-			    print "NOT FOUND:  $var = $pathname\n";
-		        }
-                    }
+		    if ($pathname ne 'default') {
+			print OUTFILE "$var = $pathname\n";
 		}
 		elsif ($input_pathname_type =~ m/rel:(.+)/o) {
 		    # The match provides the namelist variable that contains the
 		    # root directory for a relative filename
 		    my $rootdir_var = $1;
 		    my $rootdir = $nl->get_variable_value($group, $rootdir_var);
-		    $rootdir =~ s/['"]//g;
-                    if ($inputdata_rootdir) {
-                        $pathname = "$rootdir/$pathname";
-                        print OUTFILE "$var = $pathname\n";
-                    }
-                    else {
-		        if (-f "$rootdir/$pathname") {
-			    print "OK -- found $var = $rootdir/$pathname\n";
-		        }
-		        else {
-			    print "NOT FOUND:  $var = $rootdir/$pathname\n";
-		        }
-                    }
+		    $rootdir =~ s/[\'\"]//g;
+		    $pathname = "$rootdir/$pathname";
+		    print OUTFILE "$var = $pathname\n";
 		}
 	    }
 	}
@@ -711,16 +842,14 @@ sub set_abs_filepath {
     unless ( $filepath =~ /^\// ) {  # unless $filepath starts with a /
         if ($filepath =~ m/unknown.+/ ) {
            $out = "$filepath";
-        }
-        else {
-           $out = "$rootdir/$filepath"; # prepend the root directory
-        }
+       } else {
+	   $out = "$rootdir/$filepath"; # prepend the root directory
+       }
     }
     return $out;
 }
 
 #-----------------------------------------------------------------------------------------------
-
 
 sub absolute_path {
 #
@@ -823,23 +952,25 @@ sub quote_string {
 
 #-------------------------------------------------------------------------------
 
-sub version {
-# The version is found in CICE ChangeLog file.
-# $cfgdir is set by the configure script to the name of its directory.
+sub expand_env_xml {
 
-    my ($cfgdir) = @_;
+    my $value = shift;
 
-    my $logfile = "$cfgdir/../doc/ChangeLog";
+    my $DIN_LOC_ROOT = $xmlvars{'DIN_LOC_ROOT_CSMDATA'}; 
 
-    my $fh = IO::File->new($logfile, '<') or die "** $ProgName - can't open ChangeLog file: $logfile\n";
-
-    while (my $line = <$fh>) {
-
-	if ($line =~ /^Tag name:\s*(\w+)/ ) {
-	    print "$1\n";
-	    exit;
+    if ( $value =~ m/\$/ ) {
+	$value =~ s/\$//g;
+	foreach my $attr (keys %xmlvars) {
+	    if ($xmlvars{$attr} =~ m/^\$DIN_LOC_ROOT_CSMDATA/) {
+		$xmlvars{$attr} =~ s/^\$DIN_LOC_ROOT_CSMDATA/${DIN_LOC_ROOT}/;
+	    }
+	    if ($value =~ /.*($attr).*/) {
+		$value =~ s/${1}/$xmlvars{$attr}/g;
+	    }
 	}
     }
+    return $value; 
+}	 
+
 
 }
-

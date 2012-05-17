@@ -1,4 +1,37 @@
 ===============================================================
+cice4_0_20120517
+Originator: mvertens
+Date: Wed May 17 2012
+Version: 4.0
+One-line Summary: support for new cice.buildnml.csh and cice.buildexe.csh
+                  configure now called from cice.buildnml.csh and no env
+	          variables needed in build-namelist 
+	
+M       bld/cice.cpl7.template
+A       bld/cice.buildexe.csh
+A       bld/cice.buildnml.csh
+M       bld/build-namelist
+	- much simpler format - all details now in build-namelist
+	
+M       bld/configure
+	- configure called from cpl.buildnml.csh now - so no longer
+	  have backslash in front of $CASEROOT and $CODEROOT  
+M       bld/config_files/definition.xml
+        - add config definition entry for comp_intf	
+M       bld/user_nl_cice
+        - new documentation at top 	
+M       bld/namelist_files/namelist_definition.xml
+	- clean up format of namelist_definition file to make it 
+	  consistent with pop and data models
+M       bld/namelist_files/namelist_defaults_cice.xml
+	- add in new defaults for ice_ic for hgrid values of
+	  gx1v6, gx3v7, ar9v3, ar9v4
+M       src/drivers/cpl_share/ice_pio.F90
+	- use new seq_pio_getiosys calls 
+M       src/drivers/cpl_share/ice_prescribed_mod.F90
+	- use new seq_pio_getiosys calls 
+	
+===============================================================
 cice4_0_20120502
 Originator: tcraig
 Date: Wed May 2 2012

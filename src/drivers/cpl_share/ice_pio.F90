@@ -70,7 +70,7 @@ contains
 !
 ! !INTERFACE: 
    subroutine ice_pio_init(mode, filename, File, clobber, cdf64)
-     use seq_io_mod,       only: seq_io_getiosys, seq_io_getiotype
+     use shr_pio_mod, only: shr_pio_getiosys, shr_pio_getiotype
      
 !
 ! !DESCRIPTION:
@@ -103,8 +103,8 @@ contains
    logical, save :: first_call = .true.
 
 
-   ice_pio_subsystem => seq_io_getiosys(inst_name)
-   pio_iotype =  seq_io_getiotype(inst_name)
+   ice_pio_subsystem => shr_pio_getiosys(inst_name)
+   pio_iotype =  shr_pio_getiotype(inst_name)
 
    if (present(mode) .and. present(filename) .and. present(File)) then
       

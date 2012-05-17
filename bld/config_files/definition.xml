@@ -4,6 +4,10 @@
 
 <config_definition>
 
+<entry id="comp_intf" valid_values="MCT,ESMF" value="MCT">
+CICE build directory; contains .o and .mod files.
+</entry>
+
 <entry id="cice_bld" value=".">
 CICE build directory; contains .o and .mod files.
 </entry>

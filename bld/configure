@@ -67,6 +67,7 @@ OPTIONS
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CICE build directory).
      -cice_mode <mode>   Mode [prognostic | thermo_only | prescribed ]. (default: prognostic)
+     -comp_intf <name>   Component interface to use (ESMF, MCT) (default MCT)
      -bsizex <n>         Size of cice block in first horizontal dimension.
      -bsizey <n>         Size of cice block in second horizontal dimension.
      -maxblocks <n>      Max number of cice blocks per processor.
@@ -121,6 +122,7 @@ GetOptions(
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
     "cice_mode=s"               => \$opts{'cice_mode'},
+    "comp_intf=s"               => \$opts{'comp_intf'},
     "bsizex=s"                  => \$opts{'bsizex'},
     "bsizey=s"                  => \$opts{'bsizey'},
     "maxblocks=s"               => \$opts{'maxblocks'},
@@ -261,6 +263,14 @@ EOF
 }
 
 if ($print>=2) { print "The configuration cache file will be created in $config_cache_file$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# Comp_intf option
+if (defined $opts{'comp_intf'}) {
+    $cfg_ref->set('comp_intf', $opts{'comp_intf'});
+}
+my $comp_intf = $cfg_ref->get('comp_intf');
+if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # Horizontal grid parameters
@@ -530,13 +540,26 @@ sub write_filepath
     my ($file, $cfg_ref) = @_;
     my  $fh = new IO::File;
 
+    my $comp_intf = $cfg_ref->get('comp_intf');
+    my $cpl_dir; 
+    if ( $comp_intf eq "MCT" ) { 
+	$cpl_dir = "cpl_mct";
+    } elsif ( $comp_intf eq "ESMF" ) { 
+	$cpl_dir = "cpl_esmf";
+    } else {
+	die "** comp_intf interface must by MCT or ESMF \n";
+    }
+
+    my $CASEROOT = "$ENV{'CASEROOT'}";
+    my $CODEROOT = "$ENV{'CODEROOT'}";
+
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
-    print $fh "\$CASEROOT/SourceMods/src.cice\n";
-    print $fh "\$CODEROOT/ice/cice/src/drivers/cpl_\$comp\n";
-    print $fh "\$CODEROOT/ice/cice/src/drivers/cpl_share\n";
-    print $fh "\$CODEROOT/ice/cice/src/mpi\n";
-    print $fh "\$CODEROOT/ice/cice/src/source\n";
+    print $fh "$CASEROOT/SourceMods/src.cice\n";
+    print $fh "$CODEROOT/ice/cice/src/drivers/$cpl_dir\n";
+    print $fh "$CODEROOT/ice/cice/src/drivers/cpl_share\n";
+    print $fh "$CODEROOT/ice/cice/src/mpi\n";
+    print $fh "$CODEROOT/ice/cice/src/source\n";
 
     $fh->close;
 }

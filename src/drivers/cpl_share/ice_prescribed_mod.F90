@@ -110,7 +110,7 @@ contains
 !
 ! !INTERFACE: 
  subroutine ice_prescribed_init(compid, gsmap, dom)
-   use seq_io_mod, only : seq_io_getiotype, seq_io_getiosys
+   use shr_pio_mod, only : shr_pio_getiotype, shr_pio_getiosys
 ! !DESCRIPTION:
 !    Prescribed ice initialization - needed to 
 !    work with new shr_strdata module derived type 
@@ -257,8 +257,8 @@ contains
         filename=stream_fldFileName(1:nFile), &
         fldListFile=stream_fldVarName,   &
         fldListModel=stream_fldVarName,  &
-        pio_subsystem=seq_io_getiosys(inst_name), &
-        pio_iotype=seq_io_getiotype(inst_name),   &
+        pio_subsystem=shr_pio_getiosys(inst_name), &
+        pio_iotype=shr_pio_getiotype(inst_name),   &
         fillalgo=trim(fillalgo),       &
         calendar=trim(calendar_type),  &
         mapread=trim(stream_mapread))
