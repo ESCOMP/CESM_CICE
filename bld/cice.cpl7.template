@@ -1,7 +1,5 @@
 #! /bin/csh -f
 
-if !(-d $CASEBUILD) mkdir $CASEBUILD
-
 if ($NINST_ICE > 1) then
    set inst_counter = 1
    set inst_string = ""
@@ -22,7 +20,5 @@ else
    endif
 endif
 
-cp $CODEROOT/ice/cice/bld/cice.buildnml.csh $CASEROOT/Buildconf/.
-cp $CODEROOT/ice/cice/bld/cice.buildexe.csh $CASEROOT/Buildconf/.
 
 

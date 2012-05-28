@@ -528,7 +528,7 @@ chdir( $cwd ) || die <<"EOF";
 ** Trouble changing directory back to $cwd
 **
 EOF
-if ($print) { print "configure done.\n"; }
+if ($print) { print "CICE configure done.\n"; }
 exit;
 
 #-----------------------------------------------------------------------------------------------

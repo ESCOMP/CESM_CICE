@@ -4,7 +4,7 @@ if !(-d $CASEBUILD/ciceconf) mkdir -p $CASEBUILD/ciceconf
 
 
 set hgrid = "-hgrid $ICE_GRID"
-if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}"
+#if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}" TODO - fix this
 
 cd $CASEBUILD/ciceconf || exit -1
 # Invoke cice configure - output will go in $CASEBUILD/ciceconf 
@@ -33,7 +33,8 @@ endif
 set ice_in_filename = ${default_ice_in_filename}${inst_string}
 
 if (-e $CASEROOT/user_nl_cice${inst_string}) then
-  $UTILROOT/Tools/user_nlcreate -user_nl_file $CASEROOT/user_nl_cice${inst_string} -namelist_name cice_inparm >! $CASEBUILD/ciceconf/cesm_namelist 
+  $UTILROOT/Tools/user_nlcreate -user_nl_file $CASEROOT/user_nl_cice${inst_string} \
+	-namelist_name cice_inparm >! $CASEBUILD/ciceconf/cesm_namelist 
 endif
 
 # Invoke cice build-namelist - output will go in $CASEBUILD/ciceconf

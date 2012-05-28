@@ -1,4 +1,19 @@
 ===============================================================
+cice4_0_20120528
+Originator: mvertens
+Date: Wed May 20 2012
+Version: 4.0
+One-line Summary: removed copy of cice.buildnml.csh and cice.buildexe.csh
+                  from cice.cpl7.template
+
+M       bld/cice.cpl7.template
+	- removed copy of cice.buildnml.csh and cice.buildexe.csh
+M       bld/configure
+	- minor print change
+M       bld/cice.buildnml.csh
+        - removal of reference to $ICE_GRID (no longer needed)
+	
+===============================================================
 cice4_0_20120520
 Originator: mvertens
 Date: Wed May 20 2012
