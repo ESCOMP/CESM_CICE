@@ -183,7 +183,6 @@ subroutine ice_run_mct( EClock, cdata, x2d, d2x)
    integer                          :: rc, urc, COMPID
    type(ESMF_State)                 :: import_state, export_state
    type(ESMF_GridComp)              :: ice_comp
-   type(ESMF_State)                 :: import_state, export_state
    type(ESMF_GridComp)              :: ice_comp
    integer                          :: ICEID
    !----------------------------------------------------------------------------

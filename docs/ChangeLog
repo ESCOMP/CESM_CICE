@@ -1,4 +1,18 @@
 ===============================================================
+cice4_0_20120628
+Originator: mvertens
+Date: Wed June 26 2012
+Version: 4.0
+One-line Summary: use $DIN_LOC_ROOT rather than $DIN_LOC_ROOT_CSMDATA
+
+M       bld/cice.buildnml.csh
+	- use ${CASEROOT}/Tools/user_nlcreate not $UTILROOT/Tools/user_nlcreate
+M       bld/build-namelist
+        - replace  $xmlvars{'DIN_LOC_ROOT_CSMDATA'} with $xmlvars{'DIN_LOC_ROOT'}
+M       src/drivers/cpl_esmf/ice_comp_mct.F90
+	- intel compiler bug fix
+	
+===============================================================
 cice4_0_20120528
 Originator: mvertens
 Date: Wed May 20 2012

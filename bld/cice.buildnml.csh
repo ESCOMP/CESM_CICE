@@ -33,7 +33,7 @@ endif
 set ice_in_filename = ${default_ice_in_filename}${inst_string}
 
 if (-e $CASEROOT/user_nl_cice${inst_string}) then
-  $UTILROOT/Tools/user_nlcreate -user_nl_file $CASEROOT/user_nl_cice${inst_string} \
+  ${CASEROOT}/Tools/user_nlcreate -user_nl_file $CASEROOT/user_nl_cice${inst_string} \
 	-namelist_name cice_inparm >! $CASEBUILD/ciceconf/cesm_namelist 
 endif
 

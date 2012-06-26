@@ -355,7 +355,7 @@ if ( defined $opts{'caseroot'} ) {
     if (defined($opts{'csmdata'})) {
 	$inputdata_rootdir = $opts{'csmdata'};
     } else {
-	$inputdata_rootdir = $xmlvars{'DIN_LOC_ROOT_CSMDATA'};
+	$inputdata_rootdir = $xmlvars{'DIN_LOC_ROOT'};
     }
 }
 if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
