@@ -1,4 +1,12 @@
 ===============================================================
+cice4_0_20120712
+Originator: jedwards
+Date:  July 12 2012
+Version: 4.0
+One-line Summary: Reduce resolution of time in history attribute netcdf
+M           38650   src/drivers/cpl_share/ice_history_write.F90
+                   
+===============================================================
 cice4_0_20120628
 Originator: mvertens
 Date: Wed June 26 2012

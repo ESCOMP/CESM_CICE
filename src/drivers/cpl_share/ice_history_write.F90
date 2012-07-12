@@ -451,9 +451,9 @@
       call date_and_time(date=current_date, time=current_time)
       write(start_time,1000) current_date(1:4), current_date(5:6), &
            current_date(7:8), current_time(1:2), &
-           current_time(3:4), current_time(5:8)
+           current_time(3:4)
 1000  format('This dataset was created on ', &
-           a,'-',a,'-',a,' at ',a,':',a,':',a)
+           a,'-',a,'-',a,' at ',a,':',a)
 
       status = pio_put_att(File,pio_global,'history',start_time)
 
