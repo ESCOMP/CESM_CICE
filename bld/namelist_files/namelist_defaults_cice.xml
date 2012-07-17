@@ -66,6 +66,11 @@
 <!--------------------------->
 
 <ndte> 120 </ndte> 
+<maskhalo_dyn>.true.</maskhalo_dyn>
+<maskhalo_remap>.true.</maskhalo_remap>
+<maskhalo_bound>.true.</maskhalo_bound>
+<maskhalo_stress>.true.</maskhalo_stress>
+<splitcomm_dyn>.false.</splitcomm_dyn>
 
 <!--- ice albedos --->
 

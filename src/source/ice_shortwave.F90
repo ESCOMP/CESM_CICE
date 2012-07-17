@@ -55,6 +55,9 @@
       use ice_domain_size
       use ice_constants
       use ice_blocks
+      use ice_diagnostics
+      use ice_communicate, only: my_task
+      use perf_mod, only: t_startf, t_stopf, t_barrierf
 !
 !EOP
 !
@@ -187,6 +190,8 @@
       ! for delta Eddington
       real (kind=dbl_kind) :: &
          exp_min              ! minimum exponential value
+      logical,save :: tflag = .false.   ! timer flag
+      character(len=1) :: tstr    ! timer string
 
 !=======================================================================
 
@@ -1511,8 +1516,6 @@
 !
       use ice_calendar
       use ice_state, only: nt_aero, tr_aero
-! BPB 8 February 2007  For diagnostic prints
-      use ice_diagnostics
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -1638,7 +1641,7 @@
          aidfl       ! near-ir, diffuse, albedo (fraction) 
 
 !-----------------------------------------------------------------------
- 
+
       do j = 1, ny_block
       do i = 1, nx_block
          ! zero storage albedos and fluxes for accumulation over surface types:
@@ -1722,6 +1725,8 @@
       enddo                     ! ij
 
       ! calculate bare sea ice
+      if (tflag) call t_startf('cice_swdedd_computedEdd1')
+      tstr = '1'
       call compute_dEdd                                    &
             (nx_block,ny_block,                            &
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
@@ -1732,6 +1737,7 @@
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
+      if (tflag) call t_stopf('cice_swdedd_computedEdd1')
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
@@ -1773,6 +1779,8 @@
       enddo                     ! ij
 
       ! calculate snow covered sea ice
+      if (tflag) call t_startf('cice_swdedd_computedEdd2')
+      tstr = '2'
       call compute_dEdd                                    &
             (nx_block,ny_block,                            &
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
@@ -1783,6 +1791,7 @@
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
+      if (tflag) call t_stopf('cice_swdedd_computedEdd2')
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
@@ -1824,6 +1833,8 @@
       enddo                     ! ij
 
       ! calculate ponded ice
+      if (tflag) call t_startf('cice_swdedd_computedEdd3')
+      tstr = '3'
       call compute_dEdd                                    &
             (nx_block,ny_block,                            &
              icells_DE, indxi_DE, indxj_DE, fnidr, coszen, &
@@ -1834,6 +1845,7 @@
                                   fswsfc,   fswint,        &
                                   fswthru,  Sswabs(:,:,:), &
                                   Iswabs)
+      if (tflag) call t_stopf('cice_swdedd_computedEdd3')
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
@@ -2634,6 +2646,7 @@
       ! begin spectral loop
       do ns = 1, nspint
  
+        if (tflag) call t_startf('cice_computededd1_'//tstr)
         ! set optical properties of air/snow/pond overlying sea ice
         do ij = 1, icells_DE
           i = indxi_DE(ij)
@@ -2751,7 +2764,9 @@
             enddo       ! k
           endif        ! srftyp
         enddo         ! ij ... optical properties above sea ice set
+        if (tflag) call t_stopf('cice_computededd1_'//tstr)
 
+        if (tflag) call t_startf('cice_computededd2_'//tstr)
         ! set optical properties of sea ice
         kii = nslyr + 1
         do ij = 1, icells_DE
@@ -2892,6 +2907,7 @@
             endif        ! small pond depth transition to bare sea ice
           endif         ! srftyp  
         enddo          ! ij ... optical properties of sea ice set
+        if (tflag) call t_stopf('cice_computededd2_'//tstr)
  
         ! set reflectivities for ocean underlying sea ice
         if(ns == 1) then
@@ -2918,12 +2934,16 @@
         ! underlying ocean and combine successive layers upwards to
         ! the surface; see comments in solution_dEdd for more details.
  
-        call solution_dEdd                                    &
-            (nx_block, ny_block,                              &
-             icells_DE, indxi_DE,  indxj_DE,  coszen, srftyp, &
-             tau,       w0,        g,         albodr, albodf, &
-             trndir,    trntdr,    trndif,    rupdir, rupdif, &
-             rdndif)
+        if (icells_DE > 0) then
+           if (tflag) call t_startf('cice_computededdsoln_'//tstr)
+           call solution_dEdd                                    &
+               (nx_block, ny_block,                              &
+                icells_DE, indxi_DE,  indxj_DE,  coszen, srftyp, &
+                tau,       w0,        g,         albodr, albodf, &
+                trndir,    trntdr,    trndif,    rupdir, rupdif, &
+                rdndif)
+           if (tflag) call t_stopf('cice_computededdsoln_'//tstr)
+        endif
 
         ! the interface reflectivities and transmissivities required
         ! to evaluate interface fluxes are returned from solution_dEdd;
@@ -2936,6 +2956,7 @@
         !                 k
         !       --------------------- 
 
+        if (tflag) call t_startf('cice_computededd4_'//tstr)
         do ij = 1, icells_DE
           i = indxi_DE(ij)
           j = indxj_DE(ij)
@@ -2958,12 +2979,14 @@
             fdifdn(k,ij) = trndif(k,ij)*refk
           enddo       ! k 
         enddo       ! ij
+        if (tflag) call t_stopf('cice_computededd4_'//tstr)
  
         ! calculate final surface albedos and fluxes-
         ! all absorbed flux above ksrf is included in surface absorption
 
         if( ns == 1) then      ! visible
 
+          if (tflag) call t_startf('cice_computededd5_'//tstr)
           do ij = 1, icells_DE
             i = indxi_DE(ij)
             j = indxj_DE(ij)
@@ -3034,9 +3057,11 @@
                (fdifdn(kp,ij)-fdifup(kp,ij))*swvdf(i,j))
             enddo       ! k
           enddo        ! ij
+          if (tflag) call t_stopf('cice_computededd5_'//tstr)
 
         else !if(ns > 1) then  ! near IR
 
+          if (tflag) call t_startf('cice_computededd6_'//tstr)
           do ij = 1, icells_DE
             i = indxi_DE(ij)
             j = indxj_DE(ij)
@@ -3120,6 +3145,7 @@
                  *wghtns(ij,ns)
             enddo       ! k
           enddo        ! ij
+          if (tflag) call t_stopf('cice_computededd6_'//tstr)
 
         endif        ! ns = 1, ns > 1
 
@@ -3263,6 +3289,7 @@
          rupdir  , & ! reflectivity to direct radiation for layers below
          rupdif  , & ! reflectivity to diffuse radiation for layers below
          rdndif      ! reflectivity to diffuse radiation for layers above
+
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -3334,7 +3361,7 @@
          tdif_a  , & ! layer transmission to diffuse radiation from above
          tdif_b  , & ! layer transmission to diffuse radiation from below
          trnlay      ! solar beam transm for layer (direct beam only)
- 
+
       integer (kind=int_kind) :: & 
          i       , & ! longitude index
          j       , & ! latitude index
@@ -3491,29 +3518,33 @@
       ! the interface just above a given layer is less than trmin, then no
       ! Delta-Eddington computation for that layer is done.
 
+      if (tflag) call t_startf('cice_solEdd1x_'//tstr)
       do ij = 1, icells_DE 
-         i = indxi_DE(ij)
-         j = indxj_DE(ij)
+        ! if (tflag) call t_startf('cice_solEdd1ij_'//tstr)
+        i = indxi_DE(ij)
+        j = indxj_DE(ij)
+        ! if (tflag) call t_stopf('cice_solEdd1ij_'//tstr)
 
         ! begin main level loop
+        ! if (tflag) call t_startf('cice_solEdd1kl_'//tstr)
         do k=0,klev
  
-        ! initialize current layer properties to zero; only if total
-        ! transmission to the top interface of the current layer exceeds the
-        ! minimum, will these values be computed below:
-        if ( k > 0 ) then  
-            ! Calculate the solar beam transmission, total transmission, and
-            ! reflectivity for diffuse radiation from below at interface k, 
-            ! the top of the current layer k:
-            !
-            !              layers       interface
-            !         
-            !       ---------------------  k-1 
-            !                k-1
-            !       ---------------------  k
-            !                 k
-            !       ---------------------  
-
+           ! initialize current layer properties to zero; only if total
+           ! transmission to the top interface of the current layer exceeds the
+           ! minimum, will these values be computed below:
+           if ( k > 0 ) then  
+              ! if (tflag) call t_startf('cice_solEdd1k0_'//tstr)
+              ! Calculate the solar beam transmission, total transmission, and
+              ! reflectivity for diffuse radiation from below at interface k, 
+              ! the top of the current layer k:
+              !
+              !              layers       interface
+              !         
+              !       ---------------------  k-1 
+              !                k-1
+              !       ---------------------  k
+              !                 k
+              !       ---------------------  
               trndir(k,ij) = trndir(k-1,ij)*trnlay(k-1,ij)
               refkm1        = c1/(c1 - rdndif(k-1,ij)*rdif_a(k-1,ij))
               tdrrdir       = trndir(k-1,ij)*rdir(k-1,ij)
@@ -3523,179 +3554,193 @@
               rdndif(k,ij) = rdif_b(k-1,ij) + &
                 (tdif_b(k-1,ij)*rdndif(k-1,ij)*refkm1*tdif_a(k-1,ij))
               trndif(k,ij) = trndif(k-1,ij)*refkm1*tdif_a(k-1,ij)
-        endif       ! k > 0  
+              ! if (tflag) call t_stopf('cice_solEdd1k0_'//tstr)
+           endif       ! k > 0  
  
-        ! compute next layer Delta-eddington solution only if total transmission
-        ! of radiation to the interface just above the layer exceeds trmin.
-          if (trntdr(k,ij) > trmin ) then
-
-        ! calculation over layers with penetrating radiation
+           ! compute next layer Delta-eddington solution only if total transmission
+           ! of radiation to the interface just above the layer exceeds trmin.
+      
+           if (trntdr(k,ij) > trmin ) then
  
-           tautot  = tau(k,ij)
-           wtot    = w0(k,ij)
-           gtot    = g(k,ij)
-           ftot    = gtot*gtot
+              ! calculation over layers with penetrating radiation
  
-           ts   = taus(wtot,ftot,tautot)
-           ws   = omgs(wtot,ftot)
-           gs   = asys(gtot,ftot)
-           lm   = el(ws,gs)
-           ue   = u(ws,gs,lm)
-
-           ! compute level of fresnel refraction
-           if( srftyp(i,j) < 2 ) then
-             ! if snow over sea ice or bare sea ice, fresnel level is
-             ! at base of sea ice SSL (and top of the sea ice DL); the
-             ! snow SSL counts for one, then the number of snow layers,
-             ! then the sea ice SSL which also counts for one:
-             kfrsnl = nslyr + 2 
-           else
-             ! if ponded sea ice, fresnel level is the top of the pond 
-             kfrsnl = 0
-           endif
-
-           ! mu0 is cosine solar zenith angle above the fresnel level; make 
-           ! sure mu0 is large enough for stable and meaningful radiation
-           ! solution: .01 is like sun just touching horizon with its lower edge
-
-           mu0  = max(coszen(i,j),p01)
-
-           ! mu0n is cosine solar zenith angle used to compute the layer
-           ! Delta-Eddington solution; it is initially computed to be the
-           ! value below the fresnel level, i.e. the cosine solar zenith 
-           ! angle below the fresnel level for the refracted solar beam:
-
-           mu0n = sqrt(c1-((c1-mu0*mu0)/(refindx*refindx)))
-
-           ! if level k is above fresnel level and the cell is non-pond, use the
-           ! non-refracted beam instead
-
-           if( srftyp(i,j) < 2 .and. k < kfrsnl ) mu0n = mu0
+              ! if (tflag) call t_startf('cice_solEdd1c1_'//tstr)
+              tautot  = tau(k,ij)
+              wtot    = w0(k,ij)
+              gtot    = g(k,ij)
+              ftot    = gtot*gtot
  
-           extins = max(exp_min, exp(-lm*ts))
-           ne = n(ue,extins)
- 
-           ! first calculation of rdif, tdif using Delta-Eddington formulas
+              ts   = taus(wtot,ftot,tautot)
+              ws   = omgs(wtot,ftot)
+              gs   = asys(gtot,ftot)
+              lm   = el(ws,gs)
+              ue   = u(ws,gs,lm)
+              ! if (tflag) call t_stopf('cice_solEdd1c1_'//tstr)
 
-           rdif_a(k,ij) = (ue+c1)*(ue-c1)*(c1/extins - extins)/ne
-           tdif_a(k,ij) = c4*ue/ne
- 
-           ! evaluate rdir,tdir for direct beam
-           trnlay(k,ij) = max(exp_min, exp(-ts/mu0n))
-           alp = alpha(ws,mu0n,gs,lm)
-           gam = gamma(ws,mu0n,gs,lm)
-           apg = alp + gam
-           amg = alp - gam
-           rdir(k,ij) = amg*(tdif_a(k,ij)*trnlay(k,ij) - c1) + &
-                       apg*rdif_a(k,ij)
-           tdir(k,ij) = apg*tdif_a(k,ij) + &
-                       (amg*rdif_a(k,ij) - (apg-c1))*trnlay(k,ij)
- 
-           ! recalculate rdif,tdif using direct angular integration over rdir,tdir,
-           ! since Delta-Eddington rdif formula is not well-behaved (it is usually
-           ! biased low and can even be negative); use ngmax angles and gaussian
-           ! integration for most accuracy:
-           swt = c0
-           smr = c0
-           smt = c0
-           do ng=1,ngmax
-             mu  = gauspt(ng)
-             gwt = gauswt(ng)
-             swt = swt + mu*gwt
-             trn = max(exp_min, exp(-ts/mu))
-             alp = alpha(ws,mu,gs,lm)
-             gam = gamma(ws,mu,gs,lm)
-             apg = alp + gam
-             amg = alp - gam
-             rdr = amg*(tdif_a(k,ij)*trn-c1) + &
-                   apg*rdif_a(k,ij)
-             tdr = apg*tdif_a(k,ij) + &
-                   (amg*rdif_a(k,ij)-(apg-c1))*trn
-             smr = smr + mu*rdr*gwt
-             smt = smt + mu*tdr*gwt
-           enddo      ! ng
-           rdif_a(k,ij) = smr/swt
-           tdif_a(k,ij) = smt/swt
- 
-           ! homogeneous layer
-           rdif_b(k,ij) = rdif_a(k,ij)
-           tdif_b(k,ij) = tdif_a(k,ij)
- 
-           ! add fresnel layer to top of desired layer if either 
-           ! air or snow overlies ice; we ignore refraction in ice 
-           ! if a melt pond overlies it:
+              ! if (tflag) call t_startf('cice_solEdd1c2_'//tstr)
+              ! compute level of fresnel refraction
+              if( srftyp(i,j) < 2 ) then
+                ! if snow over sea ice or bare sea ice, fresnel level is
+                ! at base of sea ice SSL (and top of the sea ice DL); the
+                ! snow SSL counts for one, then the number of snow layers,
+                ! then the sea ice SSL which also counts for one:
+                kfrsnl = nslyr + 2 
+              else
+                ! if ponded sea ice, fresnel level is the top of the pond 
+                kfrsnl = 0
+              endif
 
-           if( k == kfrsnl ) then
-             ! compute fresnel reflection and transmission amplitudes
-             ! for two polarizations: 1=perpendicular and 2=parallel to
-             ! the plane containing incident, reflected and refracted rays.
-             R1 = (mu0 - refindx*mu0n) / & 
-                  (mu0 + refindx*mu0n)
-             R2 = (refindx*mu0 - mu0n) / &
-                  (refindx*mu0 + mu0n)
-             T1 = c2*mu0 / &
-                  (mu0 + refindx*mu0n)
-             T2 = c2*mu0 / &
-                  (refindx*mu0 + mu0n)
- 
-             ! unpolarized light for direct beam
-             Rf_dir_a = p5 * (R1*R1 + R2*R2)
-             Tf_dir_a = p5 * (T1*T1 + T2*T2)*refindx*mu0n/mu0
- 
-             ! precalculated diffuse reflectivities and transmissivities
-             ! for incident radiation above and below fresnel layer, using
-             ! the direct albedos and accounting for complete internal
-             ! reflection from below; precalculated because high order
-             ! number of gaussian points (~256) is required for convergence:
- 
-             ! above
-             Rf_dif_a = cp063
-             Tf_dif_a = c1 - Rf_dif_a
-             ! below
-             Rf_dif_b = cp455
-             Tf_dif_b = c1 - Rf_dif_b
+              ! mu0 is cosine solar zenith angle above the fresnel level; make 
+              ! sure mu0 is large enough for stable and meaningful radiation
+              ! solution: .01 is like sun just touching horizon with its lower edge
 
-             ! the k = kfrsnl layer properties are updated to combined 
-             ! the fresnel (refractive) layer, always taken to be above
-             ! the present layer k (i.e. be the top interface):
+              mu0  = max(coszen(i,j),p01)
 
-             rintfc   = c1 / (c1-Rf_dif_b*rdif_a(kfrsnl,ij))
-             tdir(kfrsnl,ij)   = Tf_dir_a*tdir(kfrsnl,ij) + &
-                                  Tf_dir_a*rdir(kfrsnl,ij) * &
-                                  Rf_dif_b*rintfc*tdif_a(kfrsnl,ij)
-             rdir(kfrsnl,ij)   = Rf_dir_a + &
-                                  Tf_dir_a*rdir(kfrsnl,ij) * &
-                                  rintfc*Tf_dif_b
-             rdif_a(kfrsnl,ij) = Rf_dif_a + &
-                                  Tf_dif_a*rdif_a(kfrsnl,ij) * &
-                                  rintfc*Tf_dif_b
-             rdif_b(kfrsnl,ij) = rdif_b(kfrsnl,ij) + &
-                                  tdif_b(kfrsnl,ij)*Rf_dif_b * &
-                                  rintfc*tdif_a(kfrsnl,ij)
-             tdif_a(kfrsnl,ij) = Tf_dif_a*rintfc*tdif_a(kfrsnl,ij)
-             tdif_b(kfrsnl,ij) = tdif_b(kfrsnl,ij)*rintfc*Tf_dif_b
+              ! mu0n is cosine solar zenith angle used to compute the layer
+              ! Delta-Eddington solution; it is initially computed to be the
+              ! value below the fresnel level, i.e. the cosine solar zenith 
+              ! angle below the fresnel level for the refracted solar beam:
 
-             ! update trnlay to include fresnel transmission
-             trnlay(kfrsnl,ij) = Tf_dir_a*trnlay(kfrsnl,ij)
-           endif      ! k = kfrsnl
+              mu0n = sqrt(c1-((c1-mu0*mu0)/(refindx*refindx)))
+
+              ! if level k is above fresnel level and the cell is non-pond, use the
+              ! non-refracted beam instead
+
+              if( srftyp(i,j) < 2 .and. k < kfrsnl ) mu0n = mu0
+              ! if (tflag) call t_stopf('cice_solEdd1c2_'//tstr)
+ 
+              ! if (tflag) call t_startf('cice_solEdd1c3_'//tstr)
+              extins = max(exp_min, exp(-lm*ts))
+              ne = n(ue,extins)
+ 
+              ! first calculation of rdif, tdif using Delta-Eddington formulas
+
+              rdif_a(k,ij) = (ue+c1)*(ue-c1)*(c1/extins - extins)/ne
+              tdif_a(k,ij) = c4*ue/ne
+ 
+              ! evaluate rdir,tdir for direct beam
+              trnlay(k,ij) = max(exp_min, exp(-ts/mu0n))
+              alp = alpha(ws,mu0n,gs,lm)
+              gam = gamma(ws,mu0n,gs,lm)
+              apg = alp + gam
+              amg = alp - gam
+              rdir(k,ij) = amg*(tdif_a(k,ij)*trnlay(k,ij) - c1) + &
+                           apg*rdif_a(k,ij)
+              tdir(k,ij) = apg*tdif_a(k,ij) + &
+                          (amg*rdif_a(k,ij) - (apg-c1))*trnlay(k,ij)
+              ! if (tflag) call t_stopf('cice_solEdd1c3_'//tstr)
+ 
+              ! recalculate rdif,tdif using direct angular integration over rdir,tdir,
+              ! since Delta-Eddington rdif formula is not well-behaved (it is usually
+              ! biased low and can even be negative); use ngmax angles and gaussian
+              ! integration for most accuracy:
+              ! if (tflag) call t_startf('cice_solEdd1ng_'//tstr)
+              swt = c0
+              smr = c0
+              smt = c0
+              do ng=1,ngmax
+                mu  = gauspt(ng)
+                gwt = gauswt(ng)
+                swt = swt + mu*gwt
+                trn = max(exp_min, exp(-ts/mu))
+                alp = alpha(ws,mu,gs,lm)
+                gam = gamma(ws,mu,gs,lm)
+                apg = alp + gam
+                amg = alp - gam
+                rdr = amg*(tdif_a(k,ij)*trn-c1) + &
+                      apg*rdif_a(k,ij)
+                tdr = apg*tdif_a(k,ij) + &
+                     (amg*rdif_a(k,ij)-(apg-c1))*trn
+                smr = smr + mu*rdr*gwt
+                smt = smt + mu*tdr*gwt
+              enddo      ! ng
+              rdif_a(k,ij) = smr/swt
+              tdif_a(k,ij) = smt/swt
+
+              ! homogeneous layer
+              rdif_b(k,ij) = rdif_a(k,ij)
+              tdif_b(k,ij) = tdif_a(k,ij)
+              ! if (tflag) call t_stopf('cice_solEdd1ng_'//tstr)
+ 
+              ! add fresnel layer to top of desired layer if either 
+              ! air or snow overlies ice; we ignore refraction in ice 
+              ! if a melt pond overlies it:
+
+              if( k == kfrsnl ) then
+                 ! if (tflag) call t_startf('cice_solEdd1kf_'//tstr)
+                 ! compute fresnel reflection and transmission amplitudes
+                 ! for two polarizations: 1=perpendicular and 2=parallel to
+                 ! the plane containing incident, reflected and refracted rays.
+                 R1 = (mu0 - refindx*mu0n) / & 
+                      (mu0 + refindx*mu0n)
+                 R2 = (refindx*mu0 - mu0n) / &
+                      (refindx*mu0 + mu0n)
+                 T1 = c2*mu0 / &
+                      (mu0 + refindx*mu0n)
+                 T2 = c2*mu0 / &
+                      (refindx*mu0 + mu0n)
+ 
+                 ! unpolarized light for direct beam
+                 Rf_dir_a = p5 * (R1*R1 + R2*R2)
+                 Tf_dir_a = p5 * (T1*T1 + T2*T2)*refindx*mu0n/mu0
+ 
+                 ! precalculated diffuse reflectivities and transmissivities
+                 ! for incident radiation above and below fresnel layer, using
+                 ! the direct albedos and accounting for complete internal
+                 ! reflection from below; precalculated because high order
+                 ! number of gaussian points (~256) is required for convergence:
+ 
+                 ! above
+                 Rf_dif_a = cp063
+                 Tf_dif_a = c1 - Rf_dif_a
+                 ! below
+                 Rf_dif_b = cp455
+                 Tf_dif_b = c1 - Rf_dif_b
+
+                 ! the k = kfrsnl layer properties are updated to combined 
+                 ! the fresnel (refractive) layer, always taken to be above
+                 ! the present layer k (i.e. be the top interface):
+
+                 rintfc   = c1 / (c1-Rf_dif_b*rdif_a(kfrsnl,ij))
+                 tdir(kfrsnl,ij)   = Tf_dir_a*tdir(kfrsnl,ij) + &
+                                     Tf_dir_a*rdir(kfrsnl,ij) * &
+                                     Rf_dif_b*rintfc*tdif_a(kfrsnl,ij)
+                 rdir(kfrsnl,ij)   = Rf_dir_a + &
+                                     Tf_dir_a*rdir(kfrsnl,ij) * &
+                                     rintfc*Tf_dif_b
+                 rdif_a(kfrsnl,ij) = Rf_dif_a + &
+                                     Tf_dif_a*rdif_a(kfrsnl,ij) * &
+                                     rintfc*Tf_dif_b
+                 rdif_b(kfrsnl,ij) = rdif_b(kfrsnl,ij) + &
+                                     tdif_b(kfrsnl,ij)*Rf_dif_b * &
+                                     rintfc*tdif_a(kfrsnl,ij)
+                 tdif_a(kfrsnl,ij) = Tf_dif_a*rintfc*tdif_a(kfrsnl,ij)
+                 tdif_b(kfrsnl,ij) = tdif_b(kfrsnl,ij)*rintfc*Tf_dif_b
+
+                 ! update trnlay to include fresnel transmission
+                 trnlay(kfrsnl,ij) = Tf_dir_a*trnlay(kfrsnl,ij)
+                 ! if (tflag) call t_stopf('cice_solEdd1kf_'//tstr)
+              endif      ! k = kfrsnl
 
           endif ! trntdr(k,ij) > trmin
 
         enddo       ! k   end main level loop
 
-      ! compute total direct beam transmission, total transmission, and
-      ! reflectivity for diffuse radiation (from below) for all layers
-      ! above the underlying ocean; note that we ignore refraction between 
-      ! sea ice and underlying ocean:
-      !
-      !       For k = klevp
-      !
-      !              layers       interface
-      !
-      !       ---------------------  k-1 
-      !                k-1
-      !       ---------------------  k
-      !       \\\\\\\ ocean \\\\\\\
+        ! if (tflag) call t_stopf('cice_solEdd1kl_'//tstr)
+        ! if (tflag) call t_startf('cice_solEdd1rf_'//tstr)
+        ! compute total direct beam transmission, total transmission, and
+        ! reflectivity for diffuse radiation (from below) for all layers
+        ! above the underlying ocean; note that we ignore refraction between 
+        ! sea ice and underlying ocean:
+        !
+        !       For k = klevp
+        !
+        !              layers       interface
+        !
+        !       ---------------------  k-1 
+        !                k-1
+        !       ---------------------  k
+        !       \\\\\\\ ocean \\\\\\\
 
         k = klevp
         trndir(k,ij) = trndir(k-1,ij)*trnlay(k-1,ij)
@@ -3708,21 +3753,26 @@
           (tdif_b(k-1,ij)*rdndif(k-1,ij)*refkm1*tdif_a(k-1,ij))
         trndif(k,ij) = trndif(k-1,ij)*refkm1*tdif_a(k-1,ij)
  
-      ! compute reflectivity to direct and diffuse radiation for layers 
-      ! below by adding succesive layers starting from the underlying 
-      ! ocean and working upwards:
-      !
-      !              layers       interface
-      !
-      !       ---------------------  k
-      !                 k
-      !       ---------------------  k+1
-      !                k+1
-      !       ---------------------
+        ! compute reflectivity to direct and diffuse radiation for layers 
+        ! below by adding succesive layers starting from the underlying 
+        ! ocean and working upwards:
+        !
+        !              layers       interface
+        !
+        !       ---------------------  k
+        !                 k
+        !       ---------------------  k+1
+        !                k+1
+        !       ---------------------
 
         rupdir(klevp,ij) = albodr(ij)
         rupdif(klevp,ij) = albodf(ij)
+        ! if (tflag) call t_stopf('cice_solEdd1rf_'//tstr)
+
       enddo       ! ij  
+      if (tflag) call t_stopf('cice_solEdd1x_'//tstr)
+
+      if (tflag) call t_startf('cice_solEdd2x_'//tstr)
       do k=klev,0,-1
         do ij = 1, icells_DE
           i = indxi_DE(ij)
@@ -3743,7 +3793,8 @@
                           refkp1*tdif_b(k,ij)
         enddo       ! ij  
       enddo       ! k
- 
+      if (tflag) call t_stopf('cice_solEdd2x_'//tstr)
+
       end subroutine solution_dEdd
 
 !=======================================================================

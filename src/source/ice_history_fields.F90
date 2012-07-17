@@ -76,7 +76,7 @@
          ncat_hist = ncat         ! number of ice categories written <= ncat
 
       integer (kind=int_kind), parameter :: &
-         nvar = 11                  ! number of grid fields that can be written
+         nvar = 12                  ! number of grid fields that can be written
                                     !   excluding grid vertices
 
       real (kind=real_kind) :: time_beg(max_nstrm), &
@@ -112,6 +112,7 @@
            n_HTE        = 9,  &
            n_ANGLE      = 10, &
            n_ANGLET     = 11, &
+           n_blkmask    = 12, &
 
            n_lont_bnds  = 1, &
            n_latt_bnds  = 2, &
@@ -255,7 +256,8 @@
         iyear = nyr + year_init - 1 ! set year_init=1 in ice_in to get iyear=nyr
         imonth = month
         iday = mday
-        isec = sec - dt
+!tcx        isec = sec - dt
+        isec = sec
 
         ! construct filename
         if (write_ic) then

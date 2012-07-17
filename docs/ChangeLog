@@ -1,4 +1,42 @@
 ===============================================================
+cice4_0_20120717
+Originator: tcraig
+Date:  July 17 2012
+Version: 4.0
+One-line Summary: Add new decomps, maskhalo feature, new generate_decomp, update timers
+ - add new decomps, blkrobin, blkcart
+ - add maskhalo feature (on by default)
+ - update generate decomp tool, now generates reasonable decomps for all grids/pe counts
+ - add write_ic logical to write initial history file
+ - add new field, blkmask has decomp mask
+ - add return in ice_timers code
+ - add splitcomm_dyn (off by default)
+
+M       bld/check_decomp.csh
+M       bld/build-namelist
+M       bld/cice_decomp.xml
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       bld/generate_cice_decomp.pl
+M       src/source/ice_init.F90
+M       src/source/ice_dyn_evp.F90
+M       src/source/ice_domain.F90
+M       src/source/ice_transport_driver.F90
+M       src/source/ice_transport_remap.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_distribution.F90
+M       src/source/ice_probability.F90
+M       src/source/ice_state.F90
+M       src/source/ice_grid.F90
+M       src/source/ice_history_fields.F90
+M       src/source/ice_history.F90
+M       src/mpi/ice_boundary.F90
+M       src/mpi/ice_timers.F90
+M       src/drivers/cpl_share/ice_history_write.F90
+M       src/drivers/cpl_mct/ice_comp_mct.F90
+	
+===============================================================
 cice4_0_20120712
 Originator: jedwards
 Date:  July 12 2012

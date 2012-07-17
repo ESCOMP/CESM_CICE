@@ -78,7 +78,7 @@
       !---------------------------------------------------------------
 
        logical (kind=log_kind) :: &
-           f_tmask     = .true., &
+           f_tmask     = .true., f_blkmask    = .true., &
            f_tarea     = .true., f_uarea      = .true., &
            f_dxt       = .true., f_dyt        = .true., &
            f_dxu       = .true., f_dyu        = .true., &
@@ -185,7 +185,7 @@
       !---------------------------------------------------------------
 
       namelist / icefields_nml /     &
-           f_tmask    , &
+           f_tmask    , f_blkmask  , &
            f_tarea    , f_uarea    , &
            f_dxt      , f_dyt      , &
            f_dxu      , f_dyu      , &
@@ -418,6 +418,7 @@
 #endif
 
       call broadcast_scalar (f_tmask, master_task)
+      call broadcast_scalar (f_blkmask, master_task)
       call broadcast_scalar (f_tarea, master_task)
       call broadcast_scalar (f_uarea, master_task)
       call broadcast_scalar (f_dxt, master_task)
@@ -1570,6 +1571,7 @@
       igrd=.true.
 
       igrd(n_tmask     ) = f_tmask
+      igrd(n_blkmask   ) = f_blkmask
       igrd(n_tarea     ) = f_tarea
       igrd(n_uarea     ) = f_uarea
       igrd(n_dxt       ) = f_dxt

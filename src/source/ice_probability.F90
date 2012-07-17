@@ -204,12 +204,12 @@ contains
       work_per_block(nblocks_tot)         ! number of work units per block
 
    real (dbl_kind), intent(inout) :: &
-      prob_per_block(nblocks_tot)       ! probability of sea-ice in block
+      prob_per_block(nblocks_tot)         ! probability of sea-ice in block
 
    integer (int_kind), intent(inout) ::  &
-      blockType(nblocks_tot)            ! Type of block: 
-                                        ! one of the following
-                                        !    lnd,ice,icefree
+      blockType(nblocks_tot)              ! Type of block: 
+                                          ! one of the following
+                                          !    lnd,ice,icefree
 
    real (dbl_kind), intent(inout) :: bStats(:,:) 
 
@@ -365,7 +365,7 @@ if(my_task == master_task) then
 
 endif
    !-----------------------------------------------------------------
-   ! distribute blocks among processors
+   ! broadcast info
    !-----------------------------------------------------------------
    call broadcast_array(work_per_block,master_task)
    call broadcast_array(prob_per_block,master_task)

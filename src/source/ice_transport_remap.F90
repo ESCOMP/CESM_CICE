@@ -43,7 +43,7 @@
       use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_domain_size
       use ice_constants
-      use ice_fileunits, only: nu_diag
+      use ice_fileunits, only: nu_diag, flush_fileunit
       use perf_mod,      only: t_startf, t_stopf, t_barrierf
 !
 !EOP
@@ -52,6 +52,8 @@
       save
       private
       public :: init_remap, horizontal_remap, make_masks
+
+      logical (kind=log_kind), public :: maskhalo_remap
 
       integer (kind=int_kind), parameter ::                      &
          max_ntrace = 2+max_ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
@@ -451,7 +453,8 @@
          i, j           ,&! horizontal indices
          iblk           ,&! block indices
          ilo,ihi,jlo,jhi,&! beginning and end of physical domain
-         n                ! ice category index
+         n,              &! ice category index
+         m                ! ice tracer index
 
       integer (kind=int_kind), dimension(0:ncat,max_blocks) ::     &
          icellsnc         ! number of cells with ice
@@ -521,11 +524,16 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,2,max_blocks) ::     &
           dpwork          
  
-       real (kind=dbl_kind), dimension(nx_block,ny_block,2,0:ncat,max_blocks) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,2,0:ncat,max_blocks) :: &
           mwork
 
-!     call t_barrierf ('cice_dyn_remap1_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_remap1')
+      integer (kind=int_kind), &
+         dimension(nx_block,ny_block,max_blocks) :: halomask
+      type (ice_halo) :: halo_info_tracer
+    !------------------------------------------------------------------- 
+
+      call t_barrierf('cice_hmap_remap1_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_hmap_remap1')
 
       l_stop = .false.
       istop = 0
@@ -592,6 +600,7 @@
     !  being used to compute tracer gradients.
     !------------------------------------------------------------------- 
 
+         call t_startf  ('cice_hmap_remap1_masks')
          call make_masks (nx_block,           ny_block,             &
                           ilo, ihi,           jlo, jhi,             &
                           nghost,             ntrace,               &
@@ -599,6 +608,7 @@
                           indxinc(:,:,iblk),  indxjnc  (:,:,iblk),  &
                           mm   (:,:,:,iblk),  mmask  (:,:,:,iblk),  &
                           tm (:,:,:,:,iblk),  tmask(:,:,:,:,iblk))
+         call t_stopf  ('cice_hmap_remap1_masks')
 
     !-------------------------------------------------------------------
     ! Construct linear fields, limiting gradients to preserve monotonicity.
@@ -608,6 +618,7 @@
 
          ! open water
 
+         call t_startf  ('cice_hmap_remap1_cf1')
          call construct_fields(nx_block,           ny_block,           &
                                ilo, ihi,           jlo, jhi,           &
                                nghost,             ntrace,             &
@@ -626,9 +637,11 @@
                                mm   (:,:,0,iblk),  mc   (:,:,0,iblk),  &
                                mx   (:,:,0,iblk),  my   (:,:,0,iblk),  &
                                mmask(:,:,0,iblk) )
+         call t_stopf  ('cice_hmap_remap1_cf1')
 
          ! ice categories
 
+         call t_startf  ('cice_hmap_remap1_cf2')
          do n = 1, ncat
 
             call construct_fields(nx_block,             ny_block,           &
@@ -654,12 +667,14 @@
                                   tmask(:,:,:,n,iblk) )
 
          enddo                  ! n
+         call t_stopf  ('cice_hmap_remap1_cf2')
 
     !-------------------------------------------------------------------
     ! Given velocity field at cell corners, compute departure points
     ! of trajectories.
     !-------------------------------------------------------------------
 
+         call t_startf  ('cice_hmap_remap1_dp')
          call departure_points(nx_block,        ny_block,        &
                                ilo, ihi,        jlo, jhi,        &
                                nghost,          dt,              &
@@ -669,6 +684,7 @@
                                dpx (:,:,iblk),  dpy (:,:,iblk),  &
                                l_dp_midpt,      l_stop  (iblk),  &
                                istop   (iblk),  jstop   (iblk))
+         call t_stopf  ('cice_hmap_remap1_dp')
 
          if (l_stop(iblk)) then
             this_block = get_block(blocks_ice(iblk),iblk)         
@@ -685,7 +701,7 @@
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
-!     call t_stopf ('cice_dyn_remap1')
+     call t_stopf ('cice_hmap_remap1')
     !-------------------------------------------------------------------
     ! Ghost cell updates
     ! If nghost >= 2, these calls are not needed
@@ -693,8 +709,8 @@
 
       if (nghost==1) then
 
-!        call t_barrierf ('cice_dyn_remap_update1_BARRIER',MPI_COMM_ICE)
-!        call t_startf ('cice_dyn_remap_update1')
+         call t_barrierf ('cice_hmap_halo1_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_hmap_halo1')
          call ice_timer_start(timer_bound)
 
          ! departure points
@@ -729,6 +745,10 @@
          call ice_HaloUpdate (mwork,            halo_info, &
                               field_loc_center, field_type_vector)
 
+        call t_stopf ('cice_hmap_halo1')
+        call t_barrierf ('cice_hmap_copy1_BARRIER',MPI_COMM_ICE)
+        call t_startf ('cice_hmap_copy1')
+
          !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
@@ -741,25 +761,81 @@
             enddo
          enddo
          !$OMP END PARALLEL DO
+         call t_stopf ('cice_hmap_copy1')
 
-!        call t_stopf ('cice_dyn_remap_update1')
-!        call t_barrierf ('cice_dyn_remap_update2_BARRIER',MPI_COMM_ICE)
-!        call t_startf ('cice_dyn_remap_update2')
+         call t_barrierf ('cice_hmap_halo2_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_hmap_halo2')
 
-         ! tracer fields
-         call ice_HaloUpdate (tc(:,:,1:ntrace,:,:), halo_info, &
-                              field_loc_center, field_type_scalar)
-         call ice_HaloUpdate (tx(:,:,1:ntrace,:,:), halo_info, &
-                              field_loc_center, field_type_vector)
-         call ice_HaloUpdate (ty(:,:,1:ntrace,:,:), halo_info, &
-                              field_loc_center, field_type_vector)
+         if (maskhalo_remap) then
+            call t_startf ('cice_hmap_halo2hm')
+            halomask = 0
+            !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n,m,j,i)
+            do iblk = 1,nblocks
+               this_block = get_block(blocks_ice(iblk),iblk)         
+               ilo = this_block%ilo
+               ihi = this_block%ihi
+               jlo = this_block%jlo
+               jhi = this_block%jhi
+               do n = 1,ncat
+               do m = 1,ntrace
+               do j = jlo, jhi
+               do i = ilo, ihi
+                  if (tc(i,j,m,n,iblk) /= c0) halomask(i,j,iblk) = 1
+                  if (tx(i,j,m,n,iblk) /= c0) halomask(i,j,iblk) = 1
+                  if (ty(i,j,m,n,iblk) /= c0) halomask(i,j,iblk) = 1
+               enddo
+               enddo
+               enddo
+               enddo
+            enddo
+            !$OMP END PARALLEL DO
+            call t_stopf ('cice_hmap_halo2hm')
+
+            call t_barrierf ('cice_hmap_halo2hh_BARRIER',MPI_COMM_ICE)
+            call t_startf ('cice_hmap_halo2hh')
+            call ice_HaloUpdate(halomask, halo_info, &
+                                field_loc_center, field_type_scalar)
+            call t_stopf ('cice_hmap_halo2hh')
+
+            call t_barrierf ('cice_hmap_halo2hc_BARRIER',MPI_COMM_ICE)
+            call t_startf ('cice_hmap_halo2hc')
+            call ice_HaloMask(halo_info_tracer, halo_info, halomask)
+            call t_stopf ('cice_hmap_halo2hc')
+
+            call t_barrierf ('cice_hmap_halo2hu_BARRIER',MPI_COMM_ICE)
+            call t_startf ('cice_hmap_halo2hu')
+
+            ! tracer fields 
+            call ice_HaloUpdate (tc(:,:,1:ntrace,:,:), halo_info_tracer, &
+                                 field_loc_center, field_type_scalar)
+            call ice_HaloUpdate (tx(:,:,1:ntrace,:,:), halo_info_tracer, &
+                                 field_loc_center, field_type_vector)
+            call ice_HaloUpdate (ty(:,:,1:ntrace,:,:), halo_info_tracer, &
+                                 field_loc_center, field_type_vector)
+            call ice_timer_stop(timer_bound)
+            call t_stopf ('cice_hmap_halo2hu')
+
+            call t_barrierf ('cice_hmap_halo2hd_BARRIER',MPI_COMM_ICE)
+            call t_startf ('cice_hmap_halo2hd')
+            call ice_HaloDestroy(halo_info_tracer)
+            call t_stopf ('cice_hmap_halo2hd')
+         else
+            ! tracer fields 
+            call ice_HaloUpdate (tc(:,:,1:ntrace,:,:), halo_info, &
+                                 field_loc_center, field_type_scalar)
+            call ice_HaloUpdate (tx(:,:,1:ntrace,:,:), halo_info, &
+                                 field_loc_center, field_type_vector)
+            call ice_HaloUpdate (ty(:,:,1:ntrace,:,:), halo_info, &
+                                 field_loc_center, field_type_vector)
+         endif
+
          call ice_timer_stop(timer_bound)
-!        call t_stopf ('cice_dyn_remap_update2')
+         call t_stopf ('cice_hmap_halo2')
 
       endif  ! nghost
 
-!     call t_barrierf ('cice_dyn_remap2_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_remap2')
+      call t_barrierf ('cice_hmap_remap2_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_hmap_remap2')
 
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
       do iblk = 1, nblocks
@@ -778,6 +854,7 @@
     ! Compute areas and vertices of departure triangles.
     !-------------------------------------------------------------------
 
+         call t_startf  ('cice_hmap_remap2e')
          edge(iblk) = 'east'
          call locate_triangles(nx_block,              ny_block,           &
                                ilo, ihi,              jlo, jhi,           &
@@ -801,6 +878,7 @@
                                     indxing(:,:,iblk),  indxjng(:,:,iblk),  &
                                     xp (:,:,:,:,iblk),  yp (:,:,:,:,iblk))
 
+    !-------------------------------------------------------------------
     ! Compute the transport across east cell edges by summing contributions
     ! from each triangle.
     !-------------------------------------------------------------------
@@ -833,11 +911,13 @@
                                 ty (:,:,:,n,iblk),  mtflxe(:,:,:,n,iblk))
 
          enddo
+         call t_stopf  ('cice_hmap_remap2e')
 
     !-------------------------------------------------------------------
     ! Repeat for north edges
     !-------------------------------------------------------------------
 
+         call t_startf  ('cice_hmap_remap2n')
          edge(iblk) = 'north'
          call locate_triangles(nx_block,              ny_block,           &
                                ilo, ihi,              jlo, jhi,           &
@@ -883,6 +963,7 @@
                                 ty (:,:,:,n,iblk),  mtflxn(:,:,:,n,iblk))
 
          enddo                  ! n
+         call t_stopf  ('cice_hmap_remap2n')
 
     !-------------------------------------------------------------------
     ! Update the ice area and tracers.
@@ -890,6 +971,7 @@
 
          ! open water
 
+         call t_startf  ('cice_hmap_remap2_upd')
          call update_fields (nx_block,           ny_block,          &
                              ilo, ihi,           jlo, jhi,          &
                              ntrace,                                &
@@ -938,11 +1020,12 @@
                call abort_ice ('ice remap_transport: negative area (ice)')
             endif
          enddo                  ! n
+         call t_stopf  ('cice_hmap_remap2_upd')
 
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
-!     call t_stopf ('cice_dyn_remap2')
+      call t_stopf ('cice_hmap_remap2')
 
       end subroutine horizontal_remap
 

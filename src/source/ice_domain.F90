@@ -41,8 +41,6 @@
    public  :: init_domain_blocks ,&
               init_domain_distribution
 
-!   public :: CalcWorkPerBlock
-
 ! !PUBLIC DATA MEMBERS:
 
    integer (int_kind), public :: &
@@ -97,7 +95,9 @@
     logical (log_kind), public :: profile_barrier ! flag to turn on use of barriers before timers
 
     logical (log_kind), public :: FixMaxBlock
+    integer (int_kind), public :: minBlock
     integer (int_kind), public :: maxBlock 
+    real (real_kind), public :: maxDil
 
 !EOC
 !***********************************************************************
@@ -133,6 +133,7 @@
    integer (int_kind) :: &
       nml_error          ! namelist read error flag
 
+   integer :: omp_get_num_threads
 !----------------------------------------------------------------------
 !
 !  input namelists
@@ -146,8 +147,10 @@
    			 distribution_wght_file, &
                          ew_boundary_type,  &
                          ns_boundary_type,   &
+			 minBlock,           &
                          maxBlock,           &
                          FixMaxBlock,        &
+   			 maxDil,             &
                          profile_barrier
 
 !----------------------------------------------------------------------
@@ -164,6 +167,14 @@
    ew_boundary_type  = 'cyclic'
    ns_boundary_type  = 'open'
    maxBlock          = max_blocks
+#if defined(THREADED_OMP)
+!$OMP PARALLEL
+   minBlock          = omp_get_num_threads()
+!$OMP END PARALLEL
+#else
+   minBlock          = 1
+#endif
+   maxDil            = 2.0
    profile_barrier   = .false.
    FixMaxBlock       = .false.
 
@@ -199,6 +210,8 @@
    call broadcast_scalar(ns_boundary_type,  master_task)
    call broadcast_scalar(profile_barrier,   master_task)
    call broadcast_scalar(maxBlock,          master_task)
+   call broadcast_scalar(minBlock,          master_task)
+   call broadcast_scalar(maxDil,          master_task)
 
 !----------------------------------------------------------------------
 !
@@ -282,7 +295,7 @@
          write(nu_diag,'(a30,a80)') '  Distribution weight file:  ', &
                                   trim(distribution_wght_file)
      endif
-     write(nu_diag,'(a26,i6)') '  max_blocks =            ', max_blocks
+     write(nu_diag,'(a26,2(i6))') '  {min,max}Blocks =            ', minBlock,maxBlock
      write(nu_diag,'(a26,i6,/)')'  Number of ghost cells:  ', nghost
      call flush_fileunit(nu_diag)
    endif
@@ -297,7 +310,7 @@
 ! !IROUTINE: init_domain_distribution
 ! !INTERFACE:
 
- subroutine init_domain_distribution(KMTG,ULATG,work_per_block,prob_per_block,blockType,bStats)
+ subroutine init_domain_distribution(KMTG,ULATG,work_per_block,prob_per_block,blockType,bStats,maxDil)
 
 ! !DESCRIPTION:
 !  This routine calls appropriate setup routines to distribute blocks
@@ -320,6 +333,7 @@
    
    real (dbl_kind), intent(in), dimension(:,:)  :: bStats
 
+   real (real_kind), intent(in) :: maxDil
 !EOP
 !BOC
 !----------------------------------------------------------------------
@@ -345,7 +359,6 @@
 
    integer (int_kind), dimension(:), allocatable :: &
       nocn               ! number of ocean points per block
-!JMD      work_per_block       ! number of work units per block
 
    type (block) :: &
       this_block           ! block information for current block
@@ -493,8 +506,8 @@
 !----------------------------------------------------------------------
 
 !DBG   print *,'init_domain_distribution: before call to create_distribution'
-   distrb_info = create_distribution(distribution_type, nprocs, maxBlock, &
-                     work_per_block, prob_per_block, blockType, bStats, FixMaxBlock )
+   distrb_info = create_distribution(distribution_type, nprocs, minBlock, maxBlock, &
+                     work_per_block, prob_per_block, blockType, bStats, FixMaxBlock,maxDil )
 !JMD   call abort_ice('init_domain_distribution: after call to create_distribution')
 
 !DBG   print *,'after call to create_distribution'

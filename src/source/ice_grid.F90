@@ -111,6 +111,7 @@
       ! masks
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), save :: &
          hm     , & ! land/boundary mask, thickness (T-cell)
+         bm     , & ! cice block mask (T-cell)
          uvm        ! land/boundary mask, velocity (U-cell)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), save :: &
@@ -246,19 +247,12 @@
       allocate(bStats(numCoeff,nblocks_tot))
       call CalcWorkPerBlock(distribution_wght, work_g2,work_g1, &
                 WorkPerBlock,ProbPerBlock,blockType,bStats)
-      !-----------------------------------------------------------------
-      ! distribute blocks among processors
-      !-----------------------------------------------------------------
-!      call broadcast_array(WorkPerBlock,master_task)
-!      call broadcast_array(ProbPerBlock,master_task)
-!      call broadcast_array(blockType,master_task)
-
 
 !      call abort_ice('init_grid1: after call to CalcWorkPerBlock')
 !      stop 'init_grid1: after call to CalcWorkPerBlock'
 
       call init_domain_distribution(work_g2, work_g1,  &
-                WorkPerBlock,ProbPerBlock,blockType,bStats)  ! KMT, ULAT
+                WorkPerBlock,ProbPerBlock,blockType,bStats,maxDil)  ! KMT, ULAT
 !DBG      print *,'init_grid1: after call to init_domain_distribution'
 
       deallocate(bStats)
@@ -575,6 +569,7 @@
                     field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+      bm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -587,6 +582,7 @@
          do i = ilo, ihi
             hm(i,j,iblk) = work1(i,j,iblk)
             if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
+            bm(i,j,iblk) = my_task + iblk/1000.0_dbl_kind
          enddo
          enddo
       enddo
@@ -710,6 +706,7 @@
                        field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+      bm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -722,6 +719,7 @@
          do i = ilo, ihi
             hm(i,j,iblk) = work1(i,j,iblk)
             if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
+            bm(i,j,iblk) = my_task + iblk/1000.0_dbl_kind
          enddo
          enddo
       enddo
@@ -857,6 +855,7 @@
                     field_type=field_type_scalar)
 
       hm(:,:,:) = c0
+      bm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -869,6 +868,7 @@
          do i = ilo, ihi
             hm(i,j,iblk) = work1(i,j,iblk)
             if (hm(i,j,iblk) >= c1) hm(i,j,iblk) = c1
+            bm(i,j,iblk) = my_task + iblk/1000.0_dbl_kind
          enddo
          enddo
       enddo                     ! iblk
@@ -1112,6 +1112,7 @@
             ! Convert from radians^2 to m^2
             ! (area in domain file is in radians^2 and tarea is in m^2)
             tarea(i,j,iblk) = tarea(i,j,iblk) * (radius*radius)
+            bm(i,j,iblk) = my_task + iblk/1000.0_dbl_kind
          end do
          end do
       end do
@@ -1574,6 +1575,8 @@
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (hm,               halo_info, &
+                           field_loc_center, field_type_scalar)
+      call ice_HaloUpdate (bm,               halo_info, &
                            field_loc_center, field_type_scalar)
       call ice_timer_stop(timer_bound)
 

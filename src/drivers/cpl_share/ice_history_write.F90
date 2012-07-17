@@ -254,6 +254,12 @@
       ! define information for optional time-invariant variables
       !-----------------------------------------------------------------
 
+      var(n_tmask)%req = coord_attributes('tmask', &
+                  'mask of T grid cells', 'unitless')
+      var(n_tmask)%coordinates = 'TLON TLAT'
+      var(n_blkmask)%req = coord_attributes('blkmask', &
+                  'blockid of T grid cells', 'unitless')
+      var(n_blkmask)%coordinates = 'TLON TLAT'
       var(n_tarea)%req = coord_attributes('tarea', &
                   'area of T grid cells', 'm^2')
       var(n_tarea)%coordinates = 'TLON TLAT'
@@ -313,10 +319,10 @@
          status = pio_def_var(File, coord_var(i)%short_name, pio_real, &
               dimid2, varid)
 
-         status = pio_put_att(File,varid,'long_name',coord_var(i)%long_name)
+         status = pio_put_att(File, varid,'long_name',coord_var(i)%long_name)
          status = pio_put_att(File, varid, 'units', coord_var(i)%units)
          status = pio_put_att(File, varid, 'missing_value', spval)
-         status = pio_put_att(File,varid,'_FillValue',spval)
+         status = pio_put_att(File, varid,'_FillValue',spval)
          if (coord_var(i)%short_name == 'ULAT') then
             status = pio_put_att(File,varid,'comment', &
                  'Latitude of NE corner of T grid cell')
@@ -327,21 +333,23 @@
          endif
       enddo
 
-      ! Attributes for tmask defined separately, since it has no units
-      if (igrd(n_tmask)) then
-         status = pio_def_var(File,'tmask', pio_real, dimid2, varid)
-         status = pio_put_att(File, varid, 'long_name', 'ocean grid mask')
-         status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
-         status = pio_put_att(File, varid, 'comment', '0 = land, 1 = ocean')
-      endif
-      
-      do i = 2, nvar       ! note: n_tmask=1
+!      ! Attributes for tmask defined separately, since it has no units
+!      if (igrd(n_tmask)) then
+!         status = pio_def_var(File,'tmask', pio_real, dimid2, varid)
+!         status = pio_put_att(File, varid, 'long_name', 'ocean grid mask')
+!         status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
+!         status = pio_put_att(File, varid, 'comment', '0 = land, 1 = ocean')
+!      endif
+
+      do i = 1, nvar       ! note: n_tmask=1
          if (igrd(i)) then
             status = pio_def_var(File, var(i)%req%short_name, &
                  pio_real, dimid2, varid)
             status = pio_put_att(File, varid, 'long_name', var(i)%req%long_name)
             status = pio_put_att(File, varid, 'units', var(i)%req%units)
             status = pio_put_att(File, varid, 'coordinates', var(i)%coordinates)
+            status = pio_put_att(File, varid, 'missing_value', spval)
+            status = pio_put_att(File, varid,'_FillValue',spval)
          endif
       enddo
         
@@ -514,18 +522,22 @@
       ! write grid mask, area and rotation angle
       !-----------------------------------------------------------------
 
-      if (igrd(n_tmask)) then
-         work1(:,:,:) = hm(:,:,:)
-         status = pio_inq_varid(File, 'tmask', varid)
-         call pio_write_darray(File, varid, iodesc2d, &
-                               work1, status, fillval=spval_dbl)
-      endif
+!      if (igrd(n_tmask)) then
+!         work1(:,:,:) = hm(:,:,:)
+!         status = pio_inq_varid(File, 'tmask', varid)
+!         call pio_write_darray(File, varid, iodesc2d, &
+!                               work1, status, fillval=spval_dbl)
+!      endif
 
-      do i = 2,nvar
+      do i = 1,nvar
          if (igrd(i)) then
             call broadcast_scalar(var(i)%req%short_name,master_task)
 
             SELECT CASE (var(i)%req%short_name)
+            CASE ('tmask')
+               work1(:,:,:) = hm(:,:,:)
+            CASE ('blkmask')
+               work1(:,:,:) = bm(:,:,:)
             CASE ('tarea')
                work1(:,:,:) = tarea(:,:,:)
             CASE ('uarea')

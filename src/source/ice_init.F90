@@ -83,7 +83,8 @@
       use ice_grid, only: grid_file, kmt_file, grid_type, grid_format, &
                           gridcpl_file
       use ice_mechred, only: kstrength, krdg_partic, krdg_redist
-      use ice_dyn_evp, only: ndte, kdyn, evp_damping, yield_curve
+      use ice_dyn_evp, only: ndte, kdyn, evp_damping, yield_curve, &
+          maskhalo_dyn, maskhalo_stress, splitcomm_dyn
       use ice_shortwave, only: albicev, albicei, albsnowv, albsnowi, &
                                shortwave, albedo_type, R_ice, R_pnd, &
                                R_snw, dT_mlt_in, rsnw_melt_in
@@ -91,7 +92,8 @@
       use ice_transport_driver, only: advection
       use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_volpn, nt_aero, &
                            tr_aero, tr_iage, tr_FY, tr_pond, &
-                           nt_alvl, nt_vlvl, tr_lvl
+                           nt_alvl, nt_vlvl, tr_lvl, maskhalo_bound
+      use ice_transport_remap, only: maskhalo_remap
       use ice_aerosol, only: restart_aero
       use ice_age, only: restart_age
       use ice_FY, only: restart_FY
@@ -137,6 +139,8 @@
         kcatbound, gridcpl_file
 
       namelist /ice_nml/ &
+        maskhalo_dyn,   maskhalo_remap,  maskhalo_bound,splitcomm_dyn,  &
+        maskhalo_stress, &
         kitd,           kdyn,            ndte,                          &
         evp_damping,    yield_curve,                                    &
         kstrength,      krdg_partic,     krdg_redist,   advection,      &
@@ -211,6 +215,11 @@
       ndte = 120         ! subcycles per dynamics timestep:  ndte=dt_dyn/dte
       evp_damping = .false.  ! if true, use damping procedure in evp dynamics
       yield_curve = 'ellipse'
+      splitcomm_dyn = .false.    ! allow overlap of computation and halo update in subcycling
+      maskhalo_dyn = .true.     ! compute masked halo before subcycling for use in halo update
+      maskhalo_stress = .true.  ! compute masked halo before tripole stress update
+      maskhalo_remap = .true.   ! compute masked halo before large tracer update in remap
+      maskhalo_bound = .true.   ! compute masked halo before state bound
       kstrength = 1          ! 1 = Rothrock 75 strength, 0 = Hibler 79
       krdg_partic = 1        ! 1 = new participation, 0 = Thorndike et al 75
       krdg_redist = 1        ! 1 = new redistribution, 0 = Hibler 80
@@ -466,6 +475,11 @@
       call broadcast_scalar(ndte,               master_task)
       call broadcast_scalar(evp_damping,        master_task)
       call broadcast_scalar(yield_curve,        master_task)
+      call broadcast_scalar(splitcomm_dyn,      master_task)
+      call broadcast_scalar(maskhalo_dyn,       master_task)
+      call broadcast_scalar(maskhalo_stress,    master_task)
+      call broadcast_scalar(maskhalo_remap,     master_task)
+      call broadcast_scalar(maskhalo_bound,     master_task)
       call broadcast_scalar(kstrength,          master_task)
       call broadcast_scalar(krdg_partic,        master_task)
       call broadcast_scalar(krdg_redist,        master_task)
@@ -603,6 +617,11 @@
                                evp_damping
          write(nu_diag,*)    ' yield_curve               = ', &
                                trim(yield_curve)
+         write(nu_diag,1010) ' splitcomm_dyn             = ', splitcomm_dyn
+         write(nu_diag,1010) ' maskhalo_dyn              = ', maskhalo_dyn
+         write(nu_diag,1010) ' maskhalo_stress           = ', maskhalo_stress
+         write(nu_diag,1010) ' maskhalo_remap            = ', maskhalo_remap
+         write(nu_diag,1010) ' maskhalo_bound            = ', maskhalo_bound
          write(nu_diag,1020) ' kstrength                 = ', kstrength
          write(nu_diag,1020) ' krdg_partic               = ', &
                                krdg_partic

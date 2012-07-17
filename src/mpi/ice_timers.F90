@@ -166,6 +166,8 @@
 !
 !-----------------------------------------------------------------------
 
+   return
+
    clock_rate = c1
 
    timerRoot = min(distrb_info%nprocs-1,2)
@@ -280,6 +282,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    srch_error = 1
 
    srch_loop: do n=1,max_timers
@@ -345,6 +348,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    if (all_timers(timer_id)%in_use) then
       all_timers(timer_id)%node_started  = .false.
       all_timers(timer_id)%num_starts    = 0
@@ -408,6 +412,8 @@
 !  if timer is defined, start it up
 !
 !-----------------------------------------------------------------------
+
+   return
 
    if (all_timers(timer_id)%in_use) then
 
@@ -523,6 +529,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    cycles2 = MPI_WTIME()
 
 !-----------------------------------------------------------------------
@@ -668,6 +675,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    if (all_timers(timer_id)%in_use) then
 
       !*** Find max node time and print that time as default timer
@@ -799,6 +807,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    if (my_task == master_task) then
       write(nu_diag,'(/,a19,/)') 'Timing information:'
    endif
@@ -872,6 +881,7 @@
 !
 !-----------------------------------------------------------------------
 
+   return
    if (present(block_id)) then
       call ice_timer_stop (timer_id,block_id)
       call ice_timer_start(timer_id,block_id)

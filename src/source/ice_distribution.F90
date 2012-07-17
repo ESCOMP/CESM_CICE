@@ -21,6 +21,7 @@
    use ice_kinds_mod
    use ice_communicate
    use ice_domain_size
+   use ice_communicate, only : my_task, master_task, lprint_stats
    use ice_blocks
    use ice_exit
    use ice_fileunits, only: nu_diag, nu_timing, ice_stdout
@@ -89,7 +90,7 @@
 ! !IROUTINE: create_distribution
 ! !INTERFACE:
 
- function create_distribution(dist_type, nprocs, maxBlock, work_per_block, prob_per_block, blockType, bStats, FixMaxBlock)
+ function create_distribution(dist_type, nprocs, minBlock, maxBlock, work_per_block, prob_per_block, blockType, bStats, FixMaxBlock, maxDil)
 
 ! !DESCRIPTION:
 !  This routine determines the distribution of blocks across processors
@@ -111,6 +112,7 @@
    integer (int_kind), intent(in) :: &
       nprocs                ! number of processors in this distribution
 
+   integer (int_kind), intent(in) :: minBlock ! minimum number of blocks to use
    integer (int_kind), intent(in) :: maxBlock ! maximum number of blocks to use
 
    integer (int_kind), dimension(:), intent(in) :: &
@@ -125,6 +127,7 @@
    real (dbl_kind), dimension(:,:), intent(in)  :: bStats  ! block statistics 
 
    logical, intent(in) :: FixMaxBlock
+   real (real_kind), intent(in) :: maxDil
 
 ! !OUTPUT PARAMETERS:
 
@@ -133,7 +136,17 @@
                             !  distribution of blocks
 
 !EOP
+
 !BOC
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+      n, nb, nc        ! dummy counters
+
 !----------------------------------------------------------------------
 !
 !  select the appropriate distribution type
@@ -146,6 +159,14 @@
 
       create_distribution = create_distrb_roundrobin(nprocs, work_per_block)
 
+   case('blkrobin')
+
+      create_distribution = create_distrb_blkrobin(nprocs, work_per_block)
+
+   case('blkcart')
+
+      create_distribution = create_distrb_blkcart(nprocs, work_per_block)
+
    case('cartesian')
 
       create_distribution = create_distrb_cart(nprocs, work_per_block)
@@ -157,8 +178,8 @@
    case('spacecurve')
 
 !DBG      print *,'before call to create_distrb_spacecurve'
-      create_distribution = create_distrb_spacecurve(nprocs, maxBlock, &
-                            work_per_block,prob_per_block,blockType,bStats, FixMaxBlock )
+      create_distribution = create_distrb_spacecurve(nprocs, minBlock, maxBlock, &
+                            work_per_block,prob_per_block,blockType,bStats, FixMaxBlock, maxDil )
 !DBG    stop 'create_distribution: after call to create_distrb_spacecurve'
 
    case default
@@ -166,8 +187,22 @@
       call abort_ice('ice distribution: unknown distribution type')
 
    end select
+
    if(my_task == master_task) then 
-   write(nu_diag,*) 'Active processors: ',MAXVAL(create_distribution%blockLocation)
+      write(nu_diag,*) ' '
+      nc = 0
+      do n = 1,nprocs
+         nb = create_distribution%blockcnt(n)
+         if (nb > 0) then
+            nc = nc + 1
+!            write(nu_diag,*) ' Blocks on proc : ',n,nb,':', &
+!               create_distribution%blockindex(n,1:nb)
+         else
+!            write(nu_diag,*) ' Blocks on proc : ',n,nb
+         endif
+      enddo
+      write(nu_diag,*) ' Active processors: ',nc,MAXVAL(create_distribution%blockLocation)
+      write(nu_diag,*) ' '
    endif
 !DBG print *,'end of create_distribution'
 !-----------------------------------------------------------------------
@@ -316,7 +351,7 @@
    elseif (processor_shape == 'slenderX1') then ! 1 proc in y direction
       jguess = 1
       iguess = nprocs/jguess
-   else                                  ! 2 processors in y direction
+   else                                  ! slenderX2 2 processors in y direction
       jguess = min(2, nprocs)
       iguess = nprocs/jguess
    endif
@@ -712,9 +747,7 @@
       iblock, jblock,        &!
       processor,             &! processor position in cartesian decomp
       globalID,              &! global block ID
-      localID,               &! block location on this processor
-      nprocsX,               &! num of procs in x for global domain
-      nprocsY                 ! num of procs in y for global domain
+      localID                 ! block location on this processor
 
    integer (int_kind), dimension(:), allocatable :: &
       proc_tmp           ! temp processor id
@@ -736,9 +769,6 @@
 !----------------------------------------------------------------------
 
    newDistrb%nprocs = nprocs
-
-   nprocsX = nprocs
-   nprocsY = 1
 
 !----------------------------------------------------------------------
 !
@@ -788,8 +818,8 @@
    newDistrb%blockCnt(:) = proc_tmp(:)
    deallocate(proc_tmp)
 
-   write(nu_diag,*) 'my_task,newDistrb%numLocalBlocks',&
-      my_task,newDistrb%numLocalBlocks
+!   write(nu_diag,*) 'my_task,newDistrb%numLocalBlocks',&
+!      my_task,newDistrb%numLocalBlocks
 
 !----------------------------------------------------------------------
 !
@@ -813,6 +843,462 @@
 !----------------------------------------------------------------------
 !EOC
  end function create_distrb_roundrobin
+ 
+!***********************************************************************
+!BOP
+! !IROUTINE: create_distrb_blkcart
+! !INTERFACE:
+
+ function create_distrb_blkcart(nprocs, workPerBlock) result(newDistrb)
+
+! !DESCRIPTION:
+!  This function creates a distribution of blocks across processors
+!  using a simple blkcart algorithm. Mean for prescribed ice or
+!  standalone CAM mode.
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+
+   integer (int_kind), intent(in) :: &
+      nprocs            ! number of processors in this distribution
+
+   integer (int_kind), dimension(:), intent(in) :: &
+      workPerBlock        ! amount of work per block
+
+! !OUTPUT PARAMETERS:
+
+   type (distrb) :: &
+      newDistrb           ! resulting structure describing Cartesian
+                          !  distribution of blocks
+
+!EOP
+!BOC
+!----------------------------------------------------------------------
+!
+!  local variables
+!
+!----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+      i, j, i2, j2,          &! dummy loop indices
+      istat,                 &! status flag for allocation
+      iblock, jblock,        &!
+      processor,             &! processor position in cartesian decomp
+      globalID,              &! global block ID
+      localID,               &! block location on this processor
+      blktogether,           &! number of blocks together
+      cnt                     ! counter
+
+   integer (int_kind), dimension(:), allocatable :: &
+      proc_tmp           ! temp processor id
+   
+   integer (int_kind) :: pid,n
+
+!----------------------------------------------------------------------
+!
+!  create communicator for this distribution
+!
+!----------------------------------------------------------------------
+
+   call create_communicator(newDistrb%communicator, nprocs)
+
+!----------------------------------------------------------------------
+!
+!  try to find best processor arrangement
+!
+!----------------------------------------------------------------------
+
+   newDistrb%nprocs = nprocs
+
+!----------------------------------------------------------------------
+!
+!  allocate space for decomposition
+!
+!----------------------------------------------------------------------
+
+   allocate (newDistrb%blockLocation(nblocks_tot), &
+             newDistrb%blockLocalID (nblocks_tot), stat=istat)
+
+   allocate (newDistrb%blockCnt(nprocs))
+!----------------------------------------------------------------------
+!
+!  distribute blocks linearly across processors in each direction
+!
+!----------------------------------------------------------------------
+
+   allocate(proc_tmp(nprocs))
+   proc_tmp = 0
+
+   allocate(newDistrb%blockIndex(nprocs,max_blocks))
+   newDistrb%blockIndex(:,:) = 0
+
+   blktogether = max(1,nint(float(nblocks_x*nblocks_y)/float(4*nprocs)))
+
+   ! --- two phases, resetnt processor and cnt for each phase
+   ! --- phase 1 is south to north, east to west on the left half of the domain
+   ! --- phase 2 is north to south, east to west on the right half of the domain
+
+   if (mod(nblocks_x,2) /= 0) then
+      call abort_ice( &
+         'create_distrb_blkcart: nblocks_x not divisible by 2')
+      return
+   endif
+
+   do n=1,2
+   processor = 1
+   cnt = 0
+   do j2=1,nblocks_y
+   do i2=1,nblocks_x/2
+      
+      if (n == 1) then
+         i = i2
+         j = j2
+      else
+         i = nblocks_x/2 + i2
+         j = nblocks_y - j2 + 1
+      endif
+
+      globalID = (j-1)*nblocks_x + i
+      if (cnt >= blktogether) then
+         processor = mod(processor,nprocs) + 1
+         cnt = 0
+      endif
+      cnt = cnt + 1
+
+      if (workPerBlock(globalID) /= 0) then
+         proc_tmp(processor) = proc_tmp(processor) + 1
+         localID = proc_tmp(processor)
+         newDistrb%blockLocation(globalID) = processor
+         newDistrb%blockLocalID (globalID) = localID
+         newDistrb%blockIndex(processor,localID) = globalID
+      else  ! no work - eliminate block from distribution
+         newDistrb%blockLocation(globalID) = 0
+         newDistrb%blockLocalID (globalID) = 0
+      endif
+
+   end do
+   end do
+   end do
+
+   newDistrb%numLocalBlocks = proc_tmp(my_task+1)
+   newDistrb%blockCnt(:) = proc_tmp(:)
+   deallocate(proc_tmp)
+
+!   write(nu_diag,*) 'my_task,newDistrb%numLocalBlocks',&
+!      my_task,newDistrb%numLocalBlocks
+
+!----------------------------------------------------------------------
+!
+!  now store the local info
+!
+!----------------------------------------------------------------------
+
+   globalID = 0
+
+   if (newDistrb%numLocalBlocks > 0) then
+      allocate (newDistrb%blockGlobalID(newDistrb%numLocalBlocks), &
+                stat=istat)
+
+      processor = my_task + 1
+      do localID = 1,newDistrb%numLocalBlocks
+         newDistrb%blockGlobalID (localID) = newDistrb%blockIndex(processor,&
+                                             localID)
+      enddo
+   endif
+
+!----------------------------------------------------------------------
+!EOC
+ end function create_distrb_blkcart
+ 
+!***********************************************************************
+!BOP
+! !IROUTINE: create_distrb_blkrobin
+! !INTERFACE:
+
+ function create_distrb_blkrobin(nprocs, workPerBlock) result(newDistrb)
+
+! !DESCRIPTION:
+!  This function creates a distribution of blocks across processors
+!  using a simple blkrobin algorithm. Mean for prescribed ice or
+!  standalone CAM mode.
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+
+   integer (int_kind), intent(in) :: &
+      nprocs            ! number of processors in this distribution
+
+   integer (int_kind), dimension(:), intent(in) :: &
+      workPerBlock        ! amount of work per block
+
+! !OUTPUT PARAMETERS:
+
+   type (distrb) :: &
+      newDistrb           ! resulting structure describing Cartesian
+                          !  distribution of blocks
+
+!EOP
+!BOC
+!----------------------------------------------------------------------
+!
+!  local variables
+!
+!----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+      i, j,                  &! dummy loop indices
+      istat,                 &! status flag for allocation
+      iblock, jblock,        &!
+      processor,             &! processor position in cartesian decomp
+      globalID,              &! global block ID
+      localID                 ! block location on this processor
+
+   integer (int_kind), dimension(:), allocatable :: &
+      proc_tmp           ! temp processor id
+
+   logical (log_kind), dimension(:), allocatable :: &
+      bfree              ! map of assigned blocks
+   
+   integer (int_kind) :: pid,n,cnt, blktogether, i2, j2
+   integer (int_kind) :: totblocks, nchunks
+   logical (log_kind) :: keepgoing
+
+!----------------------------------------------------------------------
+!
+!  create communicator for this distribution
+!
+!----------------------------------------------------------------------
+
+   call create_communicator(newDistrb%communicator, nprocs)
+
+!----------------------------------------------------------------------
+!
+!  try to find best processor arrangement
+!
+!----------------------------------------------------------------------
+
+   newDistrb%nprocs = nprocs
+
+!----------------------------------------------------------------------
+!
+!  allocate space for decomposition
+!
+!----------------------------------------------------------------------
+
+   allocate (newDistrb%blockLocation(nblocks_tot), &
+             newDistrb%blockLocalID (nblocks_tot), stat=istat)
+
+   allocate (newDistrb%blockCnt(nprocs))
+!----------------------------------------------------------------------
+!
+!  distribute blocks linearly across processors in each direction
+!
+!----------------------------------------------------------------------
+
+   allocate(proc_tmp(nprocs))
+   processor = 0
+   globalID = 0
+   proc_tmp = 0
+
+   allocate(newDistrb%blockIndex(nprocs,max_blocks))
+   newDistrb%blockIndex(:,:) = 0
+
+   allocate(bfree(nblocks_x*nblocks_y))
+   bfree=.true.
+
+   totblocks = 0
+   do j=1,nblocks_y
+   do i=1,nblocks_x
+      globalID = (j-1)*nblocks_x + i
+      if (workPerBlock(globalID) /= 0) then
+         totblocks=totblocks+1
+      else  ! no work - eliminate block from distribution
+         bfree(globalID) = .false.
+         newDistrb%blockLocation(globalID) = 0
+         newDistrb%blockLocalID (globalID) = 0
+      endif
+   enddo
+   enddo
+
+   blktogether = max(1,nint(float(totblocks)/float(6*nprocs)))
+
+!   write(nu_diag,*) 'ice_distrb_blkrobin totblocks = ',totblocks,nblocks_y*nblocks_x
+ 
+   !------------------------------
+   ! southern group of blocks
+   !   weave back and forth in i vs j
+   !   go south to north, low - high pes
+   !------------------------------
+
+   processor=1
+   cnt = 0
+   keepgoing = .true.
+   do j=1,nblocks_y
+   do i=1,nblocks_x
+      if (mod(j,2) == 0) then
+         i2 = nblocks_x - i + 1
+      else
+         i2 = i
+      endif
+      globalID = (j-1)*nblocks_x + i2
+      if (cnt >= blktogether) then
+         processor = mod(processor,nprocs) + 1
+         cnt = 0
+         if (processor == 1) keepgoing = .false.
+      endif
+!      write(nu_diag,'(a,6i7,l2)') 'tcx ',i,j,globalID,cnt,blktogether,processor,keepgoing
+
+      if (keepgoing) then
+         if (bfree(globalID)) then
+         if (workPerBlock(globalID) /= 0) then
+            proc_tmp(processor) = proc_tmp(processor) + 1
+            localID = proc_tmp(processor)
+            newDistrb%blockLocation(globalID) = processor
+            newDistrb%blockLocalID (globalID) = localID
+            newDistrb%blockIndex(processor,localID) = globalID
+            cnt = cnt + 1
+            totblocks = totblocks-1
+            bfree(globalID) = .false.
+
+         else  ! no work - eliminate block from distribution
+            bfree(globalID) = .false.
+            newDistrb%blockLocation(globalID) = 0
+            newDistrb%blockLocalID (globalID) = 0
+         endif
+         endif  ! bfree
+      endif
+   end do
+   end do
+
+!   write(nu_diag,*) 'ice_distrb_blkrobin totblocks left after southern = ',totblocks
+
+   !------------------------------
+   ! northern group of blocks
+   !   weave back and forth in i vs j
+   !   go north to south, high - low pes
+   !------------------------------
+
+   processor=nprocs
+   cnt = 0
+   keepgoing = .true.
+   do j=nblocks_y,1,-1
+   do i=1,nblocks_x
+      if (mod(j,2) == 1) then
+         i2 = nblocks_x - i + 1
+      else
+         i2 = i
+      endif
+      globalID = (j-1)*nblocks_x + i2
+      if (cnt >= blktogether) then
+         processor = mod(processor+nprocs-2,nprocs) + 1
+         cnt = 0
+         if (processor == nprocs) keepgoing = .false.
+      endif
+
+      if (keepgoing) then
+         if (bfree(globalID)) then
+         if (workPerBlock(globalID) /= 0) then
+            proc_tmp(processor) = proc_tmp(processor) + 1
+            localID = proc_tmp(processor)
+            newDistrb%blockLocation(globalID) = processor
+            newDistrb%blockLocalID (globalID) = localID
+            newDistrb%blockIndex(processor,localID) = globalID
+            cnt = cnt + 1
+            totblocks = totblocks - 1
+            bfree(globalID) = .false.
+
+         else  ! no work - eliminate block from distribution
+            bfree(globalID) = .false.
+            newDistrb%blockLocation(globalID) = 0
+            newDistrb%blockLocalID (globalID) = 0
+         endif
+         endif  ! bfree
+      endif
+   end do
+   end do
+
+!   write(nu_diag,*) 'ice_distrb_blkrobin totblocks left after northern = ',totblocks
+
+   !------------------------------
+   ! central group of blocks
+   !   weave back and forth in i vs j
+   !   go north to south, low - high / low - high pes
+   !------------------------------
+
+   nchunks = 2*nprocs
+   blktogether = max(1,nint(float(totblocks)/float(nchunks)))
+   processor=1
+   cnt = 0
+   do j=nblocks_y,1,-1
+   do i=1,nblocks_x
+      if (mod(j,2) == 1) then
+         i2 = nblocks_x - i + 1
+      else
+         i2 = i
+      endif
+      globalID = (j-1)*nblocks_x + i2
+      if (cnt >= blktogether) then
+         nchunks = nchunks - 1
+         if (nchunks == 0) then
+            blktogether = 1
+         else
+            blktogether = max(1,nint(float(totblocks)/float(nchunks)))
+         endif
+         cnt = 0
+         processor = mod(processor,nprocs) + 1
+      endif
+
+      if (bfree(globalID)) then
+      if (workPerBlock(globalID) /= 0) then
+         proc_tmp(processor) = proc_tmp(processor) + 1
+         localID = proc_tmp(processor)
+         newDistrb%blockLocation(globalID) = processor
+         newDistrb%blockLocalID (globalID) = localID
+         newDistrb%blockIndex(processor,localID) = globalID
+         cnt = cnt + 1
+         totblocks = totblocks-1
+         bfree(globalID) = .false.
+
+      else  ! no work - eliminate block from distribution
+         bfree(globalID) = .false.
+         newDistrb%blockLocation(globalID) = 0
+         newDistrb%blockLocalID (globalID) = 0
+      endif
+      endif  ! bfree
+   end do
+   end do
+
+   newDistrb%numLocalBlocks = proc_tmp(my_task+1)
+   newDistrb%blockCnt(:) = proc_tmp(:)
+   deallocate(proc_tmp)
+   deallocate(bfree)
+
+!----------------------------------------------------------------------
+!
+!  now store the local info
+!
+!----------------------------------------------------------------------
+
+   globalID = 0
+
+   if (newDistrb%numLocalBlocks > 0) then
+      allocate (newDistrb%blockGlobalID(newDistrb%numLocalBlocks), &
+                stat=istat)
+
+      processor = my_task + 1
+      do localID = 1,newDistrb%numLocalBlocks
+         newDistrb%blockGlobalID (localID) = newDistrb%blockIndex(processor,&
+                                             localID)
+      enddo
+   endif
+
+!----------------------------------------------------------------------
+!EOC
+ end function create_distrb_blkrobin
  
 !***********************************************************************
 !BOP
@@ -1307,7 +1793,7 @@
 ! !IROUTINE: create_distrb_spacecurve
 ! !INTERFACE:
 
- function create_distrb_spacecurve(nprocs, maxBlock, work_per_block,prob_per_block,blockType, bStats, FixMaxBlock )
+ function create_distrb_spacecurve(nprocs, minBlock, maxBlock, work_per_block,prob_per_block,blockType, bStats, FixMaxBlock, maxDil )
 
 ! !Description:
 !  This function distributes blocks across processors in a
@@ -1321,7 +1807,7 @@
    integer (int_kind), intent(in) :: &
       nprocs                ! number of processors in this distribution
 
-   integer (int_kind), intent(in) :: maxBlock
+   integer (int_kind), intent(in) :: minBlock, maxBlock
 
    integer (int_kind), dimension(:), intent(in) :: &
       work_per_block        ! amount of work per block
@@ -1335,6 +1821,8 @@
     real (dbl_kind),  dimension(:,:), intent(in) :: bStats
 
     logical, intent(in) :: FixMaxBlock
+
+     real (real_kind) :: maxDil
 
 ! !OUTPUT PARAMETERS:
 
@@ -1618,7 +2106,7 @@
       case ('weight')
    if(verbose) print *,'IAM: ',my_task,'create_distrb_spacecurve: point #16'
          call PartitionCurve(work_on_curve(1:nblocks),work_per_proc, &
-		blockLocation(1:nblocks),distance(1:nblocks), nprocs,maxB,cStats,FixMaxBlock, ierr)
+		blockLocation(1:nblocks),distance(1:nblocks), nprocs,minBlock, maxB,cStats,FixMaxBlock, maxDil, ierr)
    if(verbose) print *,'IAM: ',my_task,'create_distrb_spacecurve: point #17'
 !DBG         print *,'After PartitionCurve:'
          if(ierr < 0) then 
@@ -1831,16 +2319,18 @@
  end subroutine TypePartition
 
   subroutine PartitionCurve(work_per_block, work_per_proc, blockLocation, distance, &
-             nproc, max_blocks, Stats, FixMaxBlock, ierr)
+             nproc, min_blocks, max_blocks, Stats, FixMaxBlock, maxDil, ierr)
 
     integer (int_kind), intent(inout) :: work_per_block(:)
     integer (int_kind), intent(inout) :: work_per_proc(:)
     integer (int_kind), intent(inout) :: blockLocation(:)
     integer (int_kind), intent(inout) :: distance(:)
     integer (int_kind), intent(in)    :: nproc
+    integer (int_kind), intent(in)    :: min_blocks
     integer (int_kind), intent(in)    :: max_blocks
     real    (dbl_kind), intent(in)    :: Stats(:,:) 
     logical,            intent(in)    :: FixMaxBlock
+    real    (real_kind), intent(in)   :: maxDil
     integer (int_kind), intent(inout) :: ierr
 
     integer :: cnt
@@ -1858,17 +2348,17 @@
 
     integer :: maxB,minB
 
-    logical, parameter :: verbose = .FALSE.
+    logical, parameter :: verbose = .TRUE.
     integer :: it,maxiter
     integer :: save_maxB 
     real :: save_maxCost
     
-    integer :: amaxBlocks 
+    integer :: aminBlocks, amaxBlocks 
 
     real :: aWork,minWork,maxWork,maxWorkBlock
     real :: minCostBlock, maxCostBlock
     real :: maxCost_old
-    real (real_kind) :: maxDil,amaxDil
+    real (real_kind) :: amaxDil
     real (dbl_kind), allocatable, dimension(:) :: cost_per_proc
     real (dbl_kind), allocatable, dimension(:) :: cost_per_block
     real (dbl_kind), allocatable, dimension(:,:) :: pStats 
@@ -1877,7 +2367,7 @@
     allocate(pStats(numCoeff,nblocks_tot))
 
     maxB=max_blocks
-    maxDil = 5.0
+!    maxDil = 5.0
 
     if ( my_task .eq. master_task) then  
 
@@ -1928,7 +2418,7 @@
           do while(contLoop )
 
             cost_per_proc=0.0
-            call wPartition(cost_per_block,blockLocation, distance, nproc,maxB,maxValue,maxDil,amaxBlocks, amaxDil)
+            call wPartition(cost_per_block,blockLocation, distance, nproc,min_blocks, maxB,maxValue,maxDil,aminBlocks,amaxBlocks, amaxDil)
             anProc = MAXVAL(blockLocation)
             call ConvertStatsBlock2Proc(blockLocation,Stats,pStats)
             call EstimateCost(pStats,anProc,cost_per_proc)
@@ -1936,7 +2426,7 @@
    
 
             if(lprint_stats) then 
-		write(nu_diag,211) it,anProc,amaxBlocks,maxB,minValue, maxValue,maxCost, amaxDil
+		write(nu_diag,211) it,anProc,aminBlocks,amaxBlocks,maxB,minValue, maxValue,maxCost, amaxDil
             endif
 
             if(maxCost > maxValue) then
@@ -1968,8 +2458,8 @@
        print *,'-------------------------wSFC-----------------------'
        call PrintPartitionLB(blockLocation,nproc,Stats) 
 
- 211 format('Partition loop: it: ',i4,' anProc: ',i4,' amaxBlocks ', &
-              i4,' maxB: ',i4,' [min,max]Value: ',2(f14.4),' maxCost: ',f14.4,' maxDilation: ',f14.4 )  
+ 211 format('Partition loop: it: ',i4,' anProc: ',i4,' a{min,max}Blocks ', &
+              2(i4),' maxB: ',i4,' [min,max]Value: ',2(f14.4),' maxCost: ',f14.4,' maxDilation: ',f14.4 )  
  213 format('PartitionCurve: TotalCost: ',f12.4,' avgCost: ',f12.4, &
 	    ' minBlockCost: ',f12.4,' maxBlockCost: ',f12.4 ) 
  214 format('Using performance model: ',a20)
@@ -1985,16 +2475,17 @@
 
   end subroutine PartitionCurve
 
-  subroutine wPartition(cost_per_block, blockLocation, distance, nproc, max_blocks, maxValue, maxDil, amaxBlocks,amaxDil)
+  subroutine wPartition(cost_per_block, blockLocation, distance, nproc, min_blocks, max_blocks, maxValue, maxDil, aminBlocks, amaxBlocks,amaxDil)
 
     real (dbl_kind), intent(in) :: cost_per_block(:)
     integer (int_kind), intent(inout) :: blockLocation(:)
     integer (int_kind), intent(inout) :: distance(:)
     integer (int_kind), intent(in) :: nproc
+    integer (int_kind), intent(in) :: min_blocks
     integer (int_kind), intent(in) :: max_blocks
     real (real_kind), intent(in) :: maxvalue
     real (real_kind), intent(in)  :: maxDil    ! maximum alloable dilation of domains
-    integer (int_kind), intent(inout) :: amaxBlocks 
+    integer (int_kind), intent(inout) :: aminBlocks, amaxBlocks 
     real (real_kind), intent(out) :: amaxDil
 
     integer (int_kind)  :: n,ip,i,numB
@@ -2013,6 +2504,7 @@
 
     totalCost = SUM(cost_per_block)
 
+    aminBlocks = n
     amaxBlocks = 0
     amaxDil  = 1.0
     avgCost = (totalCost/nproc)
@@ -2036,7 +2528,7 @@
           dilation2 = real(Dist)/real(minDist)
           if(((sumTMP2 <= maxValue) .and. (numB < max_blocks) .and. dilation2 <= maxDil) &
 !          if(((sumTMP2 <= maxValue) .and. (numB < max_blocks)) &
-                 .or. (ip == nproc) ) then
+                 .or. (ip == nproc) .or. (numB < min_blocks) ) then
               blockLocation(i) = ip
               i=i+1
               sumTMP = sumTMP2
@@ -2046,6 +2538,7 @@
               break_loop = .TRUE.
           endif
         enddo
+        if(aminBlocks > numB)  aminBlocks = numB
         if(amaxBlocks < numB)  amaxBlocks = numB
         if(amaxDil < dilation) amaxDil = dilation
         ip = ip+1
@@ -2225,7 +2718,7 @@ end subroutine ice_distributionRake
 
       real :: maxCost,minCost
       integer :: anProc
-      integer :: maxB 
+      integer :: minB, maxB 
       real :: aCost
       real (dbl_kind), allocatable, dimension(:) :: cost_per_proc(:)
       integer :: i,ncnt
@@ -2246,10 +2739,12 @@ end subroutine ice_distributionRake
       minCost = MINVAL(cost_per_proc)
       aCost = SUM(cost_per_proc)/real(n)
       anProc=MAXVAL(Location)
-      maxB=0;
+      maxB=0
+      minB=n
       do i=1,n
            ncnt = COUNT(Location==i)  
            maxB = MAX(ncnt,maxB)
+           minB = MIN(ncnt,minB)
       enddo
 
 !DBG      print *,'maxCost: ',maxCost
@@ -2258,11 +2753,11 @@ end subroutine ice_distributionRake
 
 !      print *,'PrintPartitionLB: on ',anProc,' processors Avg,Min,Max work/proc, imbalance  ', &
 !                aWork,minWork,maxWork,ABS(aWork-maxWork)/aWork
-      write(nu_diag,212)  anProc, maxB,aCost,minCost,maxCost,ABS(aCost-maxCost)/aCost
+      write(nu_diag,212)  anProc, minB, maxB,aCost,minCost,maxCost,ABS(aCost-maxCost)/aCost
       deallocate(cost_per_proc)
       deallocate(pStats)
 
- 212 format('PrintPartitionLB: on ',i4,' procs maxB: ',i4,' Avg,Min,Max Cost/proc: ',(3(f10.4)),' imbalance: ',f8.2)
+ 212 format('PrintPartitionLB: on ',i4,' procs a{min,max}Blocks: ',(2(i4)),' Avg,Min,Max Cost/proc: ',(3(f10.4)),' imbalance: ',f8.2)
 
     end subroutine PrintPartitionLB
 

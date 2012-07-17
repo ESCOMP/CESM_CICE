@@ -156,6 +156,15 @@ file format ('bin'=binary or 'nc'=netcdf)
 Default: 'nc' if CPP nc is defined, and 'bin' otherwise
 </entry>
 
+<entry 
+id="write_ic" 
+type="logical"  
+category="cice" 
+group="setup_nml" >
+if true, write initial history file
+Default: false
+</entry>
+
 <!---Diagnostic output     ---->
 
 <entry 
@@ -281,6 +290,51 @@ category="cice"
 group="ice_nml" >
 Yield curve.
 Default: ellipse
+</entry>
+
+<entry 
+id="maskhalo_dyn" 
+type="logical"  
+category="cice" 
+group="ice_nml" >
+turn on masked halos in subcycling
+Default: true
+</entry>
+
+<entry 
+id="maskhalo_remap" 
+type="logical"  
+category="cice" 
+group="ice_nml" >
+turn on masked halos in tracer halo update in remap
+Default: true
+</entry>
+
+<entry 
+id="maskhalo_stress" 
+type="logical"  
+category="cice" 
+group="ice_nml" >
+turn on masked halos in tripole stress update
+Default: true
+</entry>
+
+<entry 
+id="maskhalo_bound" 
+type="logical"  
+category="cice" 
+group="ice_nml" >
+turn on masked halos in state bound
+Default: true
+</entry>
+
+<entry 
+id="splitcomm_dyn" 
+type="logical"  
+category="cice" 
+group="ice_nml" >
+allow overlap of computation and communication in subcycling
+Default: false
 </entry>
 
 <entry 
@@ -456,7 +510,7 @@ id="distribution_type"
 type="char*80"  
 category="cice" 
 group="domain_nml" 
-valid_values="cartesian,rake,spacecurve,roundrobin,DECOMPTYPE">
+valid_values="cartesian,rake,spacecurve,roundrobin,blkrobin,blkcart,DECOMPTYPE">
 method to use for distributing blocks
 Default: cartesian
 </entry>

@@ -421,6 +421,11 @@ add_default($nl, 'kcatbound');
 my $cam5 = $nl->get_value('cam5') =~ /$TRUE/io;
 
 add_default($nl, 'ndte');
+add_default($nl, 'maskhalo_dyn');
+add_default($nl, 'maskhalo_remap');
+add_default($nl, 'maskhalo_stress');
+add_default($nl, 'maskhalo_bound');
+add_default($nl, 'splitcomm_dyn');
 add_default($nl, 'albicev');
 add_default($nl, 'albicei');
 add_default($nl, 'albsnowv');

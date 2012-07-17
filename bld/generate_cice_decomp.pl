@@ -31,16 +31,6 @@ my $cwd = getcwd();  # current working directory
 my $cfgdir;
 my $utilroot = $ENV{'UTILROOT'};
 
-my $primefactors = $ENV{'ICE_DOMAIN_PRIMEFACS'};
-my @primefactors;
-my $use_primefactors;
-if ($primefactors) {
-    $use_primefactors = 1;
-    @primefactors = split(',', $primefactors);
-} else {
-    $use_primefactors = 0;
-}
-
 if ($ProgDir) { 
     $cfgdir = $ProgDir; 
 } else { 
@@ -95,11 +85,11 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
-     -nproc <number>      (or -n)   Number of processors to use.	
+     -nproc <number>      (or -n)   Number of mpi tasks used.	
                                     (required)
      -res <resolution>    (or -r)   Horizontal resolution (gx1v6 etc.). 
                                     (default $res))
-     -thrds <number>      (or -t)   Number of threads per processsor    
+     -thrds <number>      (or -t)   Number of threads per mpi task
                                     (default 1)
      -output <type>	  (or -o)   Either output: all, maxblocks, bsize-x, bsize-y, or decomptype
 			            (default: $output)
@@ -172,7 +162,7 @@ my $nlon = $latlon{'nlon'};
 
 # Try to read from the xml file
 my $dcmp = Decomp::Config->new( \%opts );
-my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"" );
+my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"", decompset=>"" );
 my $matches = $dcmp->ReadXML( $opts{'file'}, \%decomp );
 
 # If no xml entry, try to generate something
@@ -181,18 +171,16 @@ if ( $decomp{'maxblocks'} == 0) {
 }
 
 # adjust maxblocks to take into account threading
-  if ($decomp{'decomptype'} ne "spacecurve")  {
-     $decomp{'maxblocks'} = $decomp{'maxblocks'} * $opts{'thrds'};
-  }
+  $decomp{'maxblocks'} = $decomp{'maxblocks'} * $opts{'thrds'};
 
   if ( $decomp{'maxblocks'} == 0 ) {
      printf "%d %s",-1, "ERROR:($ProgName) No Decomp Created \n";
   } else {
      if (      $opts{'output'} eq "all"       ) {
-	 printf "%d %d %d %d %d %s", 
+	 printf "%d %d %d %d %d %s %s", 
 	 $nlon, $nlat,
 	 $decomp{'bsize_x'}, $decomp{'bsize_y'}, 
-	 $decomp{'maxblocks'}, $decomp{'decomptype'};
+	 $decomp{'maxblocks'}, $decomp{'decomptype'}, $decomp{'decompset'};
       } elsif ( $opts{'output'} eq "maxblocks" ) {
         print $decomp{'maxblocks'};
       } elsif ( $opts{'output'} eq "bsize_x"   ) {
@@ -201,6 +189,8 @@ if ( $decomp{'maxblocks'} == 0) {
         print $decomp{'bsize_y'};
       } elsif ( $opts{'output'} eq "decomptype") {
         print $decomp{'decomptype'};
+      } elsif ( $opts{'output'} eq "decompset") {
+        print $decomp{'decompset'};
       } else {
         print "ERROR:($ProgName) bad argument to output option $opts{'output'}\n";
         usage();
@@ -212,13 +202,6 @@ if ( $decomp{'maxblocks'} == 0) {
 sub CalcDecompInfo {
 #
 # Calculate decomposition information
-# Tries to first find an even cartesian decomposition (set = 1)
-#   For cice, want nprocsy to be as small as possible, find "first" match
-#      with preference for nprocsy = 1 or 2.  if it becomes larger than
-#      that, the cice decomp may be valid but it will run poorly.
-#   For pop, want bsize_x and bsize_y to be as equal as possible, use score 
-#      to find best decomp
-# If can't find an even decomp, tries a space filling curve (set = 2)
 #
   my $nlats    = shift;
   my $nlons    = shift;
@@ -226,8 +209,9 @@ sub CalcDecompInfo {
 
   my %opts   = %$opts_ref;
   my $nprocs = $opts{'nproc'};
+  my $nthrds = $opts{'thrds'};
 
-  my ($maxblocks,$bsize_x,$bsize_y,$decomptype);
+  my ($maxblocks,$bsize_x,$bsize_y,$decomptype,$decompset);
   my %decomp;
   my $set = 0;
   my $done = 0;
@@ -236,64 +220,80 @@ sub CalcDecompInfo {
   my $nx = 0;
   my $ny = 0;
   my $nn = 0;
-  my $tmp = 0;
+  my $mblocks = 0;
+  my $bsize  = 0;
+  my $bsizex = 0;
+  my $bsizey = 0;
   my $nscore = 0.0 ;
   my $bscore = $nlons * $nlats * $nprocs ;
 
-  # cartesian decomp
-  $nn = 0;
-  do {
-      $nn = $nn + 1;
-      $ny = $nn;
-      $nx = int($nprocs/$ny);
-      if ($ny * $nx == $nprocs &&
-	  $nlats % $ny == 0 &&
-	  $nlons % $nx == 0) {
-	  $nprocsx = $nx;
-	  $nprocsy = $ny;
-	  $set = 1;
-	  $done = 1;
-      }
-      # print "debug $nn $nx $ny $nprocsx $nprocsy $nscore $bscore $set \n";  
-  } until ($done == 1 || $nn == $nprocs);
-  if ($set == 1) {
-      $decomp{'nlats'}      = $nlats;
-      $decomp{'nlons'}      = $nlons;
-      $decomp{'maxblocks'}  = 1;
-      $decomp{'decomptype'} = "cartesian";
-      $decomp{'bsize_x'}    = int( $nlons / $nprocsx );
-      $decomp{'bsize_y'}    = int( $nlats / $nprocsy );
+  $decomp{'decompset'} = "null";
+
+  if ($set == 0) {
+     my $blksize = ($nlons * $nlats) / ($nprocs);
+     $nn = 0;
+     $done = 0;
+     do {
+         $nn = $nn + 1;
+     } until ($nn * $nn > $blksize);
+
+     my $nxnyfact = $nn * 4;
+     if ($nlats == 1) {
+	 $nxnyfact = $blksize;
+     }
+
+     #print "tcx1 $blksize $nn $nxnyfact \n";
+
+     $blksize = ($nlons * $nlats) / ($nprocs * 8);
+     $nx = 0;
+     do {
+         $nx = $nx + 1;
+         if ($nlons % $nx == 0) {
+             $ny = 0;
+             do {
+                 $ny = $ny + 1;
+                 if ($nlats % $ny == 0) {
+                     if ($nlats == 1) {
+                        # min score is best score is max block size
+                        $nscore = 1.0 / ($nx*$ny)
+   		     } else {
+                        # tcraig, somewhat arbitrary scoring system, best is min score
+                        # min aspect ratio, match blksize, avoid very small blocks
+                        $nscore = 0.5 * ($nx/$ny + $ny/$nx) + ($nx*$ny)/$blksize + $blksize/($nx*$ny) + 36/($nx*$ny);
+		     }
+                     #print "tcxc $nx $ny $nscore $bscore\n";
+                     if ($nscore < $bscore) {
+	                $bscore = $nscore;
+                        $bsizex = $nx;
+                        $bsizey = $ny;
+                        $set    = 1;
+		    }
+		 }
+	     } until ($ny > $nxnyfact);
+	 }
+     } until ($nx >= $nxnyfact);
   }
 
-  # round robin decomp - only used in prescribed mode for cice on cam grid
-  if ($set == 0) {
-      my $pattern = "^gx*|^tx*/";
-      if ($res =~ /$pattern/) {
-          # print" resolution matches gx or tx - no round robin used \n";
-	  # do nothing
+  $bsize = $bsizex * $bsizey;
+  $mblocks = ($nlats * $nlons + $bsize * $nprocs - 1)/($bsize * $nprocs);
+
+  #print "tcx0 $nlons $nlats $nprocs \n";
+  #print "tcx1 $bsizex $bsizey $bscore \n";
+  #print "tcx2 $bsize $blksize \n";
+
+  if ($bsize > 0) {
+      $decomp{'nlats'}      = $nlats;
+      $decomp{'nlons'}      = $nlons;
+      $decomp{'bsize_x'}    = $bsizex;
+      $decomp{'bsize_y'}    = $bsizey;
+      $decomp{'maxblocks'}  = $mblocks;
+      $decomp{'decompset'}  = "null";
+      if ($nlats == 1) {
+          $decomp{'decomptype'} = "roundrobin";
+      } elsif ($nprocs * $nprocs > $nlons * $nlats * 6) {
+          $decomp{'decomptype'} = "spacecurve";
       } else {
-	  $opts{'nproc'} = $opts{'nproc'} / $opts{'thrds'};
-	  $nprocs = $opts{'nproc'}; 
-	  $decomp{'nlons'}      = $nlons;
-	  $decomp{'nlats'}      = $nlats;
-	  $decomp{'decomptype'} = "roundrobin";
-	  if ($use_primefactors) {
-	      my $number=0;
-	      my $number_old=0;
-	      my $number_max=0; 
-	      foreach $number (@primefactors) {
-		  if ($nprocs >= $number){
-		      if ($number > $number_old) {$number_max = $number};
-		      $number_old           = $number; 
-		      $decomp{'bsize_x'}    = $number_max;
-		      $decomp{'bsize_y'}    = 1;
-		  }
-	      } 
-	  } else {
-	      $decomp{'bsize_x'}    = 1;
-	      $decomp{'bsize_y'}    = 1;
-	  }
-	  $decomp{'maxblocks'}  = int( ($nlons*$nlats) / ($decomp{'bsize_x'}*$nprocs) ) + 1;
+          $decomp{'decomptype'} = "blkrobin";
       }
   }
 

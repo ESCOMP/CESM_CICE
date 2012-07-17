@@ -53,6 +53,9 @@
       use ice_kinds_mod
       use ice_domain_size
       use ice_blocks
+      use ice_fileunits
+      use perf_mod,      only: t_startf, t_stopf, t_barrierf
+      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
 !
 !EOP
 !
@@ -75,6 +78,12 @@
          trcr      ! ice tracers
                    ! 1: surface temperature of ice/snow (C)
                    ! 2: meltpond volume                 (m)
+
+      !-----------------------------------------------------------------
+      ! state performance mods
+      !-----------------------------------------------------------------
+
+      logical (kind=log_kind) :: maskhalo_bound
 
       !-----------------------------------------------------------------
       ! state of the ice for each category
@@ -220,18 +229,97 @@
 !
 !EOP
 !
+      integer (kind=int_kind) :: i,j,n,iblk
+      integer (kind=int_kind), &
+         dimension(nx_block,ny_block,max_blocks) :: halomask
+      type (ice_halo) :: halo_info_aicemask
+!
+
+   if (maskhalo_bound) then
+
+      call t_barrierf('state_bound_h1_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_h1')
+
       call ice_HaloUpdate (aicen,            halo_info, &
                            field_loc_center, field_type_scalar)
+
+      call t_stopf('state_bound_h1')
+
+      call t_barrierf('state_bound_hm_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_hm')
+      halomask = 0
+      do iblk=1,nblocks
+      do n=1,ncat
+      do j=1,ny_block
+      do i=1,nx_block
+         if (aicen(i,j,n,iblk) > c0) halomask(i,j,iblk) = 1
+      enddo
+      enddo
+      enddo
+      enddo
+!tcx
+!      halomask = 1
+      call t_stopf('state_bound_hm')
+
+      call t_barrierf('state_bound_hc_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_hc')
+      call ice_HaloMask(halo_info_aicemask, halo_info, halomask)
+      call t_stopf('state_bound_hc')
+
+      call t_barrierf('state_bound_h2_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_h2')
+
+      call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info_aicemask, &
+                           field_loc_center, field_type_scalar)
+
+      call ice_HaloUpdate (vicen,            halo_info_aicemask, &
+                           field_loc_center, field_type_scalar)
+
+      call ice_HaloUpdate (vsnon,            halo_info_aicemask, &
+                           field_loc_center, field_type_scalar)
+
+      call ice_HaloUpdate (eicen,            halo_info_aicemask, &
+                           field_loc_center, field_type_scalar)
+
+      call ice_HaloUpdate (esnon,            halo_info_aicemask, &
+                           field_loc_center, field_type_scalar)
+      call t_stopf('state_bound_h2')
+
+      call t_barrierf('state_bound_hd_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_hd')
+      call ice_HaloDestroy(halo_info_aicemask)
+      call t_stopf('state_bound_hd')
+
+   else
+
+      call t_barrierf('state_bound_h1_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_h1')
+
+      call ice_HaloUpdate (aicen,            halo_info, &
+                           field_loc_center, field_type_scalar)
+
+      call t_stopf('state_bound_h1')
+
+      call t_barrierf('state_bound_h2_BARRIER',MPI_COMM_ICE)
+      call t_startf('state_bound_h2')
+
       call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info, &
                            field_loc_center, field_type_scalar)
+
       call ice_HaloUpdate (vicen,            halo_info, &
                            field_loc_center, field_type_scalar)
+
       call ice_HaloUpdate (vsnon,            halo_info, &
                            field_loc_center, field_type_scalar)
+
       call ice_HaloUpdate (eicen,            halo_info, &
                            field_loc_center, field_type_scalar)
+
       call ice_HaloUpdate (esnon,            halo_info, &
                            field_loc_center, field_type_scalar)
+      call t_stopf('state_bound_h2')
+
+   endif
 
       end subroutine bound_state
 

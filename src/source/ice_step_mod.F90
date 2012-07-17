@@ -286,6 +286,8 @@
          iblk,  &  ! block index
          i, j
 
+!      call t_barrierf('cice_step2_therm_BARRIER',MPI_COMM_ICE)
+      call t_startf('cice_step2_therm')
       call ice_timer_start(timer_column)  ! column physics
       call ice_timer_start(timer_thermo)  ! thermodynamics
 !      call ice_timer_start(timer_tmp)  ! temporary timer
@@ -338,6 +340,7 @@
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
+      call t_stopf('cice_step2_therm')
 !      call ice_timer_stop(timer_tmp)  ! temporary timer
       call ice_timer_stop(timer_thermo)  ! column physics
       call ice_timer_stop(timer_column)  ! column physics
@@ -659,23 +662,23 @@
       ! Elastic-viscous-plastic ice dynamics
       !-----------------------------------------------------------------
 
-      call t_barrierf ('cice_dyn_evp_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_evp')
+!      call t_barrierf ('cice_step_evp_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_evp')
       if (kdyn == 1) call evp (dt_dyn)
-      call t_stopf ('cice_dyn_evp')
+      call t_stopf ('cice_step_evp')
 
       !-----------------------------------------------------------------
       ! Horizontal ice transport
       !-----------------------------------------------------------------
 
-      call t_barrierf ('cice_dyn_horz_transport_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_horz_transport')
+!      call t_barrierf ('cice_step_horz_transport_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_horz_transport')
       if (advection == 'upwind') then
          call transport_upwind (dt_dyn)    ! upwind
       else
          call transport_remap (dt_dyn)     ! incremental remapping
       endif
-      call t_stopf ('cice_dyn_horz_transport')
+      call t_stopf ('cice_step_horz_transport')
 
       !-----------------------------------------------------------------
       ! Ridging
@@ -683,8 +686,8 @@
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_ridge)
-      call t_barrierf ('cice_dyn_ridge_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_ridge')
+!      call t_barrierf ('cice_step_ridge_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_ridge')
 
       l_stop = .false.
 
@@ -753,10 +756,10 @@
       !$OMP END PARALLEL DO
 
       call ice_timer_stop(timer_ridge)
-      call t_stopf ('cice_dyn_ridge')
+      call t_stopf ('cice_step_ridge')
 
-      call t_barrierf ('cice_dyn_column_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_column')
+!      call t_barrierf ('cice_step_column_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_column')
 
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,&
       !$OMP	                icells,indxi,indxj,l_stop,istop,jstop)
@@ -800,23 +803,23 @@
       enddo              ! iblk
       !$OMP END PARALLEL DO
 
-      call t_stopf ('cice_dyn_column')
+      call t_stopf ('cice_step_column')
 
       !-------------------------------------------------------------------
       ! Ghost cell updates for state variables.
       !-------------------------------------------------------------------
 
-      call t_barrierf ('cice_dyn_bound_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_bound')
+!      call t_barrierf ('cice_step_bound_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_bound')
       call ice_timer_start(timer_bound)
       call bound_state (aicen, trcrn, &
                         vicen, vsnon, &
                         eicen, esnon)
       call ice_timer_stop(timer_bound)
-      call t_stopf ('cice_dyn_bound')
+      call t_stopf ('cice_step_bound')
 
-      call t_barrierf ('cice_dyn_agg_BARRIER',MPI_COMM_ICE)
-      call t_startf ('cice_dyn_agg')
+!      call t_barrierf ('cice_step_agg_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_step_agg')
 
       !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
@@ -855,7 +858,7 @@
       enddo              ! iblk
       !$OMP END PARALLEL DO
 
-      call t_stopf ('cice_dyn_agg')
+      call t_stopf ('cice_step_agg')
       call ice_timer_stop(timer_column)
 
       end subroutine step_dynamics
@@ -918,8 +921,11 @@
       if (calc_Tsfc) then
 
          !$OMP PARALLEL DO PRIVATE(iblk)
+!         call t_barrierf('cice_step_radiationib_BARRIER',MPI_COMM_ICE)
          do iblk = 1, nblocks
+            call t_startf('cice_step_radiationib')
             call step_radiation_iblk(dt, iblk)
+            call t_stopf('cice_step_radiationib')
          end do
          !$OMP END PARALLEL DO
 
@@ -1026,6 +1032,8 @@
 
       if (trim(shortwave) == 'dEdd') then ! delta Eddington
 
+!         call t_barrierf('cice_step_rib_swdedd1_BARRIER',MPI_COMM_ICE)
+         call t_startf('cice_step_rib_swdedd1')
          ! identify ice-ocean cells
          icells = 0
          do j = 1, ny_block
@@ -1044,6 +1052,7 @@
                               tlat  (:,:,iblk), tlon(:,:,iblk), &
                               coszen(:,:,iblk), dt)
 
+         call t_stopf('cice_step_rib_swdedd1')
       else                     ! basic (ccsm3) shortwave
          coszen(:,:,iblk) = p5 ! sun above the horizon
       endif
@@ -1080,17 +1089,22 @@
       ! BPB 19 Dec 2006
 
             ! set snow properties
+!            call t_barrierf('cice_step_rib_swdedd2_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_swdedd2')
             call shortwave_dEdd_set_snow(nx_block, ny_block,           &
                               icells,                                  &
                               indxi,               indxj,              &
                               aicen(:,:,n,iblk),   vsnon(:,:,n,iblk),  &
                               trcrn(:,:,nt_Tsfc,n,iblk), fsn,          &
                               rhosnwn,             rsnwn)
+            call t_stopf('cice_step_rib_swdedd2')
 
 
             if (.not. tr_pond) then
 
                ! set pond properties
+!               call t_barrierf('cice_step_rib_swdedd3_BARRIER',MPI_COMM_ICE)
+               call t_startf('cice_step_rib_swdedd3')
                call shortwave_dEdd_set_pond(nx_block, ny_block,            &
                                  icells,                                   &
                                  indxi,               indxj,               &
@@ -1098,7 +1112,7 @@
                                  trcrn(:,:,nt_Tsfc,n,iblk),                &
                                  fsn,                 fpn,                 &
                                  hpn)
-
+               call t_stopf('cice_step_rib_swdedd3')
             else
 
                fpn(:,:) = apondn(:,:,n,iblk)
@@ -1113,6 +1127,8 @@
 
             tr_aero = .false.
 
+!            call t_barrierf('cice_step_rib_swdedd4_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_swdedd4')
             call shortwave_dEdd(nx_block,        ny_block,            &
                                 icells,                                 &
                                 indxi,             indxj,               &
@@ -1136,7 +1152,7 @@
                                 dalbicen_noaero(:,:,n,iblk),             &
                                 dalbsnon_noaero(:,:,n,iblk),             &
                                 dalbpndn_noaero(:,:,n,iblk))
-
+            call t_stopf('cice_step_rib_swdedd4')
             tr_aero = .true.
 
             endif
@@ -1152,6 +1168,8 @@
             fpn(:,:) = c0
             hpn(:,:) = c0
 
+!            call t_barrierf('cice_step_rib_swdedd5_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_swdedd5')
             call shortwave_dEdd(nx_block,        ny_block,            &
                                 icells,                                 &
                                 indxi,             indxj,               &
@@ -1175,6 +1193,7 @@
                                 dalbicen_nopond(:,:,n,iblk),             &
                                 dalbsnon_nopond(:,:,n,iblk),             &
                                 dalbpndn_nopond(:,:,n,iblk))
+            call t_stopf('cice_step_rib_swdedd5')
 
             fpn(:,:) = apondn(:,:,n,iblk)
             hpn(:,:) = hpondn(:,:,n,iblk)
@@ -1184,6 +1203,8 @@
             endif
 #endif
 #ifdef CCSM3FRC
+!            call t_barrierf('cice_step_rib_swdedd6_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_swdedd6')
             call shortwave_ccsm3(nx_block,     ny_block,           &
                            icells,                                 &
                            indxi,             indxj,               &
@@ -1202,8 +1223,11 @@
                            dIswabsn_ccsm3(:,:,il1:il2,iblk),        &
                            dalbicen_ccsm3(:,:,n,iblk),              &
                            dalbsnon_ccsm3(:,:,n,iblk))
+            call t_stopf('cice_step_rib_swdedd6')
 
 #endif
+!            call t_barrierf('cice_step_rib_swdedd7_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_swdedd7')
             call shortwave_dEdd(nx_block,        ny_block,            &
                                 icells,                                 &
                                 indxi,             indxj,               &
@@ -1223,11 +1247,14 @@
                                 Iswabsn(:,:,il1:il2,iblk),              &
                                 albicen(:,:,n,iblk),                    &
                                 albsnon(:,:,n,iblk),albpndn(:,:,n,iblk))
+            call t_stopf('cice_step_rib_swdedd7')
 
          else
 
             Sswabsn(:,:,sl1:sl2,iblk) = c0
 
+!            call t_barrierf('cice_step_rib_ccsm3_BARRIER',MPI_COMM_ICE)
+            call t_startf('cice_step_rib_ccsm3')
             call shortwave_ccsm3(nx_block,     ny_block,           &
                            icells,                                 &
                            indxi,             indxj,               &
@@ -1243,6 +1270,7 @@
                            Iswabsn(:,:,il1:il2,iblk),              &
                            albicen(:,:,n,iblk),albsnon(:,:,n,iblk))
 
+            call t_stopf('cice_step_rib_ccsm3')
          endif
 
 #ifdef AEROFRC

@@ -23,10 +23,11 @@
 !
 ! !USES:
       use ice_kinds_mod
-      use ice_communicate, only: my_task, master_task
+      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_domain_size
       use ice_constants
       use ice_fileunits
+      use perf_mod,        only: t_startf, t_stopf, t_barrierf
 !
 !EOP
 !
@@ -338,6 +339,9 @@
 !      call ice_timer_stop(timer_bound)
 
 
+      call t_barrierf('cice_remap_s2t_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_s2t')
+
       !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
@@ -355,6 +359,10 @@
 
       enddo
       !$OMP END PARALLEL DO
+
+      call t_stopf   ('cice_remap_s2t')
+      call t_barrierf('cice_remap_check1_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_check1')
 
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks.
@@ -487,6 +495,10 @@
 
       endif                     ! l_monotonicity_check
 
+      call t_stopf   ('cice_remap_check1')
+      call t_barrierf('cice_remap_horz_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_horz')
+
     !-------------------------------------------------------------------
     ! Main remapping routine: Step ice area and tracers forward in time.
     !-------------------------------------------------------------------
@@ -543,6 +555,10 @@
                                 has_dependents,    integral_order,     &
                                 l_dp_midpt)
 
+      call t_stopf   ('cice_remap_horz')
+      call t_barrierf('cice_remap_t2s_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_t2s')
+
     !-------------------------------------------------------------------
     ! Given new fields, recompute state variables.
     !-------------------------------------------------------------------
@@ -561,6 +577,10 @@
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
+      call t_stopf   ('cice_remap_t2s')
+      call t_barrierf('cice_remap_bound1_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_bound1')
+
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
     !-------------------------------------------------------------------
@@ -572,6 +592,9 @@
                         eicen, esnon)
 
       call ice_timer_stop(timer_bound)
+      call t_stopf   ('cice_remap_bound1')
+      call t_barrierf('cice_remap_check2_BARRIER',MPI_COMM_ICE)
+      call t_startf  ('cice_remap_check2')
 
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks
@@ -700,6 +723,7 @@
       endif                     ! l_monotonicity_check
 
       call ice_timer_stop(timer_advect)  ! advection 
+      call t_stopf   ('cice_remap_check2')
 
       end subroutine transport_remap
 

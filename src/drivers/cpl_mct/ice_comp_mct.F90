@@ -32,7 +32,7 @@ module ice_comp_mct
 		              seq_timemgr_eclockdateinsync, &
                               seq_timemgr_stopalarmison
   use seq_comm_mct,    only : seq_comm_suffix, seq_comm_inst, seq_comm_name
-  use perf_mod,        only : t_startf, t_stopf
+  use perf_mod,        only : t_startf, t_stopf, t_barrierf
 
   use ice_cpl_indices
   use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
@@ -420,7 +420,7 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-    call ice_timer_stop(timer_total) ! time entire run
+!    call ice_timer_stop(timer_total) ! time entire run
 !   call shr_get_memusage(msize,mrss)
 !   call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
 !   call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
@@ -496,6 +496,8 @@ contains
 !---------------------------------------------------------------------------
 
     call ice_timer_start(timer_total) ! time entire run
+    call t_barrierf('cice_run_total_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_total')
 
     !---------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -533,7 +535,8 @@ contains
     ! get import state
     !-------------------------------------------------------------------
     
-    call t_startf ('cice_import')
+    call t_barrierf('cice_run_import_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_import')
     call ice_timer_start(timer_cplrecv)
     if (other_cplgrid) then
        call mct_rearr_rearrange(x2i_i, x2i_iloc, rearr_ice2iloc)
@@ -542,7 +545,7 @@ contains
        call ice_import_mct( x2i_i )
     endif
     call ice_timer_stop(timer_cplrecv)
-    call t_stopf ('cice_import')
+    call t_stopf ('cice_run_import')
  
     !--------------------------------------------------------------------
     ! timestep update
@@ -564,82 +567,93 @@ contains
 
     if (restore_ice) call ice_HaloRestore
 
-    call t_startf ('cice_initmd')
+    call t_barrierf('cice_run_initmd_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_initmd')
     call init_mass_diags   ! diagnostics per timestep
-    call t_stopf ('cice_initmd')
+    call t_stopf ('cice_run_initmd')
 
     if(prescribed_ice) then  ! read prescribed ice
-       call t_startf ('cice_presc')
+       call t_barrierf('cice_run_presc_BARRIER',MPI_COMM_ICE)
+       call t_startf ('cice_run_presc')
        call ice_prescribed_run(idate, sec)
-       call t_stopf ('cice_presc')
+       call t_stopf ('cice_run_presc')
     endif
     
+    call t_barrierf('cice_run_initflux_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_initflux')
     call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
     call init_flux_ocn        ! initialize ocean fluxes sent to coupler
+    call t_stopf ('cice_run_initflux')
 
     !-----------------------------------------------------------------
     ! Scale radiation fields
     !-----------------------------------------------------------------
 
-    call t_startf ('cice_prep_radiation')
+    call t_barrierf('cice_run_prepradiation_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_prepradiation')
     call ice_timer_start(timer_sw)
     call prep_radiation(dt)
     call ice_timer_stop(timer_sw)
-    call t_stopf ('cice_prep_radiation')
+    call t_stopf ('cice_run_prepradiation')
     
     !-----------------------------------------------------------------
     ! thermodynamics1
     !-----------------------------------------------------------------
 
-    call t_startf ('cice_therm1')
+    call t_barrierf('cice_run_therm1_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_therm1')
     call step_therm1(dt)
-    call t_stopf ('cice_therm1')
+    call t_stopf ('cice_run_therm1')
     
     !-----------------------------------------------------------------
     ! thermodynamics2
     !-----------------------------------------------------------------
 
     if (.not.prescribed_ice) then
-       call t_startf ('cice_therm2')
+       call t_barrierf('cice_run_therm2_BARRIER',MPI_COMM_ICE)
+       call t_startf ('cice_run_therm2')
        call step_therm2 (dt)  ! post-coupler thermodynamics
-       call t_stopf ('cice_therm2')
+       call t_stopf ('cice_run_therm2')
     end if
 
    !-----------------------------------------------------------------
    ! dynamics, transport, ridging
    !-----------------------------------------------------------------
 
+    call t_barrierf('cice_run_dyn_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_dyn')
     if (.not.prescribed_ice .and. kdyn>0) then
        if (xndt_dyn > c1) then
-          call t_startf ('cice_dyn')
           do k = 1, nint(xndt_dyn)
              call step_dynamics(dt_dyn,dt) ! dynamics, transport, ridging
           enddo
-          call t_stopf ('cice_dyn')
        else
           if (mod(time, dt_dyn) == c0) then
-             call t_startf ('cice_dyn')
              call step_dynamics(dt_dyn,dt) ! dynamics, transport, ridging
-             call t_stopf ('cice_dyn')
           endif
        endif
     endif ! not prescribed_ice
+    call t_stopf ('cice_run_dyn')
     
     !-----------------------------------------------------------------
     ! radiation
     !-----------------------------------------------------------------
 
-    call t_startf ('cice_radiation')
+    call t_barrierf('cice_run_radiation_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_radiation')
     call ice_timer_start(timer_sw)
     call step_radiation(dt)
     call ice_timer_stop(timer_sw)
-    call t_stopf ('cice_radiation')
+    call t_stopf ('cice_run_radiation')
     
     !-----------------------------------------------------------------
     ! get ready for coupling
     !-----------------------------------------------------------------
 
+    call t_barrierf('cice_run_couplingprep_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_couplingprep')
     call coupling_prep
+    call t_stopf ('cice_run_couplingprep')
 
     call ice_timer_stop(timer_step)
 
@@ -647,13 +661,15 @@ contains
     ! write data
     !-----------------------------------------------------------------
     
-    call t_startf ('cice_diag')
+    call t_barrierf('cice_run_diag_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_diag')
     call ice_timer_start(timer_diags)
     if (mod(istep,diagfreq) == 0) call runtime_diags(dt) ! log file
     call ice_timer_stop(timer_diags)
-    call t_stopf ('cice_diag')
+    call t_stopf ('cice_run_diag')
     
-    call t_startf ('cice_hist')
+    call t_barrierf('cice_run_hist_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_hist')
     call ice_timer_start(timer_hist)
 #if (defined _NOIO)
 !  Not enought memory on BGL to write a history file yet! 
@@ -662,11 +678,13 @@ contains
     call ice_write_hist (dt)    ! history file
 #endif
     call ice_timer_stop(timer_hist)
-    call t_stopf ('cice_hist')
+    call t_stopf ('cice_run_hist')
  
     !--------------------------------------------
     ! Accumualate the number of active ice cells
     !--------------------------------------------
+    call t_barrierf('cice_run_accum_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_accum')
     call accum_numIceCells2(aice)
 
     rstwr = seq_timemgr_RestartAlarmIsOn(EClock)
@@ -741,12 +759,14 @@ contains
        call ice_timer_stop(timer_readwrite)
 #endif
     end if
+    call t_stopf ('cice_run_accum')
 
     !-----------------------------------------------------------------
     ! send export state to driver 
     !-----------------------------------------------------------------
     
-    call t_startf ('cice_export')
+    call t_barrierf('cice_run_export_BARRIER',MPI_COMM_ICE)
+    call t_startf ('cice_run_export')
     call ice_timer_start(timer_cplsend)
     if (other_cplgrid) then
        call ice_export_mct ( i2x_iloc )
@@ -756,7 +776,7 @@ contains
        call ice_export_mct ( i2x_i )
     endif
     call ice_timer_stop(timer_cplsend)
-    call t_stopf ('cice_export')
+    call t_stopf ('cice_run_export')
     
     !--------------------------------------------------------------------
     ! check that internal clock is in sync with master clock
@@ -806,6 +826,7 @@ contains
 !               ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
 !      endif
 !   endif
+    call t_stopf ('cice_run_total')
  
   105  format( A, 2i8, A, f10.2, A, f10.2, A)
 

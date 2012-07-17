@@ -48,6 +48,7 @@
       use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
       use ice_domain_size
       use ice_constants
+      use ice_exit, only: abort_ice
       use perf_mod,        only: t_startf, t_stopf, t_barrierf
 !
 !EOP
@@ -60,6 +61,10 @@
       integer (kind=int_kind) :: &
          kdyn     , & ! type of dynamics ( 1 = evp )
          ndte         ! number of subcycles:  ndte=dt/dte
+      logical (kind=log_kind) :: &
+         maskhalo_dyn , &  ! turn on masked halo updates in subcycling
+         maskhalo_stress , &  ! turn on masked halo updates in stress update for tripole
+         splitcomm_dyn        ! turn on overlapping of halo update and computation in subcycling
 
       logical (kind=log_kind) :: &
          evp_damping  ! if true, use evp damping procedure
@@ -164,8 +169,11 @@
 
       real (kind=dbl_kind), allocatable :: fld2(:,:,:,:)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,8):: &
-         str          ! stress combinations for momentum equation
+!      real (kind=dbl_kind), dimension(nx_block,ny_block,8,max_blocks):: &
+!         str8         ! stress combinations for momentum equation
+
+      real (kind=dbl_kind), allocatable ::  &
+         str8(:,:,:,:)         ! stress combinations for momentum equation
 
       integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
          icetmask   ! ice extent mask (T-cell)
@@ -173,7 +181,12 @@
       type (block) :: &
          this_block           ! block information for current block
       
-      call ice_timer_start(timer_dynamics) ! dynamics
+      integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         halomask     ! mask for masked halo creation
+      type (ice_halo) :: &
+         halo_info_mask          !  ghost cell update info
+
+!      call ice_timer_start(timer_dynamics) ! dynamics
 
       !-----------------------------------------------------------------
       ! Initialize
@@ -199,7 +212,9 @@
 !      call ice_timer_stop(timer_bound)
 
 !     call t_barrierf ('cice_dyn_evp_prep_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_prep')
+
+      call t_barrierf ('cice_evp_prep1_BARRIER',MPI_COMM_ICE)
+      call t_startf   ('cice_evp_prep1')
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -235,18 +250,18 @@
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
-!     call t_stopf ('cice_dyn_evp_prep')
-!     call t_barrierf ('cice_dyn_evp_bound_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_bound')
+      call t_stopf   ('cice_evp_prep1')
+      call t_barrierf('cice_evp_bound1_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_bound1')
 
-      call ice_timer_start(timer_bound)
+!      call ice_timer_start(timer_bound)
       call ice_HaloUpdate (icetmask,          halo_info, &
                            field_loc_center,  field_type_scalar)
-      call ice_timer_stop(timer_bound)
+!      call ice_timer_stop(timer_bound)
 
-!     call t_stopf ('cice_dyn_evp_bound')
-!     call t_barrierf ('cice_dyn_evp_convert_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_convert')
+      call t_stopf ('cice_evp_bound1')
+      call t_barrierf ('cice_evp_convert_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_convert')
 
       !-----------------------------------------------------------------
       ! convert fields from T to U grid
@@ -268,9 +283,9 @@
       call t2ugrid_vector(strairy)
 #endif
 
-!     call t_stopf ('cice_dyn_evp_convert')
-!     call t_barrierf ('cice_dyn_evp_prep2_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_prep2')
+     call t_stopf ('cice_evp_convert')
+     call t_barrierf ('cice_evp_prep2_BARRIER',MPI_COMM_ICE)
+     call t_startf ('cice_evp_prep2')
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -330,6 +345,10 @@
       enddo  ! iblk
       !$OMP END PARALLEL DO
 
+      call t_stopf ('cice_evp_prep2')
+      call t_barrierf ('cice_evp_bound2_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_bound2')
+
       allocate(fld2(nx_block,ny_block,2,max_blocks))
 
       !$OMP PARALLEL DO PRIVATE(iblk)
@@ -339,21 +358,11 @@
       enddo
       !$OMP END PARALLEL DO
 
-!     call t_stopf ('cice_dyn_evp_prep2')
-!     call t_barrierf ('cice_dyn_evp_bound_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_bound')
-
-      call ice_timer_start(timer_bound)
       call ice_HaloUpdate (strength,           halo_info, &
                            field_loc_center,   field_type_scalar)
       ! velocities may have changed in evp_prep2
       call ice_HaloUpdate (fld2,               halo_info, &
                            field_loc_NEcorner, field_type_vector)
-!     call ice_HaloUpdate (uvel,               halo_info, &
-!                          field_loc_NEcorner, field_type_vector)
-!     call ice_HaloUpdate (vvel,               halo_info, &
-!                          field_loc_NEcorner, field_type_vector)
-      call ice_timer_stop(timer_bound)
 
       !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1,nblocks
@@ -362,51 +371,154 @@
       enddo
       !$OMP END PARALLEL DO
 
-!     call t_stopf ('cice_dyn_evp_bound')
-!     call t_barrierf ('cice_dyn_evp_stress_BARRIER',MPI_COMM_ICE)
+     call t_stopf ('cice_evp_bound2')
+     if (maskhalo_dyn) then
+        call t_barrierf ('cice_evp_halocreate_BARRIER',MPI_COMM_ICE)
+        call t_startf('cice_evp_halocreate')
+        call ice_HaloMask(halo_info_mask, halo_info, icetmask)
+        call t_stopf ('cice_evp_halocreate')
+     endif
+
+     allocate(str8(nx_block,ny_block,8,nblocks))
+
+  if (splitcomm_dyn) then
 
       do ksub = 1,ndte        ! subcycling
 
-      !-----------------------------------------------------------------
-      ! stress tensor equation, total surface stress
-      !-----------------------------------------------------------------
+         call t_barrierf ('cice_evp_subcycling_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_evp_subcycling')
 
-!        call t_startf ('cice_dyn_evp_stress')
+         !-----------------------------------------------------------------
+         ! send halo update, skip on first subcycle
+         !-----------------------------------------------------------------
 
-         !$OMP PARALLEL DO PRIVATE(iblk,str)
+         if (ksub > 1) then
+            call t_startf ('cice_evp_bound3i')
+            !$OMP PARALLEL DO PRIVATE(iblk)
+            do iblk = 1,nblocks
+               fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
+               fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
+            enddo
+            !$OMP END PARALLEL DO
+            call t_stopf ('cice_evp_bound3i')
+            call t_startf ('cice_evp_bound3s')
+            if (maskhalo_dyn) then
+               call ice_HaloUpdate (fld2,               halo_info_mask, &
+                                    field_loc_NEcorner, field_type_vector, mode='send')
+            else
+               call ice_HaloUpdate (fld2,               halo_info, &
+                                    field_loc_NEcorner, field_type_vector, mode='send')
+            endif
+            call t_stopf ('cice_evp_bound3s')
+         endif
+
+         !-----------------------------------------------------------------
+         ! stress tensor equation, total surface stress, phase 1 = non edge pts
+         !-----------------------------------------------------------------
+
+         !$OMP PARALLEL DO PRIVATE(iblk)
          do iblk = 1, nblocks
+            this_block = get_block(blocks_ice(iblk),iblk)         
+            ilo = this_block%ilo
+            ihi = this_block%ihi
+            jlo = this_block%jlo
+            jhi = this_block%jhi
 
-!            if (trim(yield_curve) == 'ellipse') then
-               call stress (nx_block,             ny_block,             & 
-                            ksub,                 icellt(iblk),         & 
-                            indxti      (:,iblk), indxtj      (:,iblk), & 
-                            uvel      (:,:,iblk), vvel      (:,:,iblk), &     
-                            dxt       (:,:,iblk), dyt       (:,:,iblk), & 
-                            dxhy      (:,:,iblk), dyhx      (:,:,iblk), & 
-                            cxp       (:,:,iblk), cyp       (:,:,iblk), & 
-                            cxm       (:,:,iblk), cym       (:,:,iblk), & 
-                            tarear    (:,:,iblk), tinyarea  (:,:,iblk), & 
-                            strength  (:,:,iblk),                       & 
-                            stressp_1 (:,:,iblk), stressp_2 (:,:,iblk), & 
-                            stressp_3 (:,:,iblk), stressp_4 (:,:,iblk), & 
-                            stressm_1 (:,:,iblk), stressm_2 (:,:,iblk), & 
-                            stressm_3 (:,:,iblk), stressm_4 (:,:,iblk), & 
-                            stress12_1(:,:,iblk), stress12_2(:,:,iblk), & 
-                            stress12_3(:,:,iblk), stress12_4(:,:,iblk), & 
-                            shear     (:,:,iblk), divu      (:,:,iblk), & 
-                            prs_sig   (:,:,iblk),                       & 
-                            rdg_conv  (:,:,iblk), rdg_shear (:,:,iblk), & 
-                            str       (:,:,:) )
-!            endif               ! yield_curve
+            call t_startf ('cice_evp_stress1')
+            call stress (1, ilo, ihi, jlo, jhi,                      &
+                         nx_block,             ny_block,             & 
+                         ksub,                 icellt(iblk),         & 
+                         indxti      (:,iblk), indxtj      (:,iblk), & 
+                         uvel      (:,:,iblk), vvel      (:,:,iblk), &     
+                         dxt       (:,:,iblk), dyt       (:,:,iblk), & 
+                         dxhy      (:,:,iblk), dyhx      (:,:,iblk), & 
+                         cxp       (:,:,iblk), cyp       (:,:,iblk), & 
+                         cxm       (:,:,iblk), cym       (:,:,iblk), & 
+                         tarear    (:,:,iblk), tinyarea  (:,:,iblk), & 
+                         strength  (:,:,iblk),                       & 
+                         stressp_1 (:,:,iblk), stressp_2 (:,:,iblk), & 
+                         stressp_3 (:,:,iblk), stressp_4 (:,:,iblk), & 
+                         stressm_1 (:,:,iblk), stressm_2 (:,:,iblk), & 
+                         stressm_3 (:,:,iblk), stressm_4 (:,:,iblk), & 
+                         stress12_1(:,:,iblk), stress12_2(:,:,iblk), & 
+                         stress12_3(:,:,iblk), stress12_4(:,:,iblk), & 
+                         shear     (:,:,iblk), divu      (:,:,iblk), & 
+                         prs_sig   (:,:,iblk),                       & 
+                         rdg_conv  (:,:,iblk), rdg_shear (:,:,iblk), & 
+                         str8    (:,:,:,iblk) )
+            call t_stopf ('cice_evp_stress1')
+         enddo
+         !$OMP END PARALLEL DO
 
-      !-----------------------------------------------------------------
-      ! momentum equation
-      !-----------------------------------------------------------------
+         !-----------------------------------------------------------------
+         ! recv halo update, skip on first subcycle
+         !-----------------------------------------------------------------
 
+         if (ksub > 1) then
+            call t_startf ('cice_evp_bound3r')
+            if (maskhalo_dyn) then
+               call ice_HaloUpdate (fld2,               halo_info_mask, &
+                                    field_loc_NEcorner, field_type_vector, mode='recv')
+            else
+               call ice_HaloUpdate (fld2,               halo_info, &
+                                    field_loc_NEcorner, field_type_vector, mode='recv')
+            endif
+            call t_stopf ('cice_evp_bound3r')
+
+            call t_startf ('cice_evp_bound3c')
+            !$OMP PARALLEL DO PRIVATE(iblk)
+            do iblk = 1,nblocks
+               uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
+               vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
+            enddo
+            !$OMP END PARALLEL DO
+            call t_stopf ('cice_evp_bound3c')
+         endif
+
+         !-----------------------------------------------------------------
+         ! stress tensor equation, total surface stress, phase 2 = edge points
+         !-----------------------------------------------------------------
+
+         !$OMP PARALLEL DO PRIVATE(iblk)
+         do iblk = 1, nblocks
+            this_block = get_block(blocks_ice(iblk),iblk)         
+            ilo = this_block%ilo
+            ihi = this_block%ihi
+            jlo = this_block%jlo
+            jhi = this_block%jhi
+            call t_startf ('cice_evp_stress2')
+            call stress (2, ilo, ihi, jlo, jhi,                      &
+                         nx_block,             ny_block,             & 
+                         ksub,                 icellt(iblk),         & 
+                         indxti      (:,iblk), indxtj      (:,iblk), & 
+                         uvel      (:,:,iblk), vvel      (:,:,iblk), &     
+                         dxt       (:,:,iblk), dyt       (:,:,iblk), & 
+                         dxhy      (:,:,iblk), dyhx      (:,:,iblk), & 
+                         cxp       (:,:,iblk), cyp       (:,:,iblk), & 
+                         cxm       (:,:,iblk), cym       (:,:,iblk), & 
+                         tarear    (:,:,iblk), tinyarea  (:,:,iblk), & 
+                         strength  (:,:,iblk),                       & 
+                         stressp_1 (:,:,iblk), stressp_2 (:,:,iblk), & 
+                         stressp_3 (:,:,iblk), stressp_4 (:,:,iblk), & 
+                         stressm_1 (:,:,iblk), stressm_2 (:,:,iblk), & 
+                         stressm_3 (:,:,iblk), stressm_4 (:,:,iblk), & 
+                         stress12_1(:,:,iblk), stress12_2(:,:,iblk), & 
+                         stress12_3(:,:,iblk), stress12_4(:,:,iblk), & 
+                         shear     (:,:,iblk), divu      (:,:,iblk), & 
+                         prs_sig   (:,:,iblk),                       & 
+                         rdg_conv  (:,:,iblk), rdg_shear (:,:,iblk), & 
+                         str8    (:,:,:,iblk) )
+            call t_stopf ('cice_evp_stress2')
+
+         !-----------------------------------------------------------------
+         ! momentum equation
+         !-----------------------------------------------------------------
+
+            call t_startf ('cice_evp_stepu')
             call stepu (nx_block,            ny_block,           & 
                         icellu       (iblk),                     & 
                         indxui     (:,iblk), indxuj    (:,iblk), & 
-                        aiu      (:,:,iblk), str     (:,:,:),    & 
+                        aiu      (:,:,iblk), str8  (:,:,:,iblk), & 
                         uocn     (:,:,iblk), vocn    (:,:,iblk), &     
                         waterx   (:,:,iblk), watery  (:,:,iblk), & 
                         forcex   (:,:,iblk), forcey  (:,:,iblk), & 
@@ -416,76 +528,237 @@
                         strintx  (:,:,iblk), strinty (:,:,iblk), & 
                         uvel     (:,:,iblk), vvel    (:,:,iblk))
 
+            call t_stopf ('cice_evp_stepu')
          enddo
          !$OMP END PARALLEL DO
 
-!        call t_stopf ('cice_dyn_evp_stress')
-!        call t_barrierf ('cice_dyn_evp_bound2_BARRIER',MPI_COMM_ICE)
-!        call t_startf ('cice_dyn_evp_bound2')
-
-         !$OMP PARALLEL DO PRIVATE(iblk)
-         do iblk = 1,nblocks
-            fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
-            fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
-         enddo
-         !$OMP END PARALLEL DO
-
-         call ice_timer_start(timer_bound)
-         call ice_HaloUpdate (fld2,               halo_info, &
-                              field_loc_NEcorner, field_type_vector)
-!        call ice_HaloUpdate (uvel,               halo_info, &
-!                             field_loc_NEcorner, field_type_vector)
-!        call ice_HaloUpdate (vvel,               halo_info, &
-!                             field_loc_NEcorner, field_type_vector)
-         call ice_timer_stop(timer_bound)
-
-         !$OMP PARALLEL DO PRIVATE(iblk)
-         do iblk = 1,nblocks
-            uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
-            vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
-         enddo
-         !$OMP END PARALLEL DO
-
-!        call t_stopf ('cice_dyn_evp_bound2')
+         call t_stopf ('cice_evp_subcycling')
         
       enddo                     ! subcycling
 
+      !-----------------------------------------------------------------
+      ! one final halo update on the velocities
+      !-----------------------------------------------------------------
+
+      call t_barrierf ('cice_evp_bound4_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_bound4')
+      !$OMP PARALLEL DO PRIVATE(iblk)
+      do iblk = 1,nblocks
+         fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
+         fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
+      enddo
+      !$OMP END PARALLEL DO
+      if (maskhalo_dyn) then
+         call ice_HaloUpdate (fld2,               halo_info_mask, &
+                              field_loc_NEcorner, field_type_vector)
+       else
+         call ice_HaloUpdate (fld2,               halo_info, &
+                              field_loc_NEcorner, field_type_vector)
+      endif
+      !$OMP PARALLEL DO PRIVATE(iblk)
+      do iblk = 1,nblocks
+         uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
+         vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
+      enddo
+      !$OMP END PARALLEL DO
+      call t_stopf ('cice_evp_bound4')
+
+  else
+
+      do ksub = 1,ndte        ! subcycling
+
+         call t_barrierf ('cice_evp_subcycling_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_evp_subcycling')
+
+         !-----------------------------------------------------------------
+         ! stress tensor equation, total surface stress, all gridcells
+         !-----------------------------------------------------------------
+
+         !$OMP PARALLEL DO PRIVATE(iblk)
+         do iblk = 1, nblocks
+            this_block = get_block(blocks_ice(iblk),iblk)         
+            ilo = this_block%ilo
+            ihi = this_block%ihi
+            jlo = this_block%jlo
+            jhi = this_block%jhi
+            call t_startf ('cice_evp_stress0')
+            call stress (0, ilo, ihi, jlo, jhi,                      &
+                         nx_block,             ny_block,             & 
+                         ksub,                 icellt(iblk),         & 
+                         indxti      (:,iblk), indxtj      (:,iblk), & 
+                         uvel      (:,:,iblk), vvel      (:,:,iblk), &     
+                         dxt       (:,:,iblk), dyt       (:,:,iblk), & 
+                         dxhy      (:,:,iblk), dyhx      (:,:,iblk), & 
+                         cxp       (:,:,iblk), cyp       (:,:,iblk), & 
+                         cxm       (:,:,iblk), cym       (:,:,iblk), & 
+                         tarear    (:,:,iblk), tinyarea  (:,:,iblk), & 
+                         strength  (:,:,iblk),                       & 
+                         stressp_1 (:,:,iblk), stressp_2 (:,:,iblk), & 
+                         stressp_3 (:,:,iblk), stressp_4 (:,:,iblk), & 
+                         stressm_1 (:,:,iblk), stressm_2 (:,:,iblk), & 
+                         stressm_3 (:,:,iblk), stressm_4 (:,:,iblk), & 
+                         stress12_1(:,:,iblk), stress12_2(:,:,iblk), & 
+                         stress12_3(:,:,iblk), stress12_4(:,:,iblk), & 
+                         shear     (:,:,iblk), divu      (:,:,iblk), & 
+                         prs_sig   (:,:,iblk),                       & 
+                         rdg_conv  (:,:,iblk), rdg_shear (:,:,iblk), & 
+                         str8    (:,:,:,iblk) )
+            call t_stopf ('cice_evp_stress0')
+
+         !-----------------------------------------------------------------
+         ! momentum equation
+         !-----------------------------------------------------------------
+
+            call t_startf ('cice_evp_stepu')
+            call stepu (nx_block,            ny_block,           & 
+                        icellu       (iblk),                     & 
+                        indxui     (:,iblk), indxuj    (:,iblk), & 
+                        aiu      (:,:,iblk), str8  (:,:,:,iblk), & 
+                        uocn     (:,:,iblk), vocn    (:,:,iblk), &     
+                        waterx   (:,:,iblk), watery  (:,:,iblk), & 
+                        forcex   (:,:,iblk), forcey  (:,:,iblk), & 
+                        umassdtei(:,:,iblk), fm      (:,:,iblk), & 
+                        uarear   (:,:,iblk),                     & 
+                        strocnx  (:,:,iblk), strocny (:,:,iblk), & 
+                        strintx  (:,:,iblk), strinty (:,:,iblk), & 
+                        uvel     (:,:,iblk), vvel    (:,:,iblk))
+
+            call t_stopf ('cice_evp_stepu')
+         enddo
+         !$OMP END PARALLEL DO
+
+         !-----------------------------------------------------------------
+         ! halo update
+         !-----------------------------------------------------------------
+
+            call t_startf ('cice_evp_bound3i')
+            !$OMP PARALLEL DO PRIVATE(iblk)
+            do iblk = 1,nblocks
+               fld2(1:nx_block,1:ny_block,1,iblk) = uvel(1:nx_block,1:ny_block,iblk)
+               fld2(1:nx_block,1:ny_block,2,iblk) = vvel(1:nx_block,1:ny_block,iblk)
+            enddo
+            !$OMP END PARALLEL DO
+            call t_stopf ('cice_evp_bound3i')
+            call t_startf ('cice_evp_bound3sr')
+            if (maskhalo_dyn) then
+               call ice_HaloUpdate (fld2,               halo_info_mask, &
+                                    field_loc_NEcorner, field_type_vector)
+            else
+               call ice_HaloUpdate (fld2,               halo_info, &
+                                    field_loc_NEcorner, field_type_vector)
+            endif
+            call t_stopf ('cice_evp_bound3sr')
+
+            call t_startf ('cice_evp_bound3c')
+            !$OMP PARALLEL DO PRIVATE(iblk)
+            do iblk = 1,nblocks
+               uvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,1,iblk)
+               vvel(1:nx_block,1:ny_block,iblk) = fld2(1:nx_block,1:ny_block,2,iblk)
+            enddo
+            !$OMP END PARALLEL DO
+            call t_stopf ('cice_evp_bound3c')
+
+         call t_stopf ('cice_evp_subcycling')
+        
+      enddo                     ! subcycling
+
+  endif   ! splitcomm subcycling
+
+      deallocate(str8)
       deallocate(fld2)
+
+      if (maskhalo_dyn) then
+         call t_barrierf ('cice_evp_halodestroy_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_evp_halodestroy')
+         call ice_HaloDestroy(halo_info_mask)
+         call t_stopf ('cice_evp_halodestroy')
+      endif
+
+      call t_barrierf ('cice_evp_tpupd_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_tpupd')
 
       ! Force symmetry across the tripole seam
       if (trim(grid_type) == 'tripole') then
+      if (maskhalo_stress) then
+         !-------------------------------------------------------
+         ! set halomask to zero because ice_HaloMask always keeps
+         ! local copies AND tripole zipper communication
+         !-------------------------------------------------------
+         call t_barrierf ('cice_evp_tpupdhc_BARRIER',MPI_COMM_ICE)
+         call t_startf('cice_evp_tpupdhc')
+         halomask = 0
+         call ice_HaloMask(halo_info_mask, halo_info, halomask)
+         call t_stopf ('cice_evp_tpupdhc')
 
-      call ice_HaloUpdate_stress(stressp_1, stressp_3, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressp_3, stressp_1, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressp_2, stressp_4, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressp_4, stressp_2, halo_info, &
-                           field_loc_center,  field_type_scalar)
+         call t_barrierf ('cice_evp_tpupdhu_BARRIER',MPI_COMM_ICE)
+         call t_startf('cice_evp_tpupdhu')
+         call ice_HaloUpdate_stress(stressp_1, stressp_3, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_3, stressp_1, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_2, stressp_4, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_4, stressp_2, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
 
-      call ice_HaloUpdate_stress(stressm_1, stressm_3, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressm_3, stressm_1, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressm_2, stressm_4, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stressm_4, stressm_2, halo_info, &
-                           field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_1, stressm_3, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_3, stressm_1, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_2, stressm_4, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_4, stressm_2, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
 
-      call ice_HaloUpdate_stress(stress12_1, stress12_3, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stress12_3, stress12_1, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stress12_2, stress12_4, halo_info, &
-                           field_loc_center,  field_type_scalar)
-      call ice_HaloUpdate_stress(stress12_4, stress12_2, halo_info, &
-                           field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_1, stress12_3, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_3, stress12_1, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_2, stress12_4, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_4, stress12_2, halo_info_mask, &
+                              field_loc_center,  field_type_scalar)
+         call t_stopf('cice_evp_tpupdhu')
+
+         call t_barrierf ('cice_evp_tpupdhd_BARRIER',MPI_COMM_ICE)
+         call t_startf ('cice_evp_tpupdhd')
+         call ice_HaloDestroy(halo_info_mask)
+         call t_stopf ('cice_evp_tpupdhd')
+      else
+
+         call ice_HaloUpdate_stress(stressp_1, stressp_3, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_3, stressp_1, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_2, stressp_4, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressp_4, stressp_2, halo_info, &
+                              field_loc_center,  field_type_scalar)
+
+         call ice_HaloUpdate_stress(stressm_1, stressm_3, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_3, stressm_1, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_2, stressm_4, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stressm_4, stressm_2, halo_info, &
+                              field_loc_center,  field_type_scalar)
+
+         call ice_HaloUpdate_stress(stress12_1, stress12_3, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_3, stress12_1, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_2, stress12_4, halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_HaloUpdate_stress(stress12_4, stress12_2, halo_info, &
+                              field_loc_center,  field_type_scalar)
 
       endif
+      endif
 
-!     call t_barrierf ('cice_dyn_evp_finish_BARRIER',MPI_COMM_ICE)
-!     call t_startf ('cice_dyn_evp_finish')
+      call t_stopf ('cice_evp_tpupd')
+      call t_barrierf ('cice_evp_finish_BARRIER',MPI_COMM_ICE)
+      call t_startf ('cice_evp_finish')
 
       !-----------------------------------------------------------------
       ! ice-ocean stress
@@ -510,8 +783,8 @@
       call u2tgrid_vector(strocnxT)    ! shift
       call u2tgrid_vector(strocnyT)
 
-      call ice_timer_stop(timer_dynamics)    ! dynamics
-!     call t_stopf ('cice_dyn_evp_finish')
+!      call ice_timer_stop(timer_dynamics)    ! dynamics
+      call t_stopf ('cice_evp_finish')
 
       end subroutine evp
 
@@ -1018,7 +1291,8 @@
 !
 ! !INTERFACE:
 !
-      subroutine stress (nx_block,   ny_block,   & 
+      subroutine stress (phase, ilo, ihi, jlo, jhi, &
+                         nx_block,   ny_block,   & 
                          ksub,       icellt,     & 
                          indxti,     indxtj,     & 
                          uvel,       vvel,       & 
@@ -1037,7 +1311,7 @@
                          shear,      divu,       & 
                          prs_sig,                & 
                          rdg_conv,   rdg_shear,  & 
-                         str )
+                         str8 )
 !
 ! !DESCRIPTION:
 !
@@ -1054,6 +1328,8 @@
 ! !INPUT/OUTPUT PARAMETERS:
 !
       integer (kind=int_kind), intent(in) :: & 
+         phase,              & ! phase
+         ilo, ihi, jlo, jhi, & ! block dimensions
          nx_block, ny_block, & ! block dimensions
          ksub              , & ! subcycling step
          icellt                ! no. of cells where icetmask = 1
@@ -1094,12 +1370,12 @@
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,8), & 
          intent(out) :: &
-         str          ! stress combinations
+         str8         ! stress combinations
 !
 !EOP
 !
       integer (kind=int_kind) :: &
-         i, j, ij
+         i, j, ij, chunk
 
       real (kind=dbl_kind) :: &
         divune, divunw, divuse, divusw            , & ! divergence
@@ -1121,8 +1397,15 @@
       !-----------------------------------------------------------------
       ! Initialize
       !-----------------------------------------------------------------
+      if (phase == 0 .or. phase == 1 .or. phase == 2) then
+         ! valid, 0=all cells, 1=interior cells, 2=edge cells
+      else
+         call abort_ice ('ice_dyn stress: illegal phase')
+      endif
 
-      str(:,:,:) = c0
+      if (phase == 1) then
+         str8(:,:,:) = c0
+      endif
 
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
@@ -1131,6 +1414,16 @@
          i = indxti(ij)
          j = indxtj(ij)
 
+!     if ((phase == 1 .and. (i >  ilo .and. i <  ihi) .and. (j >  jlo .and. j <  jhi)) .or. &
+!         (phase == 2 .and. (i <= ilo .or.  i >= ihi) .and. (j <= jlo .or.  j >= jhi))) then
+
+     if (i >  ilo .and. i <  ihi .and. j > jlo .and. j < jhi) then
+        chunk = 1
+     else
+        chunk = 2
+     endif
+
+     if (phase == 0 .or. phase == chunk) then
       !-----------------------------------------------------------------
       ! strain rates
       ! NOTE these are actually strain rates * area  (m^2/s)
@@ -1164,7 +1457,7 @@
                  -  cxp(i,j)*uvel(i-1,j-1) + dxt(i,j)*uvel(i-1,j  )
          shearse = -cym(i,j)*vvel(i  ,j-1) - dyt(i,j)*vvel(i-1,j-1) &
                  -  cxp(i,j)*uvel(i  ,j-1) + dxt(i,j)*uvel(i  ,j  )
-         
+
          ! Delta (in the denominator of zeta, eta)
          Deltane = sqrt(divune**2 + ecci*(tensionne**2 + shearne**2))
          Deltanw = sqrt(divunw**2 + ecci*(tensionnw**2 + shearnw**2))
@@ -1319,22 +1612,22 @@
          strm_tmp  = p25*dyt(i,j)*(p333*ssigmn  + p166*ssigms)
 
          ! northeast (i,j)
-         str(i,j,1) = -strp_tmp - strm_tmp - str12ew &
+         str8(i,j,1) = -strp_tmp - strm_tmp - str12ew &
               + dxhy(i,j)*(-csigpne + csigmne) + dyhx(i,j)*csig12ne
 
          ! northwest (i+1,j)
-         str(i,j,2) = strp_tmp + strm_tmp - str12we &
+         str8(i,j,2) = strp_tmp + strm_tmp - str12we &
               + dxhy(i,j)*(-csigpnw + csigmnw) + dyhx(i,j)*csig12nw
 
          strp_tmp  = p25*dyt(i,j)*(p333*ssigps  + p166*ssigpn)
          strm_tmp  = p25*dyt(i,j)*(p333*ssigms  + p166*ssigmn)
 
          ! southeast (i,j+1)
-         str(i,j,3) = -strp_tmp - strm_tmp + str12ew &
+         str8(i,j,3) = -strp_tmp - strm_tmp + str12ew &
               + dxhy(i,j)*(-csigpse + csigmse) + dyhx(i,j)*csig12se
 
          ! southwest (i+1,j+1)
-         str(i,j,4) = strp_tmp + strm_tmp + str12we &
+         str8(i,j,4) = strp_tmp + strm_tmp + str12we &
               + dxhy(i,j)*(-csigpsw + csigmsw) + dyhx(i,j)*csig12sw
 
       !-----------------------------------------------------------------
@@ -1344,24 +1637,25 @@
          strm_tmp  = p25*dxt(i,j)*(p333*ssigme  + p166*ssigmw)
 
          ! northeast (i,j)
-         str(i,j,5) = -strp_tmp + strm_tmp - str12ns &
+         str8(i,j,5) = -strp_tmp + strm_tmp - str12ns &
               - dyhx(i,j)*(csigpne + csigmne) + dxhy(i,j)*csig12ne
 
          ! southeast (i,j+1)
-         str(i,j,6) = strp_tmp - strm_tmp - str12sn &
+         str8(i,j,6) = strp_tmp - strm_tmp - str12sn &
               - dyhx(i,j)*(csigpse + csigmse) + dxhy(i,j)*csig12se
 
          strp_tmp  = p25*dxt(i,j)*(p333*ssigpw  + p166*ssigpe)
          strm_tmp  = p25*dxt(i,j)*(p333*ssigmw  + p166*ssigme)
 
          ! northwest (i+1,j)
-         str(i,j,7) = -strp_tmp + strm_tmp + str12ns &
+         str8(i,j,7) = -strp_tmp + strm_tmp + str12ns &
               - dyhx(i,j)*(csigpnw + csigmnw) + dxhy(i,j)*csig12nw
 
          ! southwest (i+1,j+1)
-         str(i,j,8) = strp_tmp - strm_tmp + str12sn &
+         str8(i,j,8) = strp_tmp - strm_tmp + str12sn &
               - dyhx(i,j)*(csigpsw + csigmsw) + dxhy(i,j)*csig12sw
 
+      endif                     ! phase
       enddo                     ! ij
 
       end subroutine stress
@@ -1376,7 +1670,7 @@
       subroutine stepu (nx_block,   ny_block, &
                         icellu,               &
                         indxui,     indxuj,   &
-                        aiu,        str,      &
+                        aiu,        str8,      &
                         uocn,       vocn,     &
                         waterx,     watery,   &
                         forcex,     forcey,   &
@@ -1422,7 +1716,7 @@
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,8), &
          intent(in) :: &
-         str
+         str8
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
@@ -1472,9 +1766,9 @@
 
          ! divergence of the internal stress tensor
          strintx(i,j) = uarear(i,j)* &
-             (str(i,j,1) + str(i+1,j,2) + str(i,j+1,3) + str(i+1,j+1,4))
+             (str8(i,j,1) + str8(i+1,j,2) + str8(i,j+1,3) + str8(i+1,j+1,4))
          strinty(i,j) = uarear(i,j)* &
-             (str(i,j,5) + str(i,j+1,6) + str(i+1,j,7) + str(i+1,j+1,8))
+             (str8(i,j,5) + str8(i,j+1,6) + str8(i+1,j,7) + str8(i+1,j+1,8))
 
          ! finally, the velocity components
          cc1 = strintx(i,j) + forcex(i,j) + taux &
