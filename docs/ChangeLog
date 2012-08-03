@@ -1,4 +1,12 @@
 ===============================================================
+cice4_0_20120803
+Originator: fischer
+Date:  Aug 3 2012
+Version: 4.0
+One-line Summary: Add missing decomp types to definitions.xml file
+M       bld/config_files/definition.xml
+
+===============================================================
 cice4_0_20120717
 Originator: tcraig
 Date:  July 17 2012
