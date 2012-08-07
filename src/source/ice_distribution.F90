@@ -351,9 +351,11 @@
    elseif (processor_shape == 'slenderX1') then ! 1 proc in y direction
       jguess = 1
       iguess = nprocs/jguess
-   else                                  ! slenderX2 2 processors in y direction
+   elseif (processor_shape == 'slenderX2') then ! 2 proc in y direction
       jguess = min(2, nprocs)
       iguess = nprocs/jguess
+   else                                  ! abort
+      call abort_ice('ice: processor_shape not supported, '//trim(processor_shape))
    endif
 
 !----------------------------------------------------------------------

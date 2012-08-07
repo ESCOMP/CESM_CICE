@@ -25,9 +25,6 @@ module ice_comp_mct
 
    private ! except
 
-   type(ESMF_GridComp)     :: ice_comp
-   type(ESMF_State)        :: import_state, export_state
-
    save ! save everything
 
 !
@@ -182,7 +179,6 @@ subroutine ice_run_mct( EClock, cdata, x2d, d2x)
    type(ESMF_Array)                 :: d2xa,x2da
    integer                          :: rc, urc, COMPID
    type(ESMF_State)                 :: import_state, export_state
-   type(ESMF_GridComp)              :: ice_comp
    type(ESMF_GridComp)              :: ice_comp
    integer                          :: ICEID
    !----------------------------------------------------------------------------

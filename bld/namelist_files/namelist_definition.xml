@@ -500,7 +500,7 @@ id="processor_shape"
 type="char*80"  
 category="cice" 
 group="domain_nml" 
-valid_values="slenderX1,slenderX2,square-ice,square-pop,blocks">
+valid_values="slenderX1,slenderX2,square-ice,square-pop,blocks,null">
 method to use for distributing blocks
 Default: square-pop
 </entry>
