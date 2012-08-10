@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20120810
+Originator: tcraig
+Date:  Aug 10 2012
+Version: 4.0
+One-line Summary: Fix log2 bug in spacecurve
+
+- Prevented some spacecurve decomps from running but otherwise has no impact
+
+M       src/source/ice_distribution.F90
+M       src/source/ice_spacecurve.F90
+===============================================================
 cice4_0_20120807
 Originator: tcraig
 Date:  Aug 7 2012

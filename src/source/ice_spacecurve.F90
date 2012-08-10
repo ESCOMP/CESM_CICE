@@ -14,6 +14,9 @@ module ice_spacecurve
 
 ! !USES:
    use ice_kinds_mod
+   use ice_communicate, only: my_task, master_task
+   use ice_exit, only: abort_ice
+   use ice_fileunits
 
    implicit none
 
@@ -1008,13 +1011,23 @@ contains
 
    !-------------------------------
    !  Find the log2 of input value
+   !  Abort if n < 1
    !-------------------------------
-   log2 = 1
-   tmp =n
-   do while (tmp/2 .ne. 1) 
-      tmp=tmp/2
-      log2=log2+1
-   enddo 
+
+   if (n < 1) then
+      call abort_ice ('ice: spacecurve log2 error')
+
+   elseif (n == 1) then
+      log2 = 0
+
+   else  ! n > 1
+      log2 = 1
+      tmp =n
+      do while (tmp > 1 .and. tmp/2 .ne. 1) 
+         tmp=tmp/2
+         log2=log2+1
+      enddo 
+   endif
 
 !EOP
 !-----------------------------------------------------------------------
@@ -1104,6 +1117,7 @@ contains
    !-------------------------------------------------
    ! create the space-filling curve on the next level  
    !-------------------------------------------------
+
    if(type == 2) then
       ierr = Hilbert(l,type,ma,md,ja,jd)
    elseif ( type == 3) then
@@ -1255,7 +1269,7 @@ contains
    ! Allocate allocate for max # of factors
    ! --------------------------------------
    tmp = num
-   tmp2 = log2(num)
+   tmp2 = max(log2(num),1)
    allocate(res%factors(tmp2))
    allocate(res%used(tmp2))
 
@@ -1307,7 +1321,6 @@ contains
         tmp = tmp5
       endif
    enddo
-
 
    !------------------------------------
    ! make sure that the input value 
