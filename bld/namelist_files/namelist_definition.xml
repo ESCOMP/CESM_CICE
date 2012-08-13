@@ -84,6 +84,16 @@ Method of ice cover initialization.
 Default: 'default'
 </entry>
 
+<entry 
+id="write_ic" 
+type="char*256" 
+category="cice" 
+group="setup_nml" 
+input_pathname="abs" >
+Write initial state.
+Default: .false.
+</entry>
+
 <!---Time steps---->
 
 <entry 

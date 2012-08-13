@@ -295,7 +295,6 @@ contains
              write(nu_diag,*) 'ice_comp_mct: ref_ymd ',ref_tod, &
                   ' must equal start_ymd ',start_tod
           end if
-          call shr_sys_abort()
        end if
 
        if (my_task == master_task) then
