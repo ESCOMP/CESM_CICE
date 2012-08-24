@@ -1,6 +1,17 @@
 ===============================================================
-cice4_0_20120813
+cice4_0_20120824
 Originator: tcraig
+Date: Fri Aug 14 2012
+Version: 4.0
+One-line Summary: Update generate_cice_decomp to check for valid 
+ spacecurve block size and add check_decomp output.
+
+M       bld/generate_cice_decomp.pl
+A       bld/check_decomp.out
+
+===============================================================
+cice4_0_20120813
+Originator: dbailey
 Date: Mon Aug 13 13:19:44 MDT 2012
 Version: 4.0
 One-line Summary: Remove abort when ref_ymd and start_ymd are not the same.

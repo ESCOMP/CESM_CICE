@@ -202,6 +202,9 @@ if ( $decomp{'maxblocks'} == 0) {
 sub CalcDecompInfo {
 #
 # Calculate decomposition information
+#  note that spacecurve must have nblocks in x and y direction divisible by only 2, 3, 5.
+#  if spacecurve is the decomp target (dtypet) and a blocksize can't be found, use blkrobin
+#  need to factor the nblocks to check if spacecurve blocksize is valid
 #
   my $nlats    = shift;
   my $nlons    = shift;
@@ -220,14 +223,33 @@ sub CalcDecompInfo {
   my $nx = 0;
   my $ny = 0;
   my $nn = 0;
+  my $nbx = 0;
+  my $nby = 0;
+  my $fac = 0;
+  my $dtype;
+  my $dtypet;
   my $mblocks = 0;
   my $bsize  = 0;
   my $bsizex = 0;
   my $bsizey = 0;
   my $nscore = 0.0 ;
+  my $scok = 0;
   my $bscore = $nlons * $nlats * $nprocs ;
 
   $decomp{'decompset'} = "null";
+  $decomp{'maxblocks'}  = 0;
+
+  if ($nlats == 1) {
+      $dtypet = "roundrobin";
+      $dtype  = "roundrobin";
+  } elsif ($nprocs * $nprocs > $nlons * $nlats * 6) {
+#tcraig for testing  } elsif ($nprocs * $nprocs > 0) {
+      $dtypet = "spacecurve";
+      $dtype  = "blkrobin";
+  } else {
+      $dtypet = "blkrobin";
+      $dtype  = "blkrobin";
+  }
 
   if ($set == 0) {
      my $blksize = ($nlons * $nlats) / ($nprocs);
@@ -260,14 +282,50 @@ sub CalcDecompInfo {
                         # tcraig, somewhat arbitrary scoring system, best is min score
                         # min aspect ratio, match blksize, avoid very small blocks
                         $nscore = 0.5 * ($nx/$ny + $ny/$nx) + ($nx*$ny)/$blksize + $blksize/($nx*$ny) + 36/($nx*$ny);
+                        $scok = 0;
+                        if ($dtypet eq "spacecurve") {
+                            # make sure nbx and nby are factorably by only 2, 3, 5
+			    $nbx = $nlons / $nx;
+                            $nby = $nlats / $ny;
+                            $fac = 5;
+                            #print "tcxf1 $nbx $nby\n";
+                            do {
+				if ($nbx % $fac == 0) {
+				    $nbx = $nbx / $fac;
+   			        } else {
+ 				    $fac = $fac - 1;
+				}
+                            } until ($fac == 1);
+                            $fac = 5;
+                            do {
+				if ($nby % $fac == 0) {
+				    $nby = $nby / $fac;
+   			        } else {
+ 				    $fac = $fac - 1;
+				}
+                            } until ($fac == 1);
+                            #print "tcxf2 $nbx $nby\n";
+                            # if not, set nscore higher than bscore to skip it in search
+                            if ($nbx == 1 && $nby == 1) {
+                                $scok = 1;
+			    }
+                        }
 		     }
                      #print "tcxc $nx $ny $nscore $bscore\n";
-                     if ($nscore < $bscore) {
+                     if ($dtypet eq "spacecurve" && $dtype ne "spacecurve" && $scok == 1) {
 	                $bscore = $nscore;
                         $bsizex = $nx;
                         $bsizey = $ny;
                         $set    = 1;
-		    }
+                        $dtype = "spacecurve";
+		     } elsif ($nscore < $bscore) {
+                        if (($dtype eq "spacecurve" && $scok == 1) || ($dtype ne "spacecurve")) {
+	                   $bscore = $nscore;
+                           $bsizex = $nx;
+                           $bsizey = $ny;
+                           $set    = 1;
+		        }
+		     }
 		 }
 	     } until ($ny > $nxnyfact);
 	 }
@@ -275,26 +333,20 @@ sub CalcDecompInfo {
   }
 
   $bsize = $bsizex * $bsizey;
-  $mblocks = ($nlats * $nlons + $bsize * $nprocs - 1)/($bsize * $nprocs);
 
   #print "tcx0 $nlons $nlats $nprocs \n";
   #print "tcx1 $bsizex $bsizey $bscore \n";
   #print "tcx2 $bsize $blksize \n";
 
   if ($bsize > 0) {
+      $mblocks = ($nlats * $nlons + $bsize * $nprocs - 1)/($bsize * $nprocs);
       $decomp{'nlats'}      = $nlats;
       $decomp{'nlons'}      = $nlons;
       $decomp{'bsize_x'}    = $bsizex;
       $decomp{'bsize_y'}    = $bsizey;
       $decomp{'maxblocks'}  = $mblocks;
       $decomp{'decompset'}  = "null";
-      if ($nlats == 1) {
-          $decomp{'decomptype'} = "roundrobin";
-      } elsif ($nprocs * $nprocs > $nlons * $nlats * 6) {
-          $decomp{'decomptype'} = "spacecurve";
-      } else {
-          $decomp{'decomptype'} = "blkrobin";
-      }
+      $decomp{'decomptype'} = $dtype;
   }
 
   return(%decomp);
