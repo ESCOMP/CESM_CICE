@@ -2,7 +2,6 @@
 
 if !(-d $CASEBUILD/ciceconf) mkdir -p $CASEBUILD/ciceconf
 
-
 set hgrid = "-hgrid $ICE_GRID"
 #if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}" TODO - fix this
 
@@ -10,6 +9,31 @@ cd $CASEBUILD/ciceconf || exit -1
 # Invoke cice configure - output will go in $CASEBUILD/ciceconf 
 $CODEROOT/ice/cice/bld/configure $hgrid -comp_intf $COMP_INTERFACE \
     -cice_mode $CICE_MODE -nodecomp $CICE_CONFIG_OPTS || exit -1
+
+if ($CICE_AUTO_DECOMP == 'true') then
+   @ ntasks = $NTASKS_ICE / $NINST_ICE
+   set hgrid = $ICE_GRID
+   if ($ICE_GRID == ar9v2) then
+      set hgrid = 'ar9v1'
+   endif
+   if ($ICE_GRID == ar9v4) then
+      set hgrid = 'ar9v3'
+   endif
+   cd $CASEBUILD
+   set config = `./generate_cice_decomp.pl -res $hgrid -nproc $ntasks -thrds $NTHRDS_ICE -output all`
+   cd $CASEROOT 
+   if ($config[1] >= 0) then
+      ./xmlchange -file env_build.xml -id CICE_BLCKX      -val $config[3] || exit -1
+      ./xmlchange -file env_build.xml -id CICE_BLCKY      -val $config[4] || exit -2
+      ./xmlchange -file env_build.xml -id CICE_MXBLCKS    -val $config[5] || exit -3
+      ./xmlchange -file env_build.xml -id CICE_DECOMPTYPE -val $config[6] || exit -4
+      ./xmlchange -file env_build.xml -id CICE_DECOMPSETTING -val $config[7] || exit -5
+      source $CASEROOT/Tools/ccsm_getenv # need to do this since env_build.xml just changed
+   else
+      echo "ERROR configure: cice decomp not set for $ICE_GRID on $ntasks x $NTHRDS_ICE procs"
+      exit -1
+   endif
+endif
 
 #--------------------------------------------------------------------
 # Loop over ice instances

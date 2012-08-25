@@ -1,7 +1,22 @@
 ===============================================================
+cice4_0_20120825
+Originator: mvertens
+Date: Fri Aug 25 2012
+Version: 4.0
+One-line Summary: Update to be consistent with scripts4_120824
+    
+M       bld/cice.buildnml.csh
+M       bld/generate_cice_decomp.pl
+        - generate_cice_decomp.pl now called from cice.buildnml.csh
+	
+M       bld/namelist_files/namelist_definition.xml
+        - added correct category information to auto-generate
+	  namelist xml files
+	
+===============================================================
 cice4_0_20120824
 Originator: tcraig
-Date: Fri Aug 14 2012
+Date: Fri Aug 24 2012
 Version: 4.0
 One-line Summary: Update generate_cice_decomp to check for valid 
  spacecurve block size and add check_decomp output.

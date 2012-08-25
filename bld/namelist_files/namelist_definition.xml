@@ -76,7 +76,7 @@ Default: default
 <entry 
 id="ice_ic" 
 type="char*256" 
-category="cice" 
+category="setup" 
 group="setup_nml" 
 input_pathname="abs" >
 Method of ice cover initialization.
@@ -99,7 +99,7 @@ Default: .false.
 <entry 
 id="days_per_year" 
 type="real"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 Days per year (Default: 365)
 </entry>
@@ -107,7 +107,7 @@ Days per year (Default: 365)
 <entry 
 id="year_init" 
 type="integer"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 Initial year. (Default: 0)
 </entry>
@@ -115,7 +115,7 @@ Initial year. (Default: 0)
 <entry 
 id="dt" 
 type="real"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 time step, s (Default: 3600)
 </entry>
@@ -123,7 +123,7 @@ time step, s (Default: 3600)
 <entry 
 id="xndt_dyn" 
 type="real"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 number of dynamic time steps per thermodynamic time step (Default: 1.0)
 </entry>
@@ -133,7 +133,7 @@ number of dynamic time steps per thermodynamic time step (Default: 1.0)
 <entry 
 id="histfreq" 
 type="char*1(5)"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 frequency of history output (once per 1,h,d,m,y) 
 Default: 'mxxxx'
@@ -142,7 +142,7 @@ Default: 'mxxxx'
 <entry 
 id="histfreq_n" 
 type="integer(5)"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 frequency of history output (10 = once per 10 h,d,m,y)
 Default: 1
@@ -151,7 +151,7 @@ Default: 1
 <entry 
 id="hist_avg" 
 type="logical"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 if true, write time-averages (not snapshots)
 Default: true
@@ -160,7 +160,7 @@ Default: true
 <entry 
 id="history_format" 
 type="char*80"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 file format ('bin'=binary or 'nc'=netcdf)
 Default: 'nc' if CPP nc is defined, and 'bin' otherwise
@@ -169,7 +169,7 @@ Default: 'nc' if CPP nc is defined, and 'bin' otherwise
 <entry 
 id="write_ic" 
 type="logical"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 if true, write initial history file
 Default: false
@@ -180,7 +180,7 @@ Default: false
 <entry 
 id="diagfreq" 
 type="integer"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 diagnostic output frequency (10 = once per 10 dt)
 Default: 48
@@ -191,7 +191,7 @@ Default: 48
 <entry 
 id="lcdf64" 
 type="logical"  
-category="cice" 
+category="setup" 
 group="setup_nml" >
 64 bit offset
 Default: FALSE
@@ -202,7 +202,7 @@ Default: FALSE
 <entry 
 id="grid_type" 
 type="char*256"  
-category="cice" 
+category="grid" 
 group="grid_nml" 
 valid_values="displaced_pole,tripole,panarctic,latlon,rectangular">
 type of grid
@@ -212,7 +212,7 @@ Default: 'rectangular'
 <entry 
 id="grid_format" 
 type="char*256"  
-category="cice" 
+category="grid" 
 group="grid_nml" 
 valid_values="bin,nc">
 file format ('bin'=binary or 'nc'=netcdf)
@@ -222,7 +222,7 @@ Default: 'bin'
 <entry 
 id="grid_file" 
 type="char*256"  
-category="cice" 
+category="grid" 
 group="grid_nml" 
 input_pathname="abs">
 input file for CICE grid info
@@ -231,7 +231,7 @@ input file for CICE grid info
 <entry 
 id="kmt_file" 
 type="char*256"  
-category="cice" 
+category="grid" 
 group="grid_nml" 
 input_pathname="abs" >
 input file for CICE grid info
@@ -240,7 +240,7 @@ input file for CICE grid info
 <entry 
 id="gridcpl_file" 
 type="char*256"  
-category="cice" 
+category="grid" 
 group="grid_nml" 
 input_pathname="abs" >
 input file for CICE coupling grid info
@@ -249,7 +249,7 @@ input file for CICE coupling grid info
 <entry 
 id="kcatbound" 
 type="integer"  
-category="cice" 
+category="grid" 
 group="grid_nml" >
 category boundary formula (0 = old, 1 = new)
 Default: 0
@@ -260,7 +260,7 @@ Default: 0
 <entry 
 id="kitd" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml"> 
 type of itd conversions (0 = delta, 1 = linear)
 Default: 1
@@ -269,7 +269,7 @@ Default: 1
 <entry 
 id="kdyn" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml"> 
 type of dynamics (1 = evp)
 Default: 1
@@ -278,7 +278,7 @@ Default: 1
 <entry 
 id="ndte" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 subcycles per dynamics timestep
 Default: 120
@@ -287,7 +287,7 @@ Default: 120
 <entry 
 id="evp_damping" 
 type="logical"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 if true, use damping procedure in evp dynamics
 Default: false
@@ -296,7 +296,7 @@ Default: false
 <entry 
 id="yield_curve" 
 type="char*80"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 Yield curve.
 Default: ellipse
@@ -305,7 +305,7 @@ Default: ellipse
 <entry 
 id="maskhalo_dyn" 
 type="logical"  
-category="cice" 
+category="decomp" 
 group="ice_nml" >
 turn on masked halos in subcycling
 Default: true
@@ -314,7 +314,7 @@ Default: true
 <entry 
 id="maskhalo_remap" 
 type="logical"  
-category="cice" 
+category="decomp" 
 group="ice_nml" >
 turn on masked halos in tracer halo update in remap
 Default: true
@@ -323,7 +323,7 @@ Default: true
 <entry 
 id="maskhalo_stress" 
 type="logical"  
-category="cice" 
+category="decomp" 
 group="ice_nml" >
 turn on masked halos in tripole stress update
 Default: true
@@ -332,7 +332,7 @@ Default: true
 <entry 
 id="maskhalo_bound" 
 type="logical"  
-category="cice" 
+category="decomp" 
 group="ice_nml" >
 turn on masked halos in state bound
 Default: true
@@ -341,7 +341,7 @@ Default: true
 <entry 
 id="splitcomm_dyn" 
 type="logical"  
-category="cice" 
+category="decomp" 
 group="ice_nml" >
 allow overlap of computation and communication in subcycling
 Default: false
@@ -350,7 +350,7 @@ Default: false
 <entry 
 id="kstrength" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 1 = Rothrock 75 strength, 0 = Hibler 79
 Default: 1
@@ -359,7 +359,7 @@ Default: 1
 <entry 
 id="krdg_partic" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 1 = new participation, 0 = Thorndike et al 75
 Default: 1
@@ -368,7 +368,7 @@ Default: 1
 <entry 
 id="krdg_redist" 
 type="integer"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 1 = new redistribution, 0 = Hibler 80
 Default: 1
@@ -377,7 +377,7 @@ Default: 1
 <entry 
 id="advection" 
 type="char*80"  
-category="cice" 
+category="parameterizations" 
 group="ice_nml" >
 incremental remapping transport scheme
 Default: 'remap'
@@ -388,7 +388,7 @@ Default: 'remap'
 <entry 
 id="albicev" 
 type="real"  
-category="cice" 
+category="albedos" 
 group="ice_nml" >
 visible ice albedo for h > ahmax
 </entry>
@@ -396,7 +396,7 @@ visible ice albedo for h > ahmax
 <entry 
 id="albicei" 
 type="real"  
-category="cice" 
+category="albedos" 
 group="ice_nml" >
 near-ir ice albedo for h > ahmax
 </entry>
@@ -404,7 +404,7 @@ near-ir ice albedo for h > ahmax
 <entry 
 id="albsnowv" 
 type="real"  
-category="cice" 
+category="albedos" 
 group="ice_nml" >
 cold snow albedo, visible
 </entry>
@@ -412,7 +412,7 @@ cold snow albedo, visible
 <entry 
 id="albsnowi" 
 type="real"  
-category="cice" 
+category="albedos" 
 group="ice_nml" >
 cold snow albedo, near IR
 </entry>
@@ -420,7 +420,7 @@ cold snow albedo, near IR
 <entry 
 id="albedo_type" 
 type="char*80"  
-category="cice" 
+category="albedos" 
 group="ice_nml" 
 valid_values="default,constant">
 albedo parameterization, 'default' ('ccsm3') or 'constant' 
@@ -430,7 +430,7 @@ Default:'default'
 <entry 
 id="shortwave" 
 type="char*80"  
-category="cice" 
+category="swrad" 
 group="ice_nml" 
 valid_values="default,dEdd">
 shortwave method, 'default' ('ccsm3') or 'dEdd'
@@ -440,7 +440,7 @@ Default:'dEdd'
 <entry 
 id="dT_mlt_in" 
 type="real"  
-category="cice" 
+category="swrad" 
 group="ice_nml" >
 melt onset temperature tunable parameter for dEdd albedo
 </entry>
@@ -448,7 +448,7 @@ melt onset temperature tunable parameter for dEdd albedo
 <entry 
 id="rsnw_melt_in" 
 type="real"  
-category="cice" 
+category="swrad" 
 group="ice_nml" >
 maximum melting snow grain radius tunable parameter for dEdd albedo
 </entry>
@@ -456,7 +456,7 @@ maximum melting snow grain radius tunable parameter for dEdd albedo
 <entry 
 id="R_snw" 
 type="real"  
-category="cice" 
+category="swrad" 
 group="ice_nml" >
 snow grain radius tunable parameter for dEdd albedo
 </entry>
@@ -468,7 +468,7 @@ snow grain radius tunable parameter for dEdd albedo
 <entry 
 id="tr_iage" 
 type="logical"  
-category="cice" 
+category="tracers" 
 group="tracer_nml" >
 Ice age tracer.
 Default: TRUE
@@ -477,7 +477,7 @@ Default: TRUE
 <entry 
 id="tr_FY" 
 type="logical"  
-category="cice" 
+category="tracers" 
 group="tracer_nml" >
 FY area tracer.
 Default: TRUE
@@ -486,7 +486,7 @@ Default: TRUE
 <entry 
 id="tr_pond" 
 type="logical"  
-category="cice" 
+category="tracers" 
 group="tracer_nml" >
 Pond volume tracer.
 Default: TRUE
@@ -495,7 +495,7 @@ Default: TRUE
 <entry 
 id="tr_aero" 
 type="logical"  
-category="cice" 
+category="tracers" 
 group="tracer_nml" >
 Aerosol tracers.
 Default: TRUE
@@ -508,7 +508,7 @@ Default: TRUE
 <entry 
 id="processor_shape" 
 type="char*80"  
-category="cice" 
+category="decomp" 
 group="domain_nml" 
 valid_values="slenderX1,slenderX2,square-ice,square-pop,blocks,null">
 method to use for distributing blocks
@@ -518,7 +518,7 @@ Default: square-pop
 <entry 
 id="distribution_type"
 type="char*80"  
-category="cice" 
+category="decomp" 
 group="domain_nml" 
 valid_values="cartesian,rake,spacecurve,roundrobin,blkrobin,blkcart,DECOMPTYPE">
 method to use for distributing blocks
@@ -528,7 +528,7 @@ Default: cartesian
 <entry 
 id="distribution_wght" 
 type="char*80"  
-category="cice" 
+category="decomp" 
 group="domain_nml" 
 valid_values="block,latitude,erfc,file">
 method to use for distributing blocks
@@ -538,7 +538,7 @@ Default: block
 <entry 
 id="distribution_wght_file" 
 type="char*256"  
-category="cice" 
+category="decomp" 
 group="domain_nml" >
 file containing probability distribution for distribution_wght method
 Default: unknown
@@ -547,7 +547,7 @@ Default: unknown
 <entry 
 id="ew_boundary_type" 
 type="char*80"  
-category="cice" 
+category="decomp" 
 group="domain_nml" 
 valid_values="cyclic,closed">
 type of boundary in logical east-west dir
@@ -557,7 +557,7 @@ Default: cyclic
 <entry 
 id="ns_boundary_type" 
 type="char*80"  
-category="cice" 
+category="decomp" 
 group="domain_nml" 
 valid_values="open,closed,cyclic,tripole">
 Default: open
@@ -570,7 +570,7 @@ Default: open
 <entry 
 id="prescribed_ice" 
 type="logical"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 use prescribed ice mode if true
 Default: FALSE
@@ -579,7 +579,7 @@ Default: FALSE
 <entry 
 id="stream_fldvarname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 ifrac variable name on sst/ifrac dataset
 Default: 'ice_cov'
@@ -588,7 +588,7 @@ Default: 'ice_cov'
 <entry 
 id="stream_fldfilename" 
 type="char*256(400)"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" 
 input_pathname="stream" >
 file name containing sst/ifrac data 
@@ -597,7 +597,7 @@ file name containing sst/ifrac data
 <entry 
 id="stream_domtvarname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 domain file: time-dim var name
 Default: time
@@ -606,7 +606,7 @@ Default: time
 <entry 
 id="stream_domxvarname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 domain file: x-dim var name
 Default: lon
@@ -615,7 +615,7 @@ Default: lon
 <entry 
 id="stream_domyvarname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 domain file: y-dim varname
 Default: lat
@@ -624,7 +624,7 @@ Default: lat
 <entry 
 id="stream_domareaname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 domain file: area varname
 Default: area
@@ -633,7 +633,7 @@ Default: area
 <entry 
 id="stream_dommaskname" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 domain file: mask varname
 Default: mask
@@ -642,7 +642,7 @@ Default: mask
 <entry 
 id="stream_domfilename" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" 
 input_pathname="stream" >
 domain file name
@@ -651,7 +651,7 @@ domain file name
 <entry 
 id="stream_mapread" 
 type="char*256"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 Map file to read to map stream data to domain data
 Default: NOT_SET
@@ -660,7 +660,7 @@ Default: NOT_SET
 <entry 
 id="stream_year_first" 
 type="integer"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 first year in stream to use
 Default: 1
@@ -669,7 +669,7 @@ Default: 1
 <entry 
 id="stream_year_last" 
 type="integer"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 Last year in stream to use
 Default: 1
@@ -678,7 +678,7 @@ Default: 1
 <entry 
 id="model_year_align" 
 type="integer"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 Align stream_year_first with this model year
 Default: 1
@@ -687,7 +687,7 @@ Default: 1
 <entry 
 id="prescribed_ice_fill" 
 type="logical"  
-category="cice" 
+category="icepresc" 
 group="ice_prescribed_nml" >
 true => pice data fill required
 Default: FALSE
@@ -700,7 +700,7 @@ Default: FALSE
 <entry 
 id="f_hi" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -708,7 +708,7 @@ Default: mxxxx
 <entry 
 id="f_hs" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -716,7 +716,7 @@ Default: mxxxx
 <entry 
 id="f_fs" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -724,7 +724,7 @@ Default: mxxxx
 <entry 
 id="f_Tsfc" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -732,7 +732,7 @@ Default: mxxxx
 <entry 
 id="f_aice" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -740,7 +740,7 @@ Default: mxxxx
 <entry 
 id="f_uvel" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -748,7 +748,7 @@ Default: mxxxx
 <entry 
 id="f_vvel" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -756,7 +756,7 @@ Default: mxxxx
 <entry 
 id="f_transix" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -764,7 +764,7 @@ Default: mxxxx
 <entry 
 id="f_transiy" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -772,7 +772,7 @@ Default: mxxxx
 <entry 
 id="f_qi" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -780,7 +780,7 @@ Default: mxxxx
 <entry 
 id="f_qs" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -788,7 +788,7 @@ Default: mxxxx
 <entry 
 id="f_fswdn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -796,7 +796,7 @@ Default: mxxxx
 <entry 
 id="f_fswup" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -804,7 +804,7 @@ Default: mxxxx
 <entry 
 id="f_flwdn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -812,7 +812,7 @@ Default: mxxxx
 <entry 
 id="f_snow" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -820,7 +820,7 @@ Default: mxxxx
 <entry 
 id="f_snow_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -828,7 +828,7 @@ Default: mxxxx
 <entry 
 id="f_rain" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -836,7 +836,7 @@ Default: mxxxx
 <entry 
 id="f_rain_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -844,7 +844,7 @@ Default: mxxxx
 <entry 
 id="f_faero_atm" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -852,7 +852,7 @@ Default: mxxxx
 <entry 
 id="f_faero_ocn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -860,7 +860,7 @@ Default: mxxxx
 <entry 
 id="f_sst" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -868,7 +868,7 @@ Default: mxxxx
 <entry 
 id="f_sss" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -876,7 +876,7 @@ Default: mxxxx
 <entry 
 id="f_uocn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -884,7 +884,7 @@ Default: mxxxx
 <entry 
 id="f_vocn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -892,7 +892,7 @@ Default: mxxxx
 <entry 
 id="f_frzmlt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -900,7 +900,7 @@ Default: mxxxx
 <entry 
 id="f_fswfac" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -908,7 +908,7 @@ Default: mxxxx
 <entry 
 id="f_fswabs" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -916,7 +916,7 @@ Default: mxxxx
 <entry 
 id="f_fswabs_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -924,7 +924,7 @@ Default: mxxxx
 <entry 
 id="f_alidr" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -932,7 +932,7 @@ Default: mxxxx
 <entry 
 id="f_alvdr" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -940,7 +940,7 @@ Default: mxxxx
 <entry 
 id="f_alidf" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -948,7 +948,7 @@ Default: mxxxx
 <entry 
 id="f_alvdf" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -956,7 +956,7 @@ Default: mxxxx
 <entry 
 id="f_albice" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -964,7 +964,7 @@ Default: mxxxx
 <entry 
 id="f_albsno" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -972,7 +972,7 @@ Default: mxxxx
 <entry 
 id="f_albpnd" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -980,7 +980,7 @@ Default: mxxxx
 <entry 
 id="f_coszen" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -988,7 +988,7 @@ Default: mxxxx
 <entry 
 id="f_flat" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -996,7 +996,7 @@ Default: mxxxx
 <entry 
 id="f_flat_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1004,7 +1004,7 @@ Default: mxxxx
 <entry 
 id="f_fsens" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1012,7 +1012,7 @@ Default: mxxxx
 <entry 
 id="f_fsens_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1020,7 +1020,7 @@ Default: mxxxx
 <entry 
 id="f_flwup" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1028,7 +1028,7 @@ Default: mxxxx
 <entry 
 id="f_flwup_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1036,7 +1036,7 @@ Default: mxxxx
 <entry 
 id="f_evap" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1044,7 +1044,7 @@ Default: mxxxx
 <entry 
 id="f_evap_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1052,7 +1052,7 @@ Default: mxxxx
 <entry 
 id="f_Tair" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1060,7 +1060,7 @@ Default: mxxxx
 <entry 
 id="f_Tref" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1068,7 +1068,7 @@ Default: mxxxx
 <entry 
 id="f_Qref" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1076,7 +1076,7 @@ Default: mxxxx
 <entry 
 id="f_congel" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1084,7 +1084,7 @@ Default: mxxxx
 <entry 
 id="f_frazil" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1092,7 +1092,7 @@ Default: mxxxx
 <entry 
 id="f_snoice" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1100,7 +1100,7 @@ Default: mxxxx
 <entry 
 id="f_meltt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1108,7 +1108,7 @@ Default: mxxxx
 <entry 
 id="f_melts" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1116,7 +1116,7 @@ Default: mxxxx
 <entry 
 id="f_meltb" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1124,7 +1124,7 @@ Default: mxxxx
 <entry 
 id="f_meltl" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1132,7 +1132,7 @@ Default: mxxxx
 <entry 
 id="f_fresh" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1140,7 +1140,7 @@ Default: mxxxx
 <entry 
 id="f_fresh_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1148,7 +1148,7 @@ Default: mxxxx
 <entry 
 id="f_fsalt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1156,7 +1156,7 @@ Default: mxxxx
 <entry 
 id="f_fsalt_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1164,7 +1164,7 @@ Default: mxxxx
 <entry 
 id="f_fhocn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1172,7 +1172,7 @@ Default: mxxxx
 <entry 
 id="f_fhocn_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1180,7 +1180,7 @@ Default: mxxxx
 <entry 
 id="f_fswthru" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1188,7 +1188,7 @@ Default: mxxxx
 <entry 
 id="f_fswthru_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1196,7 +1196,7 @@ Default: mxxxx
 <entry 
 id="f_strairx" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1204,7 +1204,7 @@ Default: mxxxx
 <entry 
 id="f_strairy" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1212,7 +1212,7 @@ Default: mxxxx
 <entry 
 id="f_strtltx" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1220,7 +1220,7 @@ Default: xxxxx
 <entry 
 id="f_strtlty" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: TRUE
 </entry>
@@ -1228,7 +1228,7 @@ Default: TRUE
 <entry 
 id="f_strcorx" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1236,7 +1236,7 @@ Default: mxxxx
 <entry 
 id="f_strcory" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1244,7 +1244,7 @@ Default: mxxxx
 <entry 
 id="f_strocnx" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1252,7 +1252,7 @@ Default: mxxxx
 <entry 
 id="f_strocny" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1260,7 +1260,7 @@ Default: mxxxx
 <entry 
 id="f_strintx" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1268,7 +1268,7 @@ Default: mxxxx
 <entry 
 id="f_strinty" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1276,7 +1276,7 @@ Default: mxxxx
 <entry 
 id="f_strength" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1284,7 +1284,7 @@ Default: mxxxx
 <entry 
 id="f_opening" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1292,7 +1292,7 @@ Default: mxxxx
 <entry 
 id="f_divu" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1300,7 +1300,7 @@ Default: mxxxx
 <entry 
 id="f_shear" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1308,7 +1308,7 @@ Default: mxxxx
 <entry 
 id="f_sig1" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1316,7 +1316,7 @@ Default: mxxxx
 <entry 
 id="f_sig2" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1324,7 +1324,7 @@ Default: mxxxx
 <entry 
 id="f_dvidtt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1332,7 +1332,7 @@ Default: mxxxx
 <entry 
 id="f_dvidtd" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1340,7 +1340,7 @@ Default: mxxxx
 <entry 
 id="f_daidtt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1348,7 +1348,7 @@ Default: mxxxx
 <entry 
 id="f_daidtd" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1356,7 +1356,7 @@ Default: mxxxx
 <entry 
 id="f_mlt_onset" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1364,7 +1364,7 @@ Default: xxxxx
 <entry 
 id="f_frz_onset" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1372,7 +1372,7 @@ Default: xxxxx
 <entry 
 id="f_dardg1dt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1380,7 +1380,7 @@ Default: mxxxx
 <entry 
 id="f_dardg2dt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1388,7 +1388,7 @@ Default: mxxxx
 <entry 
 id="f_dvirdgdt" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1396,7 +1396,7 @@ Default: mxxxx
 <entry 
 id="f_iage" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1404,7 +1404,7 @@ Default: mxxxx
 <entry 
 id="f_ardg" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1412,7 +1412,7 @@ Default: mxxxx
 <entry 
 id="f_vrdg" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1420,7 +1420,7 @@ Default: mxxxx
 <entry 
 id="f_alvl" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1428,7 +1428,7 @@ Default: mxxxx
 <entry 
 id="f_vlvl" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1436,7 +1436,7 @@ Default: mxxxx
 <entry 
 id="f_FY" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1444,7 +1444,7 @@ Default: mxxxx
 <entry 
 id="f_aeron" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1452,7 +1452,7 @@ Default: xxxxx
 <entry 
 id="f_aero" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1460,7 +1460,7 @@ Default: xxxxx
 <entry 
 id="f_apondn" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1468,7 +1468,7 @@ Default: xxxxx
 <entry 
 id="f_apond" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1476,7 +1476,7 @@ Default: xxxxx
 <entry 
 id="f_aisnap" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mdxxx
 </entry>
@@ -1484,7 +1484,7 @@ Default: mdxxx
 <entry 
 id="f_hisnap" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mdxxx
 </entry>
@@ -1492,7 +1492,7 @@ Default: mdxxx
 <entry 
 id="f_aicen" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1500,7 +1500,7 @@ Default: mxxxx
 <entry 
 id="f_vicen" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1508,7 +1508,7 @@ Default: mxxxx
 <entry 
 id="f_trsig" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1516,7 +1516,7 @@ Default: mxxxx
 <entry 
 id="f_icepresent" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1524,7 +1524,7 @@ Default: mxxxx
 <entry 
 id="f_fsurf_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1532,7 +1532,7 @@ Default: mxxxx
 <entry 
 id="f_fcondtop_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: mxxxx
 </entry>
@@ -1540,7 +1540,7 @@ Default: mxxxx
 <entry 
 id="f_fsurfn_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1548,7 +1548,7 @@ Default: xxxxx
 <entry 
 id="f_fcondtopn_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1556,7 +1556,7 @@ Default: xxxxx
 <entry 
 id="f_fmelttn_ai" 
 type="char*5"  
-category="cice"  
+category="history"  
 group="icefields_nml" >
 Default: xxxxx
 </entry>
@@ -1564,7 +1564,7 @@ Default: xxxxx
 <entry 
 id="f_flatn_ai" 
 type="char*5"  
-category="cice"  
+category="history"
 group="icefields_nml" >
 Default: xxxxx
 </entry>

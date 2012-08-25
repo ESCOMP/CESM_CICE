@@ -39,8 +39,8 @@ if ($ProgDir) {
 
 # Horizontal grid and spectral resolution parameters.
 my $horiz_grid_file = 'config_grid.xml';
-if (-f "Tools/$horiz_grid_file") {
-    $horiz_grid_file = "Tools/$horiz_grid_file";
+if (-f "../Tools/$horiz_grid_file") {
+    $horiz_grid_file = "../Tools/$horiz_grid_file";
 } elsif (-f "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file") {
     $horiz_grid_file = "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file";
 } else {
@@ -51,8 +51,8 @@ EOF
 
 # The XML::Lite module is required to parse the XML configuration files.
 my $xmldir;
-if (-f "Tools/XML/Lite.pm") {
-    $xmldir = "Tools";
+if (-f "../Tools/XML/Lite.pm") {
+    $xmldir = "../Tools";
 } elsif (-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm") {
     $xmldir = "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib";
 } else {
