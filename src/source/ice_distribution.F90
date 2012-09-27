@@ -19,9 +19,8 @@
 ! !USES:
 
    use ice_kinds_mod
-   use ice_communicate
    use ice_domain_size
-   use ice_communicate, only : my_task, master_task, lprint_stats
+   use ice_communicate
    use ice_blocks
    use ice_exit
    use ice_fileunits, only: nu_diag, nu_timing, ice_stdout, flush_fileunit
