@@ -132,6 +132,10 @@
 
       real(kind=dbl_kind) :: mrss, mrss0,msize,msize0
 
+      integer (kind=int_kind), dimension(2) ::  &
+         bnd_start,bnd_length          ! dimension quantities for netCDF
+
+
       !-------------------------
       !  Test memory usage
       !-------------------------
@@ -484,8 +488,10 @@
 
       if (hist_avg .and. histfreq(ns) /= '1') then
          status = pio_inq_varid(File,'time_bounds',varid)
-	 time_bounds=(/time_beg(ns),time_end(ns)/)
-         status = pio_put_var(File,varid,time_bounds) 
+         time_bounds=(/time_beg(ns),time_end(ns)/)
+         bnd_start=(/1,1/)
+         bnd_length=(/1,1/)
+         status = pio_put_var(File,varid,start=bnd_start(:),count=bnd_length(:),ival=time_bounds) 
       endif
       
       !-----------------------------------------------------------------

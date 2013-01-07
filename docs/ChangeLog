@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20130107
+Originator: dbailey
+Date: Mon Jan  7 12:58:09 MST 2013
+Version: 4.0
+One-line Summary: Fix for time_bounds and pnetcdf.
+    
+M       src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20120927
 Originator: dbailey
 Date: 27 Sep 2012
@@ -6,6 +15,7 @@ Version: 4.0
 One-line Summary: Remove redundant use statement.
     
 M       src/source/ice_distribution.F90
+
 ===============================================================
 cice4_0_20120825
 Originator: mvertens
