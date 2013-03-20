@@ -1,16 +1,15 @@
 #!/usr/bin/env perl
 #=======================================================================
 #
-#  This is a script to return the decomposition information for
-#  either CICE or POP.
+#  This is a script to return the decomposition information for CICE
 #
 # Usage:
 #
-# generate_cice_pop_decomp [options]
+# generate_cice_decomp [options]
 #
 # To get help on options and usage:
 #
-# generate_cice_pop_decomp -help
+# generate_cice_decomp -help
 #
 #=======================================================================
 
@@ -35,18 +34,6 @@ if ($ProgDir) {
     $cfgdir = $ProgDir; 
 } else { 
     $cfgdir = $cwd; 
-}
-
-# Horizontal grid and spectral resolution parameters.
-my $horiz_grid_file = 'config_grid.xml';
-if (-f "../Tools/$horiz_grid_file") {
-    $horiz_grid_file = "../Tools/$horiz_grid_file";
-} elsif (-f "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file") {
-    $horiz_grid_file = "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file";
-} else {
-    die <<"EOF";
-** (generate_cice_decomp): Cannot find horizonal grid parameters file \"$horiz_grid_file\" 
-EOF
 }
 
 # The XML::Lite module is required to parse the XML configuration files.
@@ -76,9 +63,10 @@ EOF
 require Decomp::Config;
 
 #-----------------------------------------------------------------------------------------------
-my $platform = "XT";
-my $res      = "gx1v6";
-my $output   = "all";
+my $output = "all";
+my $res = "gx1v6";
+my $nx  = 320;
+my $ny  = 384;
 
 sub usage {
     die <<EOF;
@@ -89,6 +77,10 @@ OPTIONS
                                     (required)
      -res <resolution>    (or -r)   Horizontal resolution (gx1v6 etc.). 
                                     (default $res))
+     -nx <number>                   number of lons 
+                                    (required)
+     -ny <number>                   number of lats
+                                    (required)
      -thrds <number>      (or -t)   Number of threads per mpi task
                                     (default 1)
      -output <type>	  (or -o)   Either output: all, maxblocks, bsize-x, bsize-y, or decomptype
@@ -96,7 +88,7 @@ OPTIONS
 
 EXAMPLES
 
-   $ProgName -res gx1v6 -nproc 80 -output maxblocks
+   $ProgName -res gx1v6 -nx 320 -ny 384  -nproc 80 -output maxblocks
 
    will return a single value -- the optimum max number of blocks to use.
 
@@ -107,6 +99,8 @@ EOF
 
   my %opts = (
                 res        => $res,
+                nx         => $nx, 
+                ny         => $ny, 
                 nproc      => undef,
                 thrds      => 1,
                 output     => $output,
@@ -121,6 +115,8 @@ EOF
   my $cmdline = @ARGV;
   GetOptions( 
               "r|res=s"      => \$opts{'res'},
+              "nx=i"         => \$opts{'nx'},
+              "ny=i"         => \$opts{'ny'},
               "n|nproc=i"    => \$opts{'nproc'},
               "t|thrds=i"    => \$opts{'thrds'},
               "o|output=s"   => \$opts{'output'},
@@ -154,11 +150,8 @@ $opts{'cmdline'}  = $cmdline;
 $opts{'nproc'} = $opts{'nproc'} * $opts{'thrds'};
 
 # Set_horiz_grid sets the parameters for specific hgrid combinations.
-if (defined $opts{'res'}) {$res = $opts{'res'};}
-my %latlon = ( nlat=>0, nlon=>0);
-set_horiz_grid("$horiz_grid_file", $res, \%latlon);
-my $nlat = $latlon{'nlat'}; 
-my $nlon = $latlon{'nlon'}; 
+my $nlat = $opts{'ny'};
+my $nlon = $opts{'nx'};
 
 # Try to read from the xml file
 my $dcmp = Decomp::Config->new( \%opts );
@@ -353,43 +346,11 @@ sub CalcDecompInfo {
 }
 
 #-------------------------------------------------------------------------------
-
-sub set_horiz_grid
+sub clean
 {
-    # Set the parameters for the specified horizontal grid.  The
-    # parameters are read from an input file, and if no grid matches are
-    # found then issue error message.
-    # This routine uses the configuration defined at the package level ($cfg_ref).
-
-    my ($hgrid_file, $hgrid, $latlon) = @_;
-    my $xml = XML::Lite->new( $hgrid_file );
-    my $root = $xml->root_element();
-
-    # Check for valid root node
-    my $name = $root->get_name();
-    $name eq "config_horiz_grid" or die
-	"(generate_cice_decomp): file $hgrid_file is not a horizontal grid parameters file\n";
-
-    # Read the grid parameters from $hgrid_file.
-    my @e = $xml->elements_by_name( "horiz_grid" );
-    my %a = ();
-
-    # Search for matching grid.
-    my $found = 0;
-  HGRID:
-    while ( my $e = shift @e ) {
-	%a = $e->get_attributes();
-	if ( $hgrid eq $a{'GLOB_GRID'} ) {
-	    $found = 1;
-	    last HGRID;
-	}
-    }
-
-    # Die unless search was successful.
-    unless ($found) { die "(generate_cice_decomp): set_horiz_grid: no match for hgrid $hgrid\n"; }
-
-    # Set nlat and nlon values
-    $latlon{'nlat'} = $a{'ny'};
-    $latlon{'nlon'} = $a{'nx'};
+    my ($name) = @_;
+    $name =~ s/^\s+//; # strip any leading whitespace 
+    $name =~ s/\s+$//; # strip any trailing whitespace
+    return ($name);
 }
 

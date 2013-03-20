@@ -2,25 +2,18 @@
 
 if !(-d $CASEBUILD/ciceconf) mkdir -p $CASEBUILD/ciceconf
 
-set hgrid = "-hgrid $ICE_GRID"
-#if ($ICE_GRID =~ *T*) set hgrid = "-hgrid ${ICE_NX}x${ICE_NY}" TODO - fix this
-
-cd $CASEBUILD/ciceconf || exit -1
 # Invoke cice configure - output will go in $CASEBUILD/ciceconf 
-$CODEROOT/ice/cice/bld/configure $hgrid -comp_intf $COMP_INTERFACE \
+cd $CASEBUILD/ciceconf || exit -1
+$CODEROOT/ice/cice/bld/configure -hgrid $ICE_GRID -nx $ICE_NX -ny $ICE_NY -comp_intf $COMP_INTERFACE \
     -cice_mode $CICE_MODE -nodecomp $CICE_CONFIG_OPTS || exit -1
 
 if ($CICE_AUTO_DECOMP == 'true') then
    @ ntasks = $NTASKS_ICE / $NINST_ICE
    set hgrid = $ICE_GRID
-   if ($ICE_GRID == ar9v2) then
-      set hgrid = 'ar9v1'
-   endif
-   if ($ICE_GRID == ar9v4) then
-      set hgrid = 'ar9v3'
-   endif
+   if ($ICE_GRID == ar9v2) set hgrid = 'ar9v1'
+   if ($ICE_GRID == ar9v4) set hgrid = 'ar9v3'
    cd $CASEBUILD
-   set config = `./generate_cice_decomp.pl -res $hgrid -nproc $ntasks -thrds $NTHRDS_ICE -output all`
+   set config = `./generate_cice_decomp.pl -res $hgrid -nx $ICE_NX -ny $ICE_NY -nproc $ntasks -thrds $NTHRDS_ICE -output all`
    cd $CASEROOT 
    if ($config[1] >= 0) then
       ./xmlchange -file env_build.xml -id CICE_BLCKX      -val $config[3] || exit -1

@@ -1,3 +1,17 @@
+cice4_0_20130320
+Originator: mvertens
+Date: Wed Mar 20 2013
+Version: 4.0
+One-line Summary: Changes necessary for scripts refactoring in
+	scripts4_130320
+
+M       bld/configure
+M       bld/cice.buildnml.csh
+M       bld/generate_cice_decomp.pl
+
+        Now grid sizes have to be passed to configure and
+	generate_cice_decomp.pl
+	
 ===============================================================
 cice4_0_20130107
 Originator: dbailey

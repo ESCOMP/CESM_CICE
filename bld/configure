@@ -76,6 +76,8 @@ OPTIONS
      -hgrid <name>       Specify horizontal grid.  Use nlatxnlon for spectral grids;
                          dlatxdlon for fv grids (dlat and dlon are the grid cell size
 			 in degrees for latitude and longitude respectively); 
+     -nx <number>        Number of longitudes
+     -ny <number>        Number of latitudes
      -ntasks <n>         Number of MPI tasks.  
      -nthreads <n>       Number of OMP threads per process.  Setting nthreads > 0 implies smp.
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
@@ -129,6 +131,8 @@ GetOptions(
     "decomptype=s"              => \$opts{'decomptype'},
     "h|help"                    => \$opts{'help'},
     "hgrid=s"                   => \$opts{'hgrid'},
+    "nx=i"                      => \$opts{'nx'},
+    "ny=i"                      => \$opts{'ny'},
     "ntr_aero=s"                => \$opts{'ntr_aero'},
     "ntasks=s"                  => \$opts{'ntasks'},
     "nthreads=s"                => \$opts{'nthreads'},
@@ -169,14 +173,6 @@ my %cfg = ();           # build configuration
 my $config_def_file = "config_files/definition.xml";
 (-f "$cfgdir/$config_def_file")  or  die <<"EOF";
 ** Cannot find configuration definition file \"$config_def_file\" in directory \"$cfgdir\" **
-EOF
-
-# The configuration definition file specifies generic defaults.
-#
-# Horizontal grid.
-my $horiz_grid_file = 'config_grid.xml';
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file") or  die <<"EOF";
-** Cannot find horizonal grid parameters file \"$horiz_grid_file\" in directory \"$cfgdir/../../../../scripts/ccsm_utils/Case.template/\" **
 EOF
 
 # The XML::Lite module is required to parse the XML configuration files.
@@ -273,18 +269,6 @@ my $comp_intf = $cfg_ref->get('comp_intf');
 if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# Horizontal grid parameters
-if (defined $opts{'hgrid'}) {
-    $cfg_ref->set('hgrid', $opts{'hgrid'});
-}
-my $hgrid = $cfg_ref->get('hgrid');
-
-# set_horiz_grid sets the parameters for specific hgrid combinations.
-set_horiz_grid("$cfgdir/../../../../scripts/ccsm_utils/Case.template/$horiz_grid_file", $cfg_ref);
-
-if ($print>=2) { print "Horizontal grid specifier: $hgrid.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # Set the cice mode 
 my $cice_mode;
 if ($opts{'cice_mode'}) {
@@ -321,10 +305,29 @@ if (defined $opts{'ntr_aero'}) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# Get the CICE grid
+# Horizontal grid parameters
+
+if (defined $opts{'hgrid'}) {
+    $cfg_ref->set('hgrid', $opts{'hgrid'});
+}
 my $hgrid = $cfg_ref->get('hgrid');
-my $nlon  = $cfg_ref->get('nlon');
-my $nlat  = $cfg_ref->get('nlat');
+
+if ($print>=2) { print "Horizontal grid specifier: $hgrid.$eol"; }
+
+my $hgrid = $cfg_ref->get('hgrid');
+my $nlon  = $opts{'nx'};
+my $nlat  = $opts{'ny'};
+$cfg_ref->set('nlat',$nlat);
+$cfg_ref->set('nlon',$nlon);
+
+# Override resolution settings to configure for SCAM mode.  The override is needed
+# because in SCAM mode the -hgrid option is used to specify the resolution of default
+# datasets from which single data columns are extracted.
+my $scam = $cfg_ref->get('scam');
+if ($scam) {
+    $cfg_ref->set('nlat', 1);
+    $cfg_ref->set('nlon', 1);
+}
 
 if ($print>=2) { print "cice : grid         is $hgrid     $eol";}
 if ($print>=2) { print "cice : nlon         is $nlon      $eol";}
@@ -580,70 +583,6 @@ sub write_cppdefs
 
 #-------------------------------------------------------------------------------
 
-sub set_horiz_grid
-{
-    # Set the parameters for the specified horizontal grid.  The
-    # parameters are read from an input file, and if no grid matches are
-    # found then issue error message.
-    # This routine uses the configuration defined at the package level ($cfg_ref).
-
-    my ($hgrid_file, $cfg_ref) = @_;
-    my $xml = XML::Lite->new( $hgrid_file );
-    my $root = $xml->root_element();
-
-    # Check for valid root node
-    my $name = $root->get_name();
-    $name eq "config_horiz_grid" or die
-	"file $hgrid_file is not a horizontal grid parameters file\n";
-
-    # Get grid from the package's configuration
-    my $hgrid   = $cfg_ref->get('hgrid');
-
-    # Read the grid parameters from $hgrid_file.
-    my @e = $xml->elements_by_name( "horiz_grid" );
-    my %a = ();
-
-    # Search for matching grid.
-    my $found = 0;
-  HGRID:
-    while ( my $e = shift @e ) {
-	%a = $e->get_attributes();
-	if ( $hgrid eq $a{'GLOB_GRID'} ) {
-	    $found = 1;
-	    last HGRID;
-	}
-    }
-
-    # Die unless search was successful.
-    unless ($found) { die "set_horiz_grid: no match for hgrid $hgrid\n"; }
-
-    # Set parameter values
-    $cfg_ref->set('nlat', $a{'ny'});
-    $cfg_ref->set('nlon', $a{'nx'});
-
-    # Need to override for extended grid configurations
-    if ($hgrid =~ 'ar9v2') {
-       $cfg_ref->set('nlat', 720);
-       $cfg_ref->set('nlon', 1280);
-    }
-    # Need to override for extended grid configurations
-    if ($hgrid =~ 'ar9v4') {
-       $cfg_ref->set('nlat', 720);
-       $cfg_ref->set('nlon', 1280);
-    }
-
-    # Override resolution settings to configure for SCAM mode.  The override is needed
-    # because in SCAM mode the -hgrid option is used to specify the resolution of default
-    # datasets from which single data columns are extracted.
-    my $scam = $cfg_ref->get('scam');
-    if ($scam) {
-	$cfg_ref->set('nlat', 1);
-	$cfg_ref->set('nlon', 1);
-    }
-}
-
-#-------------------------------------------------------------------------------
-
 sub absolute_path {
 #
 # Convert a pathname into an absolute pathname, expanding any . or .. characters.
@@ -820,10 +759,18 @@ sub version {
 
 
 #-------------------------------------------------------------------------------
-
 sub print_hash {
     my %h = @_;
     my ($k, $v);
     while ( ($k,$v) = each %h ) { print "$k => $v\n"; }
 }
 
+
+#-------------------------------------------------------------------------------
+sub clean
+{
+    my ($name) = @_;
+    $name =~ s/^\s+//; # strip any leading whitespace 
+    $name =~ s/\s+$//; # strip any trailing whitespace
+    return ($name);
+}
