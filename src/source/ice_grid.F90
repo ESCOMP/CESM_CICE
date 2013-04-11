@@ -947,7 +947,6 @@
       use netcdf
 !
 ! !INPUT/OUTPUT PARAMETERS:
-      include "netcdf.inc"    ! only needed for single_column input
 !
 !EOP
 !
@@ -1030,14 +1029,14 @@
 
          start3=(/1,1,1/)
          count3=(/ni,nj,1/)
-         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid,start3, count3, glob_grid), subname)
+         call check_ret(nf90_inq_varid(ncid, 'xc' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, glob_grid, start3, count3), subname)
          do i = 1,ni
             lons(i) = glob_grid(i,1)
          end do
 
-         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid,start3, count3, glob_grid), subname)
+         call check_ret(nf90_inq_varid(ncid, 'yc' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, glob_grid, start3, count3), subname)
          do j = 1,nj
             lats(j) = glob_grid(1,j) 
          end do
@@ -1049,28 +1048,26 @@
          pos_scmlon = mod(scmlon  + 360._dbl_kind,360._dbl_kind)
          start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
          start(2) = (MINLOC(abs(lats    -scmlat    ),dim=1))
-         count(1) = 1
-         count(2) = 1
 
          deallocate(lats)
          deallocate(lons)
          deallocate(pos_lons)
          deallocate(glob_grid)
 
-         call check_ret(nf_inq_varid(ncid, 'xc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         call check_ret(nf90_inq_varid(ncid, 'xc' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, scamdata, start), subname)
          TLON = scamdata
-         call check_ret(nf_inq_varid(ncid, 'yc' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         call check_ret(nf90_inq_varid(ncid, 'yc' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, scamdata, start), subname)
          TLAT = scamdata
-         call check_ret(nf_inq_varid(ncid, 'area' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         call check_ret(nf90_inq_varid(ncid, 'area' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, scamdata, start), subname)
          tarea = scamdata
-         call check_ret(nf_inq_varid(ncid, 'mask' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         call check_ret(nf90_inq_varid(ncid, 'mask' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, scamdata, start), subname)
          hm = scamdata
-         call check_ret(nf_inq_varid(ncid, 'frac' , varid), subname)
-         call check_ret(nf_get_vara_double(ncid, varid, start, count, scamdata), subname)
+         call check_ret(nf90_inq_varid(ncid, 'frac' , varid), subname)
+         call check_ret(nf90_get_var(ncid, varid, scamdata, start), subname)
          ocn_gridcell_frac = scamdata
       else
          ! Check for consistency

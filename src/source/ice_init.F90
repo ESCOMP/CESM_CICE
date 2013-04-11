@@ -317,7 +317,6 @@
             read(nu_nml, nml=ice_nml,iostat=nml_error)
             print*,'Reading tracer_nml'
             read(nu_nml, nml=tracer_nml,iostat=nml_error)
-            if (nml_error > 0) read(nu_nml,*)  ! for Nagware compiler
          end do
          if (nml_error == 0) close(nu_nml)
       endif

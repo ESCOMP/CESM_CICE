@@ -190,7 +190,7 @@
       ! for delta Eddington
       real (kind=dbl_kind) :: &
          exp_min              ! minimum exponential value
-      logical,save :: tflag = .false.   ! timer flag
+      logical :: tflag = .false.   ! timer flag
       character(len=1) :: tstr    ! timer string
 
 !=======================================================================

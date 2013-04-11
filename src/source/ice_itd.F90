@@ -1519,7 +1519,7 @@
       integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
-      real (kind=dbl_kind), dimension (icells,max_ntrcr), &
+      real (kind=dbl_kind), dimension (icells,ntrcr), &
          intent(in) :: &
          atrcrn    ! aicen*trcrn or vicen*trcrn or vsnon*trcrn
 

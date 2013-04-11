@@ -26,10 +26,10 @@
    use ice_domain_size
 
    implicit none
-   private
-   save
 
+   private
    include 'mpif.h'
+   save
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -129,8 +129,6 @@
 !  this function returns the sum of vector value across processors
 !
 !-----------------------------------------------------------------------
-
-   include 'mpif.h'  ! MPI Fortran include file
 
    type (distrb), intent(in) :: &
       dist                 ! distribution from which this is called

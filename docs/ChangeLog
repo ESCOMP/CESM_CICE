@@ -13,6 +13,49 @@ M       bld/generate_cice_decomp.pl
 	generate_cice_decomp.pl
 	
 ===============================================================
+nag_port
+Originator: santos
+Date: 
+Version: 4.0
+One-line Summary: NAG port
+
+M       src/source/ice_init.F90
+M       src/source/ice_domain.F90
+M       src/source/ice_history.F90
+M       src/drivers/cpl_share/ice_prescribed_mod.F90
+         - Remove statement in the namelist read that now breaks
+           NAG (as of nagfor 5.3.1).
+
+M       src/source/ice_domain.F90
+M       src/mpi/ice_boundary.F90
+M       src/mpi/ice_global_reductions.F90
+         - Fix dimension of dummy argument to match actual
+           argument.
+
+M       src/source/ice_shortwave.F90
+         - Remove specification of "save" on a local variable
+           after a save statement in the module. (Technically
+           non-conforming.)
+         - Since mpif.h may have variables with "save", include
+           it before any "save" statement.
+
+M       src/source/ice_fileunits.F90
+         - For "ifdef CCSMCOUPLED", use shr_sys_flush *instead*
+           of any compiler extensions, rather than *after* them.
+
+M       src/source/ice_distribution.F90
+         - Break up lines longer than 132 characters.
+
+M       src/source/ice_grid.F90
+         - Change to netCDF Fortran 90 bindings. (Fortran 77 ones
+           are more complex and technically non-conforming,
+           since generic functions did not exist before F90.)
+
+M       src/mpi/ice_gather_scatter.F90
+         - Remove extra status argument to mpi_send. (How was this
+           never an error before?)
+
+===============================================================
 cice4_0_20130107
 Originator: dbailey
 Date: Mon Jan  7 12:58:09 MST 2013

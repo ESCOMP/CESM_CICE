@@ -89,7 +89,8 @@
 ! !IROUTINE: create_distribution
 ! !INTERFACE:
 
- function create_distribution(dist_type, nprocs, minBlock, maxBlock, work_per_block, prob_per_block, blockType, bStats, FixMaxBlock, maxDil)
+ function create_distribution(dist_type, nprocs, minBlock, maxBlock, work_per_block, prob_per_block, blockType, bStats, &
+      FixMaxBlock, maxDil)
 
 ! !DESCRIPTION:
 !  This routine determines the distribution of blocks across processors
@@ -1802,7 +1803,8 @@
 ! !IROUTINE: create_distrb_spacecurve
 ! !INTERFACE:
 
- function create_distrb_spacecurve(nprocs, minBlock, maxBlock, work_per_block,prob_per_block,blockType, bStats, FixMaxBlock, maxDil )
+ function create_distrb_spacecurve(nprocs, minBlock, maxBlock, work_per_block,prob_per_block,blockType, bStats, &
+      FixMaxBlock, maxDil )
 
 ! !Description:
 !  This function distributes blocks across processors in a
@@ -2136,7 +2138,8 @@
     end select
 !   call qsort(dist%blockLocation(1:numLocalBlocks))
 !   write(nu_diag,*) 'IAM: ',my_task,'create_distrb_spacecurve: dist%blockLocation(:)', dist%blockLocation(1:nblocks_tot)
-!   write(nu_diag,*) 'IAM: ',my_task,'create_distrb_spacecurve: dist%blockLocation(1:numLocalBlocks)', dist%blockLocation(1:numLocalBlocks)
+!   write(nu_diag,*) 'IAM: ',my_task,'create_distrb_spacecurve: dist%blockLocation(1:numLocalBlocks)', &
+!        dist%blockLocation(1:numLocalBlocks)
   
 !   call ConvertStatsBlock2Proc(dist%blockLocation,bStats,cStats)
 !DBG   write(nu_diag,*) 'Before call to BuildProbabilityStats2'
@@ -2428,7 +2431,8 @@
           do while(contLoop )
 
             cost_per_proc=0.0
-            call wPartition(cost_per_block,blockLocation, distance, nproc,min_blocks, maxB,maxValue,maxDil,aminBlocks,amaxBlocks, amaxDil)
+            call wPartition(cost_per_block,blockLocation, distance, nproc,min_blocks, maxB,maxValue,maxDil,aminBlocks, &
+                 amaxBlocks, amaxDil)
             anProc = MAXVAL(blockLocation)
             call ConvertStatsBlock2Proc(blockLocation,Stats,pStats)
             call EstimateCost(pStats,anProc,cost_per_proc)
@@ -2485,7 +2489,8 @@
 
   end subroutine PartitionCurve
 
-  subroutine wPartition(cost_per_block, blockLocation, distance, nproc, min_blocks, max_blocks, maxValue, maxDil, aminBlocks, amaxBlocks,amaxDil)
+  subroutine wPartition(cost_per_block, blockLocation, distance, nproc, min_blocks, max_blocks, maxValue, maxDil, aminBlocks, &
+       amaxBlocks,amaxDil)
 
     real (dbl_kind), intent(in) :: cost_per_block(:)
     integer (int_kind), intent(inout) :: blockLocation(:)
@@ -2767,7 +2772,8 @@ end subroutine ice_distributionRake
       deallocate(cost_per_proc)
       deallocate(pStats)
 
- 212 format('PrintPartitionLB: on ',i4,' procs a{min,max}Blocks: ',(2(i4)),' Avg,Min,Max Cost/proc: ',(3(f10.4)),' imbalance: ',f8.2)
+ 212 format('PrintPartitionLB: on ',i4,' procs a{min,max}Blocks: ',(2(i4)),' Avg,Min,Max Cost/proc: ',(3(f10.4)), &
+          ' imbalance: ',f8.2)
 
     end subroutine PrintPartitionLB
 
