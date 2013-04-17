@@ -1,3 +1,16 @@
+===============================================================
+cice4_0_20130417
+Originator: jedwards
+Date: Wed Apr 17 2013
+Version: 4.0
+One-line Summary: Change in ice_restart.F90 for pio async, pass correct arguments to generate_cice_decomp.pl from configure
+
+M               bld/configure
+M               src/drivers/cpl_share/ice_restart.F90
+
+
+===============================================================
+
 cice4_0_20130320
 Originator: mvertens
 Date: Wed Mar 20 2013

@@ -322,10 +322,6 @@
       call ice_pio_init(mode='write',filename=trim(filename), File=File, &
            clobber=.true., cdf64=lcdf64 )
 
-      call ice_pio_initdecomp(iodesc=iodesc2d)
-      call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat)
-      call ice_pio_initdecomp(ndim3=ntilyr, iodesc=iodesc3d_ntilyr)
-      call ice_pio_initdecomp(ndim3=ntslyr, iodesc=iodesc3d_ntslyr)
 
       status = pio_put_att(File,pio_global,'istep1',istep1)
       status = pio_put_att(File,pio_global,'time',time)
@@ -340,7 +336,9 @@
       status = pio_def_dim(File,'ncat',ncat,dimid_ncat)
       status = pio_def_dim(File,'ntilyr',ntilyr,dimid_ntilyr)
       status = pio_def_dim(File,'ntslyr',ntslyr,dimid_ntslyr)
-      write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
+      if (my_task == master_task) then
+         write(nu_diag,*) 'Writing ',filename(1:lenstr(filename))
+      endif
       diag = .true.
 
       allocate(dims(3))
@@ -431,6 +429,7 @@
       !-----------------------------------------------------------------
       ! state variables
       !-----------------------------------------------------------------
+      call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat)
 
       status = pio_inq_varid(File,'aicen',varid)
       call pio_write_darray(File, varid, iodesc3d_ncat, aicen(:,:,:,:), status, fillval=c0)
@@ -444,12 +443,18 @@
       status = pio_inq_varid(File,'Tsfcn',varid)
       call pio_write_darray(File, varid, iodesc3d_ncat, trcrn(:,:,nt_Tsfc,:,:), status, fillval=c0)
 
+      call ice_pio_initdecomp(ndim3=ntilyr, iodesc=iodesc3d_ntilyr)
       status = pio_inq_varid(File,'eicen',varid)
       call pio_write_darray(File, varid, iodesc3d_ntilyr, eicen, status, fillval=c0)
+      call PIO_freeDecomp(File,iodesc3d_ntilyr)
 
+      call ice_pio_initdecomp(ndim3=ntslyr, iodesc=iodesc3d_ntslyr)
       status = pio_inq_varid(File,'esnon',varid)
       call pio_write_darray(File, varid, iodesc3d_ntslyr, esnon, status, fillval=c0)
 
+      call PIO_freeDecomp(File,iodesc3d_ntslyr)
+
+      call ice_pio_initdecomp(iodesc=iodesc2d)
       !-----------------------------------------------------------------
       ! velocity
       !-----------------------------------------------------------------
@@ -536,15 +541,16 @@
       !$OMP PARALLEL DO PRIVATE(iblk,j,i)
       do iblk = 1, nblocks
          do j = 1, ny_block
-         do i = 1, nx_block
-            work1(i,j,iblk) = c0
-            if (iceumask(i,j,iblk)) work1(i,j,iblk) = c1
-         enddo
+            do i = 1, nx_block
+               work1(i,j,iblk) = c0
+               if (iceumask(i,j,iblk)) work1(i,j,iblk) = c1
+            enddo
          enddo
       enddo
       !$OMP END PARALLEL DO
       status = pio_inq_varid(File,'iceumask',varid)
-         call pio_write_darray(File, varid, iodesc2d, work1, status, fillval=c0)
+      call pio_write_darray(File, varid, iodesc2d, work1, status, fillval=c0)
+      call PIO_freeDecomp(File,iodesc2d)
 
       if (tr_aero) then
          do k=1,n_aero
@@ -592,12 +598,9 @@
          call pio_write_darray(File, varid, iodesc3d_ncat, hpondn, status, fillval=c0)
       endif
 
-      call pio_closefile(File)
-
-      call PIO_freeDecomp(File,iodesc2d)
       call PIO_freeDecomp(File,iodesc3d_ncat)
-      call PIO_freeDecomp(File,iodesc3d_ntilyr)
-      call PIO_freeDecomp(File,iodesc3d_ntslyr)
+
+      call pio_closefile(File)
 
       if (my_task == master_task) then
          write(nu_diag,*) 'Restart written ',istep1,time,time_forc
