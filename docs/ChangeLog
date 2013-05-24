@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20130524
+Originator: jedwards
+Date: Fri May 24 2013
+Version: 4.0
+One-line Summary:  Fix issue with time_bounds variable in ice history
+
+M               src/drivers/cpl_share/ice_history_write.F90
+
+===============================================================
 cice4_0_20130417
 Originator: jedwards
 Date: Wed Apr 17 2013

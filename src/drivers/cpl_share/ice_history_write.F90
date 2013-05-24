@@ -490,7 +490,7 @@
          status = pio_inq_varid(File,'time_bounds',varid)
          time_bounds=(/time_beg(ns),time_end(ns)/)
          bnd_start=(/1,1/)
-         bnd_length=(/1,1/)
+         bnd_length=(/2,1/)
          status = pio_put_var(File,varid,start=bnd_start(:),count=bnd_length(:),ival=time_bounds) 
       endif
       
