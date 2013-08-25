@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20130825
+Originator: tcraig
+Date: Sun Aug 25 2013
+Version: 4.0
+One-line Summary:  Fix bounds checking error in mask halo 
+ - did not affect answers
+
+M       src/mpi/ice_boundary.F90
+===============================================================
 cice4_0_20130524
 Originator: jedwards
 Date: Fri May 24 2013
