@@ -137,7 +137,7 @@ contains
     use ice_history, only: history_dir, history_file
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock)         , intent(in)    :: EClock
+    type(ESMF_Clock)         , intent(inout) :: EClock
     type(seq_cdata)          , intent(inout) :: cdata_i
     type(mct_aVect)          , intent(inout) :: x2i_i, i2x_i
     character(len=*), optional  , intent(in) :: NLFilename ! Namelist filename
@@ -409,7 +409,7 @@ contains
        call ice_export_mct (i2x_i)  !Send initial state to driver
     endif
     call seq_infodata_PutData( infodata, ice_prognostic=.true., &
-      ice_nx = nxg, ice_ny = nyg )
+      iceberg_prognostic=.false., ice_nx = nxg, ice_ny = nyg )
     call t_stopf ('cice_mct_init')
 
     !---------------------------------------------------------------------------
@@ -456,7 +456,7 @@ contains
     use ice_shortwave, only: init_shortwave
 
 ! !ARGUMENTS:
-    type(ESMF_Clock),intent(in)    :: EClock
+    type(ESMF_Clock),intent(inout) :: EClock
     type(seq_cdata), intent(inout) :: cdata_i
     type(mct_aVect), intent(inout) :: x2i_i
     type(mct_aVect), intent(inout) :: i2x_i
@@ -849,7 +849,7 @@ contains
 !
 ! !ARGUMENTS:
 
-    type(ESMF_Clock),intent(in)    :: EClock
+    type(ESMF_Clock),intent(inout) :: EClock
     type(seq_cdata), intent(inout) :: cdata_i
     type(mct_aVect), intent(inout) :: x2i_i
     type(mct_aVect), intent(inout) :: i2x_i

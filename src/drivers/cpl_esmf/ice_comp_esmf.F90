@@ -422,11 +422,14 @@ end subroutine
 
     call ESMF_AttributeSet(export_state, name="ice_prognostic", value=.true., rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_AttributeSet(export_state, name="iceberg_prognostic", value=.false., rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="ice_nx", value=nx_global, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_AttributeSet(export_state, name="ice_ny", value=ny_global, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
+#ifdef USE_ESMF_METADATA
     convCIM  = "CIM"
     purpComp = "Model Component Simulation Description"
 
@@ -469,6 +472,8 @@ end subroutine
 !                           convention=convCIM, purpose=purpComp, rc=rc)
 !    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
 !                           convention=convCIM, purpose=purpComp, rc=rc)
+
+#endif
 
     call t_stopf ('cice_esmf_init')
 

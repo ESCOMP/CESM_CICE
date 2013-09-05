@@ -1,9 +1,25 @@
 ===============================================================
+cice4_0_20130905
+Originator: tcraig
+Date: Thu Sep 05 2013
+Version: 4.0
+One-line Summary:  Merge cplupa branch to trunk
+ - modify intents on init/run/finalize coupling interfaces
+ - add ifdef USE_ESMF_METADATA around esmf attribute calls
+ - fix build-namelist bug that prevented input file list from
+   being generated
+svn merge $SVNREPO/cice/trunk_tags/cice4_0_20130825 $SVNREPO/cice/branch_tags/cplupa_tags/cplupa_n04_cice4_0_20130825
+
+M       bld/build-namelist
+M       src/drivers/cpl_mct/ice_comp_mct.F90
+M       src/drivers/cpl_esmf/ice_comp_esmf.F90
+
+===============================================================
 cice4_0_20130825
 Originator: tcraig
 Date: Sun Aug 25 2013
 Version: 4.0
-One-line Summary:  Fix bounds checking error in mask halo 
+One-line Summary:  Fix bounds checking error in mask halo
  - did not affect answers
 
 M       src/mpi/ice_boundary.F90

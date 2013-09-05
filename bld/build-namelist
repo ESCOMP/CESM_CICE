@@ -823,8 +823,6 @@ sub check_input_files {
 		}
 	    }
 	}
-	close OUTFILE if defined $inputdata_rootdir;
-	return 0 if defined $inputdata_rootdir;
     }
 }
 
