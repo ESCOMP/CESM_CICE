@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20130917
+Originator: tcraig
+Date: Tue Sep 17 2013
+Version: 4.0
+One-line Summary:  Fix errors in input data list generation
+
+M       bld/build-namelist
+
+===============================================================
 cice4_0_20130905
 Originator: tcraig
 Date: Thu Sep 05 2013
