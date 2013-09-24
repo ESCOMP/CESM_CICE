@@ -1,5 +1,6 @@
 module ice_comp_esmf
 
+#ifdef ESMF_INTERFACE
 !---------------------------------------------------------------------------
 !BOP
 !
@@ -15,6 +16,7 @@ module ice_comp_esmf
   use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
 		           shr_file_setloglevel, shr_file_setlogunit
   use esmf
+  use esmfshr_mod
 
   use seq_flds_mod
   use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
@@ -27,17 +29,9 @@ module ice_comp_esmf
   use seq_comm_mct,    only : seq_comm_suffix, seq_comm_inst, seq_comm_name
   use perf_mod,        only : t_startf, t_stopf
 
+  use ice_import_export
   use ice_cpl_indices
-  use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-    	                      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
-                              flat, fsens, flwout, evap, fswabs, fhocn, &
-                              fswthru,     &
-		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
-		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
-		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
-		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
-                              faero
-  use ice_state,       only : vice, vsno, aice, trcr, filename_aero, filename_iage, &
+  use ice_state,       only : aice, filename_aero, filename_iage, &
                               filename_volpn, filename_FY, filename_lvl, &
                               tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
@@ -45,8 +39,7 @@ module ice_comp_esmf
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
                               grid_type, t2ugrid_vector
-  use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-                              field_loc_center, field_type_scalar, field_type_vector, c100
+  use ice_constants,   only : c0, c1, tffresh, spval_dbl, rad_to_deg, radius
   use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
@@ -68,7 +61,6 @@ module ice_comp_esmf
   use ice_broadcast
   use CICE_RunMod
 
-  use esmfshr_mod
 
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -86,8 +78,6 @@ module ice_comp_esmf
 !
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ice_export_esmf
-  private :: ice_import_esmf
   private :: ice_DistGrid_esmf
   private :: ice_domain_esmf
 
@@ -116,9 +106,11 @@ subroutine ice_register_esmf(comp, rc)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
       ice_init_esmf, phase=1, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
       ice_run_esmf, phase=1, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
       ice_final_esmf, phase=1, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -180,6 +172,7 @@ end subroutine
     integer            :: mpicom_loc, mpicom_vm, gsize
     integer            :: ICEID       ! cesm ID value
 
+    real(r8), pointer  :: fptr(:,:)
     character(ESMF_MAXSTR) :: convCIM, purpComp
 
 ! !REVISION HISTORY:
@@ -198,8 +191,10 @@ end subroutine
    ! duplicate the mpi communicator from the current VM 
    call ESMF_VMGetCurrent(vm, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_VMGet(vm, mpiCommunicator=mpicom_vm, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call MPI_Comm_dup(mpicom_vm, mpicom_loc, rc)
    if(rc /= 0) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -222,10 +217,13 @@ end subroutine
    ! Determine orbital parameters
    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -241,12 +239,16 @@ end subroutine
 
     call ESMF_AttributeGet(export_state, name="case_name", value=runid, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeGet(export_state, name="single_column", value=single_column, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeGet(export_state, name="scmlat", value=scmlat, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeGet(export_state, name="scmlon", value=scmlon, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeGet(export_state, name="start_type", value=starttype, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -374,6 +376,7 @@ end subroutine
 
     dom = mct2esmf_init(distgrid, attname=seq_flds_dom_fields, name="domain", rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ice_domain_esmf(dom, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -417,15 +420,20 @@ end subroutine
     ! send initial state to driver
     !---------------------------------------------------------------------------
 
-    call ice_export_esmf (d2x, rc=rc)  !Send initial state to driver
+    call ESMF_ArrayGet(d2x, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call ice_export(fptr)
 
     call ESMF_AttributeSet(export_state, name="ice_prognostic", value=.true., rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeSet(export_state, name="iceberg_prognostic", value=.false., rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeSet(export_state, name="ice_nx", value=nx_global, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeSet(export_state, name="ice_ny", value=ny_global, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -539,6 +547,7 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     character(len=char_len_long) :: fname
     character(len=*), parameter  :: SubName = "ice_run_esmf"
     type(ESMF_Array) :: d2x, x2d
+    real(R8), pointer   :: fptr(:,:)
     logical, save :: first_time = .true.
 !
 ! !REVISION HISTORY:
@@ -567,10 +576,13 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
    ! Determine orbital parameters
    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -597,8 +609,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call ESMF_StateGet(import_state, itemName="x2d", array=x2d, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ice_import_esmf(x2d, rc=rc )
+    call ESMF_ArrayGet(x2d, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call ice_import(fptr)
 
     call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_import')
@@ -811,8 +825,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call ESMF_StateGet(export_state, itemName="d2x", array=d2x, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ice_export_esmf (d2x, rc=rc)
+    call ESMF_ArrayGet(d2x, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call ice_export(fptr)
 
     call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_export')
@@ -905,10 +921,11 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
     call esmfshr_util_StateArrayDestroy(import_state,"x2d",rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-end subroutine ice_final_esmf
+  end subroutine ice_final_esmf
 
 !=================================================================================
-function ice_DistGrid_esmf(gsize,rc)
+
+  function ice_DistGrid_esmf(gsize,rc)
 
     implicit none
     !-------------------------------------------------------------------
@@ -988,448 +1005,9 @@ function ice_DistGrid_esmf(gsize,rc)
 
   end function ice_DistGrid_esmf
 
-
 !====================================================================================
 
-subroutine ice_export_esmf(array, rc )   
-
-    implicit none
-    !-----------------------------------------------------
-    type(ESMF_Array), intent(inout)     :: array
-    integer, intent(out)                :: rc
-
-    integer :: i, j, iblk, n
-    integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
-
-    real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
-        Tsrf  &      ! surface temperature
-     ,  tauxa &      ! atmo/ice stress
-     ,  tauya &
-     ,  tauxo &      ! ice/ocean stress
-     ,  tauyo &
-     ,  ailohi       ! fractional ice area
-
-    real (kind=dbl_kind) :: workx, worky           ! tmps for converting grid
-
-    type(block)        :: this_block               ! block information for current block
-    logical :: flag
-    real(R8), pointer   :: fptr(:,:)
-    !-----------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    flag=.false.
-
-    !calculate ice thickness from aice and vice. Also
-    !create Tsrf from the first tracer (trcr) in ice_state.F
-
-    !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-    do iblk = 1, nblocks
-       do j = 1, ny_block
-       do i = 1, nx_block
-             
-          ! ice fraction
-          ailohi(i,j,iblk) = min(aice(i,j,iblk), c1)
-
-          ! surface temperature
-          Tsrf(i,j,iblk)  = Tffresh + trcr(i,j,1,iblk)             !Kelvin (original ???)
-          
-          ! wind stress  (on POP T-grid:  convert to lat-lon)
-          workx = strairxT(i,j,iblk)                             ! N/m^2
-          worky = strairyT(i,j,iblk)                             ! N/m^2
-          tauxa(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) &
-                          - worky*sin(ANGLET(i,j,iblk))
-          tauya(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                          + workx*sin(ANGLET(i,j,iblk))
-          
-          ! ice/ocean stress (on POP T-grid:  convert to lat-lon)
-          workx = -strocnxT(i,j,iblk)                            ! N/m^2
-          worky = -strocnyT(i,j,iblk)                            ! N/m^2
-          tauxo(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) &
-                          - worky*sin(ANGLET(i,j,iblk))
-          tauyo(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                          + workx*sin(ANGLET(i,j,iblk))
-
-       enddo
-       enddo
-    enddo
-    !$OMP END PARALLEL DO
-
-    do iblk = 1, nblocks
-       do j = 1, ny_block
-       do i = 1, nx_block
-          if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
-             flag = .true.
-          endif
-       end do
-       end do
-    end do
-    if (flag) then
-       do iblk = 1, nblocks
-          do j = 1, ny_block
-          do i = 1, nx_block
-             if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
-                write(nu_diag,*) &
-                     ' (ice) send: ERROR ailohi < 0.0 ',i,j,ailohi(i,j,iblk)
-                call shr_sys_flush(nu_diag)
-             endif
-          end do
-          end do
-       end do
-    endif
-
-    ! Fill export state i2x_i
-
-     fptr(:,:) = spval_dbl
-
-     n=0
-     do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
-         do j = jlo, jhi
-         do i = ilo, ihi
-
-            n = n+1
-
-            !-------states-------------------- 
-            fptr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
-
-            if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then
-               !-------states-------------------- 
-               fptr(index_i2x_Si_t     ,n)    = Tsrf(i,j,iblk)
-               fptr(index_i2x_Si_avsdr ,n)    = alvdr(i,j,iblk)
-               fptr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
-               fptr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
-               fptr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
-               fptr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
-               fptr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
-               fptr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
-               fptr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
-                                              / ailohi(i,j,iblk)
-            
-               !--- a/i fluxes computed by ice
-               fptr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    
-               fptr(index_i2x_Faii_tauy ,n)   = tauya(i,j,iblk)    
-               fptr(index_i2x_Faii_lat  ,n)   = flat(i,j,iblk)     
-               fptr(index_i2x_Faii_sen  ,n)   = fsens(i,j,iblk)    
-               fptr(index_i2x_Faii_lwup ,n)   = flwout(i,j,iblk)   
-               fptr(index_i2x_Faii_evap ,n)   = evap(i,j,iblk)     
-               fptr(index_i2x_Faii_swnet,n)   = fswabs(i,j,iblk)
-            
-               !--- i/o fluxes computed by ice
-               fptr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)
-               fptr(index_i2x_Fioi_swpen,n)   = fswthru(i,j,iblk) ! hf from melting          
-               fptr(index_i2x_Fioi_meltw,n)   = fresh(i,j,iblk)   ! h2o flux from melting    ???
-               fptr(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
-               fptr(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???
-               fptr(index_i2x_Fioi_tauy ,n)   = tauyo(i,j,iblk)   ! stress : i/o meridional  ???
-            end if
-         enddo    !i
-         enddo    !j
-     enddo        !iblk
-
-end subroutine ice_export_esmf
-
-!====================================================================================
-
-subroutine ice_import_esmf(array, rc)
-
-    !-----------------------------------------------------
-
-    implicit none
-    type(ESMF_Array), intent(inout) :: array
-    integer, intent(out)            :: rc
-
-    integer :: i, j, iblk, n
-    integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
-    type(block) :: this_block      ! block information for current block
-    real(R8), pointer   :: fptr(:,:)
-
-    integer,parameter :: nflds=15,nfldv=6
-    real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
-
-    real (kind=dbl_kind) :: &
-         workx, worky
-    logical (kind=log_kind) :: &
-         first_call = .true.
-
-    !-----------------------------------------------------
-
-    ! Note that the precipitation fluxes received  from the coupler
-    ! are in units of kg/s/m^2 which is what CICE requires.
-    ! Note also that the read in below includes only values needed
-    ! by the thermodynamic component of CICE.  Variables uocn, vocn,
-    ! ss_tltx, and ss_tlty are excluded. Also, because the SOM and
-    ! DOM don't  compute SSS.   SSS is not read in and is left at
-    ! the initilized value (see ice_flux.F init_coupler_flux) of
-    ! 34 ppt
-
-    !-----------------------------------------------------------------
-    ! Zero stuff while waiting, only filling in active cells.
-    !-----------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-    
-    call ESMF_ArrayGet(array, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    ! Use aflds to gather the halo updates of multiple fields
-    ! Need to separate the scalar from the vector halo updates
-
-    allocate(aflds(nx_block,ny_block,nflds,nblocks))
-    aflds = c0
-
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-
-       do j = jlo, jhi
-       do i = ilo, ihi
-
-          n = n+1
-          aflds(i,j, 1,iblk)   = fptr(index_x2i_So_t,n)
-          aflds(i,j, 2,iblk)   = fptr(index_x2i_So_s,n)
-          aflds(i,j, 3,iblk)   = fptr(index_x2i_Sa_z,n)
-          aflds(i,j, 4,iblk)   = fptr(index_x2i_Sa_ptem,n)
-          aflds(i,j, 5,iblk)   = fptr(index_x2i_Sa_tbot,n)
-          aflds(i,j, 6,iblk)   = fptr(index_x2i_Sa_shum,n)
-          aflds(i,j, 7,iblk)   = fptr(index_x2i_Sa_dens,n)
-          aflds(i,j, 8,iblk)   = fptr(index_x2i_Fioo_q,n)
-          aflds(i,j, 9,iblk)   = fptr(index_x2i_Faxa_swvdr,n)
-          aflds(i,j,10,iblk)   = fptr(index_x2i_Faxa_swndr,n)
-          aflds(i,j,11,iblk)   = fptr(index_x2i_Faxa_swvdf,n)
-          aflds(i,j,12,iblk)   = fptr(index_x2i_Faxa_swndf,n)
-          aflds(i,j,13,iblk)   = fptr(index_x2i_Faxa_lwdn,n)
-          aflds(i,j,14,iblk)   = fptr(index_x2i_Faxa_rain,n)
-          aflds(i,j,15,iblk)   = fptr(index_x2i_Faxa_snow,n)
-
-         enddo    !i
-         enddo    !j
-
-     enddo        !iblk
-
-     if (.not.prescribed_ice) then
-        call t_startf ('cice_imp_halo')
-        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
-                                              field_type_scalar)
-        call t_stopf ('cice_imp_halo')
-     endif
- 
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-     do iblk = 1, nblocks
-        do j = 1,ny_block
-        do i = 1,nx_block
-           sst  (i,j,iblk)   = aflds(i,j, 1,iblk)
-           sss  (i,j,iblk)   = aflds(i,j, 2,iblk)
-           zlvl (i,j,iblk)   = aflds(i,j, 3,iblk)
-           potT (i,j,iblk)   = aflds(i,j, 4,iblk)
-           Tair (i,j,iblk)   = aflds(i,j, 5,iblk)
-           Qa   (i,j,iblk)   = aflds(i,j, 6,iblk)
-           rhoa (i,j,iblk)   = aflds(i,j, 7,iblk)
-           frzmlt (i,j,iblk) = aflds(i,j, 8,iblk)
-           swvdr(i,j,iblk)   = aflds(i,j, 9,iblk)
-           swidr(i,j,iblk)   = aflds(i,j,10,iblk)
-           swvdf(i,j,iblk)   = aflds(i,j,11,iblk)
-           swidf(i,j,iblk)   = aflds(i,j,12,iblk)
-           flw  (i,j,iblk)   = aflds(i,j,13,iblk)
-           frain(i,j,iblk)   = aflds(i,j,14,iblk)
-           fsnow(i,j,iblk)   = aflds(i,j,15,iblk)
-        enddo    !i
-        enddo    !j
-     enddo        !iblk
-     !$OMP END PARALLEL DO
- 
-     deallocate(aflds)
-     allocate(aflds(nx_block,ny_block,nfldv,nblocks))
-     aflds = c0
-
-     n=0
-     do iblk = 1, nblocks
-        this_block = get_block(blocks_ice(iblk),iblk)
-        ilo = this_block%ilo
-        ihi = this_block%ihi
-        jlo = this_block%jlo
-        jhi = this_block%jhi
- 
-        do j = jlo, jhi
-        do i = ilo, ihi
-           n = n+1
-           aflds(i,j, 1,iblk)   = fptr(index_x2i_So_u,n)
-           aflds(i,j, 2,iblk)   = fptr(index_x2i_So_v,n)
-           aflds(i,j, 3,iblk)   = fptr(index_x2i_Sa_u,n)
-           aflds(i,j, 4,iblk)   = fptr(index_x2i_Sa_v,n)
-           aflds(i,j, 5,iblk)   = fptr(index_x2i_So_dhdx,n)
-           aflds(i,j, 6,iblk)   = fptr(index_x2i_So_dhdy,n)
-        enddo
-        enddo
-     enddo
-
-     if (.not.prescribed_ice) then
-        call t_startf ('cice_imp_halo')
-        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
-                                             field_type_vector)
-        call t_stopf ('cice_imp_halo')
-     endif
-
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-     do iblk = 1, nblocks
-        do j = 1,ny_block
-        do i = 1,nx_block
-           uocn (i,j,iblk)   = aflds(i,j, 1,iblk)
-           vocn (i,j,iblk)   = aflds(i,j, 2,iblk)
-           uatm (i,j,iblk)   = aflds(i,j, 3,iblk)
-           vatm (i,j,iblk)   = aflds(i,j, 4,iblk)
-           ss_tltx(i,j,iblk) = aflds(i,j, 5,iblk)
-           ss_tlty(i,j,iblk) = aflds(i,j, 6,iblk)
-        enddo    !i
-        enddo    !j
-     enddo        !iblk
-     !$OMP END PARALLEL DO
-
-     deallocate(aflds)
-
-     !-------------------------------------------------------
-     ! Set aerosols from coupler 
-     !-------------------------------------------------------
-     
-      if (first_call) then
-         if (tr_aero .and. .not. atm_aero) then
-            write(nu_diag,*) 'ice_comp_mct ERROR: atm_aero must be set for tr_aero' 
-            call shr_sys_abort()
-         end if
-        first_call = .false.
-      end if
-
-      n=0
-      do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
-         do j = jlo, jhi
-         do i = ilo, ihi
-
-            n = n+1
-            faero(i,j,1,iblk) = fptr(index_x2i_Faxa_bcphodry,n)
-
-            faero(i,j,2,iblk) = fptr(index_x2i_Faxa_bcphidry,n) &
-                              + fptr(index_x2i_Faxa_bcphiwet,n)
-         ! Combine all of the dust into one category
-            faero(i,j,3,iblk) = fptr(index_x2i_Faxa_dstwet1,n) &
-                              + fptr(index_x2i_Faxa_dstdry1,n) &
-                              + fptr(index_x2i_Faxa_dstwet2,n) &
-                              + fptr(index_x2i_Faxa_dstdry2,n) &
-                              + fptr(index_x2i_Faxa_dstwet3,n) &
-                              + fptr(index_x2i_Faxa_dstdry3,n) &
-                              + fptr(index_x2i_Faxa_dstwet4,n) &
-                              + fptr(index_x2i_Faxa_dstdry4,n)
-
-         enddo    !i
-         enddo    !j
-
-      enddo        !iblk
-
-     !-----------------------------------------------------------------
-     ! rotate zonal/meridional vectors to local coordinates
-     ! compute data derived quantities
-     !-----------------------------------------------------------------
-     
-     ! Vector fields come in on T grid, but are oriented geographically
-     ! need to rotate to pop-grid FIRST using ANGLET
-     ! then interpolate to the U-cell centers  (otherwise we
-     ! interpolate across the pole)
-     ! use ANGLET which is on the T grid !
-     
-     call t_startf ('cice_imp_ocn')
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-     do iblk = 1, nblocks
-
-       do j = 1,ny_block
-       do i = 1,nx_block
-
-          ! ocean
-          workx      = uocn  (i,j,iblk) ! currents, m/s 
-          worky      = vocn  (i,j,iblk)
-          uocn(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid 
-                         + worky*sin(ANGLET(i,j,iblk))
-          vocn(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                         - workx*sin(ANGLET(i,j,iblk))
-
-          workx      = ss_tltx  (i,j,iblk)           ! sea sfc tilt, m/m
-          worky      = ss_tlty  (i,j,iblk)
-          ss_tltx(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid 
-                            + worky*sin(ANGLET(i,j,iblk))
-          ss_tlty(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                            - workx*sin(ANGLET(i,j,iblk))
-
-          sst(i,j,iblk) = sst(i,j,iblk) - Tffresh       ! sea sfc temp (C)
-          Tf (i,j,iblk) = -1.8_dbl_kind                 ! hardwired for NCOM
-!         Tf (i,j,iblk) = -depressT*sss(i,j,iblk)       ! freezing temp (C)
-!         Tf (i,j,iblk) = -depressT*max(sss(i,j,iblk),ice_ref_salinity)
-
-       enddo
-       enddo
-      enddo
-      !$OMP END PARALLEL DO
-      call t_stopf ('cice_imp_ocn')
-
-      ! Interpolate ocean dynamics variables from T-cell centers to 
-      ! U-cell centers.
-
-      if (.not.prescribed_ice) then
-         call t_startf ('cice_imp_t2u')
-         call t2ugrid_vector(uocn)
-         call t2ugrid_vector(vocn)
-         call t2ugrid_vector(ss_tltx)
-         call t2ugrid_vector(ss_tlty)
-         call t_stopf ('cice_imp_t2u')
-      end if
-
-      ! Atmosphere variables are needed in T cell centers in
-      ! subroutine stability and are interpolated to the U grid
-      ! later as necessary.
-
-      call t_startf ('cice_imp_atm')
-      !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-  
-         ! atmosphere
-         workx      = uatm(i,j,iblk) ! wind velocity, m/s
-         worky      = vatm(i,j,iblk) 
-         uatm (i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid
-                         + worky*sin(ANGLET(i,j,iblk))   ! note uatm, vatm, wind
-         vatm (i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) & ! are on the T-grid here
-                         - workx*sin(ANGLET(i,j,iblk))
-
-         wind (i,j,iblk) = sqrt(uatm(i,j,iblk)**2 + vatm(i,j,iblk)**2)
-         fsw  (i,j,iblk) = swvdr(i,j,iblk) + swvdf(i,j,iblk) &
-                         + swidr(i,j,iblk) + swidf(i,j,iblk)
-         enddo
-         enddo
-      enddo
-      !$OMP END PARALLEL DO
-      call t_stopf ('cice_imp_atm')
-
-end subroutine ice_import_esmf
-
-!=======================================================================
-
-subroutine ice_domain_esmf( dom, rc )
+  subroutine ice_domain_esmf( dom, rc )
 
     implicit none
     !-------------------------------------------------------------------
@@ -1457,12 +1035,16 @@ subroutine ice_domain_esmf( dom, rc )
     ! Fill in correct values for domain components
     klon  = esmfshr_util_ArrayGetIndex(dom,'lon ',rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     klat  = esmfshr_util_ArrayGetIndex(dom,'lat ',rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     karea = esmfshr_util_ArrayGetIndex(dom,'area',rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     kmask = esmfshr_util_ArrayGetIndex(dom,'mask',rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     kfrac = esmfshr_util_ArrayGetIndex(dom,'frac',rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -1491,7 +1073,7 @@ subroutine ice_domain_esmf( dom, rc )
        enddo    !j
     enddo       !iblk
 
-end subroutine ice_domain_esmf
+  end subroutine ice_domain_esmf
 
 !=======================================================================
 ! BOP
@@ -1541,6 +1123,8 @@ end subroutine ice_domain_esmf
   restart_filename = trim(restart_file) // "." // trim(rdate) 
 
 end function restart_filename
+
+#endif
 
 end module ice_comp_esmf
 

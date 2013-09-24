@@ -35,16 +35,8 @@ module ice_comp_mct
   use perf_mod,        only : t_startf, t_stopf, t_barrierf
 
   use ice_cpl_indices
-  use ice_flux,        only : strairxt, strairyt, strocnxt, strocnyt,    &
-			      alvdr, alidr, alvdf, alidf, Tref, Qref, Uref, &
-                              flat, fsens, flwout, evap, fswabs, fhocn, &
-                              fswthru,     &
-		              fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa,  &
-		              rhoa, swvdr, swvdf, swidr, swidf, flw, frain,    &
-		              fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt,&
-		              sss, tf, wind, fsw, init_flux_atm, init_flux_ocn,&
-                              faero
-  use ice_state,       only : vice, vsno, aice, trcr, filename_aero, filename_iage, &
+  use ice_import_export
+  use ice_state,       only : aice, filename_aero, filename_iage, &
                               filename_volpn, filename_FY, filename_lvl, &
                               tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
   use ice_domain_size, only : nx_global, ny_global, block_size_x, block_size_y, max_blocks
@@ -52,8 +44,7 @@ module ice_comp_mct
   use ice_blocks,      only : block, get_block, nx_block, ny_block
   use ice_grid,        only : tlon, tlat, tarea, tmask, anglet, hm, ocn_gridcell_frac, &
  		              grid_type, t2ugrid_vector, gridcpl_file
-  use ice_constants,   only : c0, c1, puny, tffresh, spval_dbl, rad_to_deg, radius, &
-		              field_loc_center, field_type_scalar, field_type_vector, c100
+  use ice_constants,   only : c0, c1, spval_dbl, rad_to_deg, radius
   use ice_communicate, only : my_task, master_task, lprint_stats, MPI_COMM_ICE
   use ice_calendar,    only : idate, mday, time, month, daycal, secday, &
 		              sec, dt, dt_dyn, xndt_dyn, calendar,      &
@@ -90,8 +81,6 @@ module ice_comp_mct
 !
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ice_export_mct
-  private :: ice_import_mct
   private :: ice_SetGSMap_mct
   private :: ice_domain_mct
   private :: ice_setdef_mct
@@ -102,8 +91,6 @@ module ice_comp_mct
 ! !PRIVATE VARIABLES
 
   integer (kind=int_kind) :: ICEID       
-
-  logical (kind=log_kind) :: atm_aero
 
   !--- for coupling on other grid from gridcpl_file ---
   type(mct_gsMap) :: gsMap_iloc  ! local gsmaps
@@ -171,10 +158,9 @@ contains
     integer            :: daycal(13)  !number of cumulative days per month
     integer            :: nleaps      ! number of leap days before current year
     integer            :: mpicom_loc  ! temporary mpicom
-
+    logical (kind=log_kind) :: atm_aero
     real(r8) :: mrss, mrss0,msize,msize0
     character(len=*), parameter  :: SubName = "ice_init_mct"
-
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !EOP
@@ -201,7 +187,7 @@ contains
 
     ! Determine orbital parameters
     call seq_infodata_GetData(infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
-                              orb_lambm0=lambm0, orb_obliqr=obliqr)
+         orb_lambm0=lambm0, orb_obliqr=obliqr)
 
     !   call shr_init_memusage()
 
@@ -402,15 +388,21 @@ contains
     !---------------------------------------------------------------------------
 
     if (other_cplgrid) then
-       call ice_export_mct (i2x_iloc)  !Send initial state to driver
+       call ice_export (i2x_iloc%rattr)  !Send initial state to driver
        call ice_setdef_mct ( i2x_i )
        call mct_rearr_rearrange(i2x_iloc, i2x_i, rearr_iloc2ice)
     else
-       call ice_export_mct (i2x_i)  !Send initial state to driver
+       call ice_export (i2x_i%rattr)  !Send initial state to driver
     endif
     call seq_infodata_PutData( infodata, ice_prognostic=.true., &
       iceberg_prognostic=.false., ice_nx = nxg, ice_ny = nyg )
     call t_stopf ('cice_mct_init')
+
+    ! Error check
+    if (tr_aero .and. .not. atm_aero) then
+       write(nu_diag,*) 'ice_import ERROR: atm_aero must be set for tr_aero' 
+       call shr_sys_abort()
+    end if
 
     !---------------------------------------------------------------------------
     ! Reset shr logging to original values
@@ -419,14 +411,14 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
 
-!    call ice_timer_stop(timer_total) ! time entire run
-!   call shr_get_memusage(msize,mrss)
-!   call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
-!   call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
-!   if(my_task == 0) then
-!     write(shrlogunit,105) 'ice_init_mct: memory_write: model date = ',start_ymd,start_tod, &
-!           ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
-!   endif
+    !   call ice_timer_stop(timer_total) ! time entire run
+    !   call shr_get_memusage(msize,mrss)
+    !   call shr_mpi_max(mrss, mrss0, MPI_COMM_ICE,'ice_init_mct mrss0')
+    !   call shr_mpi_max(msize,msize0,MPI_COMM_ICE,'ice_init_mct msize0')
+    !   if(my_task == 0) then
+    !   write(shrlogunit,105) 'ice_init_mct: memory_write: model date = ',start_ymd,start_tod, &
+    !           ' memory = ',msize0,' MB (highwater)    ',mrss0,' MB (usage)'
+    !   endif
  
   105  format( A, 2i8, A, f10.2, A, f10.2, A)
 
@@ -447,13 +439,13 @@ contains
     use ice_history
     use ice_restart
     use ice_diagnostics
-    use ice_aerosol, only: write_restart_aero
-    use ice_age, only: write_restart_age
-    use ice_meltpond, only: write_restart_pond
-    use ice_FY, only: write_restart_FY
-    use ice_lvl, only: write_restart_lvl
-    use ice_restoring, only: restore_ice, ice_HaloRestore
-    use ice_shortwave, only: init_shortwave
+    use ice_aerosol   , only : write_restart_aero
+    use ice_age       , only : write_restart_age
+    use ice_meltpond  , only : write_restart_pond
+    use ice_FY        , only : write_restart_FY
+    use ice_lvl       , only : write_restart_lvl
+    use ice_restoring , only : restore_ice, ice_HaloRestore
+    use ice_shortwave , only : init_shortwave
 
 ! !ARGUMENTS:
     type(ESMF_Clock),intent(inout) :: EClock
@@ -539,9 +531,9 @@ contains
     call ice_timer_start(timer_cplrecv)
     if (other_cplgrid) then
        call mct_rearr_rearrange(x2i_i, x2i_iloc, rearr_ice2iloc)
-       call ice_import_mct( x2i_iloc )
+       call ice_import( x2i_iloc%rattr )
     else
-       call ice_import_mct( x2i_i )
+       call ice_import( x2i_i%rattr )
     endif
     call ice_timer_stop(timer_cplrecv)
     call t_stopf ('cice_run_import')
@@ -768,11 +760,11 @@ contains
     call t_startf ('cice_run_export')
     call ice_timer_start(timer_cplsend)
     if (other_cplgrid) then
-       call ice_export_mct ( i2x_iloc )
+       call ice_export ( i2x_iloc%rattr )
        call ice_setdef_mct ( i2x_i )
        call mct_rearr_rearrange(i2x_iloc, i2x_i, rearr_iloc2ice)
     else
-       call ice_export_mct ( i2x_i )
+       call ice_export ( i2x_i%rattr )
     endif
     call ice_timer_stop(timer_cplsend)
     call t_stopf ('cice_run_export')
@@ -959,433 +951,6 @@ contains
 
   end subroutine ice_SetGSMap_mct
 
-
-!===============================================================================
-
-  subroutine ice_export_mct( i2x_i )   
-
-    !-----------------------------------------------------
-    type(mct_aVect)   , intent(inout) :: i2x_i
-
-    integer :: i, j, iblk, n, ij 
-    integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
-    integer (kind=int_kind)                                :: icells ! number of ocean/ice cells
-    integer (kind=int_kind), dimension (nx_block*ny_block) :: indxi  ! compressed indices in i
-    integer (kind=int_kind), dimension (nx_block*ny_block) :: indxj  ! compressed indices in i
-
-    real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
-        Tsrf  &      ! surface temperature
-     ,  tauxa &      ! atmo/ice stress
-     ,  tauya &
-     ,  tauxo &      ! ice/ocean stress
-     ,  tauyo &
-     ,  ailohi       ! fractional ice area
-
-    real (kind=dbl_kind) :: &
-       workx, worky           ! tmps for converting grid
-
-    type(block)        :: this_block                           ! block information for current block
-    logical :: flag
-    !-----------------------------------------------------
-
-    flag=.false.
-
-    !calculate ice thickness from aice and vice. Also
-    !create Tsrf from the first tracer (trcr) in ice_state.F
-
-    !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-    do iblk = 1, nblocks
-       do j = 1, ny_block
-       do i = 1, nx_block
-             
-          ! ice fraction
-          ailohi(i,j,iblk) = min(aice(i,j,iblk), c1)
-
-          ! surface temperature
-          Tsrf(i,j,iblk)  = Tffresh + trcr(i,j,1,iblk)             !Kelvin (original ???)
-          
-          ! wind stress  (on POP T-grid:  convert to lat-lon)
-          workx = strairxT(i,j,iblk)                             ! N/m^2
-          worky = strairyT(i,j,iblk)                             ! N/m^2
-          tauxa(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) &
-                          - worky*sin(ANGLET(i,j,iblk))
-          tauya(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                          + workx*sin(ANGLET(i,j,iblk))
-          
-          ! ice/ocean stress (on POP T-grid:  convert to lat-lon)
-          workx = -strocnxT(i,j,iblk)                            ! N/m^2
-          worky = -strocnyT(i,j,iblk)                            ! N/m^2
-          tauxo(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) &
-                          - worky*sin(ANGLET(i,j,iblk))
-          tauyo(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                          + workx*sin(ANGLET(i,j,iblk))
-
-       enddo
-       enddo
-    enddo
-    !$OMP END PARALLEL DO
-
-    do iblk = 1, nblocks
-       do j = 1, ny_block
-       do i = 1, nx_block
-          if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
-             flag = .true.
-          endif
-       end do
-       end do
-    end do
-    if (flag) then
-       do iblk = 1, nblocks
-          do j = 1, ny_block
-          do i = 1, nx_block
-             if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
-                write(nu_diag,*) &
-                     ' (ice) send: ERROR ailohi < 0.0 ',i,j,ailohi(i,j,iblk)
-                call shr_sys_flush(nu_diag)
-             endif
-          end do
-          end do
-       end do
-    endif
-
-    ! Fill export state i2x_i
-
-     i2x_i%rAttr(:,:) = spval_dbl
-
-     n=0
-     do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
-         do j = jlo, jhi
-         do i = ilo, ihi
-
-            n = n+1
-
-            !-------states-------------------- 
-            i2x_i%rAttr(index_i2x_Si_ifrac ,n)    = ailohi(i,j,iblk)   
-
-            if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then
-               !-------states-------------------- 
-               i2x_i%rAttr(index_i2x_Si_t     ,n)    = Tsrf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_avsdr ,n)    = alvdr(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_anidr ,n)    = alidr(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_avsdf ,n)    = alvdf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_anidf ,n)    = alidf(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_u10  ,n)     = Uref(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_tref  ,n)    = Tref(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_qref  ,n)    = Qref(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Si_snowh ,n)    = vsno(i,j,iblk) &
-                                                     / ailohi(i,j,iblk)
-            
-               !--- a/i fluxes computed by ice
-               i2x_i%rAttr(index_i2x_Faii_taux ,n)   = tauxa(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_tauy ,n)   = tauya(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_lat  ,n)   = flat(i,j,iblk)     
-               i2x_i%rAttr(index_i2x_Faii_sen  ,n)   = fsens(i,j,iblk)    
-               i2x_i%rAttr(index_i2x_Faii_lwup ,n)   = flwout(i,j,iblk)   
-               i2x_i%rAttr(index_i2x_Faii_evap ,n)   = evap(i,j,iblk)     
-               i2x_i%rAttr(index_i2x_Faii_swnet,n)   = fswabs(i,j,iblk)
-            
-               !--- i/o fluxes computed by ice
-               i2x_i%rAttr(index_i2x_Fioi_melth,n)   = fhocn(i,j,iblk)
-               i2x_i%rAttr(index_i2x_Fioi_swpen,n)   = fswthru(i,j,iblk) ! hf from melting          
-               i2x_i%rAttr(index_i2x_Fioi_meltw,n)   = fresh(i,j,iblk)   ! h2o flux from melting    ???
-               i2x_i%rAttr(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
-               i2x_i%rAttr(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???
-               i2x_i%rAttr(index_i2x_Fioi_tauy ,n)   = tauyo(i,j,iblk)   ! stress : i/o meridional  ???
-            end if
-         enddo    !i
-         enddo    !j
-     enddo        !iblk
-
-  end subroutine ice_export_mct
-
-!==============================================================================
-
-  subroutine ice_import_mct( x2i_i )
-
-    !-----------------------------------------------------
-
-    implicit none
-    type(mct_aVect)   , intent(inout) :: x2i_i
-
-    integer :: i, j, iblk, n
-    integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
-    type(block) :: this_block      ! block information for current block
-
-    integer,parameter :: nflds=15,nfldv=6
-    real (kind=dbl_kind),allocatable :: aflds(:,:,:,:)
-
-    real (kind=dbl_kind) :: &
-         workx, worky
-    logical (kind=log_kind) :: &
-         first_call = .true.
-
-    !-----------------------------------------------------
-
-    ! Note that the precipitation fluxes received  from the coupler
-    ! are in units of kg/s/m^2 which is what CICE requires.
-    ! Note also that the read in below includes only values needed
-    ! by the thermodynamic component of CICE.  Variables uocn, vocn,
-    ! ss_tltx, and ss_tlty are excluded. Also, because the SOM and
-    ! DOM don't  compute SSS.   SSS is not read in and is left at
-    ! the initilized value (see ice_flux.F init_coupler_flux) of
-    ! 34 ppt
-
-    ! Use aflds to gather the halo updates of multiple fields
-    ! Need to separate the scalar from the vector halo updates
-
-    allocate(aflds(nx_block,ny_block,nflds,nblocks))
-    aflds = c0
-
-    n=0
-    do iblk = 1, nblocks
-       this_block = get_block(blocks_ice(iblk),iblk)         
-       ilo = this_block%ilo
-       ihi = this_block%ihi
-       jlo = this_block%jlo
-       jhi = this_block%jhi
-
-       do j = jlo, jhi
-       do i = ilo, ihi
-
-          n = n+1
-          aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_t,n)
-          aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_s,n)
-          aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_z,n)
-          aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_ptem,n)
-          aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_Sa_tbot,n)
-          aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_Sa_shum,n)
-          aflds(i,j, 7,iblk)   = x2i_i%rAttr(index_x2i_Sa_dens,n)
-          aflds(i,j, 8,iblk)   = x2i_i%rAttr(index_x2i_Fioo_q,n)
-          aflds(i,j, 9,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdr,n)
-          aflds(i,j,10,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndr,n)
-          aflds(i,j,11,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swvdf,n)
-          aflds(i,j,12,iblk)   = x2i_i%rAttr(index_x2i_Faxa_swndf,n)
-          aflds(i,j,13,iblk)   = x2i_i%rAttr(index_x2i_Faxa_lwdn,n)
-          aflds(i,j,14,iblk)   = x2i_i%rAttr(index_x2i_Faxa_rain,n)
-          aflds(i,j,15,iblk)   = x2i_i%rAttr(index_x2i_Faxa_snow,n)
-
-         enddo    !i
-         enddo    !j
-
-     enddo        !iblk
-
-     if (.not.prescribed_ice) then
-        call t_startf ('cice_imp_halo')
-        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
-                                              field_type_scalar)
-        call t_stopf ('cice_imp_halo')
-     endif
- 
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-     do iblk = 1, nblocks
-        do j = 1,ny_block
-        do i = 1,nx_block
-           sst  (i,j,iblk)   = aflds(i,j, 1,iblk)
-           sss  (i,j,iblk)   = aflds(i,j, 2,iblk)
-           zlvl (i,j,iblk)   = aflds(i,j, 3,iblk)
-           potT (i,j,iblk)   = aflds(i,j, 4,iblk)
-           Tair (i,j,iblk)   = aflds(i,j, 5,iblk)
-           Qa   (i,j,iblk)   = aflds(i,j, 6,iblk)
-           rhoa (i,j,iblk)   = aflds(i,j, 7,iblk)
-           frzmlt (i,j,iblk) = aflds(i,j, 8,iblk)
-           swvdr(i,j,iblk)   = aflds(i,j, 9,iblk)
-           swidr(i,j,iblk)   = aflds(i,j,10,iblk)
-           swvdf(i,j,iblk)   = aflds(i,j,11,iblk)
-           swidf(i,j,iblk)   = aflds(i,j,12,iblk)
-           flw  (i,j,iblk)   = aflds(i,j,13,iblk)
-           frain(i,j,iblk)   = aflds(i,j,14,iblk)
-           fsnow(i,j,iblk)   = aflds(i,j,15,iblk)
-        enddo    !i
-        enddo    !j
-     enddo        !iblk
-     !$OMP END PARALLEL DO
- 
-     deallocate(aflds)
-     allocate(aflds(nx_block,ny_block,nfldv,nblocks))
-     aflds = c0
-
-     n=0
-     do iblk = 1, nblocks
-        this_block = get_block(blocks_ice(iblk),iblk)
-        ilo = this_block%ilo
-        ihi = this_block%ihi
-        jlo = this_block%jlo
-        jhi = this_block%jhi
- 
-        do j = jlo, jhi
-        do i = ilo, ihi
-           n = n+1
-           aflds(i,j, 1,iblk)   = x2i_i%rAttr(index_x2i_So_u,n)
-           aflds(i,j, 2,iblk)   = x2i_i%rAttr(index_x2i_So_v,n)
-           aflds(i,j, 3,iblk)   = x2i_i%rAttr(index_x2i_Sa_u,n)
-           aflds(i,j, 4,iblk)   = x2i_i%rAttr(index_x2i_Sa_v,n)
-           aflds(i,j, 5,iblk)   = x2i_i%rAttr(index_x2i_So_dhdx,n)
-           aflds(i,j, 6,iblk)   = x2i_i%rAttr(index_x2i_So_dhdy,n)
-        enddo
-        enddo
-     enddo
-
-     if (.not.prescribed_ice) then
-        call t_startf ('cice_imp_halo')
-        call ice_HaloUpdate(aflds, halo_info, field_loc_center, &
-                                             field_type_vector)
-        call t_stopf ('cice_imp_halo')
-     endif
-
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-     do iblk = 1, nblocks
-        do j = 1,ny_block
-        do i = 1,nx_block
-           uocn (i,j,iblk)   = aflds(i,j, 1,iblk)
-           vocn (i,j,iblk)   = aflds(i,j, 2,iblk)
-           uatm (i,j,iblk)   = aflds(i,j, 3,iblk)
-           vatm (i,j,iblk)   = aflds(i,j, 4,iblk)
-           ss_tltx(i,j,iblk) = aflds(i,j, 5,iblk)
-           ss_tlty(i,j,iblk) = aflds(i,j, 6,iblk)
-        enddo    !i
-        enddo    !j
-     enddo        !iblk
-     !$OMP END PARALLEL DO
-
-     deallocate(aflds)
-
-     !-------------------------------------------------------
-     ! Set aerosols from coupler 
-     !-------------------------------------------------------
-     
-      if (first_call) then
-         if (tr_aero .and. .not. atm_aero) then
-            write(nu_diag,*) 'ice_comp_mct ERROR: atm_aero must be set for tr_aero' 
-            call shr_sys_abort()
-         end if
-	 first_call = .false.
-      end if
-
-      n=0
-      do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
-         ilo = this_block%ilo
-         ihi = this_block%ihi
-         jlo = this_block%jlo
-         jhi = this_block%jhi
-
-         do j = jlo, jhi
-         do i = ilo, ihi
-
-            n = n+1
-            faero(i,j,1,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphodry,n)
-
-            faero(i,j,2,iblk) = x2i_i%rAttr(index_x2i_Faxa_bcphidry,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_bcphiwet,n)
-         ! Combine all of the dust into one category
-            faero(i,j,3,iblk) = x2i_i%rAttr(index_x2i_Faxa_dstwet1,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry1,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet2,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry2,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet3,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry3,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstwet4,n) &
-                              + x2i_i%rAttr(index_x2i_Faxa_dstdry4,n)
-
-         enddo    !i
-         enddo    !j
-
-      enddo        !iblk
-
-
-     !-----------------------------------------------------------------
-     ! rotate zonal/meridional vectors to local coordinates
-     ! compute data derived quantities
-     !-----------------------------------------------------------------
-     
-     ! Vector fields come in on T grid, but are oriented geographically
-     ! need to rotate to pop-grid FIRST using ANGLET
-     ! then interpolate to the U-cell centers  (otherwise we
-     ! interpolate across the pole)
-     ! use ANGLET which is on the T grid !
-     
-     call t_startf ('cice_imp_ocn')
-     !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-     do iblk = 1, nblocks
-
-       do j = 1,ny_block
-       do i = 1,nx_block
-
-          ! ocean
-          workx      = uocn  (i,j,iblk) ! currents, m/s 
-          worky      = vocn  (i,j,iblk)
-          uocn(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid 
-                         + worky*sin(ANGLET(i,j,iblk))
-          vocn(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                         - workx*sin(ANGLET(i,j,iblk))
-
-          workx      = ss_tltx  (i,j,iblk)           ! sea sfc tilt, m/m
-          worky      = ss_tlty  (i,j,iblk)
-          ss_tltx(i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid 
-                            + worky*sin(ANGLET(i,j,iblk))
-          ss_tlty(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) &
-                            - workx*sin(ANGLET(i,j,iblk))
-
-          sst(i,j,iblk) = sst(i,j,iblk) - Tffresh       ! sea sfc temp (C)
-          Tf (i,j,iblk) = -1.8_dbl_kind                 ! hardwired for NCOM
-!         Tf (i,j,iblk) = -depressT*sss(i,j,iblk)       ! freezing temp (C)
-!         Tf (i,j,iblk) = -depressT*max(sss(i,j,iblk),ice_ref_salinity)
-
-       enddo
-       enddo
-      enddo
-      !$OMP END PARALLEL DO
-      call t_stopf ('cice_imp_ocn')
-
-      ! Interpolate ocean dynamics variables from T-cell centers to 
-      ! U-cell centers.
-
-      if (.not.prescribed_ice) then
-         call t_startf ('cice_imp_t2u')
-         call t2ugrid_vector(uocn)
-         call t2ugrid_vector(vocn)
-         call t2ugrid_vector(ss_tltx)
-         call t2ugrid_vector(ss_tlty)
-         call t_stopf ('cice_imp_t2u')
-      end if
-
-      ! Atmosphere variables are needed in T cell centers in
-      ! subroutine stability and are interpolated to the U grid
-      ! later as necessary.
-
-      call t_startf ('cice_imp_atm')
-      !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-  
-         ! atmosphere
-         workx      = uatm(i,j,iblk) ! wind velocity, m/s
-         worky      = vatm(i,j,iblk) 
-         uatm (i,j,iblk) = workx*cos(ANGLET(i,j,iblk)) & ! convert to POP grid
-                         + worky*sin(ANGLET(i,j,iblk))   ! note uatm, vatm, wind
-         vatm (i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) & ! are on the T-grid here
-                         - workx*sin(ANGLET(i,j,iblk))
-
-         wind (i,j,iblk) = sqrt(uatm(i,j,iblk)**2 + vatm(i,j,iblk)**2)
-         fsw  (i,j,iblk) = swvdr(i,j,iblk) + swvdf(i,j,iblk) &
-                         + swidr(i,j,iblk) + swidf(i,j,iblk)
-         enddo
-         enddo
-      enddo
-      !$OMP END PARALLEL DO
-      call t_stopf ('cice_imp_atm')
-
-   end subroutine ice_import_mct
-
-!=======================================================================
-
   subroutine ice_domain_mct( lsize, gsMap_i, dom_i )
 
     !-------------------------------------------------------------------
@@ -1532,7 +1097,8 @@ contains
 
   end subroutine ice_domain_mct
 
-!=======================================================================
+  !=======================================================================
+
   subroutine ice_setdef_mct( i2x_i )   
 
     implicit none
@@ -1544,11 +1110,12 @@ contains
 
     call mct_aVect_zero(i2x_i)
 
-! tcraig : this is where observations could be read in
+    ! tcraig : this is where observations could be read in
 
   end subroutine ice_setdef_mct
 
-!=======================================================================
+  !=======================================================================
+
   subroutine ice_coffset_mct(xoff,yoff,gsmap_a,dom_a,gsmap_b,dom_b,mpicom_i)
     implicit none
 
@@ -1657,7 +1224,9 @@ contains
     endif
 
   end subroutine ice_coffset_mct
-!=======================================================================
+
+  !=======================================================================
+
   subroutine ice_setcoupling_mct(mpicom_i, ICEID, gsmap_i, dom_i)
 
     implicit none
