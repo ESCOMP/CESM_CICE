@@ -19,7 +19,6 @@ module ice_comp_esmf
   use esmfshr_mod
 
   use seq_flds_mod
-  use seq_cdata_mod,   only : seq_cdata, seq_cdata_setptrs
   use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
                               seq_timemgr_restartalarmison, &
 		              seq_timemgr_eclockdateinsync, &
