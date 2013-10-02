@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20131002
+Originator: mvertens
+Date: Tue Sep 24 2013
+Version: 4.0
+One-line Summary:  removed mct2emsf calls from ice_comp_esmf.F90
+
+M       src/drivers/cpl/ice_comp_esmf.F90
+	
+===============================================================
 cice4_0_20130925
 Originator: mvertens
 Date: Tue Sep 24 2013

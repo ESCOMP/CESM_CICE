@@ -11,23 +11,22 @@ module ice_comp_esmf
 !
 ! !USES:
 
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod,  only : shr_sys_abort, shr_sys_flush
-  use shr_file_mod, only : shr_file_getlogunit, shr_file_getloglevel,  &
-		           shr_file_setloglevel, shr_file_setlogunit
   use esmf
-  use esmfshr_mod
-
+  use esmfshr_util_mod, only : esmfshr_util_StateArrayDestroy
+  use esmfshr_util_mod, only : esmfshr_util_ArrayGetIndex
+  use esmf2mct_mod,     only : esmf2mct_copy, esmf2mct_init
+  use shr_kind_mod,     only : r8 => shr_kind_r8
+  use shr_sys_mod,      only : shr_sys_abort, shr_sys_flush
+  use shr_file_mod,     only : shr_file_getlogunit, shr_file_getloglevel
+  use shr_file_mod,     only : shr_file_setloglevel, shr_file_setlogunit
   use seq_flds_mod
-  use seq_timemgr_mod, only : seq_timemgr_eclockgetdata, &
-                              seq_timemgr_restartalarmison, &
-		              seq_timemgr_eclockdateinsync, &
-                              seq_timemgr_stopalarmison
-  use seq_infodata_mod,only : seq_infodata_start_type_cont, &
-                              seq_infodata_start_type_brnch, seq_infodata_start_type_start
-  use seq_comm_mct,    only : seq_comm_suffix, seq_comm_inst, seq_comm_name
-  use perf_mod,        only : t_startf, t_stopf
-
+  use seq_timemgr_mod,  only : seq_timemgr_eclockgetdata, seq_timemgr_restartalarmison
+  use seq_timemgr_mod,  only : seq_timemgr_eclockdateinsync, seq_timemgr_stopalarmison
+  use seq_infodata_mod, only : seq_infodata_start_type_cont
+  use seq_infodata_mod, only : seq_infodata_start_type_brnch  
+  use seq_infodata_mod, only : seq_infodata_start_type_start
+  use seq_comm_mct,     only : seq_comm_suffix, seq_comm_inst, seq_comm_name
+  use perf_mod,         only : t_startf, t_stopf
   use ice_import_export
   use ice_cpl_indices
   use ice_state,       only : aice, filename_aero, filename_iage, &
@@ -77,9 +76,8 @@ module ice_comp_esmf
 !
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ice_DistGrid_esmf
+  private :: ice_distgrid_esmf
   private :: ice_domain_esmf
-
 !
 ! !PRIVATE VARIABLES
 
@@ -148,30 +146,30 @@ end subroutine
 !
 ! !LOCAL VARIABLES:
 !
-    !----- local -----
-    type(ESMF_DistGrid)                   :: distgrid
-    type(ESMF_Array)                      :: d2x, x2d, dom
-    type(ESMF_VM)                         :: vm
-
-    character(len=32)  :: starttype          ! infodata start type
-    integer            :: start_ymd          ! Start date (YYYYMMDD)
-    integer            :: start_tod          ! start time of day (s)
-    integer            :: curr_ymd           ! Current date (YYYYMMDD)
-    integer            :: curr_tod           ! Current time of day (s)
-    integer            :: ref_ymd            ! Reference date (YYYYMMDD)
-    integer            :: ref_tod            ! reference time of day (s)
-    integer            :: iyear              ! yyyy
-    integer            :: nyrp               ! yyyy
-    integer            :: dtime              ! time step
-    integer            :: shrlogunit,shrloglev ! old values
-    integer            :: iam,ierr
-    integer            :: lbnum
-    integer            :: daycal(13)  !number of cumulative days per month
-    integer            :: nleaps      ! number of leap days before current year
-    integer            :: mpicom_loc, mpicom_vm, gsize
-    integer            :: ICEID       ! cesm ID value
-
-    real(r8), pointer  :: fptr(:,:)
+   !----- local -----
+    type(ESMF_ArraySpec)   :: arrayspec
+    type(ESMF_DistGrid)    :: distgrid
+    type(ESMF_Array)       :: i2x, x2i, dom
+    type(ESMF_VM)          :: vm
+    character(len=32)      :: starttype            ! infodata start type
+    integer                :: start_ymd            ! Start date (YYYYMMDD)
+    integer                :: start_tod            ! start time of day (s)
+    integer                :: curr_ymd             ! Current date (YYYYMMDD)
+    integer                :: curr_tod             ! Current time of day (s)
+    integer                :: ref_ymd              ! Reference date (YYYYMMDD)
+    integer                :: ref_tod              ! reference time of day (s)
+    integer                :: iyear                ! yyyy
+    integer                :: nyrp                 ! yyyy
+    integer                :: dtime                ! time step
+    integer                :: shrlogunit,shrloglev ! old values
+    integer                :: iam,ierr
+    integer                :: lbnum
+    integer                :: daycal(13)           !number of cumulative days per month
+    integer                :: nleaps               ! number of leap days before current year
+    integer                :: mpicom_loc, mpicom_vm, gsize
+    integer                :: nfields
+    integer                :: ICEID   ! cesm ID value
+    real(r8), pointer      :: fptr(:,:)
     character(ESMF_MAXSTR) :: convCIM, purpComp
 
 ! !REVISION HISTORY:
@@ -364,48 +362,93 @@ end subroutine
 
     call t_startf ('cice_esmf_init')
 
-    ! Initialize ice distgrid
+    !-----------------------------------------
+    ! Initialize distgrid and gsmap_i 
+    ! (gsmap_i is needed for prescribed_ice)
+    !-----------------------------------------
 
-    distgrid = ice_DistGrid_esmf(gsize,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    distgrid = ice_distgrid_esmf(gsize)
+
     call ESMF_AttributeSet(export_state, name="gsize", value=gsize, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Initialize ice domain (needs ice initialization info)
-
-    dom = mct2esmf_init(distgrid, attname=seq_flds_dom_fields, name="domain", rc=rc)
+    !-----------------------------------------
+    !  Set arrayspec for dom, l2x and x2l
+    !-----------------------------------------
+    
+    call ESMF_ArraySpecSet(arrayspec, rank=2, typekind=ESMF_TYPEKIND_R8, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ice_domain_esmf(dom, rc=rc)
+    !-----------------------------------------
+    ! Create dom 
+    !-----------------------------------------
+
+    nfields = shr_string_listGetNum(trim(seq_flds_dom_fields))
+
+    dom = ESMF_ArrayCreate(distgrid=distgrid, arrayspec=arrayspec, distgridToArrayMap=(/2/), &
+         undistLBound=(/1/), undistUBound=(/nfields/), name="domain", rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Inialize input/output arrays
-    d2x = mct2esmf_init(distgrid, attname=seq_flds_i2x_fields, name="d2x", rc=rc)
+    call ESMF_AttributeSet(dom, name="mct_names", value=trim(seq_flds_dom_fields), rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    ! Set values of dom 
+    call ice_domain_esmf(dom)
+
+    !----------------------------------------- 
+    !  Create i2x 
+    !-----------------------------------------
+
+    ! 1d undistributed index of fields, 2d is packed data
+
+    nfields = shr_string_listGetNum(trim(seq_flds_i2x_fields))
+
+    i2x = ESMF_ArrayCreate(distgrid=distgrid, arrayspec=arrayspec, distgridToArrayMap=(/2/), &
+         undistLBound=(/1/), undistUBound=(/nfields/), name="d2x", rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call ESMF_AttributeSet(i2x, name="mct_names", value=trim(seq_flds_i2x_fields), rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
  
-    x2d = mct2esmf_init(distgrid, attname=seq_flds_x2i_fields, name="x2d", rc=rc)
+    !----------------------------------------- 
+    !  Create x2i 
+    !-----------------------------------------
+
+    nfields = shr_string_listGetNum(trim(seq_flds_x2i_fields))
+
+    x2i = ESMF_ArrayCreate(distgrid=distgrid, arrayspec=arrayspec, distgridToArrayMap=(/2/), &
+         undistLBound=(/1/), undistUBound=(/nfields/), name="x2d", rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call ESMF_AttributeSet(x2i, name="mct_names", value=trim(seq_flds_x2i_fields), rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    !----------------------------------------- 
+    ! Add esmf arrays to import and export state 
+    !-----------------------------------------
  
     call ESMF_StateAdd(export_state, (/dom/), rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ESMF_StateAdd(export_state, (/d2x/), rc=rc)
+    call ESMF_StateAdd(export_state, (/i2x/), rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
  
-    call ESMF_StateAdd(import_state, (/x2d/), rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    call esmf2mct_init(distgrid,ICEID,gsmap_i,MPI_COMM_ICE,gsize=gsize,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    call esmf2mct_init(dom,dom_i,rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call esmf2mct_copy(dom, dom_i%data, rc)
+    call ESMF_StateAdd(import_state, (/x2i/), rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     !-----------------------------------------------------------------
     ! Second phase of prescribed ice initialization
+    ! Need to create gsmap_i and dom_i (module variables)
     !-----------------------------------------------------------------
+
+    call esmf2mct_init(distgrid, ICEID, gsmap_i, MPI_COMM_ICE, gsize=gsize, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call esmf2mct_init(dom, dom_i, rc=rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+    call esmf2mct_copy(dom, dom_i%data, rc)
+    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_prescribed_init(ICEID, gsmap_i, dom_i)
 
@@ -416,10 +459,10 @@ end subroutine
     call coupling_prep
 
     !---------------------------------------------------------------------------
-    ! send initial state to driver
+    ! create ice export state
     !---------------------------------------------------------------------------
 
-    call ESMF_ArrayGet(d2x, localDe=0, farrayPtr=fptr, rc=rc)
+    call ESMF_ArrayGet(i2x, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_export(fptr)
@@ -510,11 +553,11 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     use ice_history
     use ice_restart
     use ice_diagnostics
-    use ice_aerosol, only: write_restart_aero
-    use ice_age, only: write_restart_age
-    use ice_meltpond, only: write_restart_pond
-    use ice_FY, only: write_restart_FY
-    use ice_lvl, only: write_restart_lvl
+    use ice_aerosol,   only: write_restart_aero
+    use ice_age,       only: write_restart_age
+    use ice_meltpond,  only: write_restart_pond
+    use ice_FY,        only: write_restart_FY
+    use ice_lvl,       only: write_restart_lvl
     use ice_restoring, only: restore_ice, ice_HaloRestore
     use ice_shortwave, only: init_shortwave
     implicit none
@@ -527,31 +570,25 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     integer, intent(out)         :: rc
 
 ! !LOCAL VARIABLES:
-    integer :: k             ! index
-    logical :: rstwr         ! .true. ==> write a restart file
-    logical :: stop_now      ! .true. ==> stop at the end of this run phase
-    integer :: ymd           ! Current date (YYYYMMDD)
-    integer :: tod           ! Current time of day (sec)
-    integer :: curr_ymd      ! Current date (YYYYMMDD)
-    integer :: curr_tod      ! Current time of day (s)
-    integer :: yr_sync       ! Sync current year
-    integer :: mon_sync      ! Sync current month
-    integer :: day_sync      ! Sync current day
-    integer :: tod_sync      ! Sync current time of day (sec)
-    integer :: ymd_sync      ! Current year of sync clock
-    integer :: shrlogunit,shrloglev ! old values
-    integer :: lbnum
-    integer :: n, nyrp
+    integer                      :: k             ! index
+    logical                      :: rstwr         ! .true. ==> write a restart file
+    logical                      :: stop_now      ! .true. ==> stop at the end of this run phase
+    integer                      :: ymd           ! Current date (YYYYMMDD)
+    integer                      :: tod           ! Current time of day (sec)
+    integer                      :: curr_ymd      ! Current date (YYYYMMDD)
+    integer                      :: curr_tod      ! Current time of day (s)
+    integer                      :: yr_sync       ! Sync current year
+    integer                      :: mon_sync      ! Sync current month
+    integer                      :: day_sync      ! Sync current day
+    integer                      :: tod_sync      ! Sync current time of day (sec)
+    integer                      :: ymd_sync      ! Current year of sync clock
+    integer                      :: shrlogunit,shrloglev ! old values
+    integer                      :: n, nyrp
     character(len=char_len_long) :: string1, string2
     character(len=char_len_long) :: fname
+    type(ESMF_Array)             :: i2x, x2i
+    real(R8), pointer            :: fptr(:,:)
     character(len=*), parameter  :: SubName = "ice_run_esmf"
-    type(ESMF_Array) :: d2x, x2d
-    real(R8), pointer   :: fptr(:,:)
-    logical, save :: first_time = .true.
-!
-! !REVISION HISTORY:
-! Author: Jacob Sewall, Mariana Vertenstein, Fei Liu
-!
 !EOP
 !---------------------------------------------------------------------------
 
@@ -605,10 +642,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call t_startf ('cice_import')
     call ice_timer_start(timer_cplrecv)
 
-    call ESMF_StateGet(import_state, itemName="x2d", array=x2d, rc=rc)
+    call ESMF_StateGet(import_state, itemName="x2d", array=x2i, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ESMF_ArrayGet(x2d, localDe=0, farrayPtr=fptr, rc=rc)
+    call ESMF_ArrayGet(x2i, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_import(fptr)
@@ -821,10 +858,10 @@ subroutine ice_run_esmf(comp, import_state, export_state, EClock, rc)
     call t_startf ('cice_export')
     call ice_timer_start(timer_cplsend)
 
-    call ESMF_StateGet(export_state, itemName="d2x", array=d2x, rc=rc)
+    call ESMF_StateGet(export_state, itemName="d2x", array=i2x, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call ESMF_ArrayGet(d2x, localDe=0, farrayPtr=fptr, rc=rc)
+    call ESMF_ArrayGet(i2x, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ice_export(fptr)
@@ -908,15 +945,17 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
   ! Finalize routine 
   !----------------------------------------------------------------------------
   
-  ! Note that restart for final timestep was written in run phase.
+   ! Note that restart for final timestep was written in run phase.
     rc = ESMF_SUCCESS
 
     ! Destroy ESMF objects
 
     call esmfshr_util_StateArrayDestroy(export_state,"d2x",rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(export_state,"domain",rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(import_state,"x2d",rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -924,7 +963,7 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !=================================================================================
 
-  function ice_DistGrid_esmf(gsize,rc)
+  function ice_distgrid_esmf(gsize)
 
     implicit none
     !-------------------------------------------------------------------
@@ -932,9 +971,9 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
     ! Arguments
     !
     integer, intent(out)    :: gsize
-    integer, intent(out)    :: rc
+    !
     ! Return
-    type(ESMF_DistGrid)     :: ice_DistGrid_esmf
+    type(esmf_distgrid)     :: ice_distgrid_esmf
     !
     ! Local variables
     !
@@ -943,17 +982,10 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
     integer     :: lon
     integer     :: i, j, iblk, n, gi
     integer     :: lsize
-    integer     :: ier
+    integer     :: rc
     integer     :: ilo, ihi, jlo, jhi ! beginning and end of physical domain
     type(block) :: this_block         ! block information for current block
     !-------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! Build the CICE grid numbering for distgrid
-    ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used
-    ! in SCRIP
 
     ! number the local grid
 
@@ -973,11 +1005,11 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
     enddo        !iblk
     lsize = n
 
-! not valid for padded decomps
-!    lsize = block_size_x*block_size_y*nblocks
+    ! not valid for padded decomps
+    !    lsize = block_size_x*block_size_y*nblocks
     gsize = nx_global*ny_global
 
-    allocate(gindex(lsize),stat=ier)
+    allocate(gindex(lsize))
     n=0
     do iblk = 1, nblocks
        this_block = get_block(blocks_ice(iblk),iblk)         
@@ -997,7 +1029,7 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
        enddo    !j
     enddo        !iblk
    
-    ice_DistGrid_esmf = mct2esmf_init(gindex, rc=rc)
+    ice_distgrid_esmf = ESMF_DistGridCreate(arbSeqIndexList=gindex, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     deallocate(gindex)
@@ -1006,27 +1038,23 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !====================================================================================
 
-  subroutine ice_domain_esmf( dom, rc )
+  subroutine ice_domain_esmf( dom )
 
-    implicit none
     !-------------------------------------------------------------------
     !
     ! Arguments
     !
-    type(ESMF_Array), intent(inout)     :: dom
-    integer, intent(out)                :: rc
+    type(ESMF_Array), intent(inout) :: dom
     !
     ! Local Variables
     !
-    integer :: i, j, iblk, n               ! indices
-    integer :: ilo, ihi, jlo, jhi          ! beginning and end of physical domain
-    integer :: klon,klat,karea,kmask,kfrac ! domain fields
-    type(block)             :: this_block  ! block information for current block
-
-    real(R8),    pointer    :: fptr (:,:)
+    integer           :: i, j, iblk, n               ! indices
+    integer           :: ilo, ihi, jlo, jhi          ! beginning and end of physical domain
+    integer           :: klon,klat,karea,kmask,kfrac ! domain fields
+    type(block)       :: this_block                  ! block information for current block
+    real(R8), pointer :: fptr (:,:)
+    integer           :: rc
     !-------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
 
     call ESMF_ArrayGet(dom, localDe=0, farrayPtr=fptr, rc=rc)
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -1059,8 +1087,8 @@ subroutine ice_final_esmf(comp, import_state, export_state, EClock, rc)
        do j = jlo, jhi
        do i = ilo, ihi
           n = n+1
-          fptr(klon, n) = TLON(i,j,iblk)*rad_to_deg 
-          fptr(klat, n) = TLAT(i,j,iblk)*rad_to_deg 
+          fptr(klon, n)  = TLON(i,j,iblk)*rad_to_deg 
+          fptr(klat, n)  = TLAT(i,j,iblk)*rad_to_deg 
           fptr(karea, n) = tarea(i,j,iblk)/(radius*radius)
           fptr(kmask, n) = real(nint(hm(i,j,iblk)),kind=dbl_kind)
           if (trim(grid_type) == 'latlon') then
