@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20140224
+Originator: santos
+Date: 2014/02/24
+Version: 4.0
+One-line Summary: Speed up CESM namelist build a bit.
+
+M       bld/cice.buildnml.csh
+         - Call xmlchange once with 5 arguments instead of 5
+           separate times, since this takes a couple of seconds
+           and pauses the preview_namelists script for CESM.
+
+===============================================================
 cice4_0_20131002
 Originator: mvertens
 Date: Tue Sep 24 2013
