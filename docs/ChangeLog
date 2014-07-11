@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20140711
+Originator: santos
+Date: 2014/07/11
+Version: 4.0
+One-line Summary: One-line dimension correction (to pass NAG checks).
+
+M       src/source/ice_transport_driver.F90
+         - Change dimensions of tmin/tmax in local_max_min from
+           max_ntrace to ntrace, to correctly match the actual
+           arguments.
+
+===============================================================
 cice4_0_20140224
 Originator: santos
 Date: 2014/02/24

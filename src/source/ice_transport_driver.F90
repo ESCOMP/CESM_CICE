@@ -1339,7 +1339,7 @@
            trmask         ! tracer mask
 
       real (kind=dbl_kind), intent(out),              &
-           dimension (nx_block,ny_block,max_ntrace) ::    &
+           dimension (nx_block,ny_block,ntrace) ::    &
            tmin         ,&! local min tracer
            tmax           ! local max tracer
 !
