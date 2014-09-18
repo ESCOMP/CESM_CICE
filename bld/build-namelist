@@ -418,7 +418,7 @@ add_default($nl, 'kcatbound');
 # namelist group: ice_nml        #
 ##################################
 
-my $cam5 = $nl->get_value('cam5') =~ /$TRUE/io;
+my $cam4 = $nl->get_value('cam4') =~ /$TRUE/io;
 
 add_default($nl, 'ndte');
 add_default($nl, 'maskhalo_dyn');
@@ -432,10 +432,10 @@ add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'albedo_type');
 add_default($nl, 'shortwave');
-if ($cam5) {
-    add_default($nl, 'dT_mlt_in'   , 'cam5'=>'.true.');
-    add_default($nl, 'rsnw_melt_in', 'cam5'=>'.true.');
-    add_default($nl, 'R_snw'       , 'cam5'=>'.true.');
+if ($cam4) {
+    add_default($nl, 'dT_mlt_in'   , 'cam4'=>'.true.');
+    add_default($nl, 'rsnw_melt_in', 'cam4'=>'.true.');
+    add_default($nl, 'R_snw'       , 'cam4'=>'.true.');
 } else {
     add_default($nl, 'dT_mlt_in'   );
     add_default($nl, 'rsnw_melt_in');

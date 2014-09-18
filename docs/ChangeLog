@@ -1,4 +1,16 @@
 ===============================================================
+cice4_0_20140918
+Originator: dbailey
+Date: 2014/09/18
+Version: 4.0
+One-line Summary: Remove cam5=.true. and add cam4=.true.
+
+Requires scripts4_20140918
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20140711
 Originator: santos
 Date: 2014/07/11

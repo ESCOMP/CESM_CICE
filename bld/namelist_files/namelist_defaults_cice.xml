@@ -116,16 +116,16 @@
 <shortwave                 >'dEdd'</shortwave>
 <shortwave hgrid="tx0.1v2" >'default'</shortwave>
 
-<dT_mlt_in              > 1.50 </dT_mlt_in>
-<dT_mlt_in cam5='.true.'> 1.00 </dT_mlt_in>
+<dT_mlt_in              > 1.00 </dT_mlt_in>
+<dT_mlt_in cam4='.true.'> 1.50 </dT_mlt_in>
 <dT_mlt_in hgrid='gx3v7'> 2.00 </dT_mlt_in>
 
-<rsnw_melt_in              > 1500. </rsnw_melt_in>
-<rsnw_melt_in cam5='.true.'> 1000. </rsnw_melt_in>
+<rsnw_melt_in              > 1000. </rsnw_melt_in>
+<rsnw_melt_in cam4='.true.'> 1500. </rsnw_melt_in>
 <rsnw_melt_in hgrid='gx3v7'> 2000. </rsnw_melt_in>
 
-<R_snw              >  1.50 </R_snw>
-<R_snw cam5='.true.'>  1.75 </R_snw>
+<R_snw              >  1.75 </R_snw>
+<R_snw cam4='.true.'>  1.50 </R_snw>
 <R_snw hgrid='gx3v7'> -2.00 </R_snw>
 
 <advection>'remap'</advection>
