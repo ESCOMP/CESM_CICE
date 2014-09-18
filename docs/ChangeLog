@@ -1,4 +1,15 @@
 ===============================================================
+cice4_0_20140918b
+Originator: dbailey
+Date: 2014/09/18
+Version: 4.0
+One-line Summary: Forgot namelist_definition.xml
+
+Requires scripts4_20140918
+
+namelist_files/namelist_definition.xml
+
+===============================================================
 cice4_0_20140918
 Originator: dbailey
 Date: 2014/09/18

@@ -61,7 +61,7 @@
 <!----------------------------->
 
 <entry 
-id="cam5" 
+id="cam4" 
 type="logical"  
 category="cice" 
 group="iceexp" >
