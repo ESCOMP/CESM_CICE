@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20141002
+Originator: dbailey
+Date: 2014/10/02
+Version: 4.0
+One-line Summary: Fix gx3v7 precedence.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice4_0_20140918b
 Originator: dbailey
 Date: 2014/09/18
