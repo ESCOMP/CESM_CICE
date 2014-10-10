@@ -1590,6 +1590,7 @@
       do j=1,nblocks_y
       do i=1,nblocks_x
          n=(j-1)*nblocks_x + i
+         maxWork = maxval(workPerBlock)
          if (workPerBlock(n) > 0) then
             priority(n) = maxWork + n - workPerBlock(n)
          else
