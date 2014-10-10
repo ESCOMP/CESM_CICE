@@ -1581,6 +1581,8 @@
 
    numOcnBlocks = count(workPerBlock /= 0)
 
+   maxWork = maxval(workPerBlock)
+
    if (numOcnBlocks <= 2*nprocs) then
 
       allocate(priority(nblocks_tot), stat=istat)
@@ -1590,7 +1592,6 @@
       do j=1,nblocks_y
       do i=1,nblocks_x
          n=(j-1)*nblocks_x + i
-         maxWork = maxval(workPerBlock)
          if (workPerBlock(n) > 0) then
             priority(n) = maxWork + n - workPerBlock(n)
          else
@@ -1624,7 +1625,6 @@
 
    else
 
-      maxWork = maxval(workPerBlock)
 
       call proc_decomposition(dist%nprocs, nprocsX, nprocsY)
 

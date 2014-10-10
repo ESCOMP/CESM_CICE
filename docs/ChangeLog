@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20141010b
+Originator: dbailey
+Date: 2014/10/10
+Version: 4.0
+One-line Summary: Fix maxWork bug.
+
+M       src/source/ice_distribution.F90
+
+===============================================================
 cice4_0_20141002
 Originator: dbailey
 Date: 2014/10/02
