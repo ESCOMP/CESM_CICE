@@ -1,4 +1,13 @@
 ===============================================================
+cice4_0_20141022
+Originator: dbailey
+Date: 2014/10/22
+Version: 4.0
+One-line Summary: Work around for out-of-bounds issue.
+
+M       src/source/ice_itd.F90
+
+===============================================================
 cice4_0_20141010b
 Originator: dbailey
 Date: 2014/10/10
