@@ -297,10 +297,17 @@ if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 if (defined $opts{'ntr_aero'}) {
     $cfg_ref->set('ntr_aero', $opts{'ntr_aero'});
 } else {
+    $cfg_ref->set('ntr_aero', 0);
+}
+
+#BGC
+if (defined $opts{'nbgclyr'}) {
+    $cfg_ref->set('nbgclyr', $opts{'nbgclyr'});
+} else {
     if ($cice_mode eq 'prescribed') {
-	$cfg_ref->set('ntr_aero', 0);
+	$cfg_ref->set('nbgclyr', 0);
     } else {
-	$cfg_ref->set('ntr_aero', 3);
+	$cfg_ref->set('nbgclyr', 3);
     }
 }
 
@@ -320,6 +327,12 @@ my $nlat  = $opts{'ny'};
 $cfg_ref->set('nlat',$nlat);
 $cfg_ref->set('nlon',$nlon);
 
+# Need to override for extended grid configurations
+if ($hgrid =~ 'ar9v4') {
+    $cfg_ref->set('nlat',720);
+    $cfg_ref->set('nlon',1280);
+}
+
 # Override resolution settings to configure for SCAM mode.  The override is needed
 # because in SCAM mode the -hgrid option is used to specify the resolution of default
 # datasets from which single data columns are extracted.
@@ -328,6 +341,9 @@ if ($scam) {
     $cfg_ref->set('nlat', 1);
     $cfg_ref->set('nlon', 1);
 }
+
+my $nlon  = $cfg_ref->get('nlon');
+my $nlat  = $cfg_ref->get('nlat');
 
 if ($print>=2) { print "cice : grid         is $hgrid     $eol";}
 if ($print>=2) { print "cice : nlon         is $nlon      $eol";}
@@ -343,8 +359,21 @@ if ($ntr_aero gt "6"){
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
 EOF
 }
+my $nbgclyr = $cfg_ref->get('nbgclyr');
 
-my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNCAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTR_AERO=$ntr_aero";
+#my $cice_cppdefs = " -DCCSMCOUPLED           -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNICELYR=4 -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=0 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
+
+my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=1 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
+
+# stand-alone cice5.0.4
+#my $cice_cppdefs = " -DCCSMCOUPLED  -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=0 -DNBGCLYR=7 -DNICELYR=7 -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=1 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
+
+# Trigger RASM options with ar9v grid, otherwise set CESM options
+if ($hgrid =~ m/ar9v.*/ ) {
+    $cice_cppdefs = "$cice_cppdefs -DNICELYR=7 -DRASM_MODS";
+} else {
+    $cice_cppdefs = "$cice_cppdefs -DNICELYR=4";
+}
 
 #-----------------------------------------------------------------------------------------------
 # Determine if will set the cice decomposition
@@ -549,7 +578,9 @@ sub write_filepath
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
     print $fh "$CASEROOT/SourceMods/src.cice\n";
-    print $fh "$CODEROOT/ice/cice/src/drivers/cpl\n";
+    print $fh "$CODEROOT/ice/cice/src/drivers/cesm\n";
+    print $fh "$CODEROOT/ice/cice/src/io_pio\n";
+#    print $fh "$CODEROOT/ice/cice/src/io_netcdf\n";
     print $fh "$CODEROOT/ice/cice/src/mpi\n";
     print $fh "$CODEROOT/ice/cice/src/source\n";
 

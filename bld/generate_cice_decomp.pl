@@ -196,7 +196,7 @@ sub CalcDecompInfo {
 #
 # Calculate decomposition information
 #  note that spacecurve must have nblocks in x and y direction divisible by only 2, 3, 5.
-#  if spacecurve is the decomp target (dtypet) and a blocksize can't be found, use blkrobin
+#  if spacecurve is the decomp target (dtypet) and a blocksize can't be found, use sectrobin
 #  need to factor the nblocks to check if spacecurve blocksize is valid
 #
   my $nlats    = shift;
@@ -238,10 +238,10 @@ sub CalcDecompInfo {
   } elsif ($nprocs * $nprocs > $nlons * $nlats * 6) {
 #tcraig for testing  } elsif ($nprocs * $nprocs > 0) {
       $dtypet = "spacecurve";
-      $dtype  = "blkrobin";
+      $dtype  = "sectrobin";
   } else {
-      $dtypet = "blkrobin";
-      $dtype  = "blkrobin";
+      $dtypet = "sectrobin";
+      $dtype  = "sectrobin";
   }
 
   if ($set == 0) {

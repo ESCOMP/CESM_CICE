@@ -1,15 +1,7 @@
+!  SVN:$Id: ice_forcing.F90 744 2013-09-27 22:53:24Z eclare $
 !=======================================================================
 !
-!BOP
-!
-! !MODULE: ice_forcing - reads and interpolates input forcing data
-!
-! !DESCRIPTION:
-!
 ! Reads and interpolates forcing data for atmosphere and ocean quantities.
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_forcing.F90 140 2008-07-25 20:15:53Z eclare $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
 !
@@ -22,31 +14,31 @@
 !           Converted to free source form (F90)
 ! 2007: netcdf version of read_data added by Alison McLaren, Met Office
 !
-! !INTERFACE:
-!
       module ice_forcing
-!
-! !USES:
-!
+
       use ice_kinds_mod
       use ice_blocks, only: nx_block, ny_block
-      use ice_domain_size
+      use ice_domain_size, only: ncat, max_blocks, nx_global, ny_global
       use ice_communicate, only: my_task, master_task
-      use ice_constants
       use ice_calendar, only: istep, istep1, time, time_forc, year_init, &
                               sec, mday, month, nyr, yday, daycal, dayyr, &
                               daymo, days_per_year
-      use ice_fileunits
+      use ice_fileunits, only: nu_diag, nu_forcing
       use ice_atmo, only: calc_strair
-      use ice_exit
-      use ice_timers
-!
-!EOP
-!
+      use ice_exit, only: abort_ice
+      use ice_read_write, only: ice_open, ice_read, &
+                                ice_open_nc, ice_read_nc, ice_close_nc
+      use ice_therm_shared, only: ktherm
+
       implicit none
+      private
+      public :: init_forcing_atmo, init_forcing_ocn, &
+                get_forcing_atmo, get_forcing_ocn, &
+                read_clim_data, read_clim_data_nc, &
+                interpolate_data, interp_coeff_monthly
       save
 
-      integer (kind=int_kind) :: &
+      integer (kind=int_kind), public :: &
          ycycle          , & ! number of years in forcing cycle
          fyear_init      , & ! first year of data in forcing cycle
          fyear           , & ! current year in forcing cycle
@@ -81,8 +73,7 @@
            ftime              ! forcing time (for restart)
 
       integer (kind=int_kind) :: &
-           oldrecnum = 0  , & ! old record number (save between steps)
-           oldrecslot = 1     ! old record slot (save between steps)
+           oldrecnum = 0      ! old record number (save between steps)
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
           cldf                ! cloud fraction
@@ -114,26 +105,26 @@
         topmelt_data, &
         botmelt_data
 
-      character(char_len) :: & 
+      character(char_len), public :: & 
          atm_data_format, & ! 'bin'=binary or 'nc'=netcdf
          ocn_data_format, & ! 'bin'=binary or 'nc'=netcdf
-         atm_data_type, & ! 'default', 'monthly', 'ncar', 'ecmwf', 
-                          ! 'LYq' or 'hadgem'
-         sss_data_type, & ! 'default', 'clim', or 'ncar'
-         sst_data_type, & ! 'default', 'clim', 'ncar', 
-                          !     'hadgem_sst' or 'hadgem_sst_uvocn'
+         atm_data_type, & ! 'default', 'monthly', 'ncar', 
+                          ! 'LYq' or 'hadgem' or 'oned'
+         sss_data_type, & ! 'default', 'clim', 'ncar', 'oned'
+         sst_data_type, & ! 'default', 'clim', 'ncar', 'oned',
+                          ! 'hadgem_sst' or 'hadgem_sst_uvocn'
          precip_units     ! 'mm_per_month', 'mm_per_sec', 'mks'
  
-      character(char_len_long) :: & 
+      character(char_len_long), public :: & 
          atm_data_dir , & ! top directory for atmospheric data
          ocn_data_dir , & ! top directory for ocean data
          oceanmixed_file  ! file name for ocean forcing data
 
       integer (kind=int_kind), parameter :: & 
-         nfld = 8    ! number of fields to search for in forcing file
+         nfld = 8   ! number of fields to search for in forcing file
 
       ! as in the dummy atm (latm)
-      real (kind=dbl_kind), parameter :: &
+      real (kind=dbl_kind), parameter, public :: &
          frcvdr = 0.28_dbl_kind, & ! frac of incoming sw in vis direct band
          frcvdf = 0.24_dbl_kind, & ! frac of incoming sw in vis diffuse band
          frcidr = 0.31_dbl_kind, & ! frac of incoming sw in near IR direct band
@@ -143,16 +134,16 @@
        dimension (nx_block,ny_block,max_blocks,nfld,12) :: & 
          ocn_frc_m   ! ocn data for 12 months
 
-      logical (kind=log_kind) :: &
+      logical (kind=log_kind), public :: &
          restore_sst                 ! restore sst if true
 
-      integer (kind=int_kind) :: &
+      integer (kind=int_kind), public :: &
          trestore                    ! restoring time scale (days)
 
-      real (kind=dbl_kind) :: & 
+      real (kind=dbl_kind), public :: & 
          trest                       ! restoring time scale (sec)
 
-      logical (kind=log_kind) :: &
+      logical (kind=log_kind), public :: &
          dbug             ! prints debugging output if true
 
 !=======================================================================
@@ -160,30 +151,12 @@
       contains
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: init_forcing_atmo - initialize atmospheric forcing
-!
-! !INTERFACE:
-!
+
       subroutine init_forcing_atmo
-!
-! !DESCRIPTION:
-!
+
 ! Determine the current and final year of the forcing cycle based on
-! namelist input; initialize the forcing data filenames.
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+! namelist input; initialize the atmospheric forcing data filenames.
+
       fyear       = fyear_init + mod(nyr-1,ycycle) ! current year
       fyear_final = fyear_init + ycycle - 1 ! last year in forcing cycle
 
@@ -200,69 +173,70 @@
       ! default forcing values from init_flux_atm
       if (trim(atm_data_type) == 'ncar') then
          call NCAR_files(fyear)
-      elseif (trim(atm_data_type) == 'ecmwf') then
-         call ecmwf_files(fyear)    
       elseif (trim(atm_data_type) == 'LYq') then
          call LY_files(fyear)
       elseif (trim(atm_data_type) == 'hadgem') then
          call hadgem_files(fyear)
       elseif (trim(atm_data_type) == 'monthly') then
          call monthly_files(fyear)
+      elseif (trim(atm_data_type) == 'oned') then
+         call oned_files(fyear)
       endif
 
       end subroutine init_forcing_atmo
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: init_forcing_ocn - initialize sss and sst
-!
-! !INTERFACE:
-!
+
       subroutine init_forcing_ocn(dt)
-!
-! !DESCRIPTION:
-!
+
 ! Set sea surface salinity and freezing temperature to annual mean value 
 !  using a 12-month climatology.
 ! Read sst data for current month, and adjust sst based on freezing
 ! temperature.  No interpolation in time.
 
 ! Note: SST is subsequently prognosed if CICE is run with a mixed layer
-! ocean (oceanmixed\_ice = T), and can be restored to data 
-! (restore\_sst = T). SSS is not prognosed by CICE. 
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
+! ocean (oceanmixed_ice = T), and can be restored to data 
+! (restore_sst = T). SSS is not prognosed by CICE. 
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_constants, only: c0, c12, c1000, secday, depressT, &
+          field_loc_center, field_type_scalar
       use ice_domain, only: nblocks
-      use ice_flux, only: sss, sst, Tf, Tfrzpt
-      use ice_work, only:  work1
-      use ice_read_write
-      use ice_therm_vertical, only: ustar_scale
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_domain_size, only: max_blocks
+      use ice_flux, only: sss, sst, Tf
+      use ice_zbgc_shared, only: restore_bgc
+#ifdef ncdf
+      use netcdf
+#endif
+
       real (kind=dbl_kind), intent(in) :: &
-           dt                   ! time step
-!
-!EOP
-!
+         dt                   ! time step
+
+      ! local variables
+
       integer (kind=int_kind) :: &
-           i, j, iblk       , & ! horizontal indices
-           k                , & ! month index
-           fid              , & ! file id for netCDF file 
-          nbits
+         i, j, iblk       , & ! horizontal indices
+         k                , & ! month index
+         fid              , & ! file id for netCDF file 
+         nbits
 
       logical (kind=log_kind) :: diag
 
       character (char_len) :: & 
-            fieldname    ! field name in netcdf file
+         fieldname            ! field name in netcdf file
 
-      nbits = 64                ! double precision data
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         work1
+
+      nbits = 64              ! double precision data
+
+      if (restore_sst .or. restore_bgc) then
+         if (trestore == 0) then
+            trest = dt        ! use data instantaneously
+         else
+            trest = real(trestore,kind=dbl_kind) * secday ! seconds
+         endif
+      endif
 
     !-------------------------------------------------------------------
     ! Sea surface salinity (SSS)
@@ -271,9 +245,7 @@
 
       if (trim(sss_data_type) == 'clim') then
 
-!         sss_file = trim(ocn_data_dir)//'sss_Lev.mm'
-            sss_file = trim(ocn_data_dir)//'sss.mm.100x116.da' ! gx3 only
-!!!         sss_file = trim(ocn_data_dir)//'sss_12.r'
+         sss_file = trim(ocn_data_dir)//'sss.mm.100x116.da' ! gx3 only
 
          if (my_task == master_task) then
             write (nu_diag,*) ' '
@@ -289,6 +261,7 @@
          do k = 1,12            ! loop over 12 months
             call ice_read (nu_forcing, k, work1, 'rda8', dbug, &
                            field_loc_center, field_type_scalar)
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
                do j = 1, ny_block
                do i = 1, nx_block
@@ -296,23 +269,26 @@
                enddo
                enddo
             enddo
+            !$OMP END PARALLEL DO
          enddo                  ! k
 
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
                sss(i,j,iblk) = sss(i,j,iblk) / c12   ! annual average
                sss(i,j,iblk) = max(sss(i,j,iblk),c0)
-               if (trim(Tfrzpt) == 'constant') then
-                  Tf (i,j,iblk) = -1.8_dbl_kind ! deg C
-               else ! default:  Tfrzpt = 'linear_S'
-                  Tf (i,j,iblk) = -depressT * sss(i,j,iblk) ! deg C
+               if (ktherm == 2) then
+                  Tf(i,j,iblk) = sss(i,j,iblk) / (-18.48_dbl_kind &
+                               + ((18.48_dbl_kind/c1000) * sss(i,j,iblk)))
+               else
+                  Tf(i,j,iblk) = -depressT * sss(i,j,iblk) ! deg C
                endif
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
 
-         ! close file
          if (my_task == master_task) close(nu_forcing)
 
       endif                     ! sss_data_type
@@ -322,22 +298,12 @@
     ! initialize to data for current month
     !-------------------------------------------------------------------
 
-      if (restore_sst) then
-         if (trestore == 0) then
-            trest = dt          ! use data instantaneously
-         else
-            trest = real(trestore,kind=dbl_kind) * secday ! seconds
-         endif
-      endif
-
       if (trim(sst_data_type) == 'clim') then
 
          if (nx_global == 320) then ! gx1
             sst_file = trim(ocn_data_dir)//'sst_clim_hurrell.dat'
          else                   ! gx3
-!            sst_file = trim(ocn_data_dir)//'sst_Lev.mm'
             sst_file = trim(ocn_data_dir)//'sst.mm.100x116.da'
-!!!            sst_file = trim(ocn_data_dir)//'sst_12.r'
          endif
 
          if (my_task == master_task) then
@@ -354,6 +320,7 @@
          if (my_task == master_task) close(nu_forcing)
 
          ! Make sure sst is not less than freezing temperature Tf
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -361,6 +328,7 @@
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
 
       endif                     ! init_sst_data
 
@@ -387,6 +355,7 @@
          if (my_task == master_task) call ice_close_nc(fid)  
 
          ! Make sure sst is not less than freezing temperature Tf
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -394,54 +363,35 @@
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
 
       endif                        ! sst_data_type
 
-
       if (trim(sst_data_type) == 'ncar' .or.  &
           trim(sss_data_type) == 'ncar') then
-         call ocn_data_ncar_init
-      endif
-
-      ! set ustar_scale for case of zero currents
-      ! default value of c1 (for nonzero currents) set in init_thermo_vertical
-
-      if (trim(sst_data_type) /= 'ncar' .or.  &
-          trim(sss_data_type) /= 'ncar' .or.  & 
-          trim(sst_data_type) /= 'hadgem_sst_uvocn') then
-         ustar_scale = c10            ! for zero currents
+!         call ocn_data_ncar_init
+         call ocn_data_ncar_init_3D
       endif
 
       end subroutine init_forcing_ocn
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: get_forcing_atmo - Get atmospheric forcing data and interpolate
-!
-! !INTERFACE:
-!
+
       subroutine get_forcing_atmo
-!
-! !DESCRIPTION:
-!
+
 ! Get atmospheric forcing data and interpolate as necessary
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: field_loc_center, field_type_scalar
       use ice_boundary, only: ice_HaloUpdate
-      use ice_domain
-      use ice_blocks
-      use ice_flux
-      use ice_state
+      use ice_domain, only: nblocks, blocks_ice, halo_info
+      use ice_flux, only: Tair, fsw, flw, frain, fsnow, Qa, rhoa, &
+          uatm, vatm, strax, stray, zlvl, wind, swvdr, swvdf, swidr, swidf, &
+          potT, sst
+      use ice_state, only: aice, trcr, nt_Tsfc
       use ice_grid, only: ANGLET, hm
-!
-!EOP
-!
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_bound
+
       integer (kind=int_kind) :: &
          iblk, &              ! block index
          ilo,ihi,jlo,jhi      ! beginning and end of physical domain
@@ -464,14 +414,14 @@
 
       if (trim(atm_data_type) == 'ncar') then
          call ncar_data
-      elseif (trim(atm_data_type) == 'ecmwf') then
-         call ecmwf_data
       elseif (trim(atm_data_type) == 'LYq') then
          call LY_data
       elseif (trim(atm_data_type) == 'hadgem') then
          call hadgem_data
       elseif (trim(atm_data_type) == 'monthly') then
          call monthly_data
+      elseif (trim(atm_data_type) == 'oned') then
+         call oned_data
       else    ! default values set in init_flux
          return
       endif
@@ -480,6 +430,7 @@
     ! Convert forcing data to fields needed by ice model
     !-------------------------------------------------------------------
 
+      !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
 
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -516,6 +467,7 @@
                                aice  (:,:,iblk) )
 
       enddo                     ! iblk
+      !$OMP END PARALLEL DO
 
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (swvdr,             halo_info, &
@@ -531,36 +483,16 @@
       end subroutine get_forcing_atmo
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: get_forcing_ocn - interpolate sss, sst; restore sst
-!
-! !INTERFACE:
-!
+
       subroutine get_forcing_ocn (dt)
-!
-! !DESCRIPTION:
-!
+
 ! Read and interpolate annual climatologies of SSS and SST.
 ! Restore model SST to data if desired.
 ! Interpolate ocean fields to U grid if necessary.
-!
-! !REVISION HISTORY:
-!
-! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-      use ice_domain, only: nblocks
-      use ice_ocean
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
-!
-!EOP
-!
+
       if (trim(sst_data_type) == 'clim' .or.  &
           trim(sss_data_type) == 'clim') then
          call ocn_data_clim(dt)
@@ -569,25 +501,20 @@
          call ocn_data_ncar(dt)      
       elseif (trim(sst_data_type) == 'hadgem_sst' .or.  &
               trim(sst_data_type) == 'hadgem_sst_uvocn') then
-         call ocn_data_hadgem(dt)  
+         call ocn_data_hadgem(dt) 
+      elseif (trim(sst_data_type) == 'oned' .or.  &
+              trim(sss_data_type) == 'oned') then
+         call ocn_data_oned(dt)   
       endif
 
       end subroutine get_forcing_ocn
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: read_data - Read data needed for interpolation
-!
-! !INTERFACE:
-!
+
       subroutine read_data (flag, recd, yr, ixm, ixx, ixp, &
                             maxrec, data_file, field_data, &
                             field_loc, field_type)
-!
-! !DESCRIPTION:
-!
+
 ! If data is at the beginning of a one-year record, get data from
 !  the previous year.
 ! If data is at the end of a one-year record, get data from the
@@ -598,23 +525,15 @@
 !      first value of the year.
 ! If no later data exists (end of fyear_final), then
 !  (1) For monthly data, get data from the beginning of fyear_init.
-!  (2) For more frequent data, let the ipx value
+!  (2) For more frequent data, let the ixp value
 !      equal the last value of the year.
 ! In other words, we assume persistence when daily or 6-hourly
 !   data is missing, and we assume periodicity when monthly data
 !   is missing.
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_read_write
+
       use ice_diagnostics, only: check_step
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
+
       logical (kind=log_kind), intent(in) :: flag
 
       integer (kind=int_kind), intent(in) :: &
@@ -631,9 +550,9 @@
       integer (kind=int_kind), intent(in) :: &
            field_loc, &      ! location of field on staggered grid
            field_type        ! type of field (scalar, vector, angle)
-!
-!EOP
-!
+
+      ! local variables
+
       character (char_len_long) :: &
          data_file               ! data file to be read
 
@@ -669,7 +588,7 @@
       ! read data
       !-----------------------------------------------------------------
 
-         if (ixm /= 99) then
+         if (ixm /= -99) then
          ! currently in first half of data interval
             if (ixx <= 1) then
                if (yr > fyear_init) then ! get data from previous year
@@ -691,7 +610,7 @@
                            'rda8', dbug, field_loc, field_type)
 
             if (ixx==1 .and. my_task == master_task) close(nu_forcing)
-         endif                  ! ixm ne 99
+         endif                  ! ixm ne -99
 
          ! always read ixx data from data file for current year
          call file_year (data_file, yr)
@@ -702,7 +621,7 @@
          call ice_read (nu_forcing, nrec, field_data(:,:,arg,:), &
                         'rda8', dbug, field_loc, field_type)
 
-         if (ixp /= 99) then
+         if (ixp /= -99) then
          ! currently in latter half of data interval
             if (ixx==maxrec) then
                if (yr < fyear_final) then ! get data from following year
@@ -726,7 +645,7 @@
             nrec = recd + n4
             call ice_read (nu_forcing, nrec, field_data(:,:,arg,:), &
                            'rda8', dbug, field_loc, field_type)
-         endif                  ! ixp /= 99
+         endif                  ! ixp /= -99
 
          if (my_task == master_task) close(nu_forcing)
 
@@ -737,19 +656,11 @@
       end subroutine read_data
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: read_data_nc - Read netcdf data needed for interpolation
-!
-! !INTERFACE:
-!
+
       subroutine read_data_nc (flag, recd, yr, ixm, ixx, ixp, &
                             maxrec, data_file, fieldname, field_data, &
                             field_loc, field_type)
-!
-! !DESCRIPTION:
-!
+
 ! If data is at the beginning of a one-year record, get data from
 !  the previous year.
 ! If data is at the end of a one-year record, get data from the
@@ -760,23 +671,18 @@
 !      first value of the year.
 ! If no later data exists (end of fyear_final), then
 !  (1) For monthly data, get data from the beginning of fyear_init.
-!  (2) For more frequent data, let the ipx value
+!  (2) For more frequent data, let the ixp value
 !      equal the last value of the year.
 ! In other words, we assume persistence when daily or 6-hourly
 !   data is missing, and we assume periodicity when monthly data
 !   is missing.
 !
-! !REVISION HISTORY:
-!
 ! Adapted by Alison McLaren, Met Office from read_data
-!
-! !USES:
-!
-      use ice_read_write
+
+      use ice_constants, only: c0
       use ice_diagnostics, only: check_step
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
+
       logical (kind=log_kind), intent(in) :: flag
 
       integer (kind=int_kind), intent(in) :: &
@@ -799,9 +705,9 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,2,max_blocks), &
          intent(out) :: &
          field_data              ! 2 values needed for interpolation
-!
-!EOP
-!
+
+      ! local variables
+
 #ifdef ncdf 
       integer (kind=int_kind) :: &
          nrec             , & ! record number to read
@@ -809,7 +715,6 @@
                               ! adjusted at beginning and end of data
          arg              , & ! value of time argument in field_data
          fid                  ! file id for netCDF routines
-
 
       call ice_timer_start(timer_readwrite)  ! reading/writing
 
@@ -834,7 +739,7 @@
       ! read data
       !-----------------------------------------------------------------
 
-         if (ixm /= 99) then
+         if (ixm /= -99) then
          ! currently in first half of data interval
             if (ixx <= 1) then
                if (yr > fyear_init) then ! get data from previous year
@@ -858,7 +763,7 @@
                   field_loc, field_type)
 
             if (ixx==1) call ice_close_nc(fid)
-         endif                  ! ixm ne 99
+         endif                  ! ixm ne -99
 
          ! always read ixx data from data file for current year
          call file_year (data_file, yr)
@@ -871,7 +776,7 @@
               (fid, nrec, fieldname, field_data(:,:,arg,:), dbug, &
                field_loc, field_type)
 
-         if (ixp /= 99) then
+         if (ixp /= -99) then
          ! currently in latter half of data interval
             if (ixx==maxrec) then
                if (yr < fyear_final) then ! get data from following year
@@ -896,7 +801,7 @@
             call ice_read_nc & 
                  (fid, nrec, fieldname, field_data(:,:,arg,:), dbug, &
                   field_loc, field_type)
-         endif                  ! ixp /= 99
+         endif                  ! ixp /= -99
 
          call ice_close_nc(fid)
 
@@ -910,35 +815,19 @@
       end subroutine read_data_nc
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: read_clim_data - read annual climatological data
-!
-! !INTERFACE:
-!
+
       subroutine read_clim_data (readflag, recd, ixm, ixx, ixp, &
                                  data_file, field_data, &
                                  field_loc, field_type)
-!
-! !DESCRIPTION:
-!
+
 ! Read data needed for interpolation, as in read_data.
 ! Assume a one-year cycle of climatological data, so that there is
 !  no need to get data from other years or to extrapolate data beyond
 !  the forcing time period.
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_read_write
+
       use ice_diagnostics, only: check_step
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
+
       logical (kind=log_kind),intent(in) :: readflag
 
       integer (kind=int_kind), intent(in) :: &
@@ -955,9 +844,9 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,2,max_blocks), &
         intent(out) :: &
         field_data         ! 2 values needed for interpolation
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
         nbits          , & ! = 32 for single precision, 64 for double
         nrec           , & ! record number to read
@@ -981,7 +870,7 @@
          call ice_open (nu_forcing, data_file, nbits)
 
          arg = 0
-         if (ixm /= 99) then
+         if (ixm /= -99) then
             arg = 1
             nrec = recd + ixm
             call ice_read (nu_forcing, nrec, field_data(:,:,arg,:), &
@@ -993,7 +882,7 @@
          call ice_read (nu_forcing, nrec, field_data(:,:,arg,:), &
                         'rda8', dbug, field_loc, field_type)
 
-         if (ixp /= 99) then
+         if (ixp /= -99) then
             arg = arg + 1
             nrec = recd + ixp
             call ice_read (nu_forcing, nrec, field_data(:,:,arg,:), &
@@ -1008,32 +897,107 @@
       end subroutine read_clim_data
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: interp_coeff_monthly - Compute monthly data interpolation coefficients
-!
-! !INTERFACE:
-!
+
+      subroutine read_clim_data_nc (readflag, recd, ixm, ixx, ixp, &
+                                 data_file, fieldname, field_data, &
+                                 field_loc, field_type)
+
+! Read data needed for interpolation, as in read_data.
+! Assume a one-year cycle of climatological data, so that there is
+!  no need to get data from other years or to extrapolate data beyond
+!  the forcing time period.
+
+      use ice_diagnostics, only: check_step
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
+
+      logical (kind=log_kind),intent(in) :: readflag
+
+      integer (kind=int_kind), intent(in) :: &
+        recd            , & ! baseline record number
+        ixm,ixx,ixp         ! record numbers of 3 data values
+                            ! relative to recd
+
+      character (char_len_long), intent(in) ::  data_file
+
+      character (char_len), intent(in) :: &
+         fieldname               ! field name in netCDF file
+
+      integer (kind=int_kind), intent(in) :: &
+           field_loc, &      ! location of field on staggered grid
+           field_type        ! type of field (scalar, vector, angle)
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,2,max_blocks), &
+        intent(out) :: &
+        field_data         ! 2 values needed for interpolation
+
+      ! local variables
+
+      integer (kind=int_kind) :: &
+        nbits          , & ! = 32 for single precision, 64 for double
+        nrec           , & ! record number to read
+        arg            , & ! value of time argument in field_data
+        fid                ! file id for netCDF routines
+
+      call ice_timer_start(timer_readwrite)  ! reading/writing
+
+      nbits = 64                ! double precision data
+
+      if (istep1 > check_step) dbug = .true.  !! debugging
+
+      if (my_task==master_task .and. (dbug)) &
+        write(nu_diag,*) '  ', trim(data_file)
+
+      if (readflag) then
+
+      !-----------------------------------------------------------------
+      ! read data
+      !-----------------------------------------------------------------
+
+         call ice_open_nc (data_file, fid)
+
+         arg = 0
+         if (ixm /= -99) then
+            arg = 1
+            nrec = recd + ixm
+            call ice_read_nc & 
+                 (fid, nrec, fieldname, field_data(:,:,arg,:), &
+                  dbug, field_loc, field_type)
+         endif
+
+         arg = arg + 1
+         nrec = recd + ixx
+         call ice_read_nc & 
+                 (fid, nrec, fieldname, field_data(:,:,arg,:), &
+                  dbug, field_loc, field_type)
+
+         if (ixp /= -99) then
+            arg = arg + 1
+            nrec = recd + ixp
+            call ice_read_nc & 
+                 (fid, nrec, fieldname, field_data(:,:,arg,:), &
+                  dbug, field_loc, field_type)
+         endif
+
+         if (my_task == master_task) call ice_close_nc (fid)
+      endif                     ! readflag
+
+      call ice_timer_stop(timer_readwrite)  ! reading/writing
+
+      end subroutine read_clim_data_nc
+
+!=======================================================================
+
       subroutine interp_coeff_monthly (recslot)
-!
-! !DESCRIPTION:
-!
+
 ! Compute coefficients for interpolating monthly data to current time step.
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      use ice_constants, only: c1, secday
+
       integer (kind=int_kind), intent(in) :: &
           recslot         ! slot (1 or 2) for current record
-!
-!EOP
-!
+
+      ! local variables
+
       real (kind=dbl_kind) :: &
           tt           , & ! seconds elapsed in current year
           t1, t2           ! seconds elapsed at month midpoint
@@ -1068,28 +1032,16 @@
       end subroutine interp_coeff_monthly
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: interp_coeff
-!
-! !INTERFACE:
-!
+
       subroutine interp_coeff (recnum, recslot, secint, dataloc)
-!
-! !DESCRIPTION:
-!
+
 ! Compute coefficients for interpolating data to current time step.
 ! Works for any data interval that divides evenly into a
 !  year (daily, 6-hourly, etc.)
 ! Use interp_coef_monthly for monthly data.
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
+
+      use ice_constants, only: c1, p5, secday
+
       integer (kind=int_kind), intent(in) :: &
           recnum      , & ! record number for current data value
           recslot     , & ! spline slot for current record
@@ -1098,11 +1050,9 @@
 
       real (kind=dbl_kind), intent(in) :: &
           secint                    ! seconds in data interval
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+
+      ! local variables
+
       real (kind=dbl_kind) :: &
           secyr            ! seconds in a year
 
@@ -1139,28 +1089,15 @@
       end subroutine interp_coeff
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: interpolate_data
-!
-! !INTERFACE:
-!
+
       subroutine interpolate_data (field_data, field)
-!
-! !DESCRIPTION:
-!
+
 ! Linear interpolation
-!
-! !REVISION HISTORY:
-!
+
 ! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
+
       use ice_domain, only: nblocks
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       real (kind=dbl_kind), dimension(nx_block,ny_block,2,max_blocks), &
         intent(in) :: &
         field_data    ! 2 values used for interpolation
@@ -1168,11 +1105,12 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
         intent(out) :: &
         field         ! interpolated field
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: i,j, iblk
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
          do i = 1, nx_block
@@ -1181,49 +1119,27 @@
          enddo
          enddo
       enddo
+      !$OMP END PARALLEL DO
 
       end subroutine interpolate_data
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: file_year - construct name of atmospheric data file
-!
-! !INTERFACE:
-!
+
       subroutine file_year (data_file, yr)
-!
-! !DESCRIPTION:
-!
+
 ! Construct the correct name of the atmospheric data file
 ! to be read, given the year and assuming the naming convention
 ! that filenames end with 'yyyy.dat' or 'yyyy.r' or 'yyyy.nc'.
-!
-! !REVISION HISTORY:
-!
-! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       character (char_len_long), intent(inout) ::  data_file
-!
-!EOP
-!
+
       integer (kind=int_kind), intent(in) :: yr
 
       character (char_len_long) :: tmpname
 
       integer (kind=int_kind) :: i
 
-      if (trim(atm_data_type) == 'ecmwf') then ! NPS/ECMWF naming convention
-         i = index(data_file,'.r') - 5
-         tmpname = data_file
-         write(data_file,'(a,i4.4,a)') tmpname(1:i), yr, '.r'
-      elseif (trim(atm_data_type) == 'hadgem') then ! netcdf
+      if (trim(atm_data_type) == 'hadgem') then ! netcdf
          i = index(data_file,'.nc') - 5
          tmpname = data_file
          write(data_file,'(a,i4.4,a)') tmpname(1:i), yr, '.nc'
@@ -1236,13 +1152,7 @@
       end subroutine file_year
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: prepare_forcing - finish manipulating forcing
-!
-! !INTERFACE:
-!
+
       subroutine prepare_forcing (nx_block, ny_block, &
                                   ilo, ihi, jlo, jhi, &
                                   hm,                 &
@@ -1258,17 +1168,11 @@
                                   potT,     ANGLET,   &
                                   Tsfc,     sst,      &
                                   aice)
-!
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      use ice_constants, only: c0, c1, c10, c12, c4, &
+          secday, Tffresh, stefan_boltzmann, &
+          emissivity, qqqocn, TTTocn
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          ilo,ihi,jlo,jhi       ! beginning and end of physical domain
@@ -1301,14 +1205,14 @@
          swidr   , & ! sw down, near IR, direct  (W/m^2)
          swidf   , & ! sw down, near IR, diffuse (W/m^2)
          potT        ! air potential temperature  (K)
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
          i, j
 
       real (kind=dbl_kind) :: workx, worky, &
-         fcc, sstk, rtea, ptem, qlwm, precip_factor
+         precip_factor, zlvl0
 
       do j = jlo, jhi
       do i = ilo, ihi
@@ -1330,78 +1234,61 @@
       !-----------------------------------------------------------------
 
       if (trim(atm_data_type) == 'ncar') then
+
+         ! precip is in mm/month
+
+         zlvl0 = c10
+
          do j = jlo, jhi
          do i = ilo, ihi
-
-      !-----------------------------------------------------------------
-      ! correct known biases in NCAR data (as in CCSM latm)
-      !-----------------------------------------------------------------
-
+            ! correct known biases in NCAR data (as in CCSM latm)
             Qa (i,j) = Qa (i,j) * 0.94_dbl_kind
             fsw(i,j) = fsw(i,j) * 0.92_dbl_kind
 
-      !-----------------------------------------------------------------
-      ! compute downward longwave as in Parkinson and Washington (1979)
-      ! (for now)
-      !-----------------------------------------------------------------
-
-            flw(i,j) = stefan_boltzmann*Tair(i,j)**4 &
-                     * (c1 - 0.261_dbl_kind &
-                      *exp(-7.77e-4_dbl_kind*(Tffresh - Tair(i,j))**2)) &
-                     * (c1 + 0.275_dbl_kind*cldf(i,j))
-
-      ! precip is in mm/month; converted to mks below
-
-         enddo
-         enddo
-
-      elseif (trim(atm_data_type) == 'ecmwf') then
-         do j = jlo, jhi
-         do i = ilo, ihi
-
-      !-----------------------------------------------------------------
-      ! The following assumes that the input Qa is really dew point temp
-      ! (deg K) and need to be converted to specific humidity (kg/kg).
-      ! Cf. ice_atmo module.
-      !-----------------------------------------------------------------
-
-         Qa (i,j) = (qqqocn/rhoa(i,j)) * exp(-TTTocn/Qa(i,j))
-         Qa (i,j) = max(Qa(i,j),c0)
-
-      !-----------------------------------------------------------------
-      ! compute downward longwave as in Parkinson and Washington (1979)
-      ! (for now)
-      !-----------------------------------------------------------------
-
-         flw(i,j) = stefan_boltzmann*Tair(i,j)**4 &
-                  * (c1 - 0.261_dbl_kind &
-                   *exp(-7.77e-4_dbl_kind*(Tffresh - Tair(i,j))**2)) &
-                  * (c1 + 0.275_dbl_kind*cldf(i,j))
-
-      ! precip is in mm/month; converted to mks below
-
+            ! downward longwave as in Parkinson and Washington (1979)
+            call longwave_parkinson_washington(Tair(i,j), cldf(i,j), &
+                                              flw(i,j))
          enddo
          enddo
 
       elseif (trim(atm_data_type) == 'LYq') then
 
-      !-----------------------------------------------------------------
-      ! longwave, Rosati and Miyakoda, JPO 18, p. 1607 (1988) - sort of 
-      !-----------------------------------------------------------------
+         ! precip is in mm/s
+
+         zlvl0 = c10
 
          do j = jlo, jhi
          do i = ilo, ihi
-            fcc = c1 - 0.8_dbl_kind * cldf(i,j)
-            sstk = (Tsfc(i,j) * aice(i,j) &
-                 + sst(i,j) * (c1 - aice(i,j))) + Tffresh
-            rtea = sqrt(c1000*Qa(i,j) /  &
-                  (0.622_dbl_kind+0.378_dbl_kind*Qa(i,j)))
-            ptem = Tair(i,j)    ! get this from stability?
-            qlwm = ptem * ptem * ptem  &
-                 * ( ptem*(0.39_dbl_kind-0.05_dbl_kind*rtea)*fcc  &
-                                      + c4*(sstk-ptem) )
-            flw(i,j) = emissivity*stefan_boltzmann * ( sstk**4 - qlwm )
-            flw(i,j) = flw(i,j) * hm(i,j) ! land mask
+            ! longwave based on Rosati and Miyakoda, JPO 18, p. 1607 (1988)
+            call longwave_rosati_miyakoda(cldf(i,j), Tsfc(i,j), &
+                                          aice(i,j), sst(i,j),  &
+                                          Qa(i,j),   Tair(i,j), &
+                                          hm(i,j),   flw(i,j))
+         enddo
+         enddo
+
+      elseif (trim(atm_data_type) == 'oned') then  ! rectangular grid 
+
+         ! precip is in kg/m^2/s
+
+         zlvl0 = c10
+         
+         do j = jlo, jhi
+         do i = ilo, ihi
+
+      !-----------------------------------------------------------------
+      ! compute downward longwave as in Parkinson and Washington (1979)
+      !-----------------------------------------------------------------
+
+            ! downward longwave as in Parkinson and Washington (1979)
+            call longwave_parkinson_washington(Tair(i,j), cldf(i,j), &
+                                               flw(i,j))
+
+            ! longwave based on Rosati and Miyakoda, JPO 18, p. 1607 (1988)
+!            call longwave_rosati_miyakoda(cldf(i,j), Tsfc(i,j), &
+!                                          aice(i,j), sst(i,j),  &
+!                                          Qa(i,j),   Tair(i,j), &
+!                                          hm(i,j),   flw(i,j))
          enddo
          enddo
 
@@ -1424,7 +1311,7 @@
       do j = jlo, jhi
       do i = ilo, ihi
 
-         zlvl(i,j) = c10
+         zlvl(i,j) = zlvl0
          potT(i,j) = Tair(i,j)
 
         ! divide shortwave into spectral bands
@@ -1435,7 +1322,6 @@
                  
         ! convert precipitation units to kg/m^2 s
          fsnow(i,j) = fsnow(i,j) * precip_factor
-
       enddo                     ! i
       enddo                     ! j
 
@@ -1504,38 +1390,94 @@
       end subroutine prepare_forcing
 
 !=======================================================================
+
+      subroutine longwave_parkinson_washington(Tair, cldf, flw)
+
+      use ice_constants, only: c1, Tffresh, stefan_boltzmann
+
+      ! compute downward longwave as in Parkinson and Washington (1979)
+      ! (for now)
+      ! Parkinson, C. L. and W. M. Washington (1979),
+      ! Large-scale numerical-model of sea ice,
+      ! JGR, 84, 311-337, doi:10.1029/JC084iC01p00311 
+
+      real(kind=dbl_kind), intent(in) :: &
+           Tair , & ! air temperature  (K)
+           cldf     ! cloud fraction
+      
+      real(kind=dbl_kind), intent(out) :: &
+           flw      ! incoming longwave radiation (W/m^2)
+      
+      flw = stefan_boltzmann*Tair**4 &
+             * (c1 - 0.261_dbl_kind &
+             * exp(-7.77e-4_dbl_kind*(Tffresh - Tair)**2)) &
+             * (c1 + 0.275_dbl_kind*cldf)
+        
+      end subroutine longwave_parkinson_washington
+
+!=======================================================================
+
+      subroutine longwave_rosati_miyakoda(cldf, Tsfc, &
+                                          aice, sst,  &
+                                          Qa,   Tair, &
+                                          hm,   flw)
+
+      use ice_constants, only: c1, c4, c1000, &
+          Tffresh, stefan_boltzmann, emissivity
+
+      ! based on 
+      ! Rosati, A. and K. Miyakoda (1988), 
+      ! A general-circulation model for upper ocean simulation, 
+      ! J. Physical Oceanography, 18, 1601-1626, 
+      ! doi:10.1175/1520-0485(1988)018<1601:AGCMFU>2.0.CO;2 
+
+      real(kind=dbl_kind), intent(in) :: &
+           cldf , & ! cloud fraction
+           Tsfc , & ! ice skin temperature
+           aice , & ! ice area fraction
+           sst  , & ! sea surface temperature
+           Qa   , & ! specific humidity (kg/kg)
+           Tair , & ! air temperature  (K)
+           hm       ! land mask
+
+      real(kind=dbl_kind), intent(out) :: &
+           flw      ! incoming longwave radiation (W/m^2)
+
+      real(kind=dbl_kind) :: &
+           fcc  , & ! cloudiness modification
+           sstk , & ! ice/ocean surface temperature (K)
+           rtea , & ! square root of the vapour pressure
+           ptem , & ! potential air temperature (K)
+           qlwm 
+
+      fcc = c1 - 0.8_dbl_kind * cldf
+      sstk = (Tsfc * aice &
+           + sst * (c1 - aice)) + Tffresh
+      rtea = sqrt(c1000*Qa /  &
+           (0.622_dbl_kind+0.378_dbl_kind*Qa))
+      ptem = Tair    ! get this from stability?
+      qlwm = ptem * ptem * ptem  &
+                 * ( ptem*(0.39_dbl_kind-0.05_dbl_kind*rtea)*fcc  &
+                 + c4*(sstk-ptem) )
+      flw = emissivity*stefan_boltzmann * ( sstk**4 - qlwm )
+      flw = flw * hm ! land mask
+      
+      end subroutine longwave_rosati_miyakoda
+
+!=======================================================================
 ! NCAR atmospheric forcing
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: ncar_files - construct filenames for NCAR bulk atmospheric data
-!
-! !INTERFACE:
-!
+
       subroutine ncar_files (yr)
-!
-! !DESCRIPTION:
-!
+
 ! Construct filenames based on the LANL naming conventions for NCAR data.
 ! Edit for other directory structures or filenames.
 ! Note: The year number in these filenames does not matter, because
-!       subroutine file\_year will insert the correct year.
-!
-!
-! !REVISION HISTORY:
-!
-! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+!       subroutine file_year will insert the correct year.
+
       integer (kind=int_kind), intent(in) :: &
            yr                   ! current forcing year
-!
-!EOP
-!
+
       fsw_file = &
            trim(atm_data_dir)//'ISCCPM/MONTHLY/RADFLX/swdn.1996.dat'
       call file_year(fsw_file,yr)
@@ -1585,32 +1527,14 @@
       end subroutine ncar_files
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: ncar_data - read NCAR bulk atmospheric data
-!
-! !INTERFACE:
-!
+
       subroutine ncar_data
-!
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_flux
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!
-!EOP
-!
+
+      use ice_constants, only: c4, p5, secday, &
+          field_loc_center, field_type_scalar, field_type_vector
+      use ice_flux, only: fsw, fsnow, Tair, uatm, vatm, rhoa, Qa
+
       integer (kind=int_kind) :: &
-          i, j        , &
           ixm,ixx,ixp , & ! record numbers for neighboring months
           recnum      , & ! record number
           maxrec      , & ! maximum record number
@@ -1638,8 +1562,8 @@
       maxrec = 12
       ixm  = mod(month+maxrec-2,maxrec) + 1
       ixp  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) ixm = 99  ! other two points will be used
-      if (mday <  midmonth) ixp = 99
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -1711,7 +1635,7 @@
       !  data value for the current record always goes in slot 2.
 
       recslot = 2
-      ixp = 99
+      ixp = -99
       call interp_coeff (recnum, recslot, sec6hr, dataloc)
 
       ! Read
@@ -1724,10 +1648,10 @@
                          field_loc_center, field_type_scalar)
          call read_data (read6, 0, fyear, ixm, ixx, ixp, &
                          maxrec, uwind_file, uatm_data, &
-                         field_loc_center, field_type_scalar)
+                         field_loc_center, field_type_vector)
          call read_data (read6, 0, fyear, ixm, ixx, ixp, &
                          maxrec, vwind_file, vatm_data, &
-                         field_loc_center, field_type_scalar)
+                         field_loc_center, field_type_vector)
          call read_data (read6, 0, fyear, ixm, ixx, ixp, &
                          maxrec, rhoa_file, rhoa_data, &
                          field_loc_center, field_type_scalar)
@@ -1751,288 +1675,22 @@
       end subroutine ncar_data
 
 !=======================================================================
-! ECMWF atmospheric forcing
-!=======================================================================
-!BOP
-!
-! !IROUTINE: ecmwf_files - construct filenames for ECMWF atmospheric data
-!
-! !INTERFACE:
-!
-      subroutine ecmwf_files (yr)
-!
-! !DESCRIPTION:
-!
-! Construct filenames based on naming conventions used by Wieslaw Maslowski
-!  for reading (mostly) ECMWF atmospheric data. 
-! Edit for other directory structures or filenames.
-! Note: The year number in these filenames does not matter, because
-!       subroutine file\_year will insert the correct year.
-!
-!
-! !REVISION HISTORY:
-!
-! authors: William H. Lipscomb, LANL (based on ncar_files)
-!
-! !USES:
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-      integer (kind=int_kind), intent(in) :: &
-           yr                   ! current forcing year
-!
-!EOP
-!
-      fsw_file = &
-           trim(atm_data_dir)//'sol_2002.r'
-      call file_year(fsw_file,yr)
-
-      flw_file = &
-           trim(atm_data_dir)//'flo_2002.r'
-      call file_year(flw_file,yr)
-
-      rain_file = &
-           trim(atm_data_dir)//'prec_lanl_12.r'
-      ! Comment out the file_year call if rain file is from climatology
-!!!      call file_year(rain_file,yr)
- 
-      uwind_file = &
-           trim(atm_data_dir)//'ucmp_2002.r'
-      call file_year(uwind_file,yr)
-
-      vwind_file = &
-           trim(atm_data_dir)//'vcmp_2002.r'
-      call file_year(vwind_file,yr)
-
-      tair_file = &
-           trim(atm_data_dir)//'tair_2002.r'
-      call file_year(tair_file,yr)
-
-      humid_file = &
-           trim(atm_data_dir)//'qa_2002.r'
-      call file_year(humid_file,yr)
-
-      rhoa_file = &
-           trim(atm_data_dir)//'rhoa_ncar85-88_12.r'
-      ! Comment out the file_year call if rhoa file is from climatology
-!!!      call file_year(rhoa_file,yr)
-
-      if (my_task == master_task) then
-         write (nu_diag,*) ' '
-         write (nu_diag,*) 'Forcing data year = ', fyear
-         write (nu_diag,*) 'Atmospheric data files:'
-         write (nu_diag,*) trim(fsw_file)
-         write (nu_diag,*) trim(flw_file)
-         write (nu_diag,*) trim(rain_file)
-         write (nu_diag,*) trim(uwind_file)
-         write (nu_diag,*) trim(vwind_file)
-         write (nu_diag,*) trim(tair_file)
-         write (nu_diag,*) trim(humid_file)
-         write (nu_diag,*) trim(rhoa_file)
-      endif                     ! master_task
-
-      end subroutine ecmwf_files
-
-!=======================================================================
-!BOP
-!
-! !IROUTINE: ecmwf_data - read ECMWF atmospheric data
-!
-! !INTERFACE:
-!
-      subroutine ECMWF_data
-!
-! !DESCRIPTION:
-!
-! Read ECMWF atmospheric data.
-!
-! !REVISION HISTORY:
-!
-! authors: William H. Lipscomb, LANL
-!          Wieslaw Maslowski, NPS
-!          Based on ncar_data
-!
-! !USES:
-!
-      use ice_flux
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!
-!EOP
-!
-      integer (kind=int_kind) :: &
-          ixm,ixx,ixp , & ! record numbers for neighboring months
-          recnum      , & ! record number
-          maxrec      , & ! maximum record number
-          recslot     , & ! spline slot for current record
-          dataloc     , & ! = 1 for data located in middle of time interval
-                          ! = 2 for date located at end of time interval
-          midmonth        ! middle day of month
-
-      logical (kind=log_kind) :: readm, readd
-
-    !-------------------------------------------------------------------
-    ! monthly data
-    !
-    ! Assume that monthly data values are located in the middle of the
-    ! month.
-    !-------------------------------------------------------------------
-
-      midmonth = 15  ! data is given on 15th of every month
-!      midmonth = fix(p5 * real(daymo(month)))  ! exact middle
-
-      ! Compute record numbers for surrounding months
-      maxrec = 12
-      ixm  = mod(month+maxrec-2,maxrec) + 1
-      ixp  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) ixm = 99  ! other two points will be used
-      if (mday <  midmonth) ixp = 99
-
-      ! Determine whether interpolation will use values 1:2 or 2:3
-      ! recslot = 2 means we use values 1:2, with the current value (2)
-      !  in the second slot
-      ! recslot = 1 means we use values 2:3, with the current value (2)
-      !  in the first slot
-      recslot = 1                             ! latter half of month
-      if (mday < midmonth) recslot = 2        ! first half of month
-
-      ! Find interpolation coefficients
-      call interp_coeff_monthly (recslot)
-
-      ! Read 2 monthly values
-      readm = .false.
-      if (istep==1 .or. (mday==midmonth .and. sec==0)) readm = .true.
-
-      if (trim(atm_data_format) == 'bin') then
-         call read_clim_data (readm, 0,  ixm, month, ixp, &
-              rhoa_file, rhoa_data, field_loc_center, field_type_scalar)
-         call read_clim_data (readm, 0,  ixm, month, ixp, &
-              rain_file, fsnow_data, field_loc_center, field_type_scalar)
-      else
-         call abort_ice ('nonbinary atm_data_format unavailable')
-      endif
-
-      ! Interpolate to current time step
-      call interpolate_data (fsnow_data, fsnow)
-      call interpolate_data (rhoa_data, rhoa)  
-
-    !-------------------------------------------------------------------
-    ! Daily data
-    !
-    ! Assume that the daily value is located in the middle of the
-    !  24-hour period.
-    !-------------------------------------------------------------------
-
-      dataloc = 1          ! data located in middle of interval
-      maxrec = 365         ! days in a year (no leap years)
-
-      ! current record number
-      recnum = int(yday)   ! current record number
-
-      ! Compute record numbers for surrounding data
-
-      ixm = mod(recnum+maxrec-2,maxrec) + 1
-      ixx = mod(recnum-1,       maxrec) + 1
-      ixp = mod(recnum,         maxrec) + 1
-
-      ! Compute interpolation coefficients
-      ! If data is located at the end of the time interval, then the
-      !  data value for the current record goes in slot 2
-
-      ! Determine whether interpolation will use values 1:2 or 2:3
-      ! recslot = 2 means we use values 1:2, with the current value (2)
-      !  in the second slot
-      ! recslot = 1 means we use values 2:3, with the current value (2)
-      !  in the first slot
-      if (real(sec,kind=dbl_kind) < p5*secday-puny) then  ! first half of day
-         recslot = 2
-         ixp = 99
-      else                             ! second half of day
-         recslot = 1
-         ixm = 99
-      endif
-
-      call interp_coeff (recnum, recslot, secday, dataloc)
-
-      ! Read new data at midpoint of day
-
-      readd = .false.
-      if (istep==1 .or. (recslot==1 .and. oldrecslot==2)) &
-           readd = .true.
-
-      if (trim(atm_data_format) == 'bin') then
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         tair_file, Tair_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         uwind_file, uatm_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         vwind_file, vatm_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         fsw_file, fsw_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         flw_file, flw_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (readd, 0, fyear, ixm, ixx, ixp, maxrec, &
-                         humid_file, Qa_data, &
-                         field_loc_center, field_type_scalar)
-      else
-         call abort_ice ('nonbinary atm_data_format unavailable')
-      endif
-
-      ! Interpolate
-      call interpolate_data (Tair_data, Tair)
-      call interpolate_data (uatm_data, uatm)
-      call interpolate_data (vatm_data, vatm)
-      call interpolate_data ( fsw_data, fsw)
-      call interpolate_data ( flw_data, flw)
-      call interpolate_data (  Qa_data, Qa)
-
-      ! Save recslot for next time step
-      oldrecslot = recslot
-
-      end subroutine ecmwf_data
-
-!=======================================================================
 ! Large and Yeager forcing (AOMIP style)
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: LY_files - construct filenames for Large and Yeager data
-!     note:  includes AOMIP (OMIP) cldf climatology 
-!
-! !INTERFACE:
-!
+
       subroutine LY_files (yr)
-!
-! !DESCRIPTION:
-!
-! Construct filenames based on the LANL naming conventions for NCAR data.
+
+! Construct filenames based on the LANL naming conventions for CORE
+! (Large and Yeager) data.
 ! Edit for other directory structures or filenames.
 ! Note: The year number in these filenames does not matter, because
 !       subroutine file_year will insert the correct year.
-!
-!
-! !REVISION HISTORY:
-!
+
 ! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
            yr                   ! current forcing year
-!
-!EOP
-!
+
       flw_file = &
            trim(atm_data_dir)//'MONTHLY/cldf.omip.dat'
 
@@ -2071,35 +1729,23 @@
 
 !=======================================================================
 !
-!BOP
-!
-! !IROUTINE: LY_data - read Large and Yeager atmospheric data
+! read Large and Yeager atmospheric data
 !        note:  also uses AOMIP protocol, in part
-!
-! !INTERFACE:
-!
+
       subroutine LY_data
-!
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_global_reductions
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: c4, p1, p5, secday, Tffresh, &
+          field_loc_center, field_type_scalar, field_type_vector
+      use ice_global_reductions, only: global_minval, global_maxval
       use ice_domain, only: nblocks, distrb_info, blocks_ice
-      use ice_flux 
+      use ice_flux, only: fsnow, Tair, uatm, vatm, Qa, fsw
       use ice_grid, only: hm, tlon, tlat, tmask, umask
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+      use ice_state, only: aice
+
       integer (kind=int_kind) :: & 
           i, j        , &
-          imx,ixx,ipx , & ! record numbers for neighboring months
+          ixm,ixx,ixp , & ! record numbers for neighboring months
           recnum      , & ! record number
           maxrec      , & ! maximum record number
           recslot     , & ! spline slot for current record
@@ -2130,10 +1776,10 @@
 
       ! Compute record numbers for surrounding months
       maxrec = 12
-      imx  = mod(month+maxrec-2,maxrec) + 1
-      ipx  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) imx = 99  ! other two points will be used
-      if (mday <  midmonth) ipx = 99
+      ixm  = mod(month+maxrec-2,maxrec) + 1
+      ixp  = mod(month,         maxrec) + 1
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -2150,9 +1796,9 @@
       readm = .false.
       if (istep==1 .or. (mday==midmonth .and. sec==0)) readm = .true.
 
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              flw_file, cldf_data, field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              rain_file, fsnow_data, field_loc_center, field_type_scalar)
 
       call interpolate_data (cldf_data, cldf)
@@ -2175,16 +1821,16 @@
 
       ! Compute record numbers for surrounding data (2 on each side)
 
-      imx = mod(recnum+maxrec-2,maxrec) + 1
+      ixm = mod(recnum+maxrec-2,maxrec) + 1
       ixx = mod(recnum-1,       maxrec) + 1
-!     ipx = mod(recnum,         maxrec) + 1
+!     ixp = mod(recnum,         maxrec) + 1
 
       ! Compute interpolation coefficients
       ! If data is located at the end of the time interval, then the
       !  data value for the current record goes in slot 2
 
       recslot = 2
-      ipx = 99
+      ixp = -99
       call interp_coeff (recnum, recslot, sec6hr, dataloc)
 
       ! Read
@@ -2192,16 +1838,16 @@
       if (istep==1 .or. oldrecnum .ne. recnum) read6 = .true.
 
       if (trim(atm_data_format) == 'bin') then
-         call read_data (read6, 0, fyear, imx, ixx, ipx, maxrec, &
+         call read_data (read6, 0, fyear, ixm, ixx, ixp, maxrec, &
                          tair_file, Tair_data, &
                          field_loc_center, field_type_scalar)
-         call read_data (read6, 0, fyear, imx, ixx, ipx, maxrec, &
+         call read_data (read6, 0, fyear, ixm, ixx, ixp, maxrec, &
                          uwind_file, uatm_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (read6, 0, fyear, imx, ixx, ipx, maxrec, &
+                         field_loc_center, field_type_vector)
+         call read_data (read6, 0, fyear, ixm, ixx, ixp, maxrec, &
                          vwind_file, vatm_data, &
-                         field_loc_center, field_type_scalar)
-         call read_data (read6, 0, fyear, imx, ixx, ipx, maxrec, &
+                         field_loc_center, field_type_vector)
+         call read_data (read6, 0, fyear, ixm, ixx, ixp, maxrec, &
                          humid_file, Qa_data, &
                          field_loc_center, field_type_scalar)
       else
@@ -2214,7 +1860,15 @@
       call interpolate_data (vatm_data, vatm)
       call interpolate_data (Qa_data, Qa)
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
+        ! limit summer Tair values where ice is present
+        do j = 1, ny_block
+          do i = 1, nx_block
+            if (aice(i,j,iblk) > p1) Tair(i,j,iblk) = min(Tair(i,j,iblk), Tffresh+p1)
+          enddo
+        enddo
+
         call Qa_fixLY(nx_block,  ny_block, &
                                  Tair (:,:,iblk), &
                                  Qa   (:,:,iblk))
@@ -2245,6 +1899,7 @@
                                fsw  (:,:,iblk))
 
       enddo  ! iblk
+      !$OMP END PARALLEL DO
 
       ! Save record number
       oldrecnum = recnum
@@ -2286,14 +1941,20 @@
       end subroutine LY_data
 
 !=======================================================================
+!
+! AOMIP shortwave forcing
+! standard calculation using solar declination angle
+! then shortwave is reduced using a function of cloud fraction
 
       subroutine compute_shortwave(nx_block,  ny_block, &
                                    ilo, ihi, jlo, jhi, &
                                    TLON, TLAT, hm, Qa, cldf, fsw)
 
 !---!-------------------------------------------------------------------
-!---! AOMIP shortwave forcing
 !---!-------------------------------------------------------------------
+
+      use ice_constants, only: c0, c1, c12, c2, c180, c365, &
+          c3600, p1, p5, p6, pi, secday
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -2346,10 +2007,12 @@
       end subroutine compute_shortwave
 
 !=======================================================================
+!
+! prevents humidity from being super-saturated
 
       subroutine Qa_fixLY(nx_block, ny_block, Tair, Qa)
 
-      use ice_work, only: worka
+      use ice_constants, only: c1, c10, c2, Tffresh, puny
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block ! block dimensions
@@ -2360,6 +2023,9 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block), &
          intent(inout) :: &
          Qa                 ! specific humidity
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
+         worka
 
       worka = Tair - Tffresh
       worka = c2 + (0.7859_dbl_kind + 0.03477_dbl_kind*worka) &
@@ -2378,38 +2044,22 @@
 !=======================================================================
 ! HadGEM or HadGAM atmospheric forcing
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: hadgem_files - construct filenames for HadGEM or HadGAM files
-!
-! !INTERFACE:
-!
+
       subroutine hadgem_files (yr)
-!
-! !DESCRIPTION:
-!
+
 ! Construct filenames based on selected model options
 !
 ! Note: The year number in these filenames does not matter, because
-!       subroutine file\_year will insert the correct year.
-!
-! !REVISION HISTORY:
+!       subroutine file_year will insert the correct year.
 !
 ! author: Alison McLaren, Met Office
-!
-! !USES:
-!
-      use ice_therm_vertical, only: calc_Tsfc 
+
+      use ice_therm_shared, only: calc_Tsfc 
       use ice_ocean, only: oceanmixed_ice
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
            yr                   ! current forcing year
-!
-!EOP
-!
+
       integer (kind=int_kind) :: &
            n           ! thickness category index
 
@@ -2566,44 +2216,29 @@
       end subroutine hadgem_files
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: hadgem_data - read HadGEM or HadGAM atmospheric data
-!
-! !INTERFACE:
-!
+
+! read HadGEM or HadGAM atmospheric data
+
       subroutine hadgem_data
-!
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!
+
 ! authors: Alison McLaren, Met Office
-!
-! !USES:
-!
+
+      use ice_constants, only: p5, Lsub, &
+          field_loc_center, field_type_scalar, field_type_vector
       use ice_domain, only: nblocks
-      use ice_flux
+      use ice_flux, only: fsnow, frain, uatm, vatm, strax, stray, wind, &
+          fsw, flw, Tair, rhoa, Qa, fcondtopn_f, fsurfn_f, flatn_f
       use ice_state, only: aice,aicen
       use ice_ocean, only: oceanmixed_ice
-      use ice_therm_vertical, only: calc_Tsfc
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!
-!EOP
-!
+      use ice_therm_shared, only: calc_Tsfc
+
       integer (kind=int_kind) :: &
           i, j        , & ! horizontal indices
           n           , & ! thickness category index
           iblk        , & ! block index
-          ixm,ixx,ixp , & ! record numbers for neighboring months
-          recnum      , & ! record number
+          ixm,ixp     , & ! record numbers for neighboring months
           maxrec      , & ! maximum record number
           recslot     , & ! spline slot for current record
-          dataloc     , & ! = 1 for data located in middle of time interval
-                          ! = 2 for date located at end of time interval
           midmonth        ! middle day of month
 
       logical (kind=log_kind) :: readm
@@ -2630,8 +2265,8 @@
       maxrec = 12
       ixm  = mod(month+maxrec-2,maxrec) + 1
       ixp  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) ixm = 99  ! other two points will be used
-      if (mday <  midmonth) ixp = 99
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -2801,19 +2436,18 @@
             ! categories
             !--------------------------------------------------------
 
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
                do j = 1, ny_block
                do i = 1, nx_block
-
                   fcondtopn_f(i,j,n,iblk) = botmelt(i,j,iblk)
                   fsurfn_f(i,j,n,iblk)    = topmelt(i,j,iblk) & 
                                             + botmelt(i,j,iblk)
                   flatn_f(i,j,n,iblk)    = - sublim(i,j,iblk)*Lsub
-                  
                enddo
                enddo
-
             enddo
+            !$OMP END PARALLEL DO
 
          enddo  ! ncat
 
@@ -2824,36 +2458,19 @@
 !=======================================================================
 ! monthly forcing 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: monthly_files - construct filenames for monthly data
-!
-! !INTERFACE:
-!
+
       subroutine monthly_files (yr)
-!
-! !DESCRIPTION:
-!
+
 ! Construct filenames based on the LANL naming conventions for NCAR data.
 ! Edit for other directory structures or filenames.
 ! Note: The year number in these filenames does not matter, because
 !       subroutine file_year will insert the correct year.
-!
-! !REVISION HISTORY:
-!
+
 ! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
            yr                   ! current forcing year
-!
-!EOP
-!
+
       flw_file = &
            trim(atm_data_dir)//'MONTHLY/cldf.omip.dat'
 
@@ -2896,36 +2513,21 @@
       end subroutine monthly_files
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: monthly_data - read monthly atmospheric data
-!
-! !INTERFACE:
-!
+! read monthly atmospheric data
+
       subroutine monthly_data
-!
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_global_reductions
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: p5, &
+          field_loc_center, field_type_scalar, field_type_vector
+      use ice_global_reductions, only: global_minval, global_maxval
       use ice_domain, only: nblocks, distrb_info, blocks_ice
-      use ice_flux 
+      use ice_flux, only: fsnow, Tair, Qa, wind, strax, stray, fsw
       use ice_grid, only: hm, tlon, tlat, tmask, umask
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+
       integer (kind=int_kind) :: & 
           i, j        , &
-          imx,ipx     , & ! record numbers for neighboring months
-          recnum      , & ! record number
+          ixm,ixp     , & ! record numbers for neighboring months
           maxrec      , & ! maximum record number
           recslot     , & ! spline slot for current record
           midmonth    , & ! middle day of month
@@ -2952,10 +2554,10 @@
 
       ! Compute record numbers for surrounding months
       maxrec = 12
-      imx  = mod(month+maxrec-2,maxrec) + 1
-      ipx  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) imx = 99  ! other two points will be used
-      if (mday <  midmonth) ipx = 99
+      ixm  = mod(month+maxrec-2,maxrec) + 1
+      ixp  = mod(month,         maxrec) + 1
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -2972,25 +2574,25 @@
       readm = .false.
       if (istep==1 .or. (mday==midmonth .and. sec==0)) readm = .true.
 
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              flw_file, cldf_data, &
              field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              rain_file, fsnow_data, &
              field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              tair_file, Tair_data, &
              field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              humid_file, Qa_data, &
              field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              wind_file, wind_data, &
              field_loc_center, field_type_scalar)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              strax_file, strax_data, &
              field_loc_center, field_type_vector)
-      call read_clim_data (readm, 0, imx, month, ipx,  &
+      call read_clim_data (readm, 0, ixm, month, ixp,  &
              stray_file, stray_data, &
              field_loc_center, field_type_vector)
 
@@ -3002,6 +2604,7 @@
       call interpolate_data (strax_data, strax)
       call interpolate_data (stray_data, stray)
 
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
         call Qa_fixLY(nx_block,  ny_block, &
                                  Tair (:,:,iblk), &
@@ -3034,9 +2637,7 @@
                              fsw  (:,:,iblk))
 
       enddo  ! iblk
-
-      ! Save record number
-      oldrecnum = recnum
+      !$OMP END PARALLEL DO
 
          if (dbug) then
            if (my_task == master_task) write (nu_diag,*) 'LY_bulk_data'
@@ -3078,40 +2679,197 @@
       end subroutine monthly_data
 
 !=======================================================================
+! Oned atmospheric data
+!=======================================================================
+
+      subroutine oned_data
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: p001, p01, p25, c0, c1
+      use ice_domain, only: nblocks, blocks_ice
+      use ice_flux, only: uatm, vatm, Tair, fsw, fsnow, Qa, rhoa, frain
+
+#ifdef ncdf 
+      use netcdf
+
+      ! local parameters
+
+      character (char_len_long) :: & 
+         met_file,   &    ! netcdf filename
+         fieldname        ! field name in netcdf file
+
+      integer (kind=int_kind) :: &
+         fid              ! file id for netCDF file 
+
+      real (kind=dbl_kind):: &
+         work             ! temporary variable
+
+      logical (kind=log_kind) :: diag
+
+      integer (kind=int_kind) :: &
+         status           ! status flag
+
+      integer (kind=int_kind) :: &
+         iblk, &          ! block index
+         ilo,jlo          ! beginning of physical domain
+
+      type (block) :: &
+         this_block       ! block information for current block
+      
+      real (kind=dbl_kind) :: & ! used to determine specific humidity
+         Temp               , & ! air temperature (K)
+         rh                 , & ! relative humidity (%)
+         Psat               , & ! saturation vapour pressure (hPa)
+         ws                     ! saturation mixing ratio
+
+      real (kind=dbl_kind), parameter :: & ! coefficients for Hyland-Wexler Qa 
+         ps1 = 0.58002206e4_dbl_kind,    & ! (K) 
+         ps2 = 1.3914993_dbl_kind,       & !
+         ps3 = 0.48640239e-1_dbl_kind,   & ! (K^-1) 
+         ps4 = 0.41764768e-4_dbl_kind,   & ! (K^-2)
+         ps5 = 0.14452093e-7_dbl_kind,   & ! (K^-3)
+         ps6 = 6.5459673_dbl_kind,       & !
+         ws1 = 621.97_dbl_kind,          & ! for saturation mixing ratio 
+         Pair = 1020._dbl_kind             ! Sea level pressure (hPa) 
+       
+      diag = .false.   ! write diagnostic information 
+   
+      do iblk = 1, nblocks
+         this_block = get_block(blocks_ice(iblk),iblk)         
+         ilo = this_block%ilo
+         jlo = this_block%jlo
+
+      if (trim(atm_data_format) == 'nc') then     ! read nc file
+
+        ! hourly data beginning Jan 1, 1989, 01:00   
+        ! HARDWIRED for dt = 1 hour!
+        met_file = uwind_file
+        call ice_open_nc(met_file,fid)
+
+        fieldname='Uatm' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        uatm(:,:,:) = work
+
+        fieldname='Vatm' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        vatm(:,:,:) = work
+
+        fieldname='Tair' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        Temp = work
+        Tair(:,:,:) = Temp 
+
+        if (my_task == master_task) status = nf90_close(fid)
+
+        ! hourly solar data beginning Jan 1, 1989, 01:00          
+        met_file = fsw_file
+        call ice_open_nc(met_file,fid)
+
+        fieldname='fsw' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        fsw(:,:,:) = work
+
+        if (my_task == master_task) status = nf90_close(fid)
+
+        ! hourly interpolated monthly  data beginning Jan 1, 1989, 01:00  
+        met_file = humid_file
+        call ice_open_nc(met_file,fid)
+
+        fieldname='rh' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        rh = work
+     
+        fieldname='fsnow' 
+        call ice_read_nc(fid,istep1,fieldname,work,diag)   
+        fsnow(:,:,:) = work
+
+        if (my_task == master_task) status = nf90_close(fid)
+
+      !-------------------------------------------------------------------
+      ! Find specific humidity using Hyland-Wexler formulation
+      ! Hyland, R.W. and A. Wexler, Formulations for the Thermodynamic 
+      ! Properties of the saturated phases of H20 from 173.15K to 473.15K, 
+      ! ASHRAE Trans, 89(2A), 500-519, 1983
+      !-------------------------------------------------------------------
+      
+        Psat = exp(-ps1/Temp + ps2 - ps3*Temp + ps4*Temp**2 - ps5 * Temp**3  & 
+              + ps6 * log(Temp))*p01          ! saturation vapour pressure
+        ws = ws1 * Psat/(Pair - Psat)         ! saturation mixing ratio
+        Qa(:,:,:) = rh * ws * p01/(c1 + rh * ws * p01) * p001  
+                                              ! specific humidity (kg/kg)
+      endif ! atm_data_format
+
+      ! flw calculated in prepare_forcing
+        rhoa (:,:,:) = 1.3_dbl_kind ! air density (kg/m^3)
+        cldf (:,:,:) = p25          ! cloud fraction
+        frain(:,:,:) = c0           ! this is available in hourlymet_rh file
+  
+      enddo ! nblocks
+
+#endif
+
+      end subroutine oned_data
+
+!=======================================================================
+
+      subroutine oned_files(yr)
+
+      integer (kind=int_kind), intent(in) :: &
+           yr                   ! current forcing year
+
+      fsw_file = &
+           trim(atm_data_dir)//'hourlysolar_brw1989_5yr.nc'
+
+      rain_file = &
+           trim(atm_data_dir)//'hourlymet_rh_5yr.nc'
+
+      uwind_file = &
+           trim(atm_data_dir)//'hourlymet_brw1989_5yr.nc'
+
+      vwind_file = &
+           trim(atm_data_dir)//'hourlymet_brw1989_5yr.nc'
+
+      tair_file = &
+           trim(atm_data_dir)//'hourlymet_brw1989_5yr.nc'
+
+      humid_file = &
+           trim(atm_data_dir)//'hourlymet_rh_5yr.nc'
+
+      if (my_task == master_task) then
+         write (nu_diag,*) ' '
+         write (nu_diag,*) 'Atmospheric data files:'
+         write (nu_diag,*) trim(fsw_file)
+         write (nu_diag,*) trim(rain_file)
+         write (nu_diag,*) trim(uwind_file)
+         write (nu_diag,*) trim(vwind_file)
+         write (nu_diag,*) trim(tair_file)
+         write (nu_diag,*) trim(humid_file)
+      endif                     ! master_task
+
+      end subroutine oned_files
+
+!=======================================================================
 ! Climatological ocean forcing
 !=======================================================================
-!BOP
-!
-! !IROUTINE: ocn_data_clim - interpolate sss, sst; restore sst
-!
-! !INTERFACE:
-!
+
       subroutine ocn_data_clim (dt)
-!
-! !DESCRIPTION:
-!
+
 ! Interpolate monthly sss, sst data to timestep.
 ! Restore prognostic sst to data.
 ! Interpolate fields from U grid to T grid if necessary.
-!
-! !REVISION HISTORY:
-!
+
 ! author: Elizabeth C. Hunke and William H. Lipscomb, LANL
-!
-! !USES:
-!
+
+      use ice_constants, only: c0, p5, c1000, depressT, &
+          field_loc_center, field_type_scalar
       use ice_domain, only: nblocks
-      use ice_ocean
-      use ice_flux, only: Tf, sss, sst, uocn, vocn, ss_tltx, ss_tlty, Tfrzpt
-      use ice_grid, only: t2ugrid_vector
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_flux, only: Tf, sss, sst, uocn, vocn, ss_tltx, ss_tlty
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
           i, j, iblk  , & ! horizontal indices
           ixm,ixp     , & ! record numbers for neighboring months
@@ -3156,8 +2914,8 @@
          maxrec = 12
          ixm  = mod(month+maxrec-2,maxrec) + 1
          ixp  = mod(month,         maxrec) + 1
-         if (mday >= midmonth) ixm = 99 ! other two points will be used
-         if (mday <  midmonth) ixp = 99
+         if (mday >= midmonth) ixm = -99 ! other two points will be used
+         if (mday <  midmonth) ixp = -99
 
          ! Determine whether interpolation will use values 1:2 or 2:3
          ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -3186,18 +2944,21 @@
                               field_loc_center, field_type_scalar)
          call interpolate_data (sss_data, sss)
 
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
                sss(i,j,iblk) = max(sss(i,j,iblk), c0)
-               if (trim(Tfrzpt) == 'constant') then
-                  Tf (i,j,iblk) = -1.8_dbl_kind ! deg C
-               else ! default:  Tfrzpt = 'linear_S'
-                  Tf (i,j,iblk) = -depressT * sss(i,j,iblk) ! deg C
+               if (ktherm == 2) then
+                  Tf(i,j,iblk) =  sss(i,j,iblk) / (-18.48_dbl_kind &
+                               + ((18.48_dbl_kind/c1000) * sss(i,j,iblk)))
+               else
+                  Tf(i,j,iblk) = -depressT * sss(i,j,iblk) ! deg C
                endif
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
       endif
 
     !-------------------------------------------------------------------
@@ -3212,6 +2973,7 @@
          call interpolate_data (sst_data, sstdat)
 
          if (restore_sst) then
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -3220,6 +2982,7 @@
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
          endif
       endif
 
@@ -3228,17 +2991,9 @@
 !=======================================================================
 ! NCAR CCSM M-configuration (AIO) ocean forcing
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: ocn_data_ncar_init - reads data set
-!
-! !INTERFACE:
-!
+
       subroutine ocn_data_ncar_init
-!
-! !DESCRIPTION:
-!
+
 ! Reads NCAR pop ocean forcing data set 'pop_frc_gx1v3_010815.nc'
 ! 
 ! List of ocean forcing fields: Note that order is important!
@@ -3246,38 +3001,30 @@
 ! 
 ! For ocean mixed layer-----------------------------units 
 ! 
-! 1  sst------temperature---------------------------(C)   \\
-! 2  sss------salinity------------------------------(ppt) \\
-! 3  hbl------depth---------------------------------(m)   \\ 
-! 4  u--------surface u current---------------------(m/s) \\
-! 5  v--------surface v current---------------------(m/s) \\
-! 6  dhdx-----surface tilt x direction--------------(m/m) \\
-! 7  dhdy-----surface tilt y direction--------------(m/m) \\
-! 8  qdp------ocean sub-mixed layer heat flux-------(W/m2)\\ 
+! 1  sst------temperature---------------------------(C)   
+! 2  sss------salinity------------------------------(ppt) 
+! 3  hbl------depth---------------------------------(m)   
+! 4  u--------surface u current---------------------(m/s) 
+! 5  v--------surface v current---------------------(m/s) 
+! 6  dhdx-----surface tilt x direction--------------(m/m) 
+! 7  dhdy-----surface tilt y direction--------------(m/m) 
+! 8  qdp------ocean sub-mixed layer heat flux-------(W/m2)
 !
 ! Fields 4, 5, 6, 7 are on the U-grid; 1, 2, 3, and 8 are
 ! on the T-grid.
-!
-! !REVISION HISTORY:
-!
+
 ! authors: Bruce Briegleb, NCAR
 !          Elizabeth Hunke, LANL
-!
-! !USES:
-!
-      use ice_domain, only: nblocks, distrb_info
-      use ice_gather_scatter
-      use ice_exit
-      use ice_work, only: work1
-      use ice_read_write
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_constants, only: c0, &
+          field_loc_center, field_loc_NEcorner, &
+          field_type_scalar, field_type_vector
+      use ice_domain_size, only: max_blocks
 #ifdef ncdf
       use netcdf
 #endif
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+
       integer (kind=int_kind) :: & 
         n   , & ! field index
         m   , & ! month index
@@ -3299,6 +3046,9 @@
         nlat    , & ! number of longitudes of data
         nlon        ! number of latitudes  of data
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         work1
+
       if (my_task == master_task) then
 
          write (nu_diag,*) 'WARNING: evp_prep calculates surface tilt'
@@ -3315,7 +3065,7 @@
         ! Read in ocean forcing data from an existing file
         !---------------------------------------------------------------
         write (nu_diag,*) 'ocean mixed layer forcing data file = ', &
-                           sst_file
+                           trim(sst_file)
 
       endif ! master_task
 
@@ -3392,54 +3142,186 @@
       end subroutine ocn_data_ncar_init
 
 !=======================================================================
+
+      subroutine ocn_data_ncar_init_3D
+
+! Reads NCAR pop ocean forcing data set 'oceanmixed_ice_depth.nc'
+! 
+! List of ocean forcing fields: Note that order is important!
+! (order is determined by field list in vname).
+! 
+! For ocean mixed layer-----------------------------units 
+! 
+! 1  sst------temperature---------------------------(C)   
+! 2  sss------salinity------------------------------(ppt) 
+! 3  hbl------depth---------------------------------(m)   
+! 4  u--------surface u current---------------------(m/s) 
+! 5  v--------surface v current---------------------(m/s) 
+! 6  dhdx-----surface tilt x direction--------------(m/m) 
+! 7  dhdy-----surface tilt y direction--------------(m/m) 
+! 8  qdp------ocean sub-mixed layer heat flux-------(W/m2)
 !
-!BOP
+! All fields are on the T-grid.
 !
-! !IROUTINE: ocn_data_ncar - interpolates data to timestep
-!
-! !INTERFACE:
-!
+! authors: Bruce Briegleb, NCAR
+!          Elizabeth Hunke, LANL
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_constants, only: c0, &
+          field_loc_center, field_type_scalar 
+      use ice_domain_size, only: max_blocks
+      use ice_grid, only: to_ugrid, ANGLET
+#ifdef ncdf
+      use netcdf
+#endif
+
+      integer (kind=int_kind) :: & 
+        n   , & ! field index
+        m       ! month index
+
+      character(char_len) :: &
+        vname(nfld) ! variable names to search for in file
+      data vname /  &
+           'T',      'S',      'hblt',  'U',     'V', &
+           'dhdx',   'dhdy',   'qdp' /
+
+      integer (kind=int_kind) :: &
+        fid        , & ! file id 
+        dimid          ! dimension id 
+
+      integer (kind=int_kind) :: &
+        status  , & ! status flag
+        nlat    , & ! number of longitudes of data
+        nlon        ! number of latitudes  of data
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         work1, work2
+
+      if (my_task == master_task) then
+
+         write (nu_diag,*) 'WARNING: evp_prep calculates surface tilt'
+         write (nu_diag,*) 'WARNING: stress from geostrophic currents,'
+         write (nu_diag,*) 'WARNING: not data from ocean forcing file.'
+         write (nu_diag,*) 'WARNING: Alter ice_dyn_evp.F if desired.'
+
+         if (restore_sst) write (nu_diag,*)  &
+             'SST restoring timescale = ',trestore,' days' 
+
+         sst_file = trim(ocn_data_dir)//oceanmixed_file ! not just sst
+
+        !---------------------------------------------------------------
+        ! Read in ocean forcing data from an existing file
+        !---------------------------------------------------------------
+        write (nu_diag,*) 'ocean mixed layer forcing data file = ', &
+                           trim(sst_file)
+        write (nu_diag,*)
+
+      endif ! master_task
+
+      if (trim(ocn_data_format) == 'nc') then
+#ifdef ncdf
+        if (my_task == master_task) then
+          call ice_open_nc(sst_file, fid)
+
+!          status = nf90_inq_dimid(fid,'nlon',dimid)
+          status = nf90_inq_dimid(fid,'ni',dimid)
+          status = nf90_inquire_dimension(fid,dimid,len=nlon)
+  
+!          status = nf90_inq_dimid(fid,'nlat',dimid)
+          status = nf90_inq_dimid(fid,'nj',dimid)
+          status = nf90_inquire_dimension(fid,dimid,len=nlat)
+
+          if( nlon .ne. nx_global ) then
+            call abort_ice ('ice: ocn frc file nlon ne nx_global')
+          endif
+          if( nlat .ne. ny_global ) then
+            call abort_ice ('ice: ocn frc file nlat ne ny_global')
+          endif
+
+        endif ! master_task
+
+        ! Read in ocean forcing data for all 12 months
+        do n=1,nfld
+          do m=1,12
+                
+            ! Note: netCDF does single to double conversion if necessary
+            call ice_read_nc(fid, m, vname(n), work1, dbug, &
+                             field_loc_center, field_type_scalar)
+
+            ! the land mask used in ocean_mixed_depth.nc does not 
+            ! match our gx1v3 mask (hm)
+            where (work1(:,:,:) < -900.) work1(:,:,:) = c0
+
+            ocn_frc_m(:,:,:,n,m) = work1(:,:,:)
+
+          enddo               ! month loop
+        enddo               ! field loop
+
+        if (my_task == master_task) status = nf90_close(fid)
+
+        ! Rotate vector quantities and shift to U-grid
+        do n=4,6,2
+          do m=1,12
+
+             work1(:,:,:) = ocn_frc_m(:,:,:,n  ,m)
+             work2(:,:,:) = ocn_frc_m(:,:,:,n+1,m)
+             ocn_frc_m(:,:,:,n  ,m) = work1(:,:,:)*cos(ANGLET(:,:,:)) &
+                                    + work2(:,:,:)*sin(ANGLET(:,:,:))
+             ocn_frc_m(:,:,:,n+1,m) = work2(:,:,:)*cos(ANGLET(:,:,:)) &
+                                    - work1(:,:,:)*sin(ANGLET(:,:,:))
+
+             work1(:,:,:) = ocn_frc_m(:,:,:,n  ,m)*cos(ANGLET(:,:,:)) &
+                          + ocn_frc_m(:,:,:,n+1,m)*sin(ANGLET(:,:,:))
+             work2(:,:,:) = ocn_frc_m(:,:,:,n+1,m)*cos(ANGLET(:,:,:)) &
+                          - ocn_frc_m(:,:,:,n  ,m)*sin(ANGLET(:,:,:))
+             call to_ugrid(work1,ocn_frc_m(:,:,:,n  ,m))
+             call to_ugrid(work2,ocn_frc_m(:,:,:,n+1,m))
+
+          enddo               ! month loop
+        enddo               ! field loop
+
+#endif
+
+      else  ! binary format
+
+        call abort_ice ('new ocean forcing is netcdf only')
+
+      endif
+
+      end subroutine ocn_data_ncar_init_3D
+
+!=======================================================================
+
       subroutine ocn_data_ncar(dt)
-!
-! !DESCRIPTION:
-!
+
 ! Interpolate monthly ocean data to timestep.
 ! Restore sst if desired. sst is updated with surface fluxes in ice_ocean.F.
-! 
-! !REVISION HISTORY:
-!
-! authors: same as module
-!
-! !USES:
-!
-      use ice_global_reductions
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_constants, only: c0, c1, p5, depressT
+      use ice_global_reductions, only: global_minval, global_maxval
       use ice_domain, only: nblocks, distrb_info
-      use ice_gather_scatter
-      use ice_exit
-      use ice_work, only: work_g1, work1
+      use ice_domain_size, only: max_blocks
       use ice_flux, only: sss, sst, Tf, uocn, vocn, ss_tltx, ss_tlty, &
-            qdp, hmix, Tfrzpt
-!      use ice_ocean
-      use ice_restart, only: restart
+            qdp, hmix
+      use ice_restart_shared, only: restart
       use ice_grid, only: hm, tmask, umask
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
-!
-!EOP
-!
+
       integer (kind=int_kind) :: & 
           i, j, n, iblk   , &
-          imx,ipx         , & ! record numbers for neighboring months
+          ixm,ixp         , & ! record numbers for neighboring months
           maxrec          , & ! maximum record number
           recslot         , & ! spline slot for current record
           midmonth            ! middle day of month
 
       real (kind=dbl_kind) :: &
           vmin, vmax
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         work1
 
     !-------------------------------------------------------------------
     ! monthly data 
@@ -3453,10 +3335,10 @@
 
       ! Compute record numbers for surrounding months
       maxrec = 12
-      imx  = mod(month+maxrec-2,maxrec) + 1
-      ipx  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) imx = 99  ! other two points will be used
-      if (mday <  midmonth) ipx = 99
+      ixm  = mod(month+maxrec-2,maxrec) + 1
+      ixp  = mod(month,         maxrec) + 1
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -3470,16 +3352,19 @@
       call interp_coeff_monthly (recslot)
 
       do n = nfld, 1, -1
+        !$OMP PARALLEL DO PRIVATE(iblk,i,j)
         do iblk = 1, nblocks
         ! use sst_data arrays as temporary work space until n=1
-        if (imx /= 99) then  ! first half of month
-          sst_data(:,:,1,iblk) = ocn_frc_m(:,:,iblk,n,imx)
+        if (ixm /= -99) then  ! first half of month
+          sst_data(:,:,1,iblk) = ocn_frc_m(:,:,iblk,n,ixm)
           sst_data(:,:,2,iblk) = ocn_frc_m(:,:,iblk,n,month)
         else                 ! second half of month
           sst_data(:,:,1,iblk) = ocn_frc_m(:,:,iblk,n,month)
-          sst_data(:,:,2,iblk) = ocn_frc_m(:,:,iblk,n,ipx)
+          sst_data(:,:,2,iblk) = ocn_frc_m(:,:,iblk,n,ixp)
         endif
         enddo
+        !$OMP END PARALLEL DO
+
         call interpolate_data (sst_data,work1)
         ! masking by hm is necessary due to NaNs in the data file
         do j = 1, ny_block 
@@ -3507,15 +3392,15 @@
       enddo
 
       do j = 1, ny_block 
-        do i = 1, nx_block 
-          sss (i,j,:) = max (sss(i,j,:), c0) 
-            if (trim(Tfrzpt) == 'constant') then
-               Tf (i,j,:) = -1.8_dbl_kind ! deg C
-            else ! default:  Tfrzpt = 'linear_S'
-               Tf (i,j,:) = -depressT * sss(i,j,:) ! deg C
+         do i = 1, nx_block 
+            sss (i,j,:) = max (sss(i,j,:), c0) 
+            if (ktherm == 2) then
+               Tf(i,j,:) =  sss(i,j,:) / (-18.48_dbl_kind + ((18.48_dbl_kind/1000.0_dbl_kind) * sss(i,j,:)))
+            else
+               Tf(i,j,:) = -depressT * sss(i,j,:) ! deg C
             endif
-          hmix(i,j,:) = max(hmix(i,j,:), c0) 
-        enddo 
+            hmix(i,j,:) = max(hmix(i,j,:), c0) 
+         enddo 
       enddo 
 
       if (restore_sst) then
@@ -3530,6 +3415,7 @@
       ! initialize sst properly on first step
       if (istep1 <= 1 .and. .not. (restart)) then
         call interpolate_data (sst_data,sst)
+        !$OMP PARALLEL DO PRIVATE(iblk,i,j)
         do iblk = 1, nblocks
          do j = 1, ny_block 
           do i = 1, nx_block 
@@ -3541,6 +3427,7 @@
           enddo 
          enddo 
         enddo 
+        !$OMP END PARALLEL DO
       endif
 
       if (dbug) then
@@ -3587,50 +3474,67 @@
       end subroutine ocn_data_ncar
 
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: ocn_data_hadgem - read HadGEM ocean data
-!
-! !INTERFACE:
-!
+! ocean data for oned configuration
+! Current (released) values are the same as the defaults (ice_flux.F90)
+
+      subroutine ocn_data_oned(dt)
+
+      use ice_constants, only: c0, c20, p001, depressT
+      use ice_flux, only: sss, sst, Tf, uocn, vocn, ss_tltx, ss_tlty, &
+            qdp, hmix, frzmlt
+      !use ice_therm_mushy, only: liquidus_temperature_mush
+
+      real (kind=dbl_kind), intent(in) :: &
+         dt      ! time step
+ 
+      sss    (:,:,:) = 34.0_dbl_kind   ! sea surface salinity (ppt)
+
+      ! freezing temp (C)
+      if (ktherm == 2) then
+         ! liquidus_temperature_mush(sss)
+         Tf (:,:,:) = sss(:,:,:) / (-18.48_dbl_kind &
+                                 + ((18.48_dbl_kind*p001)*sss(:,:,:)))
+      else
+         Tf (:,:,:) = -depressT*sss(:,:,:)
+      endif
+
+      sst    (:,:,:) = Tf(:,:,:)       ! sea surface temp (C)
+      uocn   (:,:,:) = c0              ! surface ocean currents (m/s)
+      vocn   (:,:,:) = c0
+      ss_tltx(:,:,:) = c0              ! sea surface tilt (m/m)
+      ss_tlty(:,:,:) = c0
+      frzmlt (:,:,:) = c0              ! freezing/melting potential (W/m^2)
+      qdp    (:,:,:) = c0              ! deep ocean heat flux (W/m^2)
+      hmix   (:,:,:) = c20             ! ocean mixed layer depth
+
+      end subroutine ocn_data_oned
+
+!=======================================================================
+
       subroutine ocn_data_hadgem(dt)
-!
-! !DESCRIPTION:
+
 !  Reads in HadGEM ocean forcing data as required from netCDF files
 !  Current options (selected by sst_data_type)
 !  hadgem_sst: 		read in sst only 
 !  hadgem_sst_uvocn:	read in sst plus uocn and vocn	
-!        
-!
-! !REVISION HISTORY:
-!
+
 ! authors: Ann Keen, Met Office
-!
-! !USES:
-!
+
+      use ice_constants, only: p5, cm_to_m, &
+          field_loc_center, field_type_scalar, field_type_vector
       use ice_domain, only: nblocks
       use ice_flux, only: sst, uocn, vocn
       use ice_grid, only: t2ugrid_vector, ANGLET
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!
-!EOP
-!
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
  
      integer (kind=int_kind) :: &
           i, j        , & ! horizontal indices
-          n           , & ! thickness category index
           iblk        , & ! block index
-          ixm,ixx,ixp , & ! record numbers for neighboring months
-          recnum      , & ! record number
+          ixm,ixp     , & ! record numbers for neighboring months
           maxrec      , & ! maximum record number
           recslot     , & ! spline slot for current record
-          dataloc     , & ! = 1 for data located in middle of time interval
-                          ! = 2 for date located at end of time interval
           midmonth        ! middle day of month
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
@@ -3660,8 +3564,8 @@
       maxrec = 12
       ixm  = mod(month+maxrec-2,maxrec) + 1
       ixp  = mod(month,         maxrec) + 1
-      if (mday >= midmonth) ixm = 99  ! other two points will be used
-      if (mday <  midmonth) ixp = 99
+      if (mday >= midmonth) ixm = -99  ! other two points will be used
+      if (mday <  midmonth) ixp = -99
 
       ! Determine whether interpolation will use values 1:2 or 2:3
       ! recslot = 2 means we use values 1:2, with the current value (2)
@@ -3678,7 +3582,6 @@
       readm = .false.
       if (istep==1 .or. (mday==midmonth .and. sec==0)) readm = .true.
 
-
       if (my_task == master_task .and. istep == 1) then
          write (nu_diag,*) ' '
          write (nu_diag,*) 'SST data interpolated to timestep:'
@@ -3692,7 +3595,6 @@
             write (nu_diag,*) trim(ocn_data_dir)//'MONTHLY/vocn.1997.nc'
          endif
       endif                     ! my_task, istep
-
 
       ! -----------------------------------------------------------
       ! SST
@@ -3708,6 +3610,7 @@
 
       ! Restore SSTs if required
         if (restore_sst) then
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -3716,8 +3619,8 @@
             enddo
             enddo
          enddo
+         !$OMP END PARALLEL DO
          endif      
-
 
       ! -----------------------------------------------------------
       ! Ocean currents
@@ -3753,7 +3656,8 @@
      ! and change  units
      !----------------------------------------------------------------- 
 
-        do iblk = 1, nblocks
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+         do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
 
@@ -3764,26 +3668,24 @@
                vocn(i,j,iblk) = worky*cos(ANGLET(i,j,iblk)) & 
                                   - workx*sin(ANGLET(i,j,iblk))
 
-		uocn(i,j,iblk) = uocn(i,j,iblk) * cm_to_m
-		vocn(i,j,iblk) = vocn(i,j,iblk) * cm_to_m
+               uocn(i,j,iblk) = uocn(i,j,iblk) * cm_to_m
+               vocn(i,j,iblk) = vocn(i,j,iblk) * cm_to_m
 
             enddo		! i
             enddo		! j
-        enddo		! nblocks
+         enddo		! nblocks
+         !$OMP END PARALLEL DO
 
      !----------------------------------------------------------------- 
      ! Interpolate to U grid 
      !----------------------------------------------------------------- 
 
-	call t2ugrid_vector(uocn)
-	call t2ugrid_vector(vocn)
-
+         call t2ugrid_vector(uocn)
+         call t2ugrid_vector(vocn)
 
      endif    !   sst_data_type = hadgem_sst_uvocn
 
-
      end subroutine ocn_data_hadgem
-
 
 !=======================================================================
 

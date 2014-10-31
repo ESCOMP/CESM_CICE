@@ -1,11 +1,8 @@
-#define _SINGLEMSG 1
+!  SVN:$Id: ice_gather_scatter.F90 776 2013-11-22 21:47:38Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-!BOP
-! !MODULE: ice_gather_scatter
 
  module ice_gather_scatter
 
-! !DESCRIPTION:
 !  This module contains routines for gathering data to a single
 !  processor from a distributed array, and scattering data from a
 !  single processor to a distributed array.
@@ -13,38 +10,34 @@
 !  NOTE: The arrays gathered and scattered are assumed to have
 !        horizontal dimensions (nx_block, ny_block).
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_gather_scatter.F90 131 2008-05-30 16:53:40Z eclare $
-!
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP version by William H. Lipscomb, LANL
 ! Jan. 2008: Elizabeth Hunke replaced old routines with new POP
 !              infrastructure, added specialized routine scatter_global_stress
 
-! !USES:
-
    use ice_kinds_mod
-   use ice_communicate
-   use ice_constants
-   use ice_blocks
-   use ice_distribution
-   use ice_domain
-   use ice_domain_size
-   use ice_exit
+   use ice_communicate, only: my_task, mpiR8, mpiR4, mpitag_gs, MPI_COMM_ICE
+   use ice_constants, only: spval_dbl, c0, &
+       field_loc_center, field_loc_NEcorner, field_loc_Nface, field_loc_Eface, &
+       field_loc_noupdate, &
+       field_type_scalar, field_type_vector, field_type_angle, &
+       field_type_noupdate
+   use ice_blocks, only: block, nx_block, ny_block, nblocks_tot, get_block, &
+       nblocks_x, nblocks_y, nghost
+   use ice_distribution, only: distrb
+   use ice_domain_size, only: nx_global, ny_global
+   use ice_exit, only: abort_ice
 
    implicit none
    private
    save
 
-! !PUBLIC MEMBER FUNCTIONS:
-
    public :: gather_global,      &
+             gather_global_ext,  &
              scatter_global,     &
-             gatherArray,        & 
+             scatter_global_ext, &
              scatter_global_stress
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  overload module functions
@@ -63,111 +56,30 @@
                       scatter_global_int
    end interface 
 
-   interface gatherArray
-     module procedure gatherArray_dbl
-   end interface
-
 !-----------------------------------------------------------------------
 !
 !  module variables
 !
 !-----------------------------------------------------------------------
 
-!EOC
 !***********************************************************************
 
  contains
 
-
- subroutine gatherArray_dbl(array_g,array,length,root)
-
-   include 'mpif.h'
-
-   real(dbl_kind) :: array_g(:)  ! The concatonated array
-   real(dbl_kind) :: array(:)    ! the local piece of the array
-   integer(int_kind) :: length   ! number of elements in the array
-   integer(int_kind) :: root     ! root to which to collect the array
-
-   integer(int_kind) :: ierr
-
-#ifdef _USE_FLOW_CONTROL
-   integer (int_kind) :: &
-     i                  ,&! loop index
-     nprocs             ,&! number of processes in communicator
-     itask              ,&! task loop index
-     mtag               ,&! MPI message tag
-     displs             ,&! MPI message length
-     rcv_request        ,&! request id
-     signal               ! MPI handshaking variable
-
-   integer (int_kind), dimension(MPI_STATUS_SIZE) :: status
-
-   signal = 1
-   nprocs = get_num_procs()
-
-   if (root .eq. my_task) then
-      do itask=0, nprocs-1
-         if (itask .ne. root) then
-            mtag = 3*mpitag_gs+itask
-            displs = itask*length
-            call mpi_irecv( array_g(displs+1), length, &
-                            MPI_REAL8, itask, mtag, MPI_COMM_ICE, &
-                            rcv_request, ierr )
-            call mpi_send ( signal, 1, mpi_integer, itask, mtag, &
-                            MPI_COMM_ICE, ierr )
-            call mpi_wait ( rcv_request, status, ierr )
-         end if
-      end do
-
-! copy local data
-      displs = root*length
-      do i=1,length
-         array_g(displs+i) = array(i)
-      enddo
-
-   else
-      mtag = 3*mpitag_gs+my_task
-
-      call mpi_recv ( signal, 1, mpi_integer, root, mtag, MPI_COMM_ICE, &
-                      status, ierr )
-      call mpi_rsend ( array, length, MPI_REAL8, root, mtag, MPI_COMM_ICE, &
-                      ierr )
-   endif
-#else
-   call MPI_Gather(array,length,MPI_REAL8,array_g, length,MPI_REAL8,root, &
-                   MPI_COMM_ICE,ierr)
-#endif
-
- end subroutine gatherArray_dbl
-
-
 !***********************************************************************
-!BOP
-! !IROUTINE: gather_global
-! !INTERFACE:
 
- subroutine gather_global_dbl(ARRAY_G, ARRAY, dst_task, src_dist)
+ subroutine gather_global_dbl(ARRAY_G, ARRAY, dst_task, src_dist, spc_val)
 
-! !DESCRIPTION:
 !  This subroutine gathers a distributed array to a global-sized
 !  array on the processor dst_task.
 !
-! !REVISION HISTORY:
-!  same as module
-!
-! !REMARKS:
 !  This is the specific inteface for double precision arrays 
 !  corresponding to the generic interface gather_global.  It is shown
 !  to provide information on the generic interface (the generic
 !  interface is identical, but chooses a specific inteface based
 !  on the data type of the input argument).
 
-
-! !USES:
-
    include 'mpif.h'
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
      dst_task   ! task to which array should be gathered
@@ -178,13 +90,12 @@
    real (dbl_kind), dimension(:,:,:), intent(in) :: &
      ARRAY      ! array containing horizontal slab of distributed field
 
-! !OUTPUT PARAMETERS:
+   real (dbl_kind), intent(in), optional :: &
+     spc_val
 
    real (dbl_kind), dimension(:,:), intent(inout) :: &
      ARRAY_G    ! array containing global horizontal field on dst_task
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -195,7 +106,6 @@
      i,j,n          ,&! dummy loop counters
      nsends         ,&! number of actual sends
      src_block      ,&! block locator for send
-     src_task       ,&! source of message
      ierr             ! MPI error flag
 
    integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
@@ -207,28 +117,20 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
-#ifdef _SINGLEMSG
-   real (dbl_kind), dimension(:,:,:), allocatable :: &
-     msg_buffer
-#else
    real (dbl_kind), dimension(:,:), allocatable :: &
      msg_buffer
-#endif
+
+   real (dbl_kind) :: &
+     special_value
 
    type (block) :: &
      this_block  ! block info for current block
 
-   integer (int_kind) :: ib, ig, itask, nprocs, maxBlocks
-   integer (int_kind) :: iig,ijg,it
-   integer (int_kind) :: msgLen, msgTag
-
-#ifdef _USE_FLOW_CONTROL
-   integer (int_kind) :: &
-     rcv_request    ,&! request id
-     signal           ! MPI handshaking variable
-
-   signal = 1
-#endif
+   if (present(spc_val)) then
+      special_value = spc_val
+   else
+      special_value = spval_dbl
+   endif
 
 !-----------------------------------------------------------------------
 !
@@ -236,8 +138,6 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
-
-   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -257,7 +157,7 @@
          end do
          end do
 
-       !*** fill land blocks with zeroes
+       !*** fill land blocks with special values
 
        else if (src_dist%blockLocation(n) == 0) then
 
@@ -266,7 +166,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
            ARRAY_G(this_block%i_glob(i), &
-                   this_block%j_glob(j)) = c0
+                   this_block%j_glob(j)) = special_value
          end do
          end do
        endif
@@ -274,46 +174,7 @@
      end do
 
      !*** receive blocks to fill up the rest
-#ifdef _SINGLEMSG
-     allocate (msg_buffer(nx_block,ny_block,max_blocks))
-     do itask = 0,nprocs-1
-        if(itask /= dst_task) then 
-           maxBlocks = src_dist%BlockCnt(itask+1)
-           msgLen = nx_block*ny_block*maxBlocks
-           msgTag = 3*mpitag_gs+itask
-           if(maxBlocks>0) then 
 
-#ifdef _USE_FLOW_CONTROL
-             call MPI_IRECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
-               mpiR8, itask, msgTag, MPI_COMM_ICE, rcv_request, &
-               ierr)
-
-             call MPI_SEND(signal, 1, mpi_integer, itask, &
-                           msgTag, MPI_COMM_ICE, ierr)
-
-             call MPI_WAIT(rcv_request, status, ierr)
-#else
-             call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
-               mpiR8, itask, msgTag, MPI_COMM_ICE, status, ierr)
-#endif
-
-             do ib=1,maxBlocks
-               ig = src_dist%blockIndex(itask+1,ib)
-      	       this_block = get_block(ig,ig)
-               do j=this_block%jlo,this_block%jhi
-                  do i=this_block%ilo,this_block%ihi
-                     iig = this_block%i_glob(i) 
-                     ijg = this_block%j_glob(j) 
-                     ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
-                  end do
-               end do
-              enddo
-            endif
-        endif
-     enddo
-
-     deallocate(msg_buffer)
-#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -322,21 +183,9 @@
 
          this_block = get_block(n,n)
 
-#ifdef _USE_FLOW_CONTROL
-         call MPI_IRECV(msg_buffer, size(msg_buffer), &
-                        mpiR8, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                        MPI_COMM_ICE, rcv_request, ierr)
-
-         call MPI_SEND(signal, 1, mpi_integer, &
-                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
-
-         call MPI_WAIT(rcv_request, status, ierr)
-#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpiR8, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
-#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -348,7 +197,6 @@
      end do
 
      deallocate(msg_buffer)
-#endif
 
 !-----------------------------------------------------------------------
 !
@@ -358,23 +206,6 @@
 
    else
 
-#ifdef _SINGLEMSG
-
-     if(nblocks>0) then 
-        msgLen = nx_block*ny_block*nblocks
-        msgTag = 3*mpitag_gs+my_task
-#ifdef _USE_FLOW_CONTROL
-        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
-                      MPI_COMM_ICE, status, ierr)
-	call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task, &
-           msgTag,MPI_COMM_ICE,ierr)
-#else
-	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR8,dst_task, &
-           msgTag,MPI_COMM_ICE,ierr)
-#endif
-     endif
-
-#else
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
 
@@ -384,26 +215,21 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
-#ifdef _USE_FLOW_CONTROL
-         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, status, ierr)
-         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
-                     mpiR8, dst_task, 3*mpitag_gs+n, &
-                     MPI_COMM_ICE, snd_request(nsends), ierr)
-#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpiR8, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
-#endif
        endif
      end do
 
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
-#endif
 
    endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
 
 !-----------------------------------------------------------------------
 
@@ -467,28 +293,11 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
-#ifdef _SINGLEMSG
-   real (real_kind), dimension(:,:,:), allocatable :: &
-     msg_buffer
-#else
    real (real_kind), dimension(:,:), allocatable :: &
      msg_buffer
-#endif
 
    type (block) :: &
      this_block  ! block info for current block
-
-   integer (int_kind) :: ib, ig, itask, nprocs, maxBlocks
-   integer (int_kind) :: iig,ijg
-   integer (int_kind) :: msgLen, msgTag
-
-#ifdef _USE_FLOW_CONTROL
-   integer (int_kind) :: &
-     rcv_request    ,&! request id
-     signal           ! MPI handshaking variable
-
-   signal = 1
-#endif
 
 !-----------------------------------------------------------------------
 !
@@ -496,8 +305,6 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
-
-   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -517,7 +324,7 @@
          end do
          end do
 
-       !*** fill land blocks with special values
+       !*** fill land blocks with zeroes
 
        else if (src_dist%blockLocation(n) == 0) then
 
@@ -526,7 +333,7 @@
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
            ARRAY_G(this_block%i_glob(i), &
-                   this_block%j_glob(j)) = spval
+                   this_block%j_glob(j)) = 0._real_kind
          end do
          end do
        endif
@@ -535,48 +342,6 @@
 
      !*** receive blocks to fill up the rest
 
-#ifdef _SINGLEMSG
-
-     allocate (msg_buffer(nx_block,ny_block,max_blocks))
-     do itask = 0,nprocs-1
-        if( itask /= dst_task) then
-           maxBlocks = src_dist%BlockCnt(itask+1)
-           msgLen = nx_block*ny_block*maxBlocks
-           msgTag = 3*mpitag_gs+itask
-           if( maxBlocks>0) then 
-
-#ifdef _USE_FLOW_CONTROL
-              call MPI_IRECV(msg_buffer(:,:,1:maxBlocks), msgLen, &
-                   mpiR4, itask, msgTag ,MPI_COMM_ICE, &
-                   rcv_request, ierr)
-
-              call MPI_SEND(signal, 1, mpi_integer, itask, &
-                            msgTag, MPI_COMM_ICE, ierr)
-
-              call MPI_WAIT(rcv_request, status, ierr)
-#else
-              call MPI_RECV(msg_buffer(:,:,1:maxBlocks), msgLen, &
-                   mpiR4, itask, msgTag ,MPI_COMM_ICE, status, ierr)
-#endif
-
-              do ib=1,maxBlocks
-                 ig = src_dist%blockIndex(itask+1,ib)
-                 this_block = get_block(ig,ig)
-                 do j=this_block%jlo,this_block%jhi
-                   do i=this_block%ilo,this_block%ihi
-                     iig = this_block%i_glob(i) 
-                     ijg = this_block%j_glob(j) 
-                     ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
-                   end do
-                 end do
-              enddo
-           endif
-        endif
-     enddo
-
-     deallocate(msg_buffer)
-
-#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -585,21 +350,9 @@
 
          this_block = get_block(n,n)
 
-#ifdef _USE_FLOW_CONTROL
-         call MPI_IRECV(msg_buffer, size(msg_buffer), &
-                        mpiR4, src_dist%blockLocation(n)-1, &
-                        3*mpitag_gs+n, MPI_COMM_ICE, rcv_request, ierr)
-
-         call MPI_SEND(signal, 1, mpi_integer, &
-                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
-
-         call MPI_WAIT(rcv_request, status, ierr)
-#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpiR4, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
-#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -609,9 +362,8 @@
          end do
        endif
      end do
-     deallocate(msg_buffer)
-#endif
 
+     deallocate(msg_buffer)
 
 !-----------------------------------------------------------------------
 !
@@ -620,23 +372,6 @@
 !-----------------------------------------------------------------------
 
    else
-#ifdef _SINGLEMSG
-
-     if(nblocks>0) then
-        msgLen = nx_block*ny_block*nblocks
-        msgTag = 3*mpitag_gs+my_task 
-#ifdef _USE_FLOW_CONTROL
-        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
-                      MPI_COMM_ICE, status, ierr)
-	call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task, &
-           msgTag,MPI_COMM_ICE,ierr)
-#else
-	call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen,mpiR4,dst_task, &
-           msgTag,MPI_COMM_ICE,ierr)
-#endif
-     endif
-
-#else
 
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
@@ -647,26 +382,21 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
-#ifdef _USE_FLOW_CONTROL
-         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, status, ierr)
-         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
-                     mpiR4, dst_task, 3*mpitag_gs+n, &
-                     MPI_COMM_ICE, snd_request(nsends), ierr)
-#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpiR4, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
-#endif
        endif
      end do
 
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
-#endif
 
    endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
 
 !-----------------------------------------------------------------------
 
@@ -730,28 +460,11 @@
    integer (int_kind), dimension(:,:), allocatable :: &
      snd_status
 
-#ifdef _SINGLEMSG
-   integer (int_kind), dimension(:,:,:), allocatable :: &
-     msg_buffer
-#else
    integer (int_kind), dimension(:,:), allocatable :: &
      msg_buffer
-#endif
 
    type (block) :: &
      this_block  ! block info for current block
-
-   integer (int_kind) :: ib, ig, len, itask, nprocs, maxBlocks
-   integer (int_kind) :: iig,ijg
-   integer (int_kind) :: msgLen, msgTag
-
-#ifdef _USE_FLOW_CONTROL
-   integer (int_kind) :: &
-     rcv_request    ,&! request id
-     signal           ! MPI handshaking variable
-
-   signal = 1
-#endif
 
 !-----------------------------------------------------------------------
 !
@@ -759,8 +472,6 @@
 !  array and post receives for non-local blocks.
 !
 !-----------------------------------------------------------------------
-
-   nprocs = get_num_procs()
 
    if (my_task == dst_task) then
 
@@ -798,45 +509,6 @@
 
      !*** receive blocks to fill up the rest
 
-#ifdef _SINGLEMSG
-
-     allocate (msg_buffer(nx_block,ny_block,max_blocks))
-     do itask = 0,nprocs-1
-        if( itask /= dst_task) then
-           maxBlocks = src_dist%BlockCnt(itask+1)
-           msgLen = nx_block*ny_block*max_blocks
-           msgTag = 3*mpitag_gs+itask
-           if(maxBLocks>0) then 
-#ifdef _USE_FLOW_CONTROL
-             call MPI_IRECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
-                  mpi_integer, itask, msgTag, MPI_COMM_ICE, &
-                  rcv_request, ierr)
-
-             call MPI_SEND(signal, 1, mpi_integer, itask, &
-                           msgTag, MPI_COMM_ICE, ierr)
-
-             call MPI_WAIT(rcv_request, status, ierr)
-#else
-             call MPI_RECV(msg_buffer(:,:,1:maxBlocks),msgLen, &
-                   mpi_integer, itask, msgTag, MPI_COMM_ICE, status, ierr)
-#endif
-             do ib=1,maxBlocks
-                ig = src_dist%blockIndex(itask+1,ib)
-                this_block = get_block(ig,ig)
-                do j=this_block%jlo,this_block%jhi
-                   do i=this_block%ilo,this_block%ihi
-                      iig = this_block%i_glob(i) 
-                      ijg = this_block%j_glob(j) 
-                      ARRAY_G(iig,ijg) = msg_buffer(i,j,ib)
-                   end do
-                end do
-              enddo
-           endif
-        endif
-     enddo
-     deallocate(msg_buffer)
-
-#else
      allocate (msg_buffer(nx_block,ny_block))
 
      do n=1,nblocks_tot
@@ -845,21 +517,9 @@
 
          this_block = get_block(n,n)
 
-#ifdef _USE_FLOW_CONTROL
-         call MPI_IRECV(msg_buffer, size(msg_buffer), &
-                        mpi_integer, src_dist%blockLocation(n)-1, &
-                        3*mpitag_gs+n, MPI_COMM_ICE, rcv_request, ierr)
-
-         call MPI_SEND(signal, 1, mpi_integer, &
-                       src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
-
-         call MPI_WAIT(rcv_request, status, ierr)
-#else
          call MPI_RECV(msg_buffer, size(msg_buffer), &
                        mpi_integer, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
                        MPI_COMM_ICE, status, ierr)
-#endif
 
          do j=this_block%jlo,this_block%jhi
          do i=this_block%ilo,this_block%ihi
@@ -869,9 +529,8 @@
          end do
        endif
      end do
-     deallocate(msg_buffer)
-#endif
 
+     deallocate(msg_buffer)
 
 !-----------------------------------------------------------------------
 !
@@ -880,24 +539,6 @@
 !-----------------------------------------------------------------------
 
    else
-
-#ifdef _SINGLEMSG
-
-     if(nblocks>0) then
-        msgLen = nx_block*ny_block*nblocks
-        msgTag = 3*mpitag_gs+my_task
-#ifdef _USE_FLOW_CONTROL
-        call MPI_RECV(signal, 1, mpi_integer, dst_task, msgTag, &
-                      MPI_COMM_ICE, status, ierr)
-        call MPI_RSEND(ARRAY(:,:,1:nblocks),msgLen, &
-             mpi_integer, dst_task, msgTag, MPI_COMM_ICE, ierr)
-#else
-        call MPI_SEND(ARRAY(:,:,1:nblocks),msgLen, &
-             mpi_integer, dst_task, msgTag, MPI_COMM_ICE, ierr)
-#endif
-     endif
-
-#else
 
      allocate(snd_request(nblocks_tot), &
               snd_status (MPI_STATUS_SIZE, nblocks_tot))
@@ -908,55 +549,358 @@
 
          nsends = nsends + 1
          src_block = src_dist%blockLocalID(n)
-#ifdef _USE_FLOW_CONTROL
-         call MPI_RECV(signal, 1, mpi_integer, dst_task, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, status, ierr)
-         call MPI_IRSEND(ARRAY(1,1,src_block), nx_block*ny_block, &
-                     mpi_integer, dst_task, 3*mpitag_gs+n, &
-                     MPI_COMM_ICE, snd_request(nsends), ierr)
-#else
          call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
                      mpi_integer, dst_task, 3*mpitag_gs+n, &
                      MPI_COMM_ICE, snd_request(nsends), ierr)
-#endif
        endif
      end do
 
      if (nsends > 0) &
        call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
      deallocate(snd_request, snd_status)
-#endif
 
    endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
 
 !-----------------------------------------------------------------------
 
  end subroutine gather_global_int
 
-!EOC
 !***********************************************************************
-!BOP
-! !IROUTINE: scatter_global
-! !INTERFACE:
+
+ subroutine gather_global_ext(ARRAY_G, ARRAY, dst_task, src_dist, spc_val)
+
+!  This subroutine gathers a distributed array to a global-sized
+!  array on the processor dst_task, including ghost cells.
+
+   include 'mpif.h'
+
+   integer (int_kind), intent(in) :: &
+     dst_task   ! task to which array should be gathered
+
+   type (distrb), intent(in) :: &
+     src_dist   ! distribution of blocks in the source array
+
+   real (dbl_kind), dimension(:,:,:), intent(in) :: &
+     ARRAY      ! array containing horizontal slab of distributed field
+
+   real (dbl_kind), dimension(:,:), intent(inout) :: &
+     ARRAY_G    ! array containing global horizontal field on dst_task
+
+   real (dbl_kind), intent(in), optional :: &
+     spc_val
+     
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+     i,j,n          ,&! dummy loop counters
+     nx, ny         ,&! global dimensions
+     nsends         ,&! number of actual sends
+     src_block      ,&! block locator for send
+     ierr             ! MPI error flag
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
+
+   integer (int_kind), dimension(:), allocatable :: &
+     snd_request
+
+   integer (int_kind), dimension(:,:), allocatable :: &
+     snd_status
+
+   real (dbl_kind), dimension(:,:), allocatable :: &
+     msg_buffer
+
+   real (dbl_kind) :: &
+     special_value
+
+   type (block) :: &
+     this_block  ! block info for current block
+
+   if (present(spc_val)) then
+      special_value = spc_val
+   else
+      special_value = spval_dbl
+   endif
+
+   nx = nx_global + 2*nghost
+   ny = ny_global + 2*nghost
+
+!-----------------------------------------------------------------------
+!
+!  if this task is the dst_task, copy local blocks into the global 
+!  array and post receives for non-local blocks.
+!
+!-----------------------------------------------------------------------
+
+   if (my_task == dst_task) then
+
+     do n=1,nblocks_tot
+
+       !*** copy local blocks
+
+       if (src_dist%blockLocation(n) == my_task+1) then
+
+         this_block = get_block(n,n)
+
+         ! interior
+         do j=this_block%jlo,this_block%jhi
+         do i=this_block%ilo,this_block%ihi
+           ARRAY_G(this_block%i_glob(i)+nghost, &
+                   this_block%j_glob(j)+nghost) = &
+           ARRAY  (i,j,src_dist%blockLocalID(n))
+         end do
+         end do
+
+         ! fill ghost cells
+         if (this_block%jblock == 1) then
+            ! south block
+            do j=1, nghost
+            do i=this_block%ilo,this_block%ihi
+              ARRAY_G(this_block%i_glob(i)+nghost,j) = &
+              ARRAY  (i,j,src_dist%blockLocalID(n))
+            end do
+            end do
+            if (this_block%iblock == 1) then
+               ! southwest corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G(i,j) = &
+                 ARRAY  (i,j,src_dist%blockLocalID(n))
+               end do
+               end do
+            endif
+         endif
+         if (this_block%jblock == nblocks_y) then
+            ! north block
+            do j=1, nghost
+            do i=this_block%ilo,this_block%ihi
+              ARRAY_G(this_block%i_glob(i)+nghost, &
+                      ny_global + nghost + j) = &
+              ARRAY  (i,this_block%jhi+nghost-j+1,src_dist%blockLocalID(n))
+            end do
+            end do
+            if (this_block%iblock == nblocks_x) then
+               ! northeast corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G(nx-i+1, ny-j+1) = &
+                 ARRAY  (this_block%ihi+nghost-i+1, &
+                         this_block%jhi+nghost-j+1, &
+                         src_dist%blockLocalID(n))
+               end do
+               end do
+            endif
+         endif
+         if (this_block%iblock == 1) then
+            ! west block
+            do j=this_block%jlo,this_block%jhi
+            do i=1, nghost
+              ARRAY_G(i,this_block%j_glob(j)+nghost) = &
+              ARRAY  (i,j,src_dist%blockLocalID(n))
+            end do
+            end do
+            if (this_block%jblock == nblocks_y) then
+               ! northwest corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G(i,                   ny-j+1) = &
+                 ARRAY  (i,this_block%jhi+nghost-j+1,src_dist%blockLocalID(n))
+               end do
+               end do
+            endif
+         endif
+         if (this_block%iblock == nblocks_x) then
+            ! east block
+            do j=this_block%jlo,this_block%jhi
+            do i=1, nghost
+              ARRAY_G(nx_global + nghost + i, &
+                      this_block%j_glob(j)+nghost) = &
+              ARRAY  (this_block%ihi+nghost-i+1,j,src_dist%blockLocalID(n))
+            end do
+            end do
+            if (this_block%jblock == 1) then
+               ! southeast corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G(                   nx-i+1,j) = &
+                 ARRAY  (this_block%ihi+nghost-i+1,j,src_dist%blockLocalID(n))
+               end do
+               end do
+            endif
+         endif
+
+       !*** fill land blocks with special values
+
+       else if (src_dist%blockLocation(n) == 0) then
+
+         this_block = get_block(n,n)
+
+         do j=this_block%jlo,this_block%jhi
+         do i=this_block%ilo,this_block%ihi
+           ARRAY_G(this_block%i_glob(i)+nghost, &
+                   this_block%j_glob(j)+nghost) = special_value
+         end do
+         end do
+       endif
+
+     end do
+
+     !*** receive blocks to fill up the rest
+
+     allocate (msg_buffer(nx_block,ny_block))
+
+     do n=1,nblocks_tot
+       if (src_dist%blockLocation(n) > 0 .and. &
+           src_dist%blockLocation(n) /= my_task+1) then
+
+         this_block = get_block(n,n)
+
+         call MPI_RECV(msg_buffer, size(msg_buffer), &
+                       mpiR8, src_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, status, ierr)
+
+         ! block interior
+         do j=this_block%jlo,this_block%jhi
+         do i=this_block%ilo,this_block%ihi
+           ARRAY_G(this_block%i_glob(i)+nghost, &
+                   this_block%j_glob(j)+nghost) = msg_buffer(i,j)
+         end do
+         end do
+         if (this_block%jblock == 1) then
+            ! south block
+            do j=1, nghost
+            do i=this_block%ilo,this_block%ihi
+              ARRAY_G   (this_block%i_glob(i)+nghost,j) = &
+              msg_buffer(i,j)
+            end do
+            end do
+            if (this_block%iblock == 1) then
+               ! southwest corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G(i,j) = msg_buffer(i,j)
+               end do
+               end do
+            endif
+         endif
+         if (this_block%jblock == nblocks_y) then
+            ! north block
+            do j=1, nghost
+            do i=this_block%ilo,this_block%ihi
+              ARRAY_G   (this_block%i_glob(i)+nghost, &
+                         ny_global + nghost + j) = &
+              msg_buffer(i, this_block%jhi+j)
+            end do
+            end do
+            if (this_block%iblock == nblocks_x) then
+               ! northeast corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G   (nx-i+1, ny-j+1) = &
+                 msg_buffer(this_block%ihi+nghost-i+1,&
+                            this_block%jhi+nghost-j+1)
+               end do
+               end do
+            endif
+         endif
+         if (this_block%iblock == 1) then
+            ! west block
+            do j=this_block%jlo,this_block%jhi
+            do i=1, nghost
+              ARRAY_G   (i, this_block%j_glob(j)+nghost) = &
+              msg_buffer(i, j)
+            end do
+            end do
+            if (this_block%jblock == nblocks_y) then
+               ! northwest corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G   (i, ny-j+1) = &
+                 msg_buffer(i, this_block%jhi+nghost-j+1)
+               end do
+               end do
+            endif
+         endif
+         if (this_block%iblock == nblocks_x) then
+            ! east block
+            do j=this_block%jlo,this_block%jhi
+            do i=1, nghost
+              ARRAY_G   (nx_global+nghost+i, &
+                         this_block%j_glob(j)+nghost) = &
+              msg_buffer(this_block%ihi+i, j)
+            end do
+            end do
+            if (this_block%jblock == 1) then
+               ! southeast corner
+               do j=1, nghost
+               do i=1, nghost
+                 ARRAY_G   (nx-i+1, j) = &
+                 msg_buffer(this_block%ihi+nghost-i+1, j)
+               end do
+               end do
+            endif
+         endif
+       endif
+     end do
+
+     deallocate(msg_buffer)
+
+!-----------------------------------------------------------------------
+!
+!  otherwise send data to dst_task
+!
+!-----------------------------------------------------------------------
+
+   else
+
+     allocate(snd_request(nblocks_tot), &
+              snd_status (MPI_STATUS_SIZE, nblocks_tot))
+
+     nsends = 0
+     do n=1,nblocks_tot
+       if (src_dist%blockLocation(n) == my_task+1) then
+
+         nsends = nsends + 1
+         src_block = src_dist%blockLocalID(n)
+         call MPI_ISEND(ARRAY(1,1,src_block), nx_block*ny_block, &
+                     mpiR8, dst_task, 3*mpitag_gs+n, &
+                     MPI_COMM_ICE, snd_request(nsends), ierr)
+       endif
+     end do
+
+     if (nsends > 0) &
+       call MPI_WAITALL(nsends, snd_request, snd_status, ierr)
+     deallocate(snd_request, snd_status)
+
+   endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
+
+!-----------------------------------------------------------------------
+
+ end subroutine gather_global_ext
+
+!***********************************************************************
 
  subroutine scatter_global_dbl(ARRAY, ARRAY_G, src_task, dst_dist, &
                                field_loc, field_type)
 
-! !DESCRIPTION:
 !  This subroutine scatters a global-sized array to a distributed array.
 !
-! !REVISION HISTORY:
-!  same as module
-!
-! !REMARKS:
 !  This is the specific interface for double precision arrays 
 !  corresponding to the generic interface scatter_global.
 
-! !USES:
-
    include 'mpif.h'
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
      src_task       ! task from which array should be scattered
@@ -972,13 +916,9 @@
       field_loc                  ! id for location on horizontal grid
                                  !  (center, NEcorner, Nface, Eface)
 
-! !OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:), intent(inout) :: &
      ARRAY          ! array containing distributed field
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -986,7 +926,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
-     i,j,n,bid,          &! dummy loop indices
+     i,j,n,              &! dummy loop indices
      nrecvs,             &! actual number of messages received
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
@@ -997,6 +937,9 @@
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
 
    integer (int_kind), dimension(:), allocatable :: &
      rcv_request     ! request array for receives
@@ -1158,7 +1101,7 @@
 
          call MPI_SEND(msg_buffer, nx_block*ny_block, &
                        mpiR8, dst_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
+                       MPI_COMM_ICE, status, ierr)
 
        endif
      end do
@@ -1315,6 +1258,10 @@
       enddo
    endif
 
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
+
 !-----------------------------------------------------------------------
 
  end subroutine scatter_global_dbl
@@ -1368,7 +1315,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
-     i,j,n,bid,          &! dummy loop indices
+     i,j,n,              &! dummy loop indices
      nrecvs,             &! actual number of messages received
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
@@ -1379,6 +1326,9 @@
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
 
    integer (int_kind), dimension(:), allocatable :: &
      rcv_request     ! request array for receives
@@ -1540,7 +1490,7 @@
 
          call MPI_SEND(msg_buffer, nx_block*ny_block, &
                        mpiR4, dst_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
+                       MPI_COMM_ICE, status, ierr)
 
        endif
      end do
@@ -1697,6 +1647,10 @@
       enddo
    endif
 
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
+
 !-----------------------------------------------------------------------
 
  end subroutine scatter_global_real
@@ -1750,7 +1704,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
-     i,j,n,bid,          &! dummy loop indices
+     i,j,n,              &! dummy loop indices
      nrecvs,             &! actual number of messages received
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
@@ -1761,6 +1715,9 @@
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
 
    integer (int_kind), dimension(:), allocatable :: &
      rcv_request     ! request array for receives
@@ -1922,7 +1879,7 @@
 
          call MPI_SEND(msg_buffer, nx_block*ny_block, &
                        mpi_integer, dst_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
+                       MPI_COMM_ICE, status, ierr)
 
        endif
      end do
@@ -2079,34 +2036,354 @@
       enddo
    endif
 
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
+
 !-----------------------------------------------------------------------
 
  end subroutine scatter_global_int
 
-!EOC
 !***********************************************************************
-!BOP
-! !IROUTINE: scatter_global_stress
-! !INTERFACE:
+
+ subroutine scatter_global_ext(ARRAY, ARRAY_G, src_task, dst_dist)
+
+!  This subroutine scatters a global-sized array to a distributed array.
+!
+!  This is the specific interface for double precision arrays 
+!  corresponding to the generic interface scatter_global.
+
+   include 'mpif.h'
+
+   integer (int_kind), intent(in) :: &
+     src_task       ! task from which array should be scattered
+
+   type (distrb), intent(in) :: &
+     dst_dist       ! distribution of resulting blocks
+
+   real (dbl_kind), dimension(:,:), intent(in) :: &
+     ARRAY_G        ! array containing global field on src_task
+
+   real (dbl_kind), dimension(:,:,:), intent(inout) :: &
+     ARRAY          ! array containing distributed field
+
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+     i,j,n,              &! dummy loop indices
+     iblk, jblk,         &! block indices
+     iglb, jglb,         &! global indices
+     nrecvs,             &! actual number of messages received
+     isrc, jsrc,         &! source addresses
+     dst_block,          &! location of block in dst array
+     ierr                 ! MPI error flag
+
+   type (block) :: &
+     this_block  ! block info for current block
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
+
+   integer (int_kind), dimension(:), allocatable :: &
+     rcv_request     ! request array for receives
+
+   integer (int_kind), dimension(:,:), allocatable :: &
+     rcv_status      ! status array for receives
+
+   real (dbl_kind), dimension(:,:), allocatable :: &
+     msg_buffer      ! buffer for sending blocks
+
+!-----------------------------------------------------------------------
+!
+!  initialize return array to zero
+!
+!-----------------------------------------------------------------------
+
+   ARRAY = c0
+
+!-----------------------------------------------------------------------
+!
+!  if this task is the src_task, copy blocks of global array into 
+!  message buffer and send to other processors. also copy local blocks
+!
+!-----------------------------------------------------------------------
+
+   if (my_task == src_task) then
+
+     !*** send non-local blocks away
+
+     allocate (msg_buffer(nx_block,ny_block))
+
+     do n=1,nblocks_tot
+       if (dst_dist%blockLocation(n) > 0 .and. &
+           dst_dist%blockLocation(n)-1 /= my_task) then
+
+         msg_buffer = c0
+         this_block = get_block(n,n)
+
+         ! interior
+         do j = 1, ny_block
+         do i = 1, nx_block
+            msg_buffer(i,j) = ARRAY_G(this_block%i_glob(i)+nghost,&
+                                      this_block%j_glob(j)+nghost)
+         end do
+         end do
+
+         if (this_block%jblock == 1) then
+            ! south edge
+            do j = 1, nghost
+            do i = this_block%ilo,this_block%ihi
+               msg_buffer(i,j) = ARRAY_G(this_block%i_glob(i)+nghost,j)
+            enddo
+               do i = 1, nghost
+               ! southwest corner
+                  iblk = i
+                  jblk = j
+                  iglb = this_block%i_glob(this_block%ilo)+i-1
+                  jglb = j
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               ! southeast corner
+                  iblk = this_block%ihi+i
+                  iglb = this_block%i_glob(this_block%ihi)+nghost+i
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               enddo
+            enddo
+         endif
+         if (this_block%jblock == nblocks_y) then
+            ! north edge
+            do j = 1, nghost
+            do i = this_block%ilo,this_block%ihi
+               msg_buffer(i,this_block%jhi+j) = ARRAY_G(this_block%i_glob(i)+nghost,&
+                                                        ny_global+nghost+j)
+            enddo
+               do i = 1, nghost
+               ! northwest corner
+                  iblk = i
+                  jblk = this_block%jhi+j
+                  iglb = this_block%i_glob(this_block%ilo)+i-1
+                  jglb = ny_global+nghost+j
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               ! northeast corner
+                  iblk = this_block%ihi+i
+                  iglb = this_block%i_glob(this_block%ihi)+nghost+i
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               enddo
+            enddo
+         endif
+         if (this_block%iblock == 1) then
+            ! west edge
+            do j = this_block%jlo,this_block%jhi
+            do i = 1, nghost
+               msg_buffer(i,j) = ARRAY_G(i,this_block%j_glob(j)+nghost)
+            enddo
+            enddo
+               do j = 1, nghost
+               do i = 1, nghost
+               ! northwest corner
+                  iblk = i
+                  jblk = this_block%jhi+j
+                  iglb = i
+                  jglb = this_block%j_glob(this_block%jhi)+nghost+j
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               ! southwest corner
+                  jblk = j
+                  jglb = this_block%j_glob(this_block%jlo)+j-1
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               enddo
+               enddo
+         endif
+         if (this_block%iblock == nblocks_x) then
+            ! east edge
+            do j = this_block%jlo,this_block%jhi
+            do i = 1, nghost
+               msg_buffer(this_block%ihi+i,j) = ARRAY_G(nx_global+nghost+i, &
+                                                        this_block%j_glob(j)+nghost)
+            enddo
+            enddo
+               do j = 1, nghost
+               do i = 1, nghost
+               ! northeast corner
+                  iblk = this_block%ihi+i
+                  jblk = this_block%jhi+j
+                  iglb = nx_global+nghost+i
+                  jglb = this_block%j_glob(this_block%jhi)+nghost+j
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               ! southeast corner
+                  jblk = j
+                  jglb = this_block%j_glob(this_block%jlo)+j-1
+                  msg_buffer(iblk,jblk) = ARRAY_G(iglb,jglb)
+               enddo
+               enddo
+         endif
+
+         call MPI_SEND(msg_buffer, nx_block*ny_block, &
+                       mpiR8, dst_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, status, ierr)
+
+       endif
+     end do
+
+     deallocate(msg_buffer)
+
+     !*** copy any local blocks
+
+     do n=1,nblocks_tot
+       if (dst_dist%blockLocation(n) == my_task+1) then
+         dst_block = dst_dist%blockLocalID(n)
+         this_block = get_block(n,n)
+
+         ! interior
+         do j = 1, ny_block
+         do i = 1, nx_block
+            ARRAY(i,j,dst_block) = ARRAY_G(this_block%i_glob(i)+nghost,&
+                                           this_block%j_glob(j)+nghost)
+         end do
+         end do
+
+         if (this_block%jblock == 1) then
+            ! south edge
+            do j = 1, nghost
+            do i = this_block%ilo,this_block%ihi
+               ARRAY(i,j,dst_block) = ARRAY_G(this_block%i_glob(i)+nghost,j)
+            enddo
+               do i = 1, nghost
+               ! southwest corner
+                  iblk = i
+                  jblk = j
+                  iglb = this_block%i_glob(this_block%ilo)+i-1
+                  jglb = j
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               ! southeast corner
+                  iblk = this_block%ihi+i
+                  iglb = this_block%i_glob(this_block%ihi)+nghost+i
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               enddo
+            enddo
+         endif
+         if (this_block%jblock == nblocks_y) then
+            ! north edge
+            do j = 1, nghost
+            do i = this_block%ilo,this_block%ihi
+               ARRAY(i,this_block%jhi+j,dst_block) = ARRAY_G(this_block%i_glob(i)+nghost,&
+                                                             ny_global+nghost+j)
+            enddo
+               do i = 1, nghost
+               ! northwest corner
+                  iblk = i
+                  jblk = this_block%jhi+j
+                  iglb = this_block%i_glob(this_block%ilo)+i-1
+                  jglb = ny_global+nghost+j
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               ! northeast corner
+                  iblk = this_block%ihi+i
+                  iglb = this_block%i_glob(this_block%ihi)+nghost+i
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               enddo
+            enddo
+         endif
+         if (this_block%iblock == 1) then
+            ! west edge
+            do j = this_block%jlo,this_block%jhi
+            do i = 1, nghost
+               ARRAY(i,j,dst_block) = ARRAY_G(i,this_block%j_glob(j)+nghost)
+            enddo
+            enddo
+               do j = 1, nghost
+               do i = 1, nghost
+               ! northwest corner
+                  iblk = i
+                  jblk = this_block%jhi+j
+                  iglb = i
+                  jglb = this_block%j_glob(this_block%jhi)+nghost+j
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               ! southwest corner
+                  jblk = j
+                  jglb = this_block%j_glob(this_block%jlo)+j-1
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               enddo
+               enddo
+         endif
+         if (this_block%iblock == nblocks_x) then
+            ! east edge
+            do j = this_block%jlo,this_block%jhi
+            do i = 1, nghost
+               ARRAY(this_block%ihi+i,j,dst_block) = ARRAY_G(nx_global+nghost+i, &
+                                                             this_block%j_glob(j)+nghost)
+            enddo
+            enddo
+               do j = 1, nghost
+               do i = 1, nghost
+               ! northeast corner
+                  iblk = this_block%ihi+i
+                  jblk = this_block%jhi+j
+                  iglb = nx_global+nghost+i
+                  jglb = this_block%j_glob(this_block%jhi)+nghost+j
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               ! southeast corner
+                  jblk = j
+                  jglb = this_block%j_glob(this_block%jlo)+j-1
+                  ARRAY(iblk,jblk,dst_block) = ARRAY_G(iglb,jglb)
+               enddo
+               enddo
+         endif
+
+       endif
+     end do
+
+!-----------------------------------------------------------------------
+!
+!  otherwise receive data from src_task
+!
+!-----------------------------------------------------------------------
+
+   else
+
+     allocate (rcv_request(nblocks_tot), &
+               rcv_status(MPI_STATUS_SIZE, nblocks_tot))
+
+     rcv_request = 0
+     rcv_status  = 0
+
+     nrecvs = 0
+     do n=1,nblocks_tot
+       if (dst_dist%blockLocation(n) == my_task+1) then
+         nrecvs = nrecvs + 1
+         dst_block = dst_dist%blockLocalID(n)
+         call MPI_IRECV(ARRAY(1,1,dst_block), nx_block*ny_block, &
+                       mpiR8, src_task, 3*mpitag_gs+n, &
+                       MPI_COMM_ICE, rcv_request(nrecvs), ierr)
+       endif
+     end do
+
+     if (nrecvs > 0) &
+       call MPI_WAITALL(nrecvs, rcv_request, rcv_status, ierr)
+
+     deallocate(rcv_request, rcv_status)
+   endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
+
+!-----------------------------------------------------------------------
+
+ end subroutine scatter_global_ext
+
+!***********************************************************************
 
  subroutine scatter_global_stress(ARRAY, ARRAY_G1, ARRAY_G2, &
                                   src_task, dst_dist)
 
-! !DESCRIPTION:
 !  This subroutine scatters global stresses to a distributed array.
 !
-! !REVISION HISTORY:
-!  same as module
-!
-! !REMARKS:
 !  Ghost cells in the stress tensor must be handled separately on tripole
 !  grids, because matching the corner values requires 2 different arrays.
 
-! !USES:
-
    include 'mpif.h'
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
      src_task       ! task from which array should be scattered
@@ -2118,13 +2395,9 @@
      ARRAY_G1,     &! array containing global field on src_task
      ARRAY_G2       ! array containing global field on src_task
 
-! !OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:), intent(inout) :: &
      ARRAY          ! array containing distributed field
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -2132,7 +2405,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
-     i,j,n,bid,          &! dummy loop indices
+     i,j,n,              &! dummy loop indices
      nrecvs,             &! actual number of messages received
      isrc, jsrc,         &! source addresses
      dst_block,          &! location of block in dst array
@@ -2143,6 +2416,9 @@
 
    type (block) :: &
      this_block  ! block info for current block
+
+   integer (int_kind), dimension(MPI_STATUS_SIZE) :: &
+     status
 
    integer (int_kind), dimension(:), allocatable :: &
      rcv_request     ! request array for receives
@@ -2258,7 +2534,7 @@
 
          call MPI_SEND(msg_buffer, nx_block*ny_block, &
                        mpiR8, dst_dist%blockLocation(n)-1, 3*mpitag_gs+n, &
-                       MPI_COMM_ICE, ierr)
+                       MPI_COMM_ICE, status, ierr)
 
        endif
      end do
@@ -2374,6 +2650,10 @@
 
      deallocate(rcv_request, rcv_status)
    endif
+
+#ifdef gather_scatter_barrier
+   call MPI_BARRIER(MPI_COMM_ICE, ierr)
+#endif
 
 !-----------------------------------------------------------------------
 

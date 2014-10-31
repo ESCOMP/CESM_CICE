@@ -1,47 +1,33 @@
+!  SVN:$Id: ice_domain.F90 726 2013-09-17 14:58:52Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_domain
 
-!BOP
-! !MODULE: ice_domain
-!
-! !DESCRIPTION:
 !  This module contains the model domain and routines for initializing
 !  the domain.  It also initializes the decompositions and
 !  distributions across processors/threads by calling relevant
 !  routines in the block, distribution modules.
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_domain.F90 155 2008-10-02 17:09:18Z eclare $
-!
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL
 ! Feb. 2007: E. Hunke removed NE and SW boundary options (they were buggy
 !  and not used anyhow).
-!
-! !USES:
-!
+
    use ice_kinds_mod
-   use ice_constants
-   use ice_communicate
-   use ice_broadcast
-   use ice_blocks
-   use ice_distribution
-   use ice_exit
-   use ice_fileunits
-   use ice_boundary
-   use ice_domain_size
+   use ice_constants, only: puny, shlat, nhlat, rad_to_deg
+   use ice_communicate, only: my_task, master_task, get_num_procs
+   use ice_broadcast, only: broadcast_scalar
+   use ice_blocks, only: block, get_block, create_blocks, nghost, &
+       nblocks_x, nblocks_y, nblocks_tot, nx_block, ny_block
+   use ice_distribution, only: distrb
+   use ice_boundary, only: ice_halo
 
    implicit none
    private
    save
 
-! !PUBLIC MEMBER FUNCTIONS
-
    public  :: init_domain_blocks ,&
               init_domain_distribution
-
-! !PUBLIC DATA MEMBERS:
 
    integer (int_kind), public :: &
       nblocks            ! actual number of blocks on this processor
@@ -53,17 +39,17 @@
       distrb_info        ! block distribution info
 
    type (ice_halo), public :: &
-      halo_info          !  ghost cell update info
+      halo_info          ! ghost cell update info
 
-   logical (log_kind), public :: &
-      ltripole_grid      ! flag to signal use of tripole grid
+   character (char_len), public :: &
+      ew_boundary_type, &! type of domain bndy in each logical
+      ns_boundary_type   !    direction (ew is i, ns is j)
 
-    character (char_len), public :: &
-       ew_boundary_type,    &! type of domain bndy in each logical
-       ns_boundary_type      !    direction (ew is i, ns is j)
+   logical (kind=log_kind), public :: &
+      maskhalo_dyn   , & ! if true, use masked halo updates for dynamics
+      maskhalo_remap , & ! if true, use masked halo updates for transport
+      maskhalo_bound     ! if true, use masked halo updates for bound_state
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !   module private variables - for the most part these appear as
@@ -72,58 +58,35 @@
 !
 !-----------------------------------------------------------------------
 
-    character (char_len), public  :: &
-       distribution_type     ! method to use for distributing blocks
+    character (char_len) :: &
+       distribution_type,   &! method to use for distributing blocks
                              ! 'cartesian'
                              ! 'rake' 
-                             ! 'spacecurve'
-
-    character (char_len), public :: &
        distribution_wght     ! method for weighting work per block 
                              ! 'block' = POP default configuration
                              ! 'latitude' = no. ocean points * |lat|
-                             ! 'erfc' = erfc function weight based 
-                             !        on performance model [default for spacecurve]
-                             ! 'file' = ice_present weight based on performance model
-
-     character (char_len_long), public :: &
-       distribution_wght_file  ! file which contains the ice_present field
 
     integer (int_kind) :: &
        nprocs                ! num of processors
 
-    logical (log_kind), public :: profile_barrier ! flag to turn on use of barriers before timers
-
-    logical (log_kind), public :: FixMaxBlock
-    integer (int_kind), public :: minBlock
-    integer (int_kind), public :: maxBlock 
-    real (real_kind), public :: maxDil
-
-!EOC
 !***********************************************************************
 
  contains
 
 !***********************************************************************
-!BOP
-! !IROUTINE: init_domain_blocks
-! !INTERFACE:
 
  subroutine init_domain_blocks
 
-! !DESCRIPTION:
 !  This routine reads in domain information and calls the routine
 !  to set up the block decomposition.
-!
-! !REVISION HISTORY:
-!  same as module
 
-! !USES:
-!
-   use ice_global_reductions
-!
-!EOP
-!BOC
+   use ice_distribution, only: processor_shape
+   use ice_domain_size, only: ncat, nilyr, nslyr, max_blocks, &
+       nx_global, ny_global
+   use ice_exit, only: abort_ice
+   use ice_fileunits, only: nu_nml, nml_filename, nu_diag, &
+       get_fileunit, release_fileunit
+
 !----------------------------------------------------------------------
 !
 !  local variables
@@ -133,7 +96,6 @@
    integer (int_kind) :: &
       nml_error          ! namelist read error flag
 
-   integer :: omp_get_num_threads
 !----------------------------------------------------------------------
 !
 !  input namelists
@@ -144,14 +106,11 @@
                          processor_shape,   &
                          distribution_type, &
                          distribution_wght, &
-   			 distribution_wght_file, &
                          ew_boundary_type,  &
-                         ns_boundary_type,   &
-			 minBlock,           &
-                         maxBlock,           &
-                         FixMaxBlock,        &
-   			 maxDil,             &
-                         profile_barrier
+                         ns_boundary_type,  &
+                         maskhalo_dyn,      &
+                         maskhalo_remap,    &
+                         maskhalo_bound
 
 !----------------------------------------------------------------------
 !
@@ -163,20 +122,11 @@
    processor_shape   = 'slenderX2'
    distribution_type = 'cartesian'
    distribution_wght = 'latitude'
-   distribution_wght_file  = 'unknown_distribution_wght_file'
    ew_boundary_type  = 'cyclic'
    ns_boundary_type  = 'open'
-   maxBlock          = max_blocks
-#if defined(THREADED_OMP)
-!$OMP PARALLEL
-   minBlock          = omp_get_num_threads()
-!$OMP END PARALLEL
-#else
-   minBlock          = 1
-#endif
-   maxDil            = 2.0
-   profile_barrier   = .false.
-   FixMaxBlock       = .false.
+   maskhalo_dyn      = .false.     ! if true, use masked halos for dynamics
+   maskhalo_remap    = .false.     ! if true, use masked halos for transport
+   maskhalo_bound    = .false.     ! if true, use masked halos for bound_state
 
    call get_fileunit(nu_nml)
    if (my_task == master_task) then
@@ -201,35 +151,18 @@
    call broadcast_scalar(nprocs,            master_task)
    call broadcast_scalar(processor_shape,   master_task)
    call broadcast_scalar(distribution_type, master_task)
-
-   call broadcast_scalar(distribution_wght_file,  master_task)
    call broadcast_scalar(distribution_wght, master_task)
-
    call broadcast_scalar(ew_boundary_type,  master_task)
    call broadcast_scalar(ns_boundary_type,  master_task)
-   call broadcast_scalar(profile_barrier,   master_task)
-   call broadcast_scalar(maxBlock,          master_task)
-   call broadcast_scalar(minBlock,          master_task)
-   call broadcast_scalar(maxDil,          master_task)
+   call broadcast_scalar(maskhalo_dyn,      master_task)
+   call broadcast_scalar(maskhalo_remap,    master_task)
+   call broadcast_scalar(maskhalo_bound,    master_task)
 
 !----------------------------------------------------------------------
 !
 !  perform some basic checks on domain
 !
 !----------------------------------------------------------------------
-   if(trim(distribution_type) == 'spacecurve') then 
-      if(trim(distribution_wght_file) == 'unknown_distribution_wght_file') then 
-	distribution_wght = 'erfc'
-      else 
-        distribution_wght =  'file'
-      endif
-   endif
-
-   if (trim(ns_boundary_type) == 'tripole') then
-      ltripole_grid = .true.
-   else
-      ltripole_grid = .false.
-   endif
 
    if (nx_global < 1 .or. ny_global < 1 .or. ncat < 1) then
       !***
@@ -240,7 +173,7 @@
       !***
       !*** input nprocs does not match system (eg MPI) request
       !***
-#ifdef CCSMCOUPLED
+#if (defined CCSMCOUPLED)
       nprocs = get_num_procs()
 #else
       call abort_ice('ice: Input nprocs not same as system request')
@@ -251,12 +184,6 @@
       !***
       call abort_ice('ice: Not enough ghost cells allocated')
    endif
-
-!----------------------------------------------------------------------
-!  notify global_reductions whether tripole grid is being used
-!----------------------------------------------------------------------
-
-   call init_global_reductions (ltripole_grid)
 
 !----------------------------------------------------------------------
 !
@@ -286,55 +213,45 @@
                                   trim(processor_shape)
      write(nu_diag,'(a25,a10)') '  Distribution type:      ', &
                                   trim(distribution_type)
-!     write(nu_diag,'(a31,a9)') '  Probability: ', &
-!                                  trim(probability_type)
      write(nu_diag,'(a25,a10)') '  Distribution weight:    ', &
                                   trim(distribution_wght)
-     if(trim(distribution_wght) == 'file') then 
-         write(nu_diag,'(a30,a80)') '  Distribution weight file:  ', &
-                                  trim(distribution_wght_file)
-     endif
-     write(nu_diag,'(a26,2(i6))') '  {min,max}Blocks =            ', minBlock,maxBlock
+     write(nu_diag,'(a25,a10)') '  ew_boundary_type:       ', &
+                                  trim(ew_boundary_type)
+     write(nu_diag,'(a25,a10)') '  ns_boundary_type:       ', &
+                                  trim(ns_boundary_type)
+     write(nu_diag,'(a26,l6)') '  maskhalo_dyn          = ', &
+                                  maskhalo_dyn
+     write(nu_diag,'(a26,l6)') '  maskhalo_remap        = ', &
+                                  maskhalo_remap
+     write(nu_diag,'(a26,l6)') '  maskhalo_bound        = ', &
+                                  maskhalo_bound
+     write(nu_diag,'(a26,i6)') '  max_blocks =            ', max_blocks
      write(nu_diag,'(a26,i6,/)')'  Number of ghost cells:  ', nghost
-     call flush_fileunit(nu_diag)
    endif
 
 !----------------------------------------------------------------------
-!EOC
 
  end subroutine init_domain_blocks
 
 !***********************************************************************
-!BOP
-! !IROUTINE: init_domain_distribution
-! !INTERFACE:
 
- subroutine init_domain_distribution(KMTG,ULATG,work_per_block,prob_per_block,blockType,bStats,maxDil)
+ subroutine init_domain_distribution(KMTG,ULATG)
 
-! !DESCRIPTION:
 !  This routine calls appropriate setup routines to distribute blocks
 !  across processors and defines arrays with block ids for any local
 !  blocks. Information about ghost cell update routines is also
 !  initialized here through calls to the appropriate boundary routines.
-!
-! !REVISION HISTORY:
-!  same as module
 
-! !INPUT PARAMETERS:
+   use ice_boundary, only: ice_HaloCreate
+   use ice_distribution, only: create_distribution, create_local_block_ids
+   use ice_domain_size, only: max_blocks, nx_global, ny_global
+   use ice_exit, only: abort_ice
+   use ice_fileunits, only: nu_diag
 
    real (dbl_kind), dimension(nx_global,ny_global), intent(in) :: &
       KMTG           ,&! global topography
       ULATG            ! global latitude field (radians)
 
-   integer(int_kind), intent(in), dimension(:) ::  work_per_block,blockType
-   
-   real (dbl_kind), intent(in), dimension(:) :: prob_per_block
-   
-   real (dbl_kind), intent(in), dimension(:,:)  :: bStats
-
-   real (real_kind), intent(in) :: maxDil
-!EOP
-!BOC
 !----------------------------------------------------------------------
 !
 !  local variables
@@ -350,14 +267,16 @@
       max_work_unit=10    ! quantize the work into values from 1,max
 
    integer (int_kind) :: &
-      i,j,k,n            ,&! dummy loop indices
+      i,j,n              ,&! dummy loop indices
       ig,jg              ,&! global indices
       work_unit          ,&! size of quantized work unit
+      tblocks_tmp        ,&! total number of blocks
       nblocks_tmp        ,&! temporary value of nblocks
       nblocks_max          ! max blocks on proc
 
    integer (int_kind), dimension(:), allocatable :: &
-      nocn               ! number of ocean points per block
+      nocn               ,&! number of ocean points per block
+      work_per_block       ! number of work units per block
 
    type (block) :: &
       this_block           ! block information for current block
@@ -489,13 +408,19 @@
 
       if (distribution_wght == 'block' .and. &   ! POP style
           nocn(n) > 0) nocn(n) = nx_block*ny_block
-
    end do
 
    work_unit = maxval(nocn)/max_work_unit + 1
 
    !*** find number of work units per block
 
+   allocate(work_per_block(nblocks_tot))
+
+   where (nocn > 0)
+     work_per_block = nocn/work_unit + 1
+   elsewhere
+     work_per_block = 0
+   end where
    deallocate(nocn)
 
 !----------------------------------------------------------------------
@@ -504,12 +429,10 @@
 !
 !----------------------------------------------------------------------
 
-!DBG   print *,'init_domain_distribution: before call to create_distribution'
-   distrb_info = create_distribution(distribution_type, nprocs, minBlock, maxBlock, &
-                     work_per_block, prob_per_block, blockType, bStats, FixMaxBlock,maxDil )
-!JMD   call abort_ice('init_domain_distribution: after call to create_distribution')
+   distrb_info = create_distribution(distribution_type, &
+                                     nprocs, work_per_block)
 
-!DBG   print *,'after call to create_distribution'
+   deallocate(work_per_block)
 
 !----------------------------------------------------------------------
 !
@@ -518,7 +441,6 @@
 !----------------------------------------------------------------------
 
    call create_local_block_ids(blocks_ice, distrb_info)
-!DBG   print *,'after call to create_local_block_ids'
 
    if (associated(blocks_ice)) then
       nblocks = size(blocks_ice)
@@ -526,11 +448,18 @@
       nblocks = 0
    endif
    nblocks_max = 0
+   tblocks_tmp = 0
    do n=0,distrb_info%nprocs - 1
      nblocks_tmp = nblocks
      call broadcast_scalar(nblocks_tmp, n)
      nblocks_max = max(nblocks_max,nblocks_tmp)
+     tblocks_tmp = tblocks_tmp + nblocks_tmp
    end do
+
+   if (my_task == master_task) then
+      write(nu_diag,*) &
+          'ice: total number of blocks is', tblocks_tmp
+   endif
 
    if (nblocks_max > max_blocks) then
      write(outstring,*) &
@@ -550,7 +479,7 @@
 !----------------------------------------------------------------------
 !
 !  Set up ghost cell updates for each distribution.
-!  Boundary types are cyclic, closed, or tripole. 
+!  Boundary types are cyclic, closed, tripole or tripoleT.
 !
 !----------------------------------------------------------------------
 
@@ -561,12 +490,10 @@
                         nx_global)
 
 !----------------------------------------------------------------------
-!EOC
 
  end subroutine init_domain_distribution
 
 !***********************************************************************
-
 
  end module ice_domain
 

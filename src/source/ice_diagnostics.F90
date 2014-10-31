@@ -1,49 +1,39 @@
+!  SVN:$Id: ice_diagnostics.F90 732 2013-09-19 18:19:31Z eclare $
 !=======================================================================
-!BOP
-!
-! !MODULE: ice_diagnostics - diagnostic information output during run
-!
-! !DESCRIPTION:
-!
+
 ! Diagnostic information output during run
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_diagnostics.F90 52 2007-01-30 18:04:24Z eclare $
 !
 ! authors: Elizabeth C. Hunke, LANL
 !          Bruce P. Briegleb, NCAR
 !
 ! 2004: Block structure added by William Lipscomb
 ! 2006: Converted to free source form (F90) by Elizabeth Hunke
-!
-! !INTERFACE:
-!
+
       module ice_diagnostics
-!
-! !USES:
-!
+
       use ice_kinds_mod
       use ice_communicate, only: my_task, master_task
-      use ice_constants
+      use ice_constants, only: c0
       use ice_calendar, only: diagfreq, istep1, istep
-      use ice_fileunits
-      use ice_domain_size
-!
-!EOP
-!
+      use ice_domain_size, only: max_aero
+      use ice_fileunits, only: nu_diag
+
       implicit none
+      private
+      public :: runtime_diags, init_mass_diags, init_diags, print_state, print_points_state
+
       save
-	
+
       ! diagnostic output file
-      character (len=char_len) :: diag_file
+      character (len=char_len), public :: diag_file
 
       ! point print data
 
-      logical (kind=log_kind) :: &
+      logical (kind=log_kind), public :: &
          print_points     , & ! if true, print point data
          print_global         ! if true, print global data
 
-      integer (kind=int_kind), parameter :: &
+      integer (kind=int_kind), parameter, public :: &
          npnt = 2             ! total number of points to be printed
 
       ! Set to true to identify unstable fast-moving ice.
@@ -54,7 +44,7 @@
          umax_stab   = 1.0_dbl_kind , & ! ice speed threshold for instability (m/s)
          aice_extmin = 0.15_dbl_kind    ! min aice value for ice extent calc
  
-      real (kind=dbl_kind), dimension(npnt) :: &
+      real (kind=dbl_kind), dimension(npnt), public :: &
          latpnt           , & !  latitude of diagnostic points
          lonpnt               ! longitude of diagnostic points
 
@@ -67,10 +57,12 @@
       real (kind=dbl_kind), dimension(npnt) :: &
          pdhi             , & ! change in mean ice thickness (m)
          pdhs             , & ! change in mean snow thickness (m)
-         pde              , & ! change in ice and snow energy (J m-2)
+         pde                  ! change in ice and snow energy (W m-2)
+
+      real (kind=dbl_kind), dimension(npnt), public :: &
          plat, plon           ! latitude, longitude of points
 
-      integer (kind=int_kind), dimension(npnt) :: &
+      integer (kind=int_kind), dimension(npnt), public :: &
          piloc, pjloc, pbloc, pmloc  ! location of diagnostic points
 
       ! for hemispheric water and heat budgets
@@ -81,16 +73,17 @@
          totmis           , & ! total ice water mass (sh)
          toten            , & ! total ice/snow energy (J)
          totes                ! total ice/snow energy (J)
-      real (kind=dbl_kind), dimension(n_aeromx) :: &
+
+      real (kind=dbl_kind), dimension(max_aero) :: &
          totaeron         , & ! total aerosol mass
          totaeros             ! total aerosol mass
 
       ! printing info for routine print_state
       ! iblkp, ip, jp, mtask identify the grid cell to print
       character (char_len) :: plabel
-      integer (kind=int_kind), parameter :: &
+      integer (kind=int_kind), parameter, public :: &
          check_step = 999999999, & ! begin printing at istep1=check_step
-         iblkp = 1, &      ! block number
+         iblkp = 1, &      ! block number 
          ip = 3, &         ! i index
          jp = 5, &         ! j index
          mtask = 0         ! my_task
@@ -100,58 +93,53 @@
       contains
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: runtime_diags - writes max,min,global sums to standard out
-!
-! !INTERFACE:
-!
-      subroutine runtime_diags (dt)
-!
-! !DESCRIPTION:
-!
+
 ! Writes diagnostic info (max, min, global sums, etc) to standard out
-!
-! !REVISION HISTORY:
 !
 ! authors: Elizabeth C. Hunke, LANL
 !          Bruce P. Briegleb, NCAR
 !          Cecilia M. Bitz, UW
-!
-! !USES:
-!
-      use ice_broadcast
-      use ice_global_reductions
-      use ice_blocks
-      use ice_domain
-!MH      use ice_domain_size
-      use ice_flux
-      use ice_state
-      use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
-      use ice_therm_vertical, only: calc_Tsfc
 
+      subroutine runtime_diags (dt)
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_broadcast, only: broadcast_scalar
+      use ice_constants, only: c1, c1000, c2, p001, p5, puny, rhoi, rhos, rhow, &
+          rhofresh, Tffresh, Lfresh, Lvap, ice_ref_salinity, field_loc_center, &
+          m2_to_km2, awtvdr, awtidr, awtvdf, awtidf
+      use ice_domain, only: distrb_info, nblocks
+      use ice_domain_size, only: ncat, n_aero, max_blocks
+      use ice_fileunits, only: flush_fileunit
+      use ice_flux, only: alvdr, alidr, alvdf, alidf, evap, fsnow, frazil, &
+          fswabs, fswthru, flw, flwout, fsens, fsurf, flat, frzmlt_init, frain, fpond, &
+          coszen, faero_atm, faero_ocn, fhocn_ai, fsalt_ai, fresh_ai, &
+          update_ocn_f, Tair, Qa, fsw, fcondtop, meltt, meltb, meltl, snoice, &
+          dsnow, congel, sst, sss, Tf, fhocn
+      use ice_global_reductions, only: global_sum, global_sum_prod, global_maxval
+      use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
+      use ice_state ! everything
+      use ice_therm_shared, only: calc_Tsfc
+      use ice_zbgc_shared, only: rhosi
 #ifdef CCSMCOUPLED
-      use ice_prescribed_mod, only : prescribed_ice
+      use ice_prescribed_mod, only: prescribed_ice
 #endif
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
-         i, j, k, n, ii,jj, iblk
+         i, j, n, iblk
 
       ! hemispheric state quantities
       real (kind=dbl_kind) :: &
-         umaxn,   hmaxn,   shmaxn,    arean,   snwmxn, extentn, &
-         umaxs,   hmaxs,   shmaxs,    areas,   snwmxs, extents, &
+         umaxn,   hmaxn,   shmaxn,    arean,   snwmxn, extentn, shmaxnt, &
+         umaxs,   hmaxs,   shmaxs,    areas,   snwmxs, extents, shmaxst, &
          etotn,   mtotn,   micen,     msnwn,   pmaxn,  ketotn, &
          etots,   mtots,   mices,     msnws,   pmaxs,  ketots, &
-         urmsn,   albtotn, arean_alb, &
-         urmss,   albtots, areas_alb
+         urmsn,   albtotn, arean_alb, mpndn,   ptotn,  spondn, &
+         urmss,   albtots, areas_alb, mpnds,   ptots,  sponds 
 
       ! hemispheric flux quantities
       real (kind=dbl_kind) :: &
@@ -160,25 +148,24 @@
          sfsaltn, sfreshn, evpn, fluxn , delmxn,  delmin, &
          sfsalts, sfreshs, evps, fluxs , delmxs,  delmis, &
          delein, werrn, herrn, msltn, delmsltn, serrn, &
-         deleis, werrs, herrs, mslts, delmslts, serrs, &
-         ftmp,faeron,faeros,fsootn,fsoots
+         deleis, werrs, herrs, mslts, delmslts, serrs
 
-! MH for aerosol diagnostics
-      integer (kind=int_kind) :: &
-        kaero, naero
-      real (kind=dbl_kind) :: &
-        aeromx1n, aeromx1s, aeromx2n, aeromx2s, &
-        aeromx3n, aeromx3s, aoermx4, &
-        aerototn, aerotots     !MH
+      ! aerosol diagnostics
+      real (kind=dbl_kind), dimension(max_aero) :: &
+         faeran, faeron, aerrn, &
+         faeras, faeros, aerrs, &
+         aeromx1n, aeromx1s, &
+         aerototn, aerotots
 
       ! fields at diagnostic points
       real (kind=dbl_kind), dimension(npnt) :: &
          paice, pTair, pQa, pfsnow, pfrain, pfsw, pflw, & 
          pTsfc, pevap, pfswabs, pflwout, pflat, pfsens, &
-         pfsurf, pfcondtop, psst,  pTf, hiavg, hsavg, pfhocn, &
-         pmeltt, pmeltb, pmeltl, psnoice, pfrazil, pcongel
+         pfsurf, pfcondtop, psst, psss, pTf, hiavg, hsavg, hbravg, &
+         pfhocn, psalt, &
+         pmeltt, pmeltb, pmeltl, psnoice, pdsnow, pfrazil, pcongel
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
          work1, work2
 
       !-----------------------------------------------------------------
@@ -194,7 +181,6 @@
 
       ! ice extent (= area of grid cells with aice > aice_extmin)
       work1(:,:,:) = c0
-
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
          do j = 1, ny_block
@@ -218,6 +204,29 @@
       ! total snow volume
       snwmxn = global_sum(vsno, distrb_info, field_loc_center, tarean)
       snwmxs = global_sum(vsno, distrb_info, field_loc_center, tareas)
+
+      ! total pond volume
+      ptotn = c0
+      ptots = c0
+      if (tr_pond_topo) then
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j,n)
+         do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            work1(i,j,iblk) = c0
+            do n = 1, ncat
+               work1(i,j,iblk) = work1(i,j,iblk)  &
+                               + aicen(i,j,n,iblk) &
+                               * trcrn(i,j,nt_apnd,n,iblk) & 
+                               * trcrn(i,j,nt_hpnd,n,iblk)
+            enddo
+         enddo
+         enddo
+         enddo
+         !$OMP END PARALLEL DO
+         ptotn = global_sum(work1, distrb_info, field_loc_center, tarean)
+         ptots = global_sum(work1, distrb_info, field_loc_center, tareas)
+      endif
 
       ! total ice-snow kinetic energy
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
@@ -260,15 +269,6 @@
                             + alidr(i,j,iblk)*awtidr &
                             + alvdf(i,j,iblk)*awtvdf &
                             + alidf(i,j,iblk)*awtidf
-         enddo
-         enddo
-      enddo
-      !$OMP END PARALLEL DO 
-
-      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
             if (coszen(i,j,iblk) > puny) then
                work2(i,j,iblk) = tarean(i,j,iblk)
             else
@@ -277,7 +277,7 @@
          enddo
          enddo
       enddo
-      !$OMP END PARALLEL DO 
+      !$OMP END PARALLEL DO
       
       arean_alb = global_sum(aice, distrb_info, field_loc_center, work2)      
 
@@ -302,7 +302,7 @@
          enddo
          enddo
       enddo
-      !$OMP END PARALLEL DO 
+      !$OMP END PARALLEL DO
 
       areas_alb = global_sum(aice, distrb_info, field_loc_center, work2)      
 
@@ -319,93 +319,6 @@
       hmaxn = global_maxval(vice, distrb_info, lmask_n)
       hmaxs = global_maxval(vice, distrb_info, lmask_s)
 
-! MH put in aerosol diagnostics
-      if (tr_aero) then
-         ! aerosols
-        do naero=1,n_aero
-         faeron = global_sum_prod(faero(:,:,naero,:), aice_init, distrb_info, &
-                               field_loc_center, tarean)
-         faeros = global_sum_prod(faero(:,:,naero,:), aice_init, distrb_info, &
-                               field_loc_center, tareas)
-         faeron = faeron*dt
-         faeros = faeros*dt
-
-         fsootn = global_sum_prod(fsoot(:,:,naero,:), aice, distrb_info, &
-                               field_loc_center, tarean)
-         fsoots = global_sum_prod(fsoot(:,:,naero,:), aice, distrb_info, &
-                               field_loc_center, tareas)
-         fsootn = fsootn*dt
-         fsoots = fsoots*dt
-
-         do iblk = 1, nblocks
-           do j = 1, ny_block
-           do i = 1, nx_block
-            work1(i,j,iblk) = trcr(i,j,nt_aero  +4*(naero-1),iblk)  *vsno(i,j,iblk) &
-                            + trcr(i,j,nt_aero+1+4*(naero-1),iblk)*vsno(i,j,iblk) &
-                            + trcr(i,j,nt_aero+2+4*(naero-1),iblk)*vice(i,j,iblk) &
-                            + trcr(i,j,nt_aero+3+4*(naero-1),iblk)*vice(i,j,iblk)
-           enddo
-           enddo
-         enddo
-         aerototn= global_sum(work1, distrb_info, field_loc_center, tarean)
-         aerotots= global_sum(work1, distrb_info, field_loc_center, tareas)
-         aeromx1n = global_maxval(work1, distrb_info, lmask_n)
-         aeromx1s = global_maxval(work1, distrb_info, lmask_s)
-         if (my_task == master_task) then
-          write(nu_diag,*) 'aero: ',naero,' faero         : ',&
-                faeron, faeros
-          write(nu_diag,*) 'aero: ',naero,' fsoot         : ',&
-                fsootn, fsoots
-          write(nu_diag,*) 'aero: ',naero,' faero-fsoot   : ',&
-                faeron-fsootn, faeros-fsoots
-          write(nu_diag,*) 'aero: ',naero,' aerotot       : ',&
-                aerototn, aerotots
-          write(nu_diag,*) 'aero: ',naero,' aerotot change: ',&
-                aerototn-totaeron(naero), aerotots-totaeros(naero)
-          write(nu_diag,*) 'aero: ',naero,' aeromax agg: ',&
-                aeromx1n,aeromx1s
-         endif
-
-!         do kaero=1,ncat
-!          do iblk = 1, nblocks
-!           do j = 1, ny_block
-!           do i = 1, nx_block
-!            work1(i,j,iblk) = trcrn(i,j,nt_aero,kaero,iblk)
-!           enddo
-!           enddo
-!          enddo
-!          aeromx1n = global_maxval(work1, distrb_info, lmask_n)
-!          aeromx1s = global_maxval(work1, distrb_info, lmask_s)
-!          if (my_task == master_task) &
-!           write(nu_diag,*) 'MH aeromx1s: ',aeromx1n,aeromx1s,kaero
-!         enddo
-
-!       do iblk = 1, nblocks
-!         do j = 1, ny_block
-!         do i = 1, nx_block
-!            work1(i,j,iblk) = trcrn(i,j,nt_aero+1,1,iblk)
-!         enddo
-!         enddo
-!       enddo
-!       aeromx2n = global_maxval(work1, distrb_info, lmask_n)
-!       write(nu_diag,*) 'MH aeromx2n: ',aeromx2n
-!       aeromx2s = global_maxval(work1, distrb_info, lmask_s)
-!       write(nu_diag,*) 'MH aeromx2s: ',aeromx2s
-!
-!       do iblk = 1, nblocks
-!         do j = 1, ny_block
-!         do i = 1, nx_block
-!            work1(i,j,iblk) = trcrn(i,j,nt_aero+2,1,iblk)
-!         enddo
-!         enddo
-!       enddo
-!       aeromx3n = global_maxval(work1, distrb_info, lmask_n)
-!       write(nu_diag,*) 'MH aeromx2n: ',aeromx3n
-!       aeromx3s = global_maxval(work1, distrb_info, lmask_s)
-!       write(nu_diag,*) 'MH aeromx2s: ',aeromx3s
-        enddo ! n_aero
-      endif  ! tr_aero
-    
       ! maximum ice speed
       !$OMP PARALLEL DO PRIVATE(iblk,i,j)
       do iblk = 1, nblocks
@@ -425,7 +338,8 @@
       ! (Ice speeds of ~1 m/s or more usually indicate instability)
 
       if (check_umax) then
-      	 if (umaxn > umax_stab) then
+         if (umaxn > umax_stab) then
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -438,7 +352,9 @@
             enddo
             enddo
             enddo
+            !$OMP END PARALLEL DO
          elseif (umaxs > umax_stab) then
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -451,6 +367,7 @@
             enddo
             enddo
             enddo
+            !$OMP END PARALLEL DO
          endif   ! umax
       endif      ! check_umax
 
@@ -465,16 +382,8 @@
       if (print_global) then
 
          ! total ice/snow internal energy
-         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-         do iblk = 1, nblocks
-            do j = 1, ny_block
-            do i = 1, nx_block
-               work1(i,j,iblk) = esno(i,j,iblk) + eice(i,j,iblk)
-            enddo
-            enddo
-         enddo
-         !$OMP END PARALLEL DO
-
+         call total_energy (work1)
+      
          etotn = global_sum(work1, distrb_info, &
                             field_loc_center, tarean)
          etots = global_sum(work1, distrb_info, &
@@ -496,28 +405,50 @@
          evpn = evpn*dt
          evps = evps*dt
 
+         ! total brine tracer
+         shmaxnt = c0
+         shmaxst = c0
+         if (tr_brine) then
+         shmaxnt = global_sum(vice(:,:,:)*trcr(:,:,nt_fbri,:), distrb_info, &
+                                   field_loc_center, tarean)
+         shmaxst = global_sum(vice(:,:,:)*trcr(:,:,nt_fbri,:), distrb_info, &
+                                   field_loc_center, tareas)
+         endif
+
          ! salt flux
-         sfsaltn = global_sum(fsalt_gbm, distrb_info, &
-                              field_loc_center, tarean)
-         sfsalts = global_sum(fsalt_gbm, distrb_info, &
-                              field_loc_center, tareas)
+         sfsaltn = global_sum(fsalt_ai, distrb_info, &
+                                   field_loc_center, tarean)
+         sfsalts = global_sum(fsalt_ai, distrb_info, &
+                                   field_loc_center, tareas)
          sfsaltn = sfsaltn*dt
          sfsalts = sfsalts*dt
 
          ! fresh water flux
-         sfreshn = global_sum(fresh_gbm, distrb_info, &
-                              field_loc_center, tarean)
-         sfreshs = global_sum(fresh_gbm, distrb_info, &
-                              field_loc_center, tareas)
+         sfreshn = global_sum(fresh_ai, distrb_info, &
+                                   field_loc_center, tarean)
+         sfreshs = global_sum(fresh_ai, distrb_info, &
+                                   field_loc_center, tareas)
          sfreshn = sfreshn*dt
          sfreshs = sfreshs*dt
 
+         ! pond water flux
+         spondn = c0
+         sponds = c0
+         if (tr_pond_topo) then
+         spondn = global_sum(fpond, distrb_info, &
+                                   field_loc_center, tarean)
+         sponds = global_sum(fpond, distrb_info, &
+                                   field_loc_center, tareas)
+         spondn = spondn*dt
+         sponds = sponds*dt
+         endif
+
          ! ocean heat
          ! Note: fswthru not included because it does not heat ice
-         fhocnn = global_sum(fhocn_gbm, distrb_info, &
-                             field_loc_center, tarean)
-         fhocns = global_sum(fhocn_gbm, distrb_info, &
-                             field_loc_center, tareas)
+         fhocnn = global_sum(fhocn_ai, distrb_info, &
+                                  field_loc_center, tarean)
+         fhocns = global_sum(fhocn_ai, distrb_info, &
+                                  field_loc_center, tareas)
 
          ! latent heat
          ! You may be wondering, where is the latent heat flux?
@@ -538,23 +469,23 @@
                do j = 1, ny_block
                do i = 1, nx_block
                   work1(i,j,iblk) = &
-                               (fswabs(i,j,iblk) - fswthru(i,j,iblk) &
-                              + flwout(i,j,iblk)                          &
-                              + fsens (i,j,iblk)) * aice(i,j,iblk)        &
-                              + flw   (i,j,iblk)  * aice_init(i,j,iblk)
+                     (fswabs(i,j,iblk) - fswthru(i,j,iblk) &
+                    + fsens (i,j,iblk) + flwout (i,j,iblk)) &
+                                                  * aice      (i,j,iblk) &
+                    + flw   (i,j,iblk) * aice_init (i,j,iblk)
                enddo
                enddo
             enddo
             !$OMP END PARALLEL DO
 
-         else   ! fsurf is computed by atmosphere model
+         else   ! fsurf is computed by atmosphere model 
 
             !$OMP PARALLEL DO PRIVATE(iblk,i,j)
             do iblk = 1, nblocks
                do j = 1, ny_block
                do i = 1, nx_block
                   work1(i,j,iblk) = &
-                             (fsurf(i,j,iblk) - flat(i,j,iblk)) &
+                             (fsurf(i,j,iblk) - flat(i,j,iblk)) & 
                               * aice(i,j,iblk)
                enddo
                enddo
@@ -573,7 +504,7 @@
          do iblk = 1, nblocks
             do j = 1, ny_block
             do i = 1, nx_block
-               work1(i,j,iblk) = max(c0,frzmlt(i,j,iblk))
+               work1(i,j,iblk) = max(c0,frzmlt_init(i,j,iblk))
             enddo
             enddo
          enddo
@@ -604,19 +535,22 @@
          work1(:,:,:) = frazil(:,:,:)*rhoi/dt
          frzn = global_sum(work1, distrb_info, &
                            field_loc_center, tarean)
-         frzs = global_sum(work1, distrb_info, field_loc_center, &
-                           tareas)
+         frzs = global_sum(work1, distrb_info, &
+                           field_loc_center, tareas)
          frzn = frzn*dt
          frzs = frzs*dt
 
-         ! ice and snow mass
+         ! ice, snow, pond mass
          micen = rhoi*shmaxn
          msnwn = rhos*snwmxn
          mices = rhoi*shmaxs
          msnws = rhos*snwmxs
+         mpndn = rhofresh*ptotn
+         mpnds = rhofresh*ptots
 
-         mtotn = micen + msnwn
-         mtots = mices + msnws
+         ! total ice, snow and pond mass
+         mtotn = micen + msnwn + mpndn
+         mtots = mices + msnws + mpnds
   
          ! mass change since beginning of time step
          delmin = mtotn - totmn
@@ -636,21 +570,21 @@
          fluxs  = c0
          if( arean > c0) then
            ! water associated with frazil ice included in fresh
-           fluxn = rnn + snn + evpn - sfreshn
+           fluxn = rnn + snn + evpn - sfreshn 
            if (.not. update_ocn_f) then
              fluxn = fluxn + frzn
            endif
          endif
          if( areas > c0) then
            ! water associated with frazil ice included in fresh
-           fluxs = rns + sns + evps - sfreshs
+           fluxs = rns + sns + evps - sfreshs 
            if (.not. update_ocn_f) then
              fluxs = fluxs + frzs
            endif
          endif
 
-         werrn = (fluxn-delmin)/(mtotn+c1)
-         werrs = (fluxs-delmis)/(mtots+c1)
+         werrn = (fluxn-delmin)/(mtotn + c1)
+         werrs = (fluxs-delmis)/(mtots + c1)
 
          ! energy change
          delein = etotn - toten
@@ -677,6 +611,47 @@
          serrn = (sfsaltn + delmsltn) / (msltn + c1)
          serrs = (sfsalts + delmslts) / (mslts + c1)
 
+         ! aerosols
+         if (tr_aero) then
+         do n = 1, n_aero
+            faeran(n) = global_sum_prod(faero_atm(:,:,n,:), aice_init, &
+                                        distrb_info, field_loc_center, tarean)
+            faeras(n) = global_sum_prod(faero_atm(:,:,n,:), aice_init, &
+                                        distrb_info, field_loc_center, tareas)
+            faeran(n) = faeran(n)*dt
+            faeras(n) = faeras(n)*dt
+            faeron(n) = global_sum_prod(faero_ocn(:,:,n,:), aice, &
+                                        distrb_info, field_loc_center, tarean)
+            faeros(n) = global_sum_prod(faero_ocn(:,:,n,:), aice, &
+                                        distrb_info, field_loc_center, tareas)
+            faeron(n) = faeron(n)*dt
+            faeros(n) = faeros(n)*dt
+
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+            do iblk = 1, nblocks
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  work1(i,j,iblk) = &
+                   trcr(i,j,nt_aero  +4*(n-1),iblk)*vsno(i,j,iblk) &
+                 + trcr(i,j,nt_aero+1+4*(n-1),iblk)*vsno(i,j,iblk) &
+                 + trcr(i,j,nt_aero+2+4*(n-1),iblk)*vice(i,j,iblk) &
+                 + trcr(i,j,nt_aero+3+4*(n-1),iblk)*vice(i,j,iblk)
+               enddo
+               enddo
+            enddo
+            !$OMP END PARALLEL DO
+            aerototn(n) = global_sum(work1, distrb_info, field_loc_center, tarean)
+            aerotots(n) = global_sum(work1, distrb_info, field_loc_center, tareas)
+            aeromx1n(n) = global_maxval(work1, distrb_info, lmask_n)
+            aeromx1s(n) = global_maxval(work1, distrb_info, lmask_s)
+
+            aerrn(n) = (totaeron(n)-aerototn(n)+faeran(n)-faeron(n)) &
+                                 / (aerototn(n) + c1)
+            aerrs(n) = (totaeros(n)-aerotots(n)+faeras(n)-faeros(n)) &
+                                 / (aerotots(n) + c1)
+         enddo ! n_aero
+         endif ! tr_aero
+
       endif                     ! print_global
 
       if (print_points) then
@@ -685,6 +660,9 @@
       ! state of the ice and associated fluxes for 2 defined points
       ! NOTE these are computed for the last timestep only (not avg)
       !-----------------------------------------------------------------
+
+         call total_energy (work1)
+         call total_salt   (work2)
 
          do n = 1, npnt
             if (my_task == pmloc(n)) then
@@ -702,10 +680,13 @@
                
                hiavg(n) = c0                       ! avg snow/ice thickness
                hsavg(n) = c0
+               hbravg(n) = c0                      ! avg brine thickness
                if (paice(n) /= c0) then
                   hiavg(n) = vice(i,j,iblk)/paice(n)
                   hsavg(n) = vsno(i,j,iblk)/paice(n)
+                  if (tr_brine) hbravg(n) = trcr(i,j,nt_fbri,iblk)* hiavg(n)
                endif
+               psalt(n) = work2(i,j,iblk)
                pTsfc(n) = trcr(i,j,nt_Tsfc,iblk)   ! ice/snow sfc temperature
                pevap(n) = evap(i,j,iblk)*dt/rhoi   ! sublimation/condensation
                pfswabs(n) = fswabs(i,j,iblk)       ! absorbed solar flux
@@ -718,15 +699,16 @@
                pmeltb(n) = meltb(i,j,iblk)         ! bottom melt
                pmeltl(n) = meltl(i,j,iblk)         ! lateral melt
                psnoice(n) = snoice(i,j,iblk)       ! snow ice
+               pdsnow(n) = dsnow(i,j,iblk)         ! snow change
                pfrazil(n) = frazil(i,j,iblk)       ! frazil ice
                pcongel(n) = congel(i,j,iblk)       ! congelation ice
                pdhi(n) = vice(i,j,iblk) - pdhi(n)  ! ice thickness change
                pdhs(n) = vsno(i,j,iblk) - pdhs(n)  ! snow thickness change
-               pde(n) = -(eice(i,j,iblk) &         ! ice/snow energy change 
-                        + esno(i,j,iblk) - pde(n)) / dt
+               pde(n) =-(work1(i,j,iblk)- pde(n))/dt ! ice/snow energy change 
                psst(n) = sst(i,j,iblk)             ! sea surface temperature
+               psss(n) = sss(i,j,iblk)             ! sea surface salinity
                pTf(n) = Tf(i,j,iblk)               ! freezing temperature
-               pfhocn(n) = -fhocn(i,j,iblk)   ! ocean heat used by ice
+               pfhocn(n) = -fhocn(i,j,iblk)        ! ocean heat used by ice
 
             endif  ! my_task = pmloc
 
@@ -738,25 +720,29 @@
             call broadcast_scalar(pflw     (n), pmloc(n))             
             call broadcast_scalar(paice    (n), pmloc(n))             
             call broadcast_scalar(hsavg    (n), pmloc(n))             
-            call broadcast_scalar(hiavg    (n), pmloc(n))             
+            call broadcast_scalar(hiavg    (n), pmloc(n))              
+            call broadcast_scalar(psalt    (n), pmloc(n))
+            call broadcast_scalar(hbravg   (n), pmloc(n))
             call broadcast_scalar(pTsfc    (n), pmloc(n))             
             call broadcast_scalar(pevap    (n), pmloc(n))             
             call broadcast_scalar(pfswabs  (n), pmloc(n)) 
             call broadcast_scalar(pflwout  (n), pmloc(n)) 
             call broadcast_scalar(pflat    (n), pmloc(n)) 
             call broadcast_scalar(pfsens   (n), pmloc(n)) 
-            call broadcast_scalar(pfsurf   (n), pmloc(n))
-            call broadcast_scalar(pfcondtop(n), pmloc(n))
+            call broadcast_scalar(pfsurf   (n), pmloc(n)) 
+            call broadcast_scalar(pfcondtop(n), pmloc(n)) 
             call broadcast_scalar(pmeltt   (n), pmloc(n)) 
             call broadcast_scalar(pmeltb   (n), pmloc(n)) 
             call broadcast_scalar(pmeltl   (n), pmloc(n)) 
             call broadcast_scalar(psnoice  (n), pmloc(n)) 
+            call broadcast_scalar(pdsnow   (n), pmloc(n)) 
             call broadcast_scalar(pfrazil  (n), pmloc(n)) 
             call broadcast_scalar(pcongel  (n), pmloc(n)) 
             call broadcast_scalar(pdhi     (n), pmloc(n)) 
             call broadcast_scalar(pdhs     (n), pmloc(n)) 
             call broadcast_scalar(pde      (n), pmloc(n)) 
             call broadcast_scalar(psst     (n), pmloc(n)) 
+            call broadcast_scalar(psss     (n), pmloc(n)) 
             call broadcast_scalar(pTf      (n), pmloc(n)) 
             call broadcast_scalar(pfhocn   (n), pmloc(n))
             
@@ -768,70 +754,6 @@
       !-----------------------------------------------------------------
 
       if (my_task == master_task) then
-       if (grid_type == 'panarctic') then   ! Arctic only
-        write (nu_diag,799) 'Arctic diagnostics'
-        write (nu_diag,801) 'total ice area  (km^2) = ',arean
-        write (nu_diag,801) 'total ice extent(km^2) = ',extentn
-        write (nu_diag,801) 'total ice volume (m^3) = ',shmaxn
-        write (nu_diag,801) 'total snw volume (m^3) = ',snwmxn
-        write (nu_diag,801) 'tot kinetic energy (J) = ',ketotn
-        write (nu_diag,800) 'rms ice speed    (m/s) = ',urmsn
-        write (nu_diag,800) 'average albedo         = ',albtotn
-        write (nu_diag,800) 'max ice volume     (m) = ',hmaxn
-        write (nu_diag,800) 'max ice speed    (m/s) = ',umaxn
-        write (nu_diag,900) 'max strength    (kN/m) = ',pmaxn
-
-        if (print_global) then  ! global diags for conservations checks
-
-#ifdef CCSMCOUPLED
-        if (prescribed_ice) then
-          write (nu_diag,*) '----------------------------'
-          write (nu_diag,*)   'This is the prescribed ice option.'
-          write (nu_diag,*)   'Heat and water will not be conserved.'   
-        else
-#endif
-
-          write (nu_diag,*) '----------------------------'
-          write (nu_diag,801) 'arwt rain h2o kg in dt = ',rnn
-          write (nu_diag,801) 'arwt snow h2o kg in dt = ',snn
-          write (nu_diag,801) 'arwt evap h2o kg in dt = ',evpn
-          write (nu_diag,801) 'arwt frzl h2o kg in dt = ',frzn
-          write (nu_diag,801) 'arwt frsh h2o kg in dt = ',sfreshn
-         
-          write (nu_diag,801) 'arwt ice mass (kg)     = ',micen
-          write (nu_diag,801) 'arwt snw mass (kg)     = ',msnwn
-
-          write (nu_diag,801) 'arwt tot mass (kg)     = ',mtotn
-          write (nu_diag,801) 'arwt tot mass chng(kg) = ',delmin
-          write (nu_diag,801) 'arwt water flux        = ',fluxn
-          if (update_ocn_f) then
-            write (nu_diag,*) '(=rain+snow+evap-fresh)  '
-          else
-            write (nu_diag,*) '(=rain+snow+evap+frzl-fresh)  '
-          endif
-          write (nu_diag,801) 'water flux error       = ',werrn
-#ifdef CCSMCOUPLED
-         endif                    ! prescribed_ice
-#endif       
-         write (nu_diag,*) '----------------------------'
-         write (nu_diag,801) 'arwt atm heat flux (W) = ',fhatmn
-         write (nu_diag,801) 'arwt ocn heat flux (W) = ',fhocnn
-         write (nu_diag,801) 'arwt frzl heat flux(W) = ',fhfrzn
-         write (nu_diag,801) 'arwt tot energy    (J) = ',etotn
-         write (nu_diag,801) 'arwt net heat      (J) = ',hnetn
-         write (nu_diag,801) 'arwt tot energy chng(J)= ',delein
-         write (nu_diag,801) 'arwt heat error        = ',herrn
-       
-         write (nu_diag,*) '----------------------------'
-         write (nu_diag,801) 'arwt salt mass (kg)    = ',msltn
-         write (nu_diag,801) 'arwt salt mass chng(kg)= ',delmsltn
-         write (nu_diag,801) 'arwt salt flx in dt(kg)= ',sfsaltn
-         write (nu_diag,801) 'arwt salt flx error    = ',serrn
-         write (nu_diag,*) '----------------------------'
-
-        endif                     ! print_global
-
-       else  ! global grid
 
         write(nu_diag,899) 'Arctic','Antarctic'
 
@@ -848,15 +770,28 @@
 
         if (print_global) then  ! global diags for conservations checks
 
+#ifdef CCSMCOUPLED
+         if (prescribed_ice) then
+          write (nu_diag,*) '----------------------------'
+          write (nu_diag,*)   'This is the prescribed ice option.'
+          write (nu_diag,*)   'Heat and water will not be conserved.'
+          write (nu_diag,*) '----------------------------'
+         endif
+#endif
+
          write(nu_diag,*) '----------------------------'
          write(nu_diag,901) 'arwt rain h2o kg in dt = ',rnn,rns
          write(nu_diag,901) 'arwt snow h2o kg in dt = ',snn,sns
          write(nu_diag,901) 'arwt evap h2o kg in dt = ',evpn,evps
          write(nu_diag,901) 'arwt frzl h2o kg in dt = ',frzn,frzs
+         if (tr_pond_topo) &
+         write(nu_diag,901) 'arwt fpnd h2o kg in dt = ',spondn,sponds
          write(nu_diag,901) 'arwt frsh h2o kg in dt = ',sfreshn,sfreshs
 
          write(nu_diag,901) 'arwt ice mass (kg)     = ',micen,mices
          write(nu_diag,901) 'arwt snw mass (kg)     = ',msnwn,msnws
+         if (tr_pond_topo) &
+         write(nu_diag,901) 'arwt pnd mass (kg)     = ',mpndn,mpnds
  
          write(nu_diag,901) 'arwt tot mass (kg)     = ',mtotn,mtots
          write(nu_diag,901) 'arwt tot mass chng(kg) = ',delmin,delmis
@@ -878,16 +813,28 @@
          write(nu_diag,901) 'arwt heat error        = ',herrn,herrs
 
          write(nu_diag,*) '----------------------------'
+         write(nu_diag,901) 'total brine tr (m^3)   = ',shmaxnt, shmaxst
          write(nu_diag,901) 'arwt salt mass (kg)    = ',msltn,mslts
          write(nu_diag,901) 'arwt salt mass chng(kg)= ',delmsltn, &
                                                         delmslts
          write(nu_diag,901) 'arwt salt flx in dt(kg)= ',sfsaltn, &
                                                         sfsalts
          write(nu_diag,901) 'arwt salt flx error    = ',serrn,serrs
+
          write(nu_diag,*) '----------------------------'
+         if (tr_aero) then
+         do n = 1, n_aero
+         write(nu_diag,*)   '  aerosol ',n
+         write(nu_diag,901) 'faero_atm (kg/m2)      = ', faeran(n), faeras(n)
+         write(nu_diag,901) 'faero_ocn (kg/m2)      = ', faeron(n), faeros(n)
+         write(nu_diag,901) 'total aero (kg/m2)     = ', aerototn(n), aerotots(n)
+         write(nu_diag,901) 'aero error             = ', aerrn(n), aerrs(n)
+         write(nu_diag,901) 'maximum aero (kg/m2)   = ', aeromx1n(n),aeromx1s(n)
+         enddo
+         write(nu_diag,*) '----------------------------'
+         endif ! tr_aero
 
         endif                    ! print_global
-       endif                     ! grid_type
 
        call flush_fileunit(nu_diag)
 
@@ -923,6 +870,9 @@
         write(nu_diag,900) 'area fraction          = ',paice(1),paice(2)
         write(nu_diag,900) 'avg ice thickness (m)  = ',hiavg(1),hiavg(2)
         write(nu_diag,900) 'avg snow depth (m)     = ',hsavg(1),hsavg(2)
+        write(nu_diag,900) 'avg salinity (ppt)     = ',psalt(1),psalt(2)
+        write(nu_diag,900) 'avg brine thickness (m)= ',hbravg(1),hbravg(2)
+
         if (calc_Tsfc) then
            write(nu_diag,900) 'surface temperature(C) = ',pTsfc(1),pTsfc(2)
            write(nu_diag,900) 'absorbed shortwave flx = ',pfswabs(1), &
@@ -946,11 +896,14 @@
                                                        pcongel(2)
         write(nu_diag,900) 'snow-ice (m)           = ',psnoice(1), &
                                                        psnoice(2)
+        write(nu_diag,900) 'snow change (m)        = ',pdsnow(1), &
+                                                       pdsnow(2)
         write(nu_diag,900) 'effective dhi (m)      = ',pdhi(1),pdhi(2)
         write(nu_diag,900) 'effective dhs (m)      = ',pdhs(1),pdhs(2)
         write(nu_diag,900) 'intnl enrgy chng(W/m^2)= ',pde (1),pde (2)
         write(nu_diag,*) '----------ocn----------'
         write(nu_diag,900) 'sst (C)                = ',psst(1),psst(2)
+        write(nu_diag,900) 'sss (ppt)              = ',psss(1),psss(2)
         write(nu_diag,900) 'freezing temp (C)      = ',pTf(1),pTf(2)
         write(nu_diag,900) 'heat used (W/m^2)      = ',pfhocn(1), &
                                                        pfhocn(2)
@@ -970,42 +923,29 @@
       end subroutine runtime_diags
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: init_mass_diags - computes global combined ice and snow mass sum
-!
-! !INTERFACE:
-!
-      subroutine init_mass_diags
-!
-! !DESCRIPTION:
-!
+
 ! Computes global combined ice and snow mass sum
 !
-! !REVISION HISTORY:
-!
 ! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-      use ice_global_reductions
-      use ice_grid
-      use ice_state
-      use ice_broadcast
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
-      integer (kind=int_kind) :: n, k, ii, jj, i, j, iblk
-      integer (kind=int_kind) :: naero
+
+      subroutine init_mass_diags
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_constants, only: field_loc_center, rhofresh, rhoi, rhos
+      use ice_domain, only: distrb_info, nblocks
+      use ice_domain_size, only: n_aero, ncat, max_blocks
+      use ice_global_reductions, only: global_sum
+      use ice_grid, only: tareas, tarean
+      use ice_state, only: aicen, vice, vsno, trcrn, trcr, &
+          tr_aero, nt_aero, tr_pond_topo, nt_apnd, nt_hpnd
+
+      integer (kind=int_kind) :: n, i, j, iblk
 
       real (kind=dbl_kind) :: &
-         shmaxn, snwmxn,  shmaxs, snwmxs
+         shmaxn, snwmxn,  shmaxs, snwmxs, totpn, totps
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
-         work1, work2
-
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
+         work1
 
       ! total ice volume
       shmaxn = global_sum(vice, distrb_info, field_loc_center, tarean)
@@ -1024,41 +964,12 @@
       totms = totmis + rhos*snwmxs
 
       ! north/south ice+snow energy
-      ! total ice/snow energy
-      !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-      do iblk = 1, nblocks
-      do j=1,ny_block
-      do i=1,nx_block
-         work1(i,j,iblk) = esno(i,j,iblk) + eice(i,j,iblk)
-      enddo
-      enddo
-      enddo
-      !$OMP END PARALLEL DO
-      
+      call total_energy (work1)
       toten = global_sum(work1, distrb_info, field_loc_center, tarean)
       totes = global_sum(work1, distrb_info, field_loc_center, tareas)
 
-      if (tr_aero) then
-       do naero=1,n_aero
-        do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-            work1(i,j,iblk) = trcr(i,j,nt_aero  +4*(naero-1),iblk)*vsno(i,j,iblk) &
-                            + trcr(i,j,nt_aero+1+4*(naero-1),iblk)*vsno(i,j,iblk) &
-                            + trcr(i,j,nt_aero+2+4*(naero-1),iblk)*vice(i,j,iblk) &
-                            + trcr(i,j,nt_aero+3+4*(naero-1),iblk)*vice(i,j,iblk)
-         enddo
-         enddo
-        enddo
-        totaeron(naero)= global_sum(work1, distrb_info, field_loc_center, tarean)
-        totaeros(naero)= global_sum(work1, distrb_info, field_loc_center, tareas)
-       enddo
-      endif
-
       if (print_points) then
-
          do n = 1, npnt
-
             if (my_task == pmloc(n)) then
                i = piloc(n)
                j = pjloc(n)
@@ -1066,44 +977,232 @@
 
                pdhi(n) = vice(i,j,iblk)
                pdhs(n) = vsno(i,j,iblk)
-               pde(n)  = esno(i,j,iblk) + eice(i,j,iblk)
+               pde(n) = work1(i,j,iblk)
             endif
-
          enddo  ! npnt
-
       endif                     ! print_points
+
+      if (tr_aero) then
+         do n=1,n_aero
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+            do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+               work1(i,j,iblk) = trcr(i,j,nt_aero  +4*(n-1),iblk)*vsno(i,j,iblk) &
+                               + trcr(i,j,nt_aero+1+4*(n-1),iblk)*vsno(i,j,iblk) &
+                               + trcr(i,j,nt_aero+2+4*(n-1),iblk)*vice(i,j,iblk) &
+                               + trcr(i,j,nt_aero+3+4*(n-1),iblk)*vice(i,j,iblk)
+            enddo
+            enddo
+            enddo
+            !$OMP END PARALLEL DO
+            totaeron(n)= global_sum(work1, distrb_info, field_loc_center, tarean)
+            totaeros(n)= global_sum(work1, distrb_info, field_loc_center, tareas)
+         enddo
+      endif
+
+      if (tr_pond_topo) then
+         totpn = c0
+         totps = c0
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j,n)
+         do iblk = 1, nblocks
+         do j = 1, ny_block
+         do i = 1, nx_block
+            work1(i,j,iblk) = c0
+            do n = 1, ncat
+               work1(i,j,iblk) = work1(i,j,iblk)  &
+                               + aicen(i,j,n,iblk) &
+                               * trcrn(i,j,nt_apnd,n,iblk) & 
+                               * trcrn(i,j,nt_hpnd,n,iblk)
+            enddo
+         enddo
+         enddo
+         enddo
+         !$OMP END PARALLEL DO
+         totpn = global_sum(work1, distrb_info, field_loc_center, tarean)
+         totps = global_sum(work1, distrb_info, field_loc_center, tareas)
+
+         ! north/south ice+snow+pond mass
+         totmn = totmn + totpn*rhofresh
+         totms = totms + totps*rhofresh
+      endif
 
       end subroutine init_mass_diags
 
 !=======================================================================
-!BOP
+
+! Computes total energy of ice and snow in a grid cell.
 !
-! !IROUTINE: init_diags - find tasks for diagnostic points
-!
-! !INTERFACE:
-!
-      subroutine init_diags
-!
-! !DESCRIPTION:
-!
+! authors: E. C. Hunke, LANL
+
+      subroutine total_energy (work)
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_domain, only: nblocks
+      use ice_domain_size, only: ncat, nilyr, nslyr, max_blocks
+      use ice_grid, only: tmask
+      use ice_state, only: vicen, vsnon, trcrn, nt_qice, nt_qsno
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks),  &
+         intent(out) :: &
+         work      ! total energy
+
+      ! local variables
+
+      integer (kind=int_kind) :: &
+        icells                ! number of ocean/ice cells
+
+      integer (kind=int_kind), dimension (nx_block*ny_block) :: &
+        indxi, &              ! compressed indices in i/j directions
+        indxj
+
+      integer (kind=int_kind) :: &
+        i, j, k, n, iblk, ij
+
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,n,k,ij,icells,indxi,indxj)
+      do iblk = 1, nblocks
+
+      !-----------------------------------------------------------------
+      ! Initialize
+      !-----------------------------------------------------------------
+
+         icells = 0
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (tmask(i,j,iblk)) then
+               icells = icells + 1
+               indxi(icells) = i
+               indxj(icells) = j
+            endif                  ! tmask
+         enddo
+         enddo
+
+         work(:,:,iblk) = c0
+
+      !-----------------------------------------------------------------
+      ! Aggregate
+      !-----------------------------------------------------------------
+
+         do n = 1, ncat
+            do k = 1, nilyr
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  work(i,j,iblk) = work(i,j,iblk) &
+                                 + trcrn(i,j,nt_qice+k-1,n,iblk) &
+                                 * vicen(i,j,n,iblk) / real(nilyr,kind=dbl_kind)
+               enddo            ! ij
+            enddo               ! k
+
+            do k = 1, nslyr
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  work(i,j,iblk) = work(i,j,iblk) &
+                                 + trcrn(i,j,nt_qsno+k-1,n,iblk) &
+                                 * vsnon(i,j,n,iblk) / real(nslyr,kind=dbl_kind)
+               enddo            ! ij
+            enddo               ! k
+         enddo                  ! n
+
+      enddo                     ! iblk
+      !$OMP END PARALLEL DO
+
+      end subroutine total_energy
+
+!=======================================================================
+
+! Computes bulk salinity of ice and snow in a grid cell.
+! author: E. C. Hunke, LANL
+
+      subroutine total_salt (work)
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_domain, only: nblocks
+      use ice_domain_size, only: ncat, nilyr, nslyr, max_blocks
+      use ice_grid, only: tmask
+      use ice_state, only: vicen, trcrn, nt_sice
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks),  &
+         intent(out) :: &
+         work      ! total salt
+
+      ! local variables
+
+      integer (kind=int_kind) :: &
+        icells                ! number of ocean/ice cells
+
+      integer (kind=int_kind), dimension (nx_block*ny_block) :: &
+        indxi, &              ! compressed indices in i/j directions
+        indxj
+
+      integer (kind=int_kind) :: &
+        i, j, k, n, iblk, ij
+
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,n,k,ij,icells,indxi,indxj)
+      do iblk = 1, nblocks
+
+      !-----------------------------------------------------------------
+      ! Initialize
+      !-----------------------------------------------------------------
+
+         icells = 0
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (tmask(i,j,iblk)) then
+               icells = icells + 1
+               indxi(icells) = i
+               indxj(icells) = j
+            endif                  ! tmask
+         enddo
+         enddo
+
+         work(:,:,iblk) = c0
+
+      !-----------------------------------------------------------------
+      ! Aggregate
+      !-----------------------------------------------------------------
+
+         do n = 1, ncat
+            do k = 1, nilyr
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  work(i,j,iblk) = work(i,j,iblk) &
+                                 + trcrn(i,j,nt_sice+k-1,n,iblk) &
+                                 * vicen(i,j,n,iblk) / real(nilyr,kind=dbl_kind)
+               enddo            ! ij
+            enddo               ! k
+         enddo                  ! n
+
+      enddo                     ! iblk
+      !$OMP END PARALLEL DO
+
+      end subroutine total_salt
+
+!=======================================================================
+
 !  Find tasks for diagnostic points.
 !
-!
-! !REVISION HISTORY:
-!
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL
-!
-! !USES:
-      use ice_grid
-      use ice_blocks
-      use ice_broadcast
-      use ice_global_reductions
-      use ice_gather_scatter
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
-!EOP
-!
+
+      subroutine init_diags
+
+      use ice_grid, only: hm, TLAT, TLON
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: c180, c360, p5, rad_to_deg, puny
+      use ice_domain, only: blocks_ice, distrb_info, nblocks
+      use ice_global_reductions, only: global_minval, global_maxval
+
       real (kind=dbl_kind) :: &
          latdis  , & ! latitude distance
          londis  , & ! longitude distance
@@ -1117,21 +1216,16 @@
          iblk        , & ! block index
          ilo,ihi,jlo,jhi ! beginning and end of physical domain
 
-      character (char_len) :: label(npnt)
-
       type (block) :: &
          this_block           ! block information for current block
 
-      if (print_points) then
+!tcraig, do this all the time now for print_points_state usage
+!      if (print_points) then
 
          if (my_task==master_task) then
             write(nu_diag,*) ' '
             write(nu_diag,*) ' Find indices of diagnostic points '
          endif
-
-         ! initialize labels
-         label(1)(1:40)  = 'Near North Pole pack ice                '
-         label(2)(1:40)  = 'Weddell Sea                             '
 
          piloc(:) = 0
          pjloc(:) = 0
@@ -1149,9 +1243,9 @@
             bindx = 0
             mindis = 540.0_dbl_kind !  360. + 180.
 
-            !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,j,i, &
-            !$OMP                     latdis,londis,totdis,mindis, &
-            !$OMP                     jindx,iindx,bindx) 
+            if (abs(latpnt(n)) < c360 .and. abs(lonpnt(n)) < c360) then
+
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,latdis,londis,totdis)
             do iblk = 1, nblocks
                this_block = get_block(blocks_ice(iblk),iblk)         
                ilo = this_block%ilo
@@ -1176,13 +1270,15 @@
                enddo            ! i
                enddo            ! j
             enddo               ! iblk
-            !$OMP END PARALLEL DO 
+            !$OMP END PARALLEL DO
+
+            endif
 
             ! find global minimum distance to diagnostic points 
             mindis_g = global_minval(mindis, distrb_info)
 
             ! save indices of minimum-distance grid cell
-            if (abs(mindis_g - mindis) < puny) then
+            if (mindis <= 180.0 .and. abs(mindis_g - mindis) < puny) then
                piloc(n) = iindx
                pjloc(n) = jindx
                pbloc(n) = bindx
@@ -1210,21 +1306,12 @@
                 4(f6.1,1x),1x,4(i4,2x) )
 
          enddo                  ! npnt
-      endif                     ! print_points
+!      endif                     ! print_points
 
       end subroutine init_diags
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: print_state - print ice state for specified grid point
-!
-! !INTERFACE:
-!
-      subroutine print_state(plabel,i,j,iblk)
-!
-! !DESCRIPTION:
-!
+
 ! This routine is useful for debugging.
 ! Calls to it should be inserted in the form (after thermo, for example)
 !      do iblk = 1, nblocks
@@ -1239,37 +1326,45 @@
 !      enddo
 !
 ! 'use ice_diagnostics' may need to be inserted also
-!
-! !REVISION HISTORY:
-!
 ! author: Elizabeth C. Hunke, LANL
-!
-! !USES:
-!
-!MH      use ice_domain_size
-      use ice_state
-      use ice_itd
-      use ice_flux
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine print_state(plabel,i,j,iblk)
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: puny, rhoi, rhos, Lfresh, cp_ice
+      use ice_domain, only: blocks_ice
+      use ice_domain_size, only: ncat, nilyr, nslyr
+      use ice_state, only: aice0, aicen, vicen, vsnon, uvel, vvel, &
+          trcrn,  nt_Tsfc, nt_qice, nt_qsno
+      use ice_flux, only: uatm, vatm, potT, Tair, Qa, flw, frain, fsnow, &
+          fsens, flat, evap, flwout, swvdr, swvdf, swidr, swidf, rhoa, &
+          frzmlt, sst, sss, Tf, Tref, Qref, Uref, uocn, vocn, strtltx, strtlty
+
       character (len=20), intent(in) :: plabel
 
       integer (kind=int_kind), intent(in) :: & 
           i, j       , & ! horizontal indices
           iblk           ! block index
-!
-!EOP
-!
+
+      ! local variables
+
       real (kind=dbl_kind) :: &
            eidebug, esdebug, &
            qi, qs, Tsnow
 
       integer (kind=int_kind) :: n, k
 
+      type (block) :: &
+         this_block           ! block information for current block
+
+      this_block = get_block(blocks_ice(iblk),iblk)         
+
       write(nu_diag,*) plabel
       write(nu_diag,*) 'istep1, my_task, i, j, iblk:', &
                         istep1, my_task, i, j, iblk
+      write(nu_diag,*) 'Global i and j:', &
+                        this_block%i_glob(i), &
+                        this_block%j_glob(j) 
       write(nu_diag,*) ' '
       write(nu_diag,*) 'aice0', aice0(i,j,iblk)
       do n = 1, ncat
@@ -1289,29 +1384,25 @@
       eidebug = c0
       do n = 1,ncat
          do k = 1,nilyr
-            write(nu_diag,*) 'eicen, cat ',n,' layer ',k, &
-                 eicen(i,j,ilyr1(n)+k-1,iblk)
-            eidebug = eidebug + eicen(i,j,ilyr1(n)+k-1,iblk)
+            qi = trcrn(i,j,nt_qice+k-1,n,iblk)
+            write(nu_diag,*) 'qice, cat ',n,' layer ',k, qi
+            eidebug = eidebug + qi
             if (aicen(i,j,n,iblk) > puny) then
-               qi = eicen(i,j,ilyr1(n)+k-1,iblk) / & ! qi, eicen < 0
-                   (vicen(i,j,n,iblk)/real(nilyr,kind=dbl_kind))
                write(nu_diag,*)  'qi/rhoi', qi/rhoi
             endif
          enddo
          write(nu_diag,*) ' '
       enddo
-      write(nu_diag,*) 'eice(i,j)',eidebug
+      write(nu_diag,*) 'qice(i,j)',eidebug
       write(nu_diag,*) ' '
 
       esdebug = c0
       do n = 1,ncat
          if (vsnon(i,j,n,iblk) > puny) then
             do k = 1,nslyr
-               write(nu_diag,*) 'esnon, cat ',n,' layer ',k, &
-                  esnon(i,j,slyr1(n)+k-1,iblk)
-               esdebug = esdebug + esnon(i,j,slyr1(n)+k-1,iblk)
-               qs = esnon(i,j,slyr1(n)+k-1,iblk) / &  ! qs, esnon < 0
-                   (vsnon(i,j,n,iblk)/real(nslyr,kind=dbl_kind))
+               qs = trcrn(i,j,nt_qsno+k-1,n,iblk)
+               write(nu_diag,*) 'qsnow, cat ',n,' layer ',k, qs
+               esdebug = esdebug + qs
                Tsnow = (Lfresh + qs/rhos) / cp_ice
                write(nu_diag,*) 'qs/rhos', qs/rhos
                write(nu_diag,*) 'Tsnow', Tsnow
@@ -1319,7 +1410,7 @@
             write(nu_diag,*) ' '
          endif
       enddo
-      write(nu_diag,*) 'esno(i,j)',esdebug
+      write(nu_diag,*) 'qsnow(i,j)',esdebug
       write(nu_diag,*) ' '
 
       write(nu_diag,*) 'uvel(i,j)',uvel(i,j,iblk)
@@ -1354,6 +1445,7 @@
       write(nu_diag,*) 'srf states and fluxes'
       write(nu_diag,*) '            Tref    = ',Tref  (i,j,iblk)
       write(nu_diag,*) '            Qref    = ',Qref  (i,j,iblk)
+      write(nu_diag,*) '            Uref    = ',Uref  (i,j,iblk)
       write(nu_diag,*) '            fsens   = ',fsens (i,j,iblk)
       write(nu_diag,*) '            flat    = ',flat  (i,j,iblk)
       write(nu_diag,*) '            evap    = ',evap  (i,j,iblk)
@@ -1363,12 +1455,147 @@
       end subroutine print_state
 
 !=======================================================================
+!=======================================================================
+
+! This routine is useful for debugging.
+! Calls can be inserted anywhere and it will print info on print_points points
+!      call print_points_state(plabel)
+!
+! 'use ice_diagnostics' may need to be inserted also
+
+      subroutine print_points_state(plabel,ilabel)
+
+      use ice_blocks, only: block, get_block
+      use ice_constants, only: puny, rhoi, rhos, Lfresh, cp_ice
+      use ice_domain, only: blocks_ice
+      use ice_domain_size, only: ncat, nilyr, nslyr
+      use ice_state, only: aice0, aicen, vicen, vsnon, uvel, vvel, &
+          trcrn,  nt_Tsfc, nt_qice, nt_qsno
+      use ice_flux, only: uatm, vatm, potT, Tair, Qa, flw, frain, fsnow, &
+          fsens, flat, evap, flwout, swvdr, swvdf, swidr, swidf, rhoa, &
+          frzmlt, sst, sss, Tf, Tref, Qref, Uref, uocn, vocn, strtltx, strtlty
+
+      character (len=*), intent(in),optional :: plabel
+      integer          , intent(in),optional :: ilabel
+
+      ! local variables
+
+      real (kind=dbl_kind) :: &
+           eidebug, esdebug, &
+           qi, qs, Tsnow
+
+      integer (kind=int_kind) :: m, n, k, i, j, iblk
+      character(len=256) :: llabel
+
+      type (block) :: &
+         this_block           ! block information for current block
+
+      ! ----------------------
+
+      do m = 1, npnt
+      if (my_task == pmloc(m)) then
+         i = piloc(m)
+         j = pjloc(m)
+         iblk = pbloc(m)
+         this_block = get_block(blocks_ice(iblk),iblk)         
+
+         if (present(ilabel)) then
+            write(llabel,'(i6,a1,i3,a1)') ilabel,':',m,':'
+         else
+            write(llabel,'(i3,a1)') m,':'
+         endif
+         if (present(plabel)) then
+            write(llabel,'(a)') 'pps:'//trim(plabel)//':'//trim(llabel)
+         else
+            write(llabel,'(a)') 'pps:'//trim(llabel)
+         endif
+
+         write(nu_diag,*) trim(llabel),'istep1, my_task, i, j, iblk=', &
+                           istep1, my_task, i, j, iblk
+         write(nu_diag,*) trim(llabel),'Global i and j=', &
+                           this_block%i_glob(i), &
+                           this_block%j_glob(j) 
+         write(nu_diag,*) trim(llabel),'aice0=', aice0(i,j,iblk)
+
+      do n = 1, ncat
+         write(nu_diag,*) trim(llabel),'aicen=', n,aicen(i,j,n,iblk)
+         write(nu_diag,*) trim(llabel),'vicen=', n,vicen(i,j,n,iblk)
+         write(nu_diag,*) trim(llabel),'vsnon=', n,vsnon(i,j,n,iblk)
+         if (aicen(i,j,n,iblk) > puny) then
+            write(nu_diag,*) trim(llabel),'hin=', n,vicen(i,j,n,iblk)/aicen(i,j,n,iblk)
+            write(nu_diag,*) trim(llabel),'hsn=', n,vsnon(i,j,n,iblk)/aicen(i,j,n,iblk)
+         endif
+         write(nu_diag,*) trim(llabel),'Tsfcn=',n,trcrn(i,j,nt_Tsfc,n,iblk)
+      enddo
+
+      eidebug = c0
+      do n = 1,ncat
+         do k = 1,nilyr
+            qi = trcrn(i,j,nt_qice+k-1,n,iblk)
+            write(nu_diag,*) trim(llabel),'qice= ',n,k, qi
+            eidebug = eidebug + qi
+         enddo
+      enddo
+      write(nu_diag,*) trim(llabel),'qice=',eidebug
+
+      esdebug = c0
+      do n = 1,ncat
+         if (vsnon(i,j,n,iblk) > puny) then
+            do k = 1,nslyr
+               qs = trcrn(i,j,nt_qsno+k-1,n,iblk)
+               write(nu_diag,*) trim(llabel),'qsnow=',n,k, qs
+               esdebug = esdebug + qs
+            enddo
+         endif
+      enddo
+      write(nu_diag,*) trim(llabel),'qsnow=',esdebug
+
+      write(nu_diag,*) trim(llabel),'uvel=',uvel(i,j,iblk)
+      write(nu_diag,*) trim(llabel),'vvel=',vvel(i,j,iblk)
+
+      !  write(nu_diag,*) ' '
+      !  write(nu_diag,*) 'atm states and fluxes'
+      !  write(nu_diag,*) '            uatm    = ',uatm (i,j,iblk)
+      !  write(nu_diag,*) '            vatm    = ',vatm (i,j,iblk)
+      !  write(nu_diag,*) '            potT    = ',potT (i,j,iblk)
+      !  write(nu_diag,*) '            Tair    = ',Tair (i,j,iblk)
+      !  write(nu_diag,*) '            Qa      = ',Qa   (i,j,iblk)
+      !  write(nu_diag,*) '            rhoa    = ',rhoa (i,j,iblk)
+      !  write(nu_diag,*) '            swvdr   = ',swvdr(i,j,iblk)
+      !  write(nu_diag,*) '            swvdf   = ',swvdf(i,j,iblk)
+      !  write(nu_diag,*) '            swidr   = ',swidr(i,j,iblk)
+      !  write(nu_diag,*) '            swidf   = ',swidf(i,j,iblk)
+      !  write(nu_diag,*) '            flw     = ',flw  (i,j,iblk)
+      !  write(nu_diag,*) '            frain   = ',frain(i,j,iblk)
+      !  write(nu_diag,*) '            fsnow   = ',fsnow(i,j,iblk)
+      !  write(nu_diag,*) ' '
+      !  write(nu_diag,*) 'ocn states and fluxes'
+      !  write(nu_diag,*) '            frzmlt  = ',frzmlt (i,j,iblk)
+      !  write(nu_diag,*) '            sst     = ',sst    (i,j,iblk)
+      !  write(nu_diag,*) '            sss     = ',sss    (i,j,iblk)
+      !  write(nu_diag,*) '            Tf      = ',Tf     (i,j,iblk)
+      !  write(nu_diag,*) '            uocn    = ',uocn   (i,j,iblk)
+      !  write(nu_diag,*) '            vocn    = ',vocn   (i,j,iblk)
+      !  write(nu_diag,*) '            strtltx = ',strtltx(i,j,iblk)
+      !  write(nu_diag,*) '            strtlty = ',strtlty(i,j,iblk)
+      !  write(nu_diag,*) ' '
+      !  write(nu_diag,*) 'srf states and fluxes'
+      !  write(nu_diag,*) '            Tref    = ',Tref  (i,j,iblk)
+      !  write(nu_diag,*) '            Qref    = ',Qref  (i,j,iblk)
+      !  write(nu_diag,*) '            Uref    = ',Uref  (i,j,iblk)
+      !  write(nu_diag,*) '            fsens   = ',fsens (i,j,iblk)
+      !  write(nu_diag,*) '            flat    = ',flat  (i,j,iblk)
+      !  write(nu_diag,*) '            evap    = ',evap  (i,j,iblk)
+      !  write(nu_diag,*) '            flwout  = ',flwout(i,j,iblk)
+      !  write(nu_diag,*) ' '
+
+      endif   ! my_task
+      enddo   ! ncnt
+
+      end subroutine print_points_state
+
+!=======================================================================
 
       end module ice_diagnostics
 
 !=======================================================================
-
-
-
-
-

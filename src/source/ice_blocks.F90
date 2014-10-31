@@ -1,33 +1,23 @@
+!  SVN:$Id: ice_blocks.F90 700 2013-08-15 19:17:39Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-!BOP
-! !MODULE: ice_blocks
 
  module ice_blocks
 
-!
-! !DESCRIPTION: 
 !  This module contains data types and tools for decomposing a global
 !  horizontal domain into a set of blocks.  It contains a data type 
 !  for describing each block and contains routines for creating and 
 !  querying the block decomposition for a global domain.
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_blocks.F90 100 2008-01-29 00:25:32Z eclare $
-!
 ! author: Phil Jones, LANL
 ! Oct. 2004: Adapted from POP by William H. Lipscomb, LANL
-!
-! !USES:
 
    use ice_kinds_mod
-   use ice_exit
-   use ice_domain_size
+   use ice_domain_size, only: block_size_x, block_size_y
+   use ice_exit, only: abort_ice
 
    implicit none
    private
    save
-
-! !PUBLIC TYPES:
 
    type, public :: block   ! block data type
       integer (int_kind) :: &
@@ -44,19 +34,10 @@
          i_glob, j_glob     ! global domain location for each point
    end type
 
-! !PUBLIC MEMBER FUNCTIONS:
-
    public :: create_blocks       ,&
              get_block           ,&
              get_block_parameter ,&
              ice_blocksGetNbrID
-
-   public :: LocateTrouble,PrintTrouble
-   interface PrintTrouble
-       module procedure PrintTrouble_dbl, PrintTrouble_int
-   end interface
-
-! !DEFINED PARAMETERS:
 
    integer (int_kind), parameter, public :: &
       nghost = 1       ! number of ghost cells around each block
@@ -98,21 +79,11 @@
 !      ice_blocksNorthNorthWest = 23,      & ! (i-1,j+2)
 !      ice_blocksSouthSouthWest = 24         ! (i-1,j-2)
 
-! !PUBLIC DATA MEMBERS:
-
    integer (int_kind), public :: &
       nblocks_tot      ,&! total number of blocks in decomposition
       nblocks_x        ,&! tot num blocks in i direction
       nblocks_y          ! tot num blocks in j direction
 
-   integer (int_kind), public, parameter ::  &
-		trouble_ig = 2, &
-		trouble_jg = 2
-				
-   integer (int_kind), public :: trouble_il,trouble_jl,trouble_ibl
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  module private data
@@ -131,96 +102,20 @@
       i_global,         &! global i index for each point in each block
       j_global           ! global j index for each point in each block
 
-!EOC
 !***********************************************************************
 
 contains
 
-   subroutine PrintTrouble_dbl(name,array)
-
-     use ice_fileunits, only: nu_diag
-
-     character(len=*), intent(in) :: name
-     real(kind=dbl_kind), intent(in)         :: array(nx_block,ny_block) 
-       
-     write(nu_diag,*) TRIM(name),'(i,j) =',array(trouble_il,trouble_jl)
-
-   end subroutine PrintTrouble_dbl
-
-   subroutine PrintTrouble_int(name,array)
-
-     use ice_fileunits, only: nu_diag
-
-     character(len=*), intent(in) :: name
-     integer(int_kind), intent(in)         :: array(nx_block,ny_block) 
-        
-     write(nu_diag,*) TRIM(name),'(i,j) =',array(trouble_il,trouble_jl)
-
-   end subroutine PrintTrouble_int
-
-   subroutine LocateTrouble
-
-     type (block) :: this_block
-     integer(int_kind) :: n,gbid,ib,ie,jb,je,ig,jg,i,j
-     integer(int_kind) :: j_save,i_save,ib_save
-     logical  :: foundi, foundj
-    
-
-      do n=1,nblocks_tot
-	  foundi=.false.;foundj=.false.
-	  gbid = all_blocks(n)%block_id
-	  ib   = all_blocks(n)%ilo
-	  ie   = all_blocks(n)%ihi
-	  jb   = all_blocks(n)%jlo
-          je   = all_blocks(n)%jhi
-	  do i=ib,ie
-	     ig=all_blocks(n)%i_glob(i) 
-	     if(ig == trouble_ig) then 
-		i_save=i
-		foundi=.true.
-	     endif
-          enddo
-	  do j=jb,je
-	     jg=all_blocks(n)%j_glob(j) 
-	     if(jg == trouble_jg) then
-		j_save=j;foundj=.true.
-	     endif
-          enddo
-          if(foundi .and. foundj) then 
-		ib_save = n
-	  endif
-      enddo
-      trouble_il  = i_save
-      trouble_jl  = j_save
-      trouble_ibl = ib_save
-!      print *,'Trouble located: ib, i, j: ',ib_save,i_save,j_save
-
-   end subroutine LocateTrouble
-
-
-
-
 !***********************************************************************
-!BOP
-! !IROUTINE: create_blocks
-! !INTERFACE:
 
  subroutine create_blocks(nx_global, ny_global, ew_boundary_type, &
                                                 ns_boundary_type)
 
-! !DESCRIPTION:
 !  This subroutine decomposes the global domain into blocks and
 !  fills the data structures with all the necessary block information.
-!
-! !REVISION HISTORY: 
-!  same as module
-!
-! !USES:
 
    use ice_fileunits, only: nu_diag
    use ice_communicate, only: my_task, master_task
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       nx_global, ny_global           ! global domain size in x,y
@@ -229,8 +124,6 @@ contains
       ew_boundary_type,  &! type of boundary in logical east-west dir
       ns_boundary_type    ! type of boundary in logical north-south dir
 
-!EOP
-!BOC
 !----------------------------------------------------------------------
 !
 !  local variables
@@ -238,7 +131,7 @@ contains
 !----------------------------------------------------------------------
 
    integer (int_kind) :: &
-      i, ip1, j, jp1, n    ,&! loop indices
+      i, j, n              ,&! loop indices
       iblock, jblock       ,&! block loop indices
       is, ie, js, je         ! temp start, end indices
 
@@ -424,30 +317,25 @@ contains
    dbug = .false.
    if (dbug) then
       if (my_task == master_task) then
-         write(nu_diag,*) 'block i,j locations'
-         do n = 1, nblocks_tot
-            write(nu_diag,*) 'block id, iblock, jblock:', &
-            all_blocks(n)%block_id, &
-            all_blocks(n)%iblock,   & 
-            all_blocks(n)%jblock
-         enddo
+      write(nu_diag,*) 'block i,j locations'
+      do n = 1, nblocks_tot
+         write(nu_diag,*) 'block id, iblock, jblock:', &
+         all_blocks(n)%block_id, &
+         all_blocks(n)%iblock,   & 
+         all_blocks(n)%jblock
+      enddo
       endif
    endif
 
-!EOC
 !----------------------------------------------------------------------
 
 end subroutine create_blocks
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_blocksGetNbrID
-! !INTERFACE:
 
  function ice_blocksGetNbrID(blockID, direction, iBoundary, jBoundary) &
                              result (nbrID)
 
-! !DESCRIPTION:
 !  This function returns the block id of a neighboring block in a
 !  requested direction.  Directions:
 !      ice\_blocksNorth             (i  ,j+1)
@@ -476,8 +364,6 @@ end subroutine create_blocks
 !      ice\_blocksSouthSouthWest    (i-1,j-2)
 !
 
-! !INPUT PARAMETERS:
-
    integer (int_kind), intent(in)  :: &
       blockID,       &! id of block for which neighbor id requested
       direction       ! direction for which to look for neighbor -
@@ -488,13 +374,9 @@ end subroutine create_blocks
       iBoundary,     &! determines what to do at edges of domain
       jBoundary       !  options are - open, closed, cyclic, tripole, tripoleT
 
-! !OUTPUT PARAMETERS:
-
    integer (int_kind) :: &
       nbrID           ! block ID of neighbor in requested dir
 
-!EOP
-!BOC
 !----------------------------------------------------------------------
 !
 !  local variables
@@ -898,37 +780,23 @@ end subroutine create_blocks
    endif
 
 !----------------------------------------------------------------------
-!EOC
 
  end function ice_blocksGetNbrID
 
 !**********************************************************************
-!BOP
-! !IROUTINE: get_block
-! !INTERFACE:
 
  function get_block(block_id,local_id)
 
-! !DESCRIPTION:
 !  This function returns the block data structure for the block
 !  associated with the input block id.
-!
-! !REVISION HISTORY:
-!  same as module
-!
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       block_id,   &! global block id for requested block info
       local_id     ! local  block id to assign to this block
 
-! !OUTPUT PARAMETERS:
-
    type (block) :: &
       get_block    ! block information returned for requested block
 
-!EOP
-!BOC
 !----------------------------------------------------------------------
 !
 !  check for valid id.  if valid, return block info for requested block
@@ -943,33 +811,21 @@ end subroutine create_blocks
    get_block%local_id = local_id
 
 !----------------------------------------------------------------------
-!EOC
 
  end function get_block
 
 !**********************************************************************
-!BOP
-! !IROUTINE: get_block_parameter
-! !INTERFACE:
 
  subroutine get_block_parameter(block_id, local_id,           & 
                                 ilo, ihi, jlo, jhi,           &
                                 iblock, jblock, tripole,      &
                                 i_glob, j_glob)
 
-! !DESCRIPTION:
 !  This routine returns requested parts of the block data type
 !  for the block associated with the input block id
-!
-! !REVISION HISTORY:
-!  same as module
-!
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       block_id   ! global block id for which parameters are requested
-
-! !OUTPUT PARAMETERS:
 
    !(optional) parts of block data type to extract if requested
 
@@ -984,8 +840,6 @@ end subroutine create_blocks
    integer (int_kind), dimension(:), pointer, optional :: &
       i_glob, j_glob     ! global domain location for each point
 
-!EOP
-!BOC
 !----------------------------------------------------------------------
 !
 !  extract each component of data type if requested
@@ -1008,7 +862,6 @@ end subroutine create_blocks
    if (present(tripole )) tripole  = all_blocks(block_id)%tripole
 
 !----------------------------------------------------------------------
-!EOC
 
  end subroutine get_block_parameter
 

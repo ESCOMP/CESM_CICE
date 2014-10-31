@@ -1,9 +1,5 @@
+!  SVN:$Id: ice_state.F90 704 2013-08-20 23:43:58Z eclare $
 !=======================================================================
-!BOP
-!
-! !MODULE: ice_state - primary state variables
-!
-! !DESCRIPTION:
 !
 ! Primary state variables in various configurations
 ! Note: other state variables are at the end of this...
@@ -15,14 +11,11 @@
 ! aicen(i,j,n)         aice(i,j)           ---
 ! vicen(i,j,n)         vice(i,j)           m
 ! vsnon(i,j,n)         vsno(i,j)           m
-! eicen(i,j,k)         eice(i,j)           J/m^2
-! esnon(i,j,k)         esno(i,j)           J/m^2
 ! trcrn(i,j,it,n)      trcr(i,j,it)        
 !
 ! Area is dimensionless because aice is the fractional area
 ! (normalized so that the sum over all categories, including open
-! water, is 1.0).  That is why vice/vsno have units of m instead of
-! m^3, and eice/esno have units of J/m^2 instead of J.
+! water, is 1.0).  That is why vice/vsno have units of m instead of m^3.
 !
 ! Variable names follow these rules:
 !
@@ -35,129 +28,118 @@
 !     at the end: e.g. hin, hsn.  These are not declared here
 !     but in individual modules (e.g., ice_therm_vertical).
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_state.F90 37 2006-11-29 18:06:44Z eclare $
-!
 ! authors C. M. Bitz, UW
 !         Elizabeth C. Hunke and William H. Lipscomb, LANL
 !
 ! 2004: Block structure added by William Lipscomb
 ! 2006: Converted to free form source (F90) by Elizabeth Hunke
-!
-! !INTERFACE:
-!
+
       module ice_state
-!
-! !USES:
-!
+
       use ice_kinds_mod
-      use ice_domain_size
-      use ice_blocks
-      use ice_fileunits
-      use perf_mod,      only: t_startf, t_stopf, t_barrierf
-      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
-!
-!EOP
-!
+      use ice_domain_size, only: max_blocks, ncat, max_ntrcr, n_aero
+      use ice_blocks, only: nx_block, ny_block
+
       implicit none
+      private
+      public :: bound_state
       save
 
       !-----------------------------------------------------------------
       ! state of the ice aggregated over all categories
       !-----------------------------------------------------------------
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
+         public :: &
          aice  , & ! concentration of ice
          vice  , & ! volume per unit area of ice          (m)
-         vsno  , & ! volume per unit area of snow         (m)
-         eice  , & ! energy of melt. of ice           (J/m^2)
-         esno      ! energy of melt. of snow layer    (J/m^2)
+         vsno      ! volume per unit area of snow         (m)
 
       real (kind=dbl_kind), &
-         dimension(nx_block,ny_block,max_ntrcr,max_blocks) :: &
+         dimension(nx_block,ny_block,max_ntrcr,max_blocks), public :: &
          trcr      ! ice tracers
                    ! 1: surface temperature of ice/snow (C)
-                   ! 2: meltpond volume                 (m)
-
-      !-----------------------------------------------------------------
-      ! state performance mods
-      !-----------------------------------------------------------------
-
-      logical (kind=log_kind) :: maskhalo_bound
 
       !-----------------------------------------------------------------
       ! state of the ice for each category
       !-----------------------------------------------------------------
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks):: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), &
+         public:: &
          aice0     ! concentration of open water
 
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ncat,max_blocks) :: &
+         dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          aicen , & ! concentration of ice
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ncat,max_blocks) :: &
-         apondn , & ! concentration of ponds
-         hpondn     ! pond depth         (m)
-
-      real (kind=dbl_kind), &
+      real (kind=dbl_kind), public, &
          dimension (nx_block,ny_block,max_ntrcr,ncat,max_blocks) :: &
          trcrn     ! tracers
                    ! 1: surface temperature of ice/snow (C)
 
-      integer (kind=int_kind), dimension (max_ntrcr) :: &
+      !-----------------------------------------------------------------
+      ! indices and flags for tracers
+      !-----------------------------------------------------------------
+
+      integer (kind=int_kind), dimension (max_ntrcr), public :: &
          trcr_depend   ! = 0 for ice area tracers
                        ! = 1 for ice volume tracers
                        ! = 2 for snow volume tracers
 
-      integer (kind=int_kind) :: &
+      integer (kind=int_kind), public :: &
          ntrcr     ! number of tracers in use
 
-      real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ntilyr,max_blocks) :: &
-         eicen     ! energy of melting for each ice layer  (J/m^2)
-
-      real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ntslyr,max_blocks) :: &
-         esnon     ! energy of melting for each snow layer (J/m^2)
-
-      !-----------------------------------------------------------------
-      ! indices for tracers
-      ! The maximum index should be no greater than max_ntrcr 
-      ! (ice_domain_size) to prevent array out-of-bounds errors.
-      !-----------------------------------------------------------------
-
-      integer (kind=int_kind) :: &
-         nt_Tsfc  , & ! ice/snow surface temperature
+      integer (kind=int_kind), public :: &
+         nbtrcr    ! number of bgc tracers in use
+      
+      integer (kind=int_kind), public :: &
+         nt_Tsfc  , & ! ice/snow temperature
+         nt_qice  , & ! volume-weighted ice enthalpy (in layers)
+         nt_qsno  , & ! volume-weighted snow enthalpy (in layers)
+         nt_sice  , & ! volume-weighted ice bulk salinity (CICE grid layers)
+         nt_fbri  , & ! volume fraction of ice with dynamic salt (hinS/vicen*aicen)
          nt_iage  , & ! volume-weighted ice age
-         nt_FY    , & ! area-weighted FY ice concentration
-         nt_alvl  , & ! ridged ice area fraction
-         nt_vlvl  , & ! ridged ice volume fraction
-         nt_volpn , & ! melt pond volume - not used, for now
-         nt_aero          ! starting index for aerosol within ice MH
+         nt_FY    , & ! area-weighted first-year ice area
+         nt_alvl  , & ! level ice area fraction
+         nt_vlvl  , & ! level ice volume fraction
+         nt_apnd  , & ! melt pond area fraction
+         nt_hpnd  , & ! melt pond depth
+         nt_ipnd  , & ! melt pond refrozen lid thickness
+         nt_aero  , & ! starting index for aerosols in ice
+         nt_bgc_N_sk,   & ! algae (skeletal layer)
+         nt_bgc_C_sk,   & ! 
+         nt_bgc_chl_sk, & ! 
+         nt_bgc_Nit_sk, & ! nutrients (skeletal layer) 
+         nt_bgc_Am_sk,  & ! 
+         nt_bgc_Sil_sk, & !
+         nt_bgc_DMSPp_sk, & ! trace gases (skeletal layer)
+         nt_bgc_DMSPd_sk, & ! 
+         nt_bgc_DMS_sk, & ! 
+         nt_bgc_Nit_ml, & ! nutrients (ocean mixed layer) 
+         nt_bgc_Am_ml,  & ! 
+         nt_bgc_Sil_ml, & !
+         nt_bgc_DMSP_ml, & ! trace gases (ocean mixed layer)
+         nt_bgc_DMS_ml
 
-      logical (kind=log_kind) :: &
-         tr_aero,   & ! if .true., use aerosol tracers
+      logical (kind=log_kind), public :: &
          tr_iage,   & ! if .true., use age tracer
-         tr_FY,     & ! if .true., use FY tracer
+         tr_FY,     & ! if .true., use first-year area tracer
          tr_lvl,    & ! if .true., use level ice tracer
-         tr_pond      ! if .true., use melt pond tracer
-
-      character(len=char_len_long) :: &
-         filename_iage,  & ! filenames of tracer restarts
-         filename_FY,    &
-         filename_lvl,   &
-         filename_volpn, &
-         filename_aero
+         tr_pond,   & ! if .true., use melt pond tracer
+         tr_pond_cesm,& ! if .true., use cesm pond tracer
+         tr_pond_lvl, & ! if .true., use level-ice pond tracer
+         tr_pond_topo,& ! if .true., use explicit topography-based ponds
+         tr_aero     ,& ! if .true., use aerosol tracers
+         tr_brine       ! if .true., brine height differs from ice thickness
 
       !-----------------------------------------------------------------
       ! dynamic variables closely related to the state of the ice
       !-----------------------------------------------------------------
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
+         public :: &
          uvel     , & ! x-component of velocity (m/s)
          vvel     , & ! y-component of velocity (m/s)
          divu     , & ! strain rate I component, velocity divergence (1/s)
@@ -168,11 +150,12 @@
       ! ice state at start of time step, saved for later in the step 
       !-----------------------------------------------------------------
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
+         public :: &
          aice_init       ! initial concentration of ice, for diagnostics
 
       real (kind=dbl_kind), &
-         dimension(nx_block,ny_block,ncat,max_blocks) :: &
+         dimension(nx_block,ny_block,ncat,max_blocks), public :: &
          aicen_init  , & ! initial ice concentration, for linear ITD
          vicen_init      ! initial ice volume (m), for linear ITD
 
@@ -181,33 +164,20 @@
       contains
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: bound_state - bound calls for ice state variables
-!
-! !INTERFACE:
-!
-      subroutine bound_state (aicen, trcrn, &
-                              vicen, vsnon, &
-                              eicen, esnon)
-!
-! !DESCRIPTION:
 !
 ! Get ghost cell values for ice state variables in each thickness category.
 ! NOTE: This subroutine cannot be called from inside a block loop!
 !
-! !REVISION HISTORY:
-!
 ! author: William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_boundary
-      use ice_domain
-      use ice_constants
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine bound_state (aicen, trcrn, &
+                              vicen, vsnon)
+
+      use ice_boundary, only: ice_halo, ice_HaloMask, ice_HaloUpdate, &
+          ice_HaloDestroy
+      use ice_domain, only: halo_info, maskhalo_bound, nblocks
+      use ice_constants, only: field_loc_center, field_type_scalar, c0
+
       real (kind=dbl_kind), &
          dimension(nx_block,ny_block,ncat,max_blocks), intent(inout) :: &
          aicen , & ! fractional ice area
@@ -219,107 +189,51 @@
          intent(inout) :: &
          trcrn     ! ice tracers
 
-      real (kind=dbl_kind), &
-         dimension(nx_block,ny_block,ntilyr,max_blocks),intent(inout) :: &
-         eicen     ! energy of melting for each ice layer  (J/m^2)
+      ! local variables
 
-      real (kind=dbl_kind), &
-         dimension(nx_block,ny_block,ntslyr,max_blocks),intent(inout) :: &
-         esnon     ! energy of melting for each snow layer (J/m^2)
-!
-!EOP
-!
-      integer (kind=int_kind) :: i,j,n,iblk
+      integer (kind=int_kind) :: i, j, n, iblk
+
       integer (kind=int_kind), &
          dimension(nx_block,ny_block,max_blocks) :: halomask
+
       type (ice_halo) :: halo_info_aicemask
-!
-
-   if (maskhalo_bound) then
-
-      call t_barrierf('state_bound_h1_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_h1')
 
       call ice_HaloUpdate (aicen,            halo_info, &
                            field_loc_center, field_type_scalar)
 
-      call t_stopf('state_bound_h1')
+      if (maskhalo_bound) then
+         halomask(:,:,:) = 0
 
-      call t_barrierf('state_bound_hm_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_hm')
-      halomask = 0
-      do iblk=1,nblocks
-      do n=1,ncat
-      do j=1,ny_block
-      do i=1,nx_block
-         if (aicen(i,j,n,iblk) > c0) halomask(i,j,iblk) = 1
-      enddo
-      enddo
-      enddo
-      enddo
-!tcx
-!      halomask = 1
-      call t_stopf('state_bound_hm')
+         !$OMP PARALLEL DO PRIVATE(iblk,n,i,j)
+         do iblk = 1, nblocks
+         do n = 1, ncat
+         do j = 1, ny_block
+         do i = 1, nx_block
+            if (aicen(i,j,n,iblk) > c0) halomask(i,j,iblk) = 1
+         enddo
+         enddo
+         enddo
+         enddo
+         !$OMP END PARALLEL DO
 
-      call t_barrierf('state_bound_hc_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_hc')
-      call ice_HaloMask(halo_info_aicemask, halo_info, halomask)
-      call t_stopf('state_bound_hc')
+         call ice_HaloMask(halo_info_aicemask, halo_info, halomask)
 
-      call t_barrierf('state_bound_h2_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_h2')
+         call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info_aicemask, &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (vicen,            halo_info_aicemask, &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (vsnon,            halo_info_aicemask, &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloDestroy(halo_info_aicemask)
 
-      call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info_aicemask, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (vicen,            halo_info_aicemask, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (vsnon,            halo_info_aicemask, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (eicen,            halo_info_aicemask, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (esnon,            halo_info_aicemask, &
-                           field_loc_center, field_type_scalar)
-      call t_stopf('state_bound_h2')
-
-      call t_barrierf('state_bound_hd_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_hd')
-      call ice_HaloDestroy(halo_info_aicemask)
-      call t_stopf('state_bound_hd')
-
-   else
-
-      call t_barrierf('state_bound_h1_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_h1')
-
-      call ice_HaloUpdate (aicen,            halo_info, &
-                           field_loc_center, field_type_scalar)
-
-      call t_stopf('state_bound_h1')
-
-      call t_barrierf('state_bound_h2_BARRIER',MPI_COMM_ICE)
-      call t_startf('state_bound_h2')
-
-      call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (vicen,            halo_info, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (vsnon,            halo_info, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (eicen,            halo_info, &
-                           field_loc_center, field_type_scalar)
-
-      call ice_HaloUpdate (esnon,            halo_info, &
-                           field_loc_center, field_type_scalar)
-      call t_stopf('state_bound_h2')
-
-   endif
+      else
+         call ice_HaloUpdate (trcrn(:,:,1:ntrcr,:,:), halo_info, &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (vicen,            halo_info, &
+                              field_loc_center, field_type_scalar)
+         call ice_HaloUpdate (vsnon,            halo_info, &
+                              field_loc_center, field_type_scalar)
+      endif
 
       end subroutine bound_state
 

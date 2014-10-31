@@ -1,73 +1,45 @@
+!  SVN:$Id: ice_exit.F90 700 2013-08-15 19:17:39Z eclare $
 !=======================================================================
 !
-!BOP
-!
-! !MODULE: ice_exit - exit the model
-!
-! !DESCRIPTION:
-!
 ! Exit the model. 
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_exit.F90 82 2007-10-02 15:44:25Z eclare $
-!
 ! authors William H. Lipscomb (LANL)
 !         Elizabeth C. Hunke (LANL)
 ! 2006 ECH: separated serial and mpi functionality
-!
-! !INTERFACE:
-!
+
       module ice_exit
-!
-! !USES:
-!
+
       use ice_kinds_mod
-!
-!EOP
-!
+
       implicit none
+      public
 
 !=======================================================================
 
       contains
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: abort_ice - abort the model
-!
-! !INTERFACE:
-!
+
       subroutine abort_ice(error_message)
-!
-! !DESCRIPTION:
-!
+
 !  This routine aborts the ice model and prints an error message.
-!
-! !REVISION HISTORY:
-!
-! same as module
-!
-! !USES:
-!
-      use ice_fileunits
-      use ice_communicate
-#ifdef CCSMCOUPLED
+
+      use ice_fileunits, only: nu_diag, ice_stderr, flush_fileunit
+#if (defined CCSMCOUPLED)
       use shr_sys_mod
 #endif
 
       include 'mpif.h'   ! MPI Fortran include file
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       character (len=*), intent(in) :: error_message
-!
-!EOP
-!
+
+      ! local variables
+
       integer (int_kind) :: ierr ! MPI error flag
 
-#ifdef CCSMCOUPLED
+#if (defined CCSMCOUPLED)
+      call flush_fileunit(nu_diag)
+      write (nu_diag,*) error_message
+      call flush_fileunit(nu_diag)
       call shr_sys_abort(error_message)
 #else
       call flush_fileunit(nu_diag)
@@ -82,33 +54,15 @@
       end subroutine abort_ice
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: end_run - ends run
-!
-! !INTERFACE:
-!
+
       subroutine end_run
-!
-! !DESCRIPTION:
-!
+
 ! Ends run by calling MPI_FINALIZE.
-!
-! !REVISION HISTORY:
-!
-! author: ?
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
 
       integer (int_kind) :: ierr ! MPI error flag
 
       call MPI_FINALIZE(ierr)
-!
-!EOP
-!
+
       end subroutine end_run
 
 !=======================================================================

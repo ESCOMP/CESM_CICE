@@ -1,35 +1,25 @@
+!  SVN:$Id: ice_timers.F90 707 2013-08-22 21:21:05Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_timers
 
-!BOP
-! !MODULE: timers
-!
-! !DESCRIPTION:
 !  This module contains routine for supporting multiple CPU timers
 !  and accumulates time for each individual block and node (task).
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_timers.F90 20 2006-09-01 17:09:49Z  $
-!
 ! 2005: Adapted from POP by William Lipscomb
 !       Replaced 'stdout' by 'nu_diag'
-!
-! !USES:
 
    use ice_kinds_mod
-   use ice_constants
-   use ice_domain
-   use ice_global_reductions
-   use ice_exit
+   use ice_constants, only: c0, c1, bignum
+   use ice_domain, only: nblocks, distrb_info
+   use ice_global_reductions, only: global_minval, global_maxval, global_sum
+   use ice_exit, only: abort_ice
    use ice_fileunits, only: nu_diag
    use ice_communicate, only: my_task, master_task
 
    implicit none
    private
    save
-
-! !PUBLIC MEMBER FUNCTIONS:
 
    public :: init_ice_timers,     &
              get_ice_timer,       &
@@ -39,9 +29,6 @@
              ice_timer_print,     &
              ice_timer_print_all, &
              ice_timer_check
-
-!EOP
-!BOC
 
 !-----------------------------------------------------------------------
 ! public timers
@@ -55,14 +42,16 @@
       timer_column,           &! column
       timer_thermo,           &! thermodynamics
       timer_sw,               &! radiative transfer
+      timer_ponds,            &! melt ponds
       timer_ridge,            &! ridging
       timer_catconv,          &! category conversions
       timer_couple,           &! coupling
       timer_readwrite,        &! read/write
       timer_diags,            &! diagnostics/history
       timer_hist,             &! diagnostics/history
-      timer_bound              ! boundary updates
-!      timer_tmp                ! for temporary timings
+      timer_bound,            &! boundary updates
+      timer_bgc                ! biogeochemistry
+!      timer_tmp               ! for temporary timings
 
 !-----------------------------------------------------------------------
 !
@@ -115,28 +104,17 @@
    real (dbl_kind) ::               &
       clock_rate               ! clock rate in seconds for each cycle
 
-
-!EOC
 !***********************************************************************
 
  contains
 
 !***********************************************************************
-!BOP
-! !IROUTINE: init_ice_timers
-! !INTERFACE:
 
  subroutine init_ice_timers
 
-! !DESCRIPTION:
 !  This routine initializes machine parameters and timer structures
 !  for computing cpu time from F90 intrinsic timer functions.
-!
-! !REVISION HISTORY:
-!  same as module
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -194,12 +172,13 @@
    end do
 
    call get_ice_timer(timer_total,    'Total',    nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_step,     'Step',     nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_step,     'TimeLoop', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_dynamics, 'Dynamics', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_advect,   'Advection',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_column,   'Column',   nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_thermo,   'Thermo',   nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_sw,       'Shortwave',nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_ponds,    'Meltponds',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_ridge,    'Ridging',  nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_catconv,  'Cat Conv', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_couple,   'Coupling', nblocks,distrb_info%nprocs)
@@ -207,28 +186,19 @@
    call get_ice_timer(timer_diags,    'Diags    ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_hist,     'History  ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bound,    'Bound',    nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_bgc,      'BGC',      nblocks,distrb_info%nprocs)
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
 
 !-----------------------------------------------------------------------
-!EOC
 
    end subroutine init_ice_timers
 
 !***********************************************************************
-!BOP
-! !IROUTINE: get_ice_timer
-! !INTERFACE:
 
  subroutine get_ice_timer(timer_id, name_choice, num_blocks, num_nodes)
 
-! !DESCRIPTION:
 !  This routine initializes a timer with a given name and returns a 
 !  timer id.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    character (*), intent(in) :: &
       name_choice               ! input name for this timer
@@ -239,13 +209,9 @@
                                 ! (can be =1 if timer called outside
                                 !  threaded region)
 
-! !OUTPUT PARAMETERS:
-
    integer (int_kind), intent(out) :: &
       timer_id           ! timer number assigned to this timer 
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -294,32 +260,20 @@
                     
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine get_ice_timer
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_clear
-! !INTERFACE:
 
  subroutine ice_timer_clear(timer_id)
 
-! !DESCRIPTION:
 !  This routine resets the time for a timer which has already been
 !  defined.  NOTE: This routine must be called from outside a threaded
 !  region to ensure correct reset of block timers.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                ! timer number
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  if the timer has been defined, reset all times to 0
@@ -347,26 +301,16 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_clear
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_start
-! !INTERFACE:
 
  subroutine ice_timer_start(timer_id, block_id)
 
-! !DESCRIPTION:
 !  This routine starts a given node timer if it has not already
 !  been started by another thread.  If block information is available,
 !  the appropriate block timer is also started.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -382,8 +326,6 @@
    integer (int_kind) :: &
       cycles                   ! count rate return by sys_clock
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  if timer is defined, start it up
@@ -453,25 +395,15 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_start
  
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_stop
-! !INTERFACE:
 
  subroutine ice_timer_stop(timer_id, block_id)
 
-! !DESCRIPTION:
 !  This routine stops a given node timer if appropriate.  If block 
 !  information is available the appropriate block timer is also stopped.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -484,8 +416,6 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -597,26 +527,16 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_stop
  
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_print
-! !INTERFACE:
 
  subroutine ice_timer_print(timer_id,stats)
 
-! !DESCRIPTION:
 !  Prints the accumulated time for a given timer and optional
 !  statistics for that timer. It is assumed that this routine
 !  is called outside of a block loop.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                ! timer number
@@ -625,8 +545,6 @@
       stats                   ! if true, print statistics for node
                               !   and block times for this timer
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -749,33 +667,21 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_print
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_print_all
-! !INTERFACE:
 
  subroutine ice_timer_print_all(stats)
 
-! !DESCRIPTION:
 !  Prints the accumulated time for a all timers and optional
 !  statistics for that timer. It is assumed that this routine
 !  is called outside of a block loop.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    logical (log_kind), intent(in), optional :: &
       stats                   ! if true, print statistics for node
                               !   and block times for this timer
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -805,26 +711,16 @@
    end do
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_print_all
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_check
-! !INTERFACE:
 
  subroutine ice_timer_check(timer_id,block_id)
 
-! !DESCRIPTION:
 !  This routine checks a given timer by stopping and restarting the
 !  timer.  This is primarily used to periodically accumulate time in 
 !  the timer to prevent timer cycles from wrapping around max_cycles.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -837,8 +733,6 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  stop and restart the requested timer
@@ -854,7 +748,6 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_check
 

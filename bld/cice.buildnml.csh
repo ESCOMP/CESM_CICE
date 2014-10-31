@@ -45,6 +45,14 @@ else
 endif
 set ice_in_filename = ${default_ice_in_filename}${inst_string}
 
+if ($NINST_ICE > 1) then
+  # If multi-instance case does not have restart file, use single-case restart
+  # for each instance
+  if (! -e $RUNDIR/rpointer.ice${inst_string} && -e $RUNDIR/rpointer.ice) then
+    cp -v $RUNDIR/rpointer.ice $RUNDIR/rpointer.ice${inst_string}
+  endif
+endif
+
 if (-e $CASEROOT/user_nl_cice${inst_string}) then
   ${CASEROOT}/Tools/user_nlcreate -user_nl_file $CASEROOT/user_nl_cice${inst_string} \
 	-namelist_name cice_inparm >! $CASEBUILD/ciceconf/cesm_namelist 
@@ -55,6 +63,7 @@ setenv INST_STRING $inst_string
 $CODEROOT/ice/cice/bld/build-namelist \
     -infile $CASEBUILD/ciceconf/cesm_namelist \
     -inputdata $CASEBUILD/cice.input_data_list \
+    -rundir $RUNDIR \
     -caseroot $CASEROOT \
     -scriptsroot $SCRIPTSROOT  \
     -inst_string "$inst_string" \

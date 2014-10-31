@@ -1,15 +1,8 @@
+!  SVN:$Id: ice_ocean.F90 704 2013-08-20 23:43:58Z eclare $
 !=======================================================================
-!BOP
-!
-! !MODULE: ice_ocean - ocean mixed layer internal to sea ice model
-!
-! !DESCRIPTION:
-!
+
 ! Ocean mixed layer calculation (internal to sea ice model).
 ! Allows heat storage in ocean for uncoupled runs.
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_ocean.F90 131 2008-05-30 16:53:40Z eclare $
 !
 ! authors:   John Weatherly, CRREL
 !            C.M. Bitz, UW
@@ -20,22 +13,19 @@
 ! 2004: Block structure added by William Lipscomb
 ! 2005: Ocean-to-atmosphere fluxes added as 3D arrays, William Lipscomb
 ! 2006: Converted to free source form (F90) by Elizabeth Hunke
-!
-! !INTERFACE:
-!
+
       module ice_ocean
-!
-! !USES:
-!
+
       use ice_kinds_mod
       use ice_constants
-!
-!EOP
-!
+
       implicit none
       save
 
-      logical (kind=log_kind) :: &
+      private
+      public :: ocean_mixed_layer
+
+      logical (kind=log_kind), public :: &
          oceanmixed_ice           ! if true, use ocean mixed layer
 
       real (kind=dbl_kind), parameter :: &
@@ -46,39 +36,32 @@
       contains
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ocean_mixed_layer - compute SST and freeze/melt potential
-!
-! !DESCRIPTION:
-!
+
 ! Compute the mixed layer heat balance and update the SST.
 ! Compute the energy available to freeze or melt ice.
 ! NOTE: SST changes due to fluxes through the ice are computed in
 !       ice_therm_vertical.
-!
-! !REVISION HISTORY: same as module
-!
-! !INTERFACE:
-!
-      subroutine ocean_mixed_layer (dt)
-!
-! !USES:
-!
-      use ice_blocks
-      use ice_domain
-      use ice_state, only: aice, uvel, vvel
-      use ice_flux
+
+      subroutine ocean_mixed_layer (dt, iblk)
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_state, only: aice
+      use ice_flux, only: sst, Tf, Qa, uatm, vatm, wind, potT, rhoa, zlvl, &
+           frzmlt, fhocn, fswthru, flw, flwout_ocn, fsens_ocn, flat_ocn, evap_ocn, &
+           alvdr_ocn, alidr_ocn, alvdf_ocn, alidf_ocn, swidf, swvdf, swidr, swvdr, &
+           qdp, hmix, strairx_ocn, strairy_ocn, Tref_ocn, Qref_ocn
       use ice_grid, only: tmask
-      use ice_atmo, only: atmo_boundary_layer, atmbndy, atmo_boundary_const
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_atmo, only: atmo_boundary_layer, atmbndy, atmo_boundary_const, &
+           Cdn_atm, Cdn_atm_ocn
+
       real (kind=dbl_kind), intent(in) :: &
          dt      ! time step
-!
-!EOP
-!
+
+      integer (kind=int_kind), intent(in) :: &
+         iblk    ! block index
+
+      ! local variables
+
       real (kind=dbl_kind) :: &
          TsfK , & ! surface temperature (K)
          swabs    ! surface absorbed shortwave heat flux (W/m^2)
@@ -88,9 +71,7 @@
 
       integer (kind=int_kind) :: &
          i, j           , & ! horizontal indices
-         ij             , & ! combined ij index
-         iblk           , & ! block index
-         ilo,ihi,jlo,jhi    ! beginning and end of physical domain
+         ij                 ! combined ij index
 
       real (kind=dbl_kind), dimension(nx_block,ny_block) :: &
          delt  , & ! potential temperature difference   (K)
@@ -98,16 +79,11 @@
          shcoef, & ! transfer coefficient for sensible heat
          lhcoef    ! transfer coefficient for latent heat
 
-      integer (kind=int_kind), save :: &
+      integer (kind=int_kind) :: &
          icells    ! number of ocean cells
 
-      integer (kind=int_kind), dimension(nx_block*ny_block), save :: &
+      integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! compressed indices for ocean cells
-
-      type (block) :: &
-         this_block           ! block information for current block
-
-      do iblk = 1, nblocks
 
       !-----------------------------------------------------------------
       ! Identify ocean cells.
@@ -115,6 +91,8 @@
       !-----------------------------------------------------------------
 
          icells = 0
+         indxi(:) = 0
+         indxj(:) = 0
          do j = 1, ny_block
          do i = 1, nx_block
             if (tmask(i,j,iblk)) then
@@ -138,7 +116,7 @@
 
          if (trim(atmbndy) == 'constant') then
             call atmo_boundary_const (nx_block,  ny_block,   &
-                                      'ice',     icells,     &
+                                      'ocn',     icells,     &
                                       indxi,     indxj,      &
                                       uatm       (:,:,iblk), &   
                                       vatm       (:,:,iblk), &   
@@ -146,8 +124,15 @@
                                       rhoa       (:,:,iblk), &
                                       strairx_ocn(:,:,iblk), & 
                                       strairy_ocn(:,:,iblk), & 
+                                      sst        (:,:,iblk), &    
+                                      potT       (:,:,iblk), &
+                                      Qa         (:,:,iblk), &     
+                                      delt       (:,:),      &    
+                                      delq       (:,:),      &
                                       lhcoef     (:,:),      &
-                                      shcoef     (:,:) )
+                                      shcoef     (:,:),      &
+                                      Cdn_atm(:,:,iblk)) 
+
          else ! default
             call atmo_boundary_layer (nx_block,  ny_block,   &
                                       'ocn',     icells,     &
@@ -156,21 +141,20 @@
                                       potT       (:,:,iblk), &
                                       uatm       (:,:,iblk), &   
                                       vatm       (:,:,iblk), &   
-                                      uvel       (:,:,iblk), &   
-                                      vvel       (:,:,iblk), &   
                                       wind       (:,:,iblk), &   
                                       zlvl       (:,:,iblk), &   
                                       Qa         (:,:,iblk), &     
                                       rhoa       (:,:,iblk), &
                                       strairx_ocn(:,:,iblk), & 
                                       strairy_ocn(:,:,iblk), & 
-                                      Uref_ocn   (:,:,iblk), &
                                       Tref_ocn   (:,:,iblk), & 
                                       Qref_ocn   (:,:,iblk), & 
                                       delt       (:,:),      &    
                                       delq       (:,:),      &
                                       lhcoef     (:,:),      &
-                                      shcoef     (:,:) )
+                                      shcoef     (:,:),      &
+                                      Cdn_atm(:,:,iblk),     & 
+                                      Cdn_atm_ocn(:,:,iblk)  )
          endif
 
       !-----------------------------------------------------------------
@@ -232,7 +216,6 @@
          if (sst(i,j,iblk) <= Tf(i,j,iblk)) sst(i,j,iblk) = Tf(i,j,iblk)
 
       enddo                     ! ij
-      enddo                     ! iblk
 
       end subroutine ocean_mixed_layer
 

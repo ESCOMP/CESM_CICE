@@ -1,15 +1,11 @@
+!  SVN:$Id: ice_boundary.F90 744 2013-09-27 22:53:24Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-!BOP
-! !MODULE: ice_boundary
 
  module ice_boundary
 
-! !DESCRIPTION:
 !  This module contains data types and routines for updating halo
 !  regions (ghost cells) using MPI calls
 !
-! !REVISION HISTORY:
-!  SVN:$Id: ice_boundary.F90 231 2009-09-01 23:16:05Z eclare $
 !  2007-07-19: Phil Jones, Yoshi Yoshida, John Dennis
 !              new naming conventions, optimizations during
 !              initialization, true multi-dimensional updates 
@@ -18,18 +14,14 @@
 !  2008-01-28: Elizabeth Hunke replaced old routines with new POP
 !              infrastructure
 
-! !USES:
-
    use ice_kinds_mod
    use ice_communicate, only: my_task, mpiR4, mpiR8, mpitagHalo
-   use ice_domain_size, only: max_blocks
    use ice_constants, only: field_type_scalar, &
-          field_type_vector, field_type_angle, &
+         field_type_vector, field_type_angle, &
          field_loc_center,  field_loc_NEcorner, &
          field_loc_Nface, field_loc_Eface
    use ice_global_reductions, only: global_maxval
-   use ice_fileunits, only: nu_diag, flush_fileunit
-   use ice_exit
+   use ice_exit, only: abort_ice
 
    use ice_blocks, only: nx_block, ny_block, nghost, &
            nblocks_tot, ice_blocksNorth, &
@@ -44,10 +36,9 @@
 
    implicit none
    private
-   include 'mpif.h'
    save
 
-! !PUBLIC TYPES:
+   include 'mpif.h'
 
    type, public :: ice_halo
       integer (int_kind) ::  &
@@ -78,14 +69,12 @@
 
    end type
 
-! !PUBLIC MEMBER FUNCTIONS:
-
-   public :: ice_HaloCreate,  &
-             ice_HaloMask,  &
-             ice_HaloDestroy, &
-             ice_HaloUpdate,  &
-             ice_HaloUpdate_stress,  &
-             ice_HaloExtrapolate
+   public :: ice_HaloCreate, &
+             ice_HaloMask, &
+             ice_HaloUpdate, &
+             ice_HaloUpdate_stress, &
+             ice_HaloExtrapolate, &
+             ice_HaloDestroy
 
    interface ice_HaloUpdate  ! generic interface
       module procedure ice_HaloUpdate2DR8, &
@@ -104,9 +93,6 @@
 !                       ice_HaloExtrapolate2DR4, &  ! not yet
 !                       ice_HaloExtrapolate2DI4, &  ! implemented
    end interface
-
-!EOP
-!BOC
 
 !-----------------------------------------------------------------------
 !
@@ -147,28 +133,18 @@
    real (dbl_kind), dimension(:,:), allocatable :: &
       bufTripoleR8
 
-!EOC
 !***********************************************************************
 
 contains
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloCreate
-! !INTERFACE:
 
  function ice_HaloCreate(dist, nsBoundaryType, ewBoundaryType, &
                          nxGlobal)  result(halo)
 
-! !DESCRIPTION:
 !  This routine creates a halo type with info necessary for
 !  performing a halo (ghost cell) update. This info is computed
 !  based on the input block distribution.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    type (distrb), intent(in) :: &
       dist             ! distribution of blocks across procs
@@ -180,13 +156,9 @@ contains
    integer (int_kind), intent(in) :: &
       nxGlobal           ! global grid extent for tripole grids
 
-! !OUTPUT PARAMETERS:
-
    type (ice_halo) :: &
       halo               ! a new halo type with info for halo updates
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -194,7 +166,6 @@ contains
 !-----------------------------------------------------------------------
 
    integer (int_kind) ::             &
-      i,j,k,l,n,m,&
       istat,                       &! allocate status flag
       numProcs,                    &! num of processors involved
       communicator,                &! communicator for message passing
@@ -1026,43 +997,28 @@ contains
 
    end do msgConfigLoop
 
-!   write(nu_diag,'(a,5i8)') 'ice_HaloCreate ',my_task,halo%numMsgSend,halo%numMsgRecv, &
-!      sum(halo%sizeSend(1:halo%numMsgSend)),sum(halo%sizeRecv(1:halo%numMsgRecv))
-
 !-----------------------------------------------------------------------
-!EOC
 
  end function ice_HaloCreate
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloMask
-! !INTERFACE:
 
  subroutine ice_HaloMask(halo, basehalo, mask)
 
-! !DESCRIPTION:
 !  This routine creates a halo type with info necessary for
 !  performing a halo (ghost cell) update. This info is computed
 !  based on a base halo already initialized and a mask
-!
-! !REVISION HISTORY:
-!  same as module
 
-! !INPUT PARAMETERS:
+   use ice_domain_size, only: max_blocks
 
    type (ice_halo) :: &
       basehalo            ! basehalo to mask
    integer (int_kind), intent(in) ::  &
       mask(nx_block,ny_block,max_blocks)   ! mask of live points
 
-! !OUTPUT PARAMETERS:
-
    type (ice_halo) :: &
       halo               ! a new halo type with info for halo updates
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -1080,8 +1036,8 @@ contains
       lbufSizeSend,                &! buffer size for send messages
       lbufSizeRecv                  ! buffer size for recv messages
    logical (log_kind) :: &
-      tripoleTFlag,                &! flag for processing tripole buffer as T-fold
-      tmpflag                       ! temporary flag for if tests
+      tripoleTFlag,    &      ! flag for processing tripole buffer as T-fold
+      tmpflag                 ! temporary flag for setting halomask along T-fold
 
 !-----------------------------------------------------------------------
 !
@@ -1120,20 +1076,10 @@ contains
       halo%communicator   = communicator
       halo%tripoleRows    = tripoleRows
       halo%tripoleTFlag   = tripoleTFlag
-!      halo%numMsgSend     = numMsgSend
-!      halo%numMsgRecv     = numMsgRecv
       halo%numLocalCopies = numLocalCopies
 
-!      halo%recvTask       = basehalo%recvTask
-!      halo%sendTask       = basehalo%sendTask
-!      halo%sizeSend       = basehalo%sizeSend
-!      halo%sizeRecv       = basehalo%sizeRecv
-!      halo%tripSend       = basehalo%tripSend
-!      halo%tripRecv       = basehalo%tripRecv
       halo%srcLocalAddr   = basehalo%srcLocalAddr
       halo%dstLocalAddr   = basehalo%dstLocalAddr
-!      halo%sendAddr       = basehalo%sendAddr
-!      halo%recvAddr       = basehalo%recvAddr
 
    numMsgSend = 0
    do nmsg=1,basehalo%numMsgSend
@@ -1142,9 +1088,8 @@ contains
          icel     = basehalo%sendAddr(1,n,nmsg)
          jcel     = basehalo%sendAddr(2,n,nmsg)
          nblock   = basehalo%sendAddr(3,n,nmsg)
-
 ! the following line fails bounds check for mask when tripSend /= 0
-!         if (mask(icel,jcel,abs(nblock)) /= 0 .or. basehalo%tripSend(nmsg) /= 0) then
+!        if (mask(icel,jcel,abs(nblock)) /= 0 .or. basehalo%tripSend(nmsg) /= 0) then
          tmpflag = .false.
          if (basehalo%tripSend(nmsg) /= 0) then
             tmpflag = .true.
@@ -1175,16 +1120,15 @@ contains
          icel     = basehalo%recvAddr(1,n,nmsg)
          jcel     = basehalo%recvAddr(2,n,nmsg)
          nblock   = basehalo%recvAddr(3,n,nmsg)
-
-! the following line fails bounds check for mask when tripSend /= 0
-!         if (mask(icel,jcel,abs(nblock)) /= 0 .or. basehalo%tripRecv(nmsg) /= 0) then
+! the following line fails bounds check for mask when tripRecv /= 0
+!        if (mask(icel,jcel,abs(nblock)) /= 0 .or. basehalo%tripRecv(nmsg) /= 0) then
          tmpflag = .false.
          if (basehalo%tripRecv(nmsg) /= 0) then
             tmpflag = .true.
          elseif (mask(icel,jcel,abs(nblock)) /= 0) then
             tmpflag = .true.
          endif
-
+         
          if (tmpflag) then
             scnt = scnt + 1
             if (scnt == 1) then
@@ -1202,71 +1146,19 @@ contains
    halo%numMsgRecv = numMsgRecv     
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloMask
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloDestroy
-! !INTERFACE:
-
- subroutine ice_HaloDestroy(halo)
-
-! !DESCRIPTION:
-!  This routine creates a halo type with info necessary for
-!  performing a halo (ghost cell) update. This info is computed
-!  based on the input block distribution.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
-
-! !OUTPUT PARAMETERS:
-
-   type (ice_halo) :: &
-      halo               ! a new halo type with info for halo updates
-
-!EOP
-!BOC
-   integer (int_kind) ::           &
-      istat                      ! error or status flag for MPI,alloc
-!-----------------------------------------------------------------------
-
-   deallocate(halo%sendTask, stat=istat)
-   deallocate(halo%recvTask, stat=istat)
-   deallocate(halo%sizeSend, stat=istat)
-   deallocate(halo%sizeRecv, stat=istat)
-   deallocate(halo%tripSend, stat=istat)
-   deallocate(halo%tripRecv, stat=istat)
-   deallocate(halo%srcLocalAddr, stat=istat)
-   deallocate(halo%dstLocalAddr, stat=istat)
-   deallocate(halo%sendAddr, stat=istat)
-   deallocate(halo%recvAddr, stat=istat)
-
-end subroutine ice_HaloDestroy
-!***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate2DR8
-! !INTERFACE:
 
  subroutine ice_HaloUpdate2DR8(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 2d horizontal arrays of double precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -1283,16 +1175,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -1300,7 +1186,7 @@ end subroutine ice_HaloDestroy
 !-----------------------------------------------------------------------
 
    integer (int_kind) ::           &
-      i,j,n,nmsg,                &! dummy loop indices
+      i,j,n,nmsg,                    &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       nxGlobal,                  &! global domain size in x (tripole)
       iSrc,jSrc,                 &! source addresses for message
@@ -1400,12 +1286,11 @@ end subroutine ice_HaloDestroy
                      halo%communicator, sndRequest(nmsg), ierr)
    end do
 
-
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -1656,355 +1541,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate2DR8
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate_stress
-! !INTERFACE:
-
- subroutine ice_HaloUpdate_stress(array1, array2, halo, &
-                               fieldLoc, fieldKind,     &
-                               fillValue)
-
-! !DESCRIPTION:
-!  This routine updates ghost cells for an input array using
-!  a second array as needed by the stress fields.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
-
-   type (ice_halo), intent(in) :: &
-      halo                 ! precomputed halo structure containing all
-                           !  information needed for halo update
-
-   integer (int_kind), intent(in) :: &
-      fieldKind,          &! id for type of field (scalar, vector, angle)
-      fieldLoc             ! id for location on horizontal grid
-                           !  (center, NEcorner, Nface, Eface)
-
-   real (dbl_kind), intent(in), optional :: &
-      fillValue            ! optional value to put in ghost cells
-                           !  where neighbor points are unknown
-                           !  (e.g. eliminated land blocks or
-                           !   closed boundaries)
-
-! !INPUT/OUTPUT PARAMETERS:
-
-   real (dbl_kind), dimension(:,:,:), intent(inout) :: &
-      array1           ,&  ! array containing field for which halo
-                           ! needs to be updated
-      array2               ! array containing field for which halo
-                           ! in array1 needs to be updated
-
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (int_kind) ::           &
-      i,j,n,nmsg,                &! dummy loop indices
-      ierr,                      &! error or status flag for MPI,alloc
-      nxGlobal,                  &! global domain size in x (tripole)
-      iSrc,jSrc,                 &! source addresses for message
-      iDst,jDst,                 &! dest   addresses for message
-      srcBlock,                  &! local block number for source
-      dstBlock,                  &! local block number for destination
-      ioffset, joffset,          &! address shifts for tripole
-      isign                       ! sign factor for tripole grids
-
-   integer (int_kind), dimension(:), allocatable :: &
-      sndRequest,      &! MPI request ids
-      rcvRequest        ! MPI request ids
-
-   integer (int_kind), dimension(:,:), allocatable :: &
-      sndStatus,       &! MPI status flags
-      rcvStatus         ! MPI status flags
-
-   real (dbl_kind) :: &
-      fill,            &! value to use for unknown points
-      x1,x2,xavg        ! scalars for enforcing symmetry at U pts
-
-   integer (int_kind) ::  len  ! length of messages
-
-!-----------------------------------------------------------------------
-!
-!  initialize error code and fill value
-!
-!-----------------------------------------------------------------------
-
-   if (present(fillValue)) then
-      fill = fillValue
-   else
-      fill = 0.0_dbl_kind
-   endif
-
-   nxGlobal = 0
-   if (allocated(bufTripoleR8)) then
-      nxGlobal = size(bufTripoleR8,dim=1)
-      bufTripoleR8 = fill
-   endif
-
-!-----------------------------------------------------------------------
-!
-!  allocate request and status arrays for messages
-!
-!-----------------------------------------------------------------------
-
-   allocate(sndRequest(halo%numMsgSend), &
-            rcvRequest(halo%numMsgRecv), &
-            sndStatus(MPI_STATUS_SIZE,halo%numMsgSend), &
-            rcvStatus(MPI_STATUS_SIZE,halo%numMsgRecv), stat=ierr)
-
-   if (ierr > 0) then
-      call abort_ice( &
-         'ice_HaloUpdate_stress: error allocating req,status arrays')
-      return
-   endif
-
-!-----------------------------------------------------------------------
-!
-!  post receives
-!
-!-----------------------------------------------------------------------
-
-   do nmsg=1,halo%numMsgRecv
-
-      len = halo%SizeRecv(nmsg)
-      call MPI_IRECV(bufRecvR8(1:len,nmsg), len, mpiR8, &
-                     halo%recvTask(nmsg),               &
-                     mpitagHalo + halo%recvTask(nmsg),  &
-                     halo%communicator, rcvRequest(nmsg), ierr)
-   end do
-
-!-----------------------------------------------------------------------
-!
-!  fill send buffer and post sends
-!
-!-----------------------------------------------------------------------
-
-   do nmsg=1,halo%numMsgSend
-
-      do n=1,halo%sizeSend(nmsg)
-         iSrc     = halo%sendAddr(1,n,nmsg)
-         jSrc     = halo%sendAddr(2,n,nmsg)
-         srcBlock = halo%sendAddr(3,n,nmsg)
-
-         bufSendR8(n,nmsg) = array2(iSrc,jSrc,srcBlock)
-      end do
-      do n=halo%sizeSend(nmsg)+1,bufSizeSend
-         bufSendR8(n,nmsg) = fill  ! fill remainder of buffer
-      end do
-
-      len = halo%SizeSend(nmsg)
-      call MPI_ISEND(bufSendR8(1:len,nmsg), len, mpiR8, &
-                     halo%sendTask(nmsg),               &
-                     mpitagHalo + my_task,              &
-                     halo%communicator, sndRequest(nmsg), ierr)
-   end do
-
-!-----------------------------------------------------------------------
-!
-!  while messages are being communicated,
-!  do NOT zero the halo out, this halo update just updates
-!  the tripole zipper as needed for stresses.  if you zero
-!  it out, all halo values will be wiped out.
-!-----------------------------------------------------------------------
-!   do j = 1,nghost
-!      array1(1:nx_block,           j,:) = fill
-!      array1(1:nx_block,ny_block-j+1,:) = fill
-!   enddo
-!   do i = 1,nghost
-!      array1(i,           1:ny_block,:) = fill
-!      array1(nx_block-i+1,1:ny_block,:) = fill
-!   enddo
-
-!-----------------------------------------------------------------------
-!
-!  do local copies while waiting for messages to complete
-!  if srcBlock is zero, that denotes an eliminated land block or a 
-!    closed boundary where ghost cell values are undefined
-!  if srcBlock is less than zero, the message is a copy out of the
-!    tripole buffer and will be treated later
-!
-!-----------------------------------------------------------------------
-
-   do nmsg=1,halo%numLocalCopies
-      iSrc     = halo%srcLocalAddr(1,nmsg)
-      jSrc     = halo%srcLocalAddr(2,nmsg)
-      srcBlock = halo%srcLocalAddr(3,nmsg)
-      iDst     = halo%dstLocalAddr(1,nmsg)
-      jDst     = halo%dstLocalAddr(2,nmsg)
-      dstBlock = halo%dstLocalAddr(3,nmsg)
-
-      if (srcBlock > 0) then
-         if (dstBlock < 0) then ! tripole copy into buffer
-            bufTripoleR8(iDst,jDst) = &
-            array2(iSrc,jSrc,srcBlock)
-         endif
-      else if (srcBlock == 0) then
-         array1(iDst,jDst,dstBlock) = fill
-     endif
-   end do
-
-!-----------------------------------------------------------------------
-!
-!  wait for receives to finish and then unpack the recv buffer into
-!  ghost cells
-!
-!-----------------------------------------------------------------------
-
-   call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
-
-   do nmsg=1,halo%numMsgRecv
-      do n=1,halo%sizeRecv(nmsg)
-         iDst     = halo%recvAddr(1,n,nmsg)
-         jDst     = halo%recvAddr(2,n,nmsg)
-         dstBlock = halo%recvAddr(3,n,nmsg)
-
-         if (dstBlock < 0) then !tripole
-            bufTripoleR8(iDst,jDst) = bufRecvR8(n,nmsg)
-         endif
-      end do
-   end do
-
-!-----------------------------------------------------------------------
-!
-!  take care of northern boundary in tripole case
-!  bufTripole array contains the top haloWidth+1 rows of physical
-!    domain for entire (global) top row 
-!
-!-----------------------------------------------------------------------
-
-   if (nxGlobal > 0) then
-
-      select case (fieldKind)
-      case (field_type_scalar)
-         isign =  1
-      case (field_type_vector)
-         isign = -1
-      case (field_type_angle)
-         isign = -1
-      case default
-         call abort_ice( &
-            'ice_HaloUpdate_stress: Unknown field kind')
-      end select
-
-      select case (fieldLoc)
-      case (field_loc_center)   ! cell center location
-
-         ioffset = 0
-         joffset = 0
-
-      case (field_loc_NEcorner)   ! cell corner location
-
-         ioffset = 1
-         joffset = 1
-
-      case (field_loc_Eface) 
-
-         ioffset = 1
-         joffset = 0
-
-      case (field_loc_Nface) 
-
-         ioffset = 0
-         joffset = 1
-
-      case default
-         call abort_ice( &
-               'ice_HaloUpdate_stress: Unknown field location')
-      end select
-
-      !*** copy out of global tripole buffer into local
-      !*** ghost cells
-
-      !*** look through local copies to find the copy out
-      !*** messages (srcBlock < 0)
-
-      do nmsg=1,halo%numLocalCopies
-         srcBlock = halo%srcLocalAddr(3,nmsg)
-
-         if (srcBlock < 0) then
-
-            iSrc     = halo%srcLocalAddr(1,nmsg) ! tripole buffer addr
-            jSrc     = halo%srcLocalAddr(2,nmsg)
-
-            iDst     = halo%dstLocalAddr(1,nmsg) ! local block addr
-            jDst     = halo%dstLocalAddr(2,nmsg)
-            dstBlock = halo%dstLocalAddr(3,nmsg)
-
-            !*** correct for offsets
-            iSrc = iSrc - ioffset
-            jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
- 
-            !*** for center and Eface, do not need to replace
-            !*** top row of physical domain, so jSrc should be
-            !*** out of range and skipped
-            !*** otherwise do the copy
-
-            if (jSrc <= nghost+1) then
-               array1(iDst,jDst,dstBlock) = isign*bufTripoleR8(iSrc,jSrc)
-            endif
-
-         endif
-      end do
-
-   endif
-
-!-----------------------------------------------------------------------
-!
-!  wait for sends to complete and deallocate arrays
-!
-!-----------------------------------------------------------------------
-
-   call MPI_WAITALL(halo%numMsgSend, sndRequest, sndStatus, ierr)
-
-   deallocate(sndRequest, rcvRequest, sndStatus, rcvStatus, stat=ierr)
-
-   if (ierr > 0) then
-      call abort_ice( &
-         'ice_HaloUpdate_stress: error deallocating req,status arrays')
-      return
-   endif
-
-!-----------------------------------------------------------------------
-!EOC
- end subroutine ice_HaloUpdate_stress
-
-!***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate2DR4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate2DR4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 2d horizontal arrays of single precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -2021,16 +1570,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    real (real_kind), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -2140,9 +1683,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -2393,31 +1936,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate2DR4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate2DI4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate2DI4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 2d horizontal integer arrays.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -2434,16 +1965,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    integer (int_kind), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -2553,9 +2078,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -2806,31 +2331,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate2DI4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate3DR8
-! !INTERFACE:
 
  subroutine ice_HaloUpdate3DR8(array, halo,                    &
                                fieldLoc, fieldKind, &
-                               fillValue, mode)
+                               fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 3d horizontal arrays of double precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -2847,19 +2360,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-   character(*), intent(in), optional :: &
-      mode                 ! optional value to specify mode of comm
-
-! !INPUT/OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -2897,29 +2401,12 @@ end subroutine ice_HaloDestroy
       bufTripole                  ! 3d tripole buffer
 
    integer (int_kind) :: len ! length of message 
-   logical :: do_send, do_recv
-   save
 
 !-----------------------------------------------------------------------
 !
 !  initialize error code and fill value
 !
 !-----------------------------------------------------------------------
-
-   do_send = .true.
-   do_recv = .true.
-   if (present(mode)) then
-      if (trim(mode) == 'send') then
-         do_send=.true.
-         do_recv=.false.
-      elseif (trim(mode) == 'recv') then
-         do_send=.false.
-         do_recv=.true.
-      else
-         call abort_ice( &
-         'ice_HaloUpdate3DR8: illegal mode : '//trim(mode))
-      endif
-   endif
 
    if (present(fillValue)) then
       fill = fillValue
@@ -2935,8 +2422,6 @@ end subroutine ice_HaloDestroy
 !  allocate request and status arrays for messages
 !
 !-----------------------------------------------------------------------
-
- if (do_send) then
 
    allocate(sndRequest(halo%numMsgSend), &
             rcvRequest(halo%numMsgRecv), &
@@ -3017,9 +2502,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -3068,7 +2553,6 @@ end subroutine ice_HaloDestroy
          end do
       endif
    end do
- endif   ! do_send
 
 !-----------------------------------------------------------------------
 !
@@ -3077,7 +2561,6 @@ end subroutine ice_HaloDestroy
 !
 !-----------------------------------------------------------------------
 
- if (do_recv) then
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
    do nmsg=1,halo%numMsgRecv
@@ -3278,6 +2761,7 @@ end subroutine ice_HaloDestroy
       end do
 
    endif
+
 !-----------------------------------------------------------------------
 !
 !  wait for sends to complete and deallocate arrays
@@ -3301,34 +2785,21 @@ end subroutine ice_HaloDestroy
          'ice_HaloUpdate3DR8: error deallocating 3d buffers')
       return
    endif
- endif    ! do_recv
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate3DR8
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate3DR4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate3DR4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 3d horizontal arrays of single precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -3345,16 +2816,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    real (real_kind), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -3493,9 +2958,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -3778,31 +3243,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate3DR4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate3DI4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate3DI4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 3d horizontal arrays of double precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -3819,16 +3272,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    integer (int_kind), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -3967,9 +3414,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -4252,31 +3699,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate3DI4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate4DR8
-! !INTERFACE:
 
  subroutine ice_HaloUpdate4DR8(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 4d horizontal arrays of double precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -4293,16 +3728,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -4445,9 +3874,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -4750,31 +4179,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate4DR8
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate4DR4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate4DR4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 4d horizontal arrays of single precision.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -4791,16 +4208,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    real (real_kind), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -4943,9 +4354,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -5248,31 +4659,19 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate4DR4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloUpdate4DI4
-! !INTERFACE:
 
  subroutine ice_HaloUpdate4DI4(array, halo,                    &
                                fieldLoc, fieldKind, &
                                fillValue)
 
-! !DESCRIPTION:
 !  This routine updates ghost cells for an input array and is a
 !  member of a group of routines under the generic interface
 !  ice\_HaloUpdate.  This routine is the specific interface
 !  for 4d horizontal integer arrays.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !USER:
-
-! !INPUT PARAMETERS:
 
    type (ice_halo), intent(in) :: &
       halo                 ! precomputed halo structure containing all
@@ -5289,16 +4688,10 @@ end subroutine ice_HaloDestroy
                            !  (e.g. eliminated land blocks or
                            !   closed boundaries)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    integer (int_kind), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -5441,9 +4834,9 @@ end subroutine ice_HaloDestroy
 
 !-----------------------------------------------------------------------
 !
-!  while messages are being communicated,
-!  fill out halo region, needed for masked halos to ensure
-!  halo values are fill for halo gridcells that are not updated
+!  while messages are being communicated, fill out halo region
+!  needed for masked halos to ensure halo values are filled for 
+!  halo grid cells that are not updated
 !
 !-----------------------------------------------------------------------
 
@@ -5746,44 +5139,330 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_HaloUpdate4DI4
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloIncrementMsgCount
-! !INTERFACE:
+!  This routine updates ghost cells for an input array using
+!  a second array as needed by the stress fields.
+
+ subroutine ice_HaloUpdate_stress(array1, array2, halo, &
+                               fieldLoc, fieldKind,     &
+                               fillValue)
+
+   type (ice_halo), intent(in) :: &
+      halo                 ! precomputed halo structure containing all
+                           !  information needed for halo update
+
+   integer (int_kind), intent(in) :: &
+      fieldKind,          &! id for type of field (scalar, vector, angle)
+      fieldLoc             ! id for location on horizontal grid
+                           !  (center, NEcorner, Nface, Eface)
+
+   real (dbl_kind), intent(in), optional :: &
+      fillValue            ! optional value to put in ghost cells
+                           !  where neighbor points are unknown
+                           !  (e.g. eliminated land blocks or
+                           !   closed boundaries)
+
+   real (dbl_kind), dimension(:,:,:), intent(inout) :: &
+      array1           ,&  ! array containing field for which halo
+                           ! needs to be updated
+      array2               ! array containing field for which halo
+                           ! in array1 needs to be updated
+
+!  local variables
+
+   integer (int_kind) ::           &
+      i,j,n,nmsg,                &! dummy loop indices
+      ierr,                      &! error or status flag for MPI,alloc
+      nxGlobal,                  &! global domain size in x (tripole)
+      iSrc,jSrc,                 &! source addresses for message
+      iDst,jDst,                 &! dest   addresses for message
+      srcBlock,                  &! local block number for source
+      dstBlock,                  &! local block number for destination
+      ioffset, joffset,          &! address shifts for tripole
+      isign                       ! sign factor for tripole grids
+
+   integer (int_kind), dimension(:), allocatable :: &
+      sndRequest,      &! MPI request ids
+      rcvRequest        ! MPI request ids
+
+   integer (int_kind), dimension(:,:), allocatable :: &
+      sndStatus,       &! MPI status flags
+      rcvStatus         ! MPI status flags
+
+   real (dbl_kind) :: &
+      fill,            &! value to use for unknown points
+      x1,x2,xavg        ! scalars for enforcing symmetry at U pts
+
+   integer (int_kind) ::  len  ! length of messages
+
+!-----------------------------------------------------------------------
+!
+!  initialize error code and fill value
+!
+!-----------------------------------------------------------------------
+
+   if (present(fillValue)) then
+      fill = fillValue
+   else
+      fill = 0.0_dbl_kind
+   endif
+
+   nxGlobal = 0
+   if (allocated(bufTripoleR8)) then
+      nxGlobal = size(bufTripoleR8,dim=1)
+      bufTripoleR8 = fill
+   endif
+
+!-----------------------------------------------------------------------
+!
+!  allocate request and status arrays for messages
+!
+!-----------------------------------------------------------------------
+
+   allocate(sndRequest(halo%numMsgSend), &
+            rcvRequest(halo%numMsgRecv), &
+            sndStatus(MPI_STATUS_SIZE,halo%numMsgSend), &
+            rcvStatus(MPI_STATUS_SIZE,halo%numMsgRecv), stat=ierr)
+
+   if (ierr > 0) then
+      call abort_ice( &
+         'ice_HaloUpdate_stress: error allocating req,status arrays')
+      return
+   endif
+
+!-----------------------------------------------------------------------
+!
+!  post receives
+!
+!-----------------------------------------------------------------------
+
+   do nmsg=1,halo%numMsgRecv
+
+      len = halo%SizeRecv(nmsg)
+      call MPI_IRECV(bufRecvR8(1:len,nmsg), len, mpiR8, &
+                     halo%recvTask(nmsg),               &
+                     mpitagHalo + halo%recvTask(nmsg),  &
+                     halo%communicator, rcvRequest(nmsg), ierr)
+   end do
+
+!-----------------------------------------------------------------------
+!
+!  fill send buffer and post sends
+!
+!-----------------------------------------------------------------------
+
+   do nmsg=1,halo%numMsgSend
+
+      do n=1,halo%sizeSend(nmsg)
+         iSrc     = halo%sendAddr(1,n,nmsg)
+         jSrc     = halo%sendAddr(2,n,nmsg)
+         srcBlock = halo%sendAddr(3,n,nmsg)
+
+         bufSendR8(n,nmsg) = array2(iSrc,jSrc,srcBlock)
+      end do
+      do n=halo%sizeSend(nmsg)+1,bufSizeSend
+         bufSendR8(n,nmsg) = fill  ! fill remainder of buffer
+      end do
+
+      len = halo%SizeSend(nmsg)
+      call MPI_ISEND(bufSendR8(1:len,nmsg), len, mpiR8, &
+                     halo%sendTask(nmsg),               &
+                     mpitagHalo + my_task,              &
+                     halo%communicator, sndRequest(nmsg), ierr)
+   end do
+
+!-----------------------------------------------------------------------
+!
+!  while messages are being communicated,
+!  do NOT zero the halo out, this halo update just updates
+!  the tripole zipper as needed for stresses.  if you zero
+!  it out, all halo values will be wiped out.
+!-----------------------------------------------------------------------
+!   do j = 1,nghost
+!      array1(1:nx_block,           j,:) = fill
+!      array1(1:nx_block,ny_block-j+1,:) = fill
+!   enddo
+!   do i = 1,nghost
+!      array1(i,           1:ny_block,:) = fill
+!      array1(nx_block-i+1,1:ny_block,:) = fill
+!   enddo
+
+!-----------------------------------------------------------------------
+!
+!  do local copies while waiting for messages to complete
+!  if srcBlock is zero, that denotes an eliminated land block or a 
+!    closed boundary where ghost cell values are undefined
+!  if srcBlock is less than zero, the message is a copy out of the
+!    tripole buffer and will be treated later
+!
+!-----------------------------------------------------------------------
+
+   do nmsg=1,halo%numLocalCopies
+      iSrc     = halo%srcLocalAddr(1,nmsg)
+      jSrc     = halo%srcLocalAddr(2,nmsg)
+      srcBlock = halo%srcLocalAddr(3,nmsg)
+      iDst     = halo%dstLocalAddr(1,nmsg)
+      jDst     = halo%dstLocalAddr(2,nmsg)
+      dstBlock = halo%dstLocalAddr(3,nmsg)
+
+      if (srcBlock > 0) then
+         if (dstBlock < 0) then ! tripole copy into buffer
+            bufTripoleR8(iDst,jDst) = &
+            array2(iSrc,jSrc,srcBlock)
+         endif
+      else if (srcBlock == 0) then
+         array1(iDst,jDst,dstBlock) = fill
+     endif
+   end do
+
+!-----------------------------------------------------------------------
+!
+!  wait for receives to finish and then unpack the recv buffer into
+!  ghost cells
+!
+!-----------------------------------------------------------------------
+
+   call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
+
+   do nmsg=1,halo%numMsgRecv
+      do n=1,halo%sizeRecv(nmsg)
+         iDst     = halo%recvAddr(1,n,nmsg)
+         jDst     = halo%recvAddr(2,n,nmsg)
+         dstBlock = halo%recvAddr(3,n,nmsg)
+
+         if (dstBlock < 0) then !tripole
+            bufTripoleR8(iDst,jDst) = bufRecvR8(n,nmsg)
+         endif
+      end do
+   end do
+
+!-----------------------------------------------------------------------
+!
+!  take care of northern boundary in tripole case
+!  bufTripole array contains the top haloWidth+1 rows of physical
+!    domain for entire (global) top row 
+!
+!-----------------------------------------------------------------------
+
+   if (nxGlobal > 0) then
+
+      select case (fieldKind)
+      case (field_type_scalar)
+         isign =  1
+      case (field_type_vector)
+         isign = -1
+      case (field_type_angle)
+         isign = -1
+      case default
+         call abort_ice( &
+            'ice_HaloUpdate_stress: Unknown field kind')
+      end select
+
+      select case (fieldLoc)
+      case (field_loc_center)   ! cell center location
+
+         ioffset = 0
+         joffset = 0
+
+      case (field_loc_NEcorner)   ! cell corner location
+
+         ioffset = 1
+         joffset = 1
+
+      case (field_loc_Eface) 
+
+         ioffset = 1
+         joffset = 0
+
+      case (field_loc_Nface) 
+
+         ioffset = 0
+         joffset = 1
+
+      case default
+         call abort_ice( &
+               'ice_HaloUpdate_stress: Unknown field location')
+      end select
+
+      !*** copy out of global tripole buffer into local
+      !*** ghost cells
+
+      !*** look through local copies to find the copy out
+      !*** messages (srcBlock < 0)
+
+      do nmsg=1,halo%numLocalCopies
+         srcBlock = halo%srcLocalAddr(3,nmsg)
+
+         if (srcBlock < 0) then
+
+            iSrc     = halo%srcLocalAddr(1,nmsg) ! tripole buffer addr
+            jSrc     = halo%srcLocalAddr(2,nmsg)
+
+            iDst     = halo%dstLocalAddr(1,nmsg) ! local block addr
+            jDst     = halo%dstLocalAddr(2,nmsg)
+            dstBlock = halo%dstLocalAddr(3,nmsg)
+
+            !*** correct for offsets
+            iSrc = iSrc - ioffset
+            jSrc = jSrc - joffset
+            if (iSrc == 0) iSrc = nxGlobal
+ 
+            !*** for center and Eface, do not need to replace
+            !*** top row of physical domain, so jSrc should be
+            !*** out of range and skipped
+            !*** otherwise do the copy
+
+            if (jSrc <= nghost+1) then
+               array1(iDst,jDst,dstBlock) = isign*bufTripoleR8(iSrc,jSrc)
+            endif
+
+         endif
+      end do
+
+   endif
+
+!-----------------------------------------------------------------------
+!
+!  wait for sends to complete and deallocate arrays
+!
+!-----------------------------------------------------------------------
+
+   call MPI_WAITALL(halo%numMsgSend, sndRequest, sndStatus, ierr)
+
+   deallocate(sndRequest, rcvRequest, sndStatus, rcvStatus, stat=ierr)
+
+   if (ierr > 0) then
+      call abort_ice( &
+         'ice_HaloUpdate_stress: error deallocating req,status arrays')
+      return
+   endif
+
+!-----------------------------------------------------------------------
+
+ end subroutine ice_HaloUpdate_stress
+
+!***********************************************************************
 
    subroutine ice_HaloIncrementMsgCount(sndCounter, rcvCounter,    &
                                         srcProc, dstProc, msgSize)
 
-! !DESCRIPTION:
 !  This is a utility routine to increment the arrays for counting
 !  whether messages are required.  It checks the source and destination
 !  task to see whether the current task needs to send, receive or
 !  copy messages to fill halo regions (ghost cells).
-
-! !REVISION HISTORY:
-!  Same as module.
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       srcProc,               &! source processor for communication
       dstProc,               &! destination processor for communication
       msgSize                 ! number of words for this message
 
-! !INPUT/OUTPUT PARAMETERS:
-
    integer (int_kind), dimension(:), intent(inout) :: &
       sndCounter,       &! array for counting messages to be sent
       rcvCounter         ! array for counting messages to be received
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  error check
@@ -5841,27 +5520,17 @@ end subroutine ice_HaloDestroy
       endif
    endif
 !-----------------------------------------------------------------------
-!EOC
 
    end subroutine ice_HaloIncrementMsgCount
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloMsgCreate
-! !INTERFACE:
 
    subroutine ice_HaloMsgCreate(halo, srcBlock, srcProc, srcLocalID, &
                                       dstBlock, dstProc, dstLocalID, &
                                       direction)
 
-! !DESCRIPTION:
 !  This is a utility routine to determine the required address and
 !  message information for a particular pair of blocks.
-
-! !REVISION HISTORY:
-!  Same as module.
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       srcBlock,   dstBlock,   & ! source,destination block id
@@ -5873,15 +5542,9 @@ end subroutine ice_HaloDestroy
                              !  (north,south,east,west,
                              !   and NE, NW, SE, SW)
 
-! !INPUT/OUTPUT PARAMETERS:
-
    type (ice_halo), intent(inout) :: &
       halo                   ! data structure containing halo info
 
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -6984,18 +6647,13 @@ end subroutine ice_HaloDestroy
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
    end subroutine ice_HaloMsgCreate
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_HaloExtrapolate
-! !INTERFACE:
 
  subroutine ice_HaloExtrapolate2DR8(ARRAY,dist,ew_bndy_type,ns_bndy_type)
 
-! !DESCRIPTION:
 !  This subroutine extrapolates ARRAY values into the first row or column 
 !  of ghost cells, and is intended for grid variables whose ghost cells 
 !  would otherwise be set using the default boundary conditions (Dirichlet 
@@ -7003,35 +6661,23 @@ end subroutine ice_HaloDestroy
 !  Note: This routine will need to be modified for nghost > 1.
 !        We assume padding occurs only on east and north edges.
 !
-! !REVISION HISTORY:
-!  same as module
-!
-! !REMARKS:
 !  This is the specific interface for double precision arrays 
 !  corresponding to the generic interface ice_HaloExtrapolate
 
-! !USES:
+   use ice_blocks, only: block, nblocks_x, nblocks_y, get_block
+   use ice_constants, only: c2
+   use ice_distribution, only: ice_distributionGetBlockID
 
-   use ice_blocks
-   use ice_constants
-   use ice_distribution
-
-! !INPUT PARAMETERS:
-
-    character (char_len) :: &
+   character (char_len) :: &
        ew_bndy_type,    &! type of domain bndy in each logical
        ns_bndy_type      !    direction (ew is i, ns is j)
 
    type (distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-! !OUTPUT PARAMETERS:
-
    real (dbl_kind), dimension(:,:,:), intent(inout) :: &
      ARRAY          ! array containing distributed field
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -7042,8 +6688,7 @@ end subroutine ice_HaloDestroy
      i,j,iblk,           &! dummy loop indices
      numBlocks,       &! number of local blocks
      blockID,            &! block location
-     ibc,                &! ghost cell column or row
-     npad                 ! padding column/row counter
+     ibc                  ! ghost cell column or row
 
    type (block) :: &
      this_block  ! block info for current block
@@ -7067,12 +6712,13 @@ end subroutine ice_HaloDestroy
                ARRAY(1,j,iblk) = c2*ARRAY(2,j,iblk) - ARRAY(3,j,iblk)
             enddo
          endif
+      endif
 
-      elseif (this_block%iblock == nblocks_x) then  ! east edge
+      if (this_block%iblock == nblocks_x) then  ! east edge
          if (trim(ew_bndy_type) /= 'cyclic') then
             ! locate ghost cell column (avoid padding)
             ibc = nx_block
-            do i = nx_block, 1, - 1
+            do i = nx_block, nghost + 1, -1
                if (this_block%i_glob(i) == 0) ibc = ibc - 1
             enddo
             do j = 1, ny_block
@@ -7087,14 +6733,15 @@ end subroutine ice_HaloDestroy
                ARRAY(i,1,iblk) = c2*ARRAY(i,2,iblk) - ARRAY(i,3,iblk)
             enddo
          endif
+      endif
 
-      elseif (this_block%jblock == nblocks_y) then  ! north edge
+      if (this_block%jblock == nblocks_y) then  ! north edge
          if (trim(ns_bndy_type) /= 'cyclic' .and. &
              trim(ns_bndy_type) /= 'tripole' .and. &
              trim(ns_bndy_type) /= 'tripoleT' ) then
             ! locate ghost cell column (avoid padding)
             ibc = ny_block
-            do j = ny_block, 1, - 1
+            do j = ny_block, nghost + 1, -1
                if (this_block%j_glob(j) == 0) ibc = ibc - 1
             enddo
             do i = 1, nx_block
@@ -7108,6 +6755,34 @@ end subroutine ice_HaloDestroy
 !-----------------------------------------------------------------------
 
  end subroutine ice_HaloExtrapolate2DR8
+
+!***********************************************************************
+
+ subroutine ice_HaloDestroy(halo)
+
+!  This routine creates a halo type with info necessary for
+!  performing a halo (ghost cell) update. This info is computed
+!  based on the input block distribution.
+
+   type (ice_halo) :: &
+      halo               ! a new halo type with info for halo updates
+
+   integer (int_kind) ::           &
+      istat                      ! error or status flag for MPI,alloc
+!-----------------------------------------------------------------------
+
+   deallocate(halo%sendTask, stat=istat)
+   deallocate(halo%recvTask, stat=istat)
+   deallocate(halo%sizeSend, stat=istat)
+   deallocate(halo%sizeRecv, stat=istat)
+   deallocate(halo%tripSend, stat=istat)
+   deallocate(halo%tripRecv, stat=istat)
+   deallocate(halo%srcLocalAddr, stat=istat)
+   deallocate(halo%dstLocalAddr, stat=istat)
+   deallocate(halo%sendAddr, stat=istat)
+   deallocate(halo%recvAddr, stat=istat)
+
+end subroutine ice_HaloDestroy
 
 !***********************************************************************
 

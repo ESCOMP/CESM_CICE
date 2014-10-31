@@ -1,14 +1,7 @@
+!  SVN:$Id: ice_transport_driver.F90 732 2013-09-19 18:19:31Z eclare $
 !=======================================================================
-!BOP
-!
-! !MODULE: ice_transport_driver - drivers for ice transport
-!
-! !DESCRIPTION:
 !
 ! Drivers for remapping and upwind ice transport
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_transport_upwind.F 28 2006-11-03 20:32:53Z eclare $
 !
 ! authors: Elizabeth C. Hunke and William H. Lipscomb, LANL 
 !
@@ -16,25 +9,20 @@
 !       Stripped out mpdata, retained upwind, and added block structure.
 ! 2006: Incorporated remap transport driver and renamed from
 !       ice_transport_upwind.  
-!
-! !INTERFACE:
+! 2011: ECH moved edgearea arrays into ice_transport_remap.F90
 
       module ice_transport_driver
-!
-! !USES:
+
       use ice_kinds_mod
-      use ice_communicate, only: my_task, master_task, MPI_COMM_ICE
-      use ice_domain_size
-      use ice_constants
-      use ice_fileunits
-      use perf_mod,        only: t_startf, t_stopf, t_barrierf
-!
-!EOP
-!
+      use ice_communicate, only: my_task, master_task
+      use ice_fileunits, only: nu_diag
+
       implicit none
+      private
+      public :: init_transport, transport_remap, transport_upwind
       save
 
-      character (len=char_len) ::     &
+      character (len=char_len), public ::     &
          advection   ! type of advection scheme used
                      ! 'upwind' => 1st order donor cell scheme
                      ! 'remap' => remapping scheme
@@ -42,21 +30,17 @@
       logical, parameter :: & ! if true, prescribe area flux across each edge  
          l_fixed_area = .false.
 
-! NOTE: For remapping, hice, hsno, qice, and qsno are considered tracers.
-!       max_ntrace is not equal to max_ntrcr!
+! NOTE: For remapping, hice and hsno are considered tracers.
 !       ntrace is not equal to ntrcr!
-
-      integer (kind=int_kind), parameter ::                      &
-         max_ntrace = 2+max_ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
 
       integer (kind=int_kind) ::                      &
          ntrace              ! number of tracers in use
                           
-      integer (kind=int_kind), dimension (:), allocatable ::     &
-         tracer_type       ,&! = 1, 2, or 3 (see comments below)
+      integer (kind=int_kind), dimension(:), allocatable ::             &
+         tracer_type       ,&! = 1, 2, or 3 (depends on 0, 1 or 2 other tracers)
          depend              ! tracer dependencies (see below)
 
-      logical (kind=log_kind), dimension (:), allocatable ::     &
+      logical (kind=log_kind), dimension (:), allocatable ::             &
          has_dependents      ! true if a tracer has dependent tracers
 
       integer (kind=int_kind), parameter ::                      &
@@ -72,48 +56,36 @@
       contains
 
 !=======================================================================
-
-!BOP
-!
-! !IROUTINE: init_transport - initializations for horizontal transport
-!
-! !INTERFACE:
-!
-      subroutine init_transport
-!
-! !DESCRIPTION:
 !
 ! This subroutine is a wrapper for init_remap, which initializes the
 ! remapping transport scheme.  If the model is run with upwind
 ! transport, no initializations are necessary.
 !
-! !REVISION HISTORY:
-!
 ! authors William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_state, only: trcr_depend, ntrcr
-      use ice_exit
-      use ice_timers
+
+      subroutine init_transport
+
+      use ice_state, only: ntrcr, trcr_depend, nt_Tsfc, nt_qice, nt_qsno, &
+          nt_sice, nt_fbri, nt_iage, nt_FY, nt_alvl, nt_vlvl, &
+          nt_apnd, nt_hpnd, nt_ipnd, nt_bgc_n_sk
+      use ice_exit, only: abort_ice
+      use ice_timers, only: ice_timer_start, ice_timer_stop, timer_advect
       use ice_transport_remap, only: init_remap
-!
-!EOP
-!
+
       integer (kind=int_kind) ::       &
          k, nt, nt1     ! tracer indices
 
       call ice_timer_start(timer_advect)  ! advection 
 
-      ntrace = 2+ntrcr+nilyr+nslyr  ! hice,hsno,qice,qsno,trcr
+      ntrace = 2 + ntrcr ! hice,hsno,trcr
+
+      if (allocated(tracer_type)) deallocate(tracer_type)
+      if (allocated(depend)) deallocate(depend)
+      if (allocated(has_dependents)) deallocate(has_dependents)
 
       allocate (tracer_type   (ntrace), &
                 depend        (ntrace), &
                 has_dependents(ntrace))
-
-      if (trim(advection)=='remap') then
-
-!lipscomb - two branches for now; consolidate later
 
          ! define tracer dependency arrays
          ! see comments in remapping routine
@@ -127,22 +99,15 @@
              depend(k+nt) = trcr_depend(nt) ! 0 for ice area tracers
                                             ! 1 for ice volume tracers
                                             ! 2 for snow volume tracers
+             tracer_type(k+nt) = 2          ! depends on 1 other tracer
              if (trcr_depend(nt) == 0) then
-                tracer_type(k+nt) = 1
-             else               ! trcr_depend = 1 or 2
-                tracer_type(k+nt) = 2
+                tracer_type(k+nt) = 1       ! depends on no other tracers
+             elseif (trcr_depend(nt) > 2) then
+                if (trcr_depend(trcr_depend(nt)-2) > 0) then
+                   tracer_type(k+nt) = 3    ! depends on 2 other tracers
+                endif
              endif
           enddo
-
-          k = k + ntrcr
-          
-          depend(k+1:k+nilyr) = 1 ! qice depends on hice
-          tracer_type(k+1:k+nilyr) = 2 
-
-          k = k + nilyr
-
-          depend(k+1:k+nslyr) = 2 ! qsno depends on hsno
-          tracer_type(k+1:k+nslyr) = 2 
 
           has_dependents = .false.
           do nt = 1, ntrace
@@ -158,28 +123,66 @@
              endif
           enddo                 ! ntrace
 
-          call init_remap    ! grid quantities
+          ! diagnostic output
+          if (my_task == master_task) then
+          write (nu_diag, *) 'tracer        index      depend        type has_dependents'
+             nt = 1
+                write(nu_diag,*) '   hi  ',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             nt = 2
+                write(nu_diag,*) '   hs  ',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+          k=2
+          do nt = k+1, k+ntrcr
+             if (nt-k==nt_Tsfc) &
+                write(nu_diag,*) 'nt_Tsfc',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_qice) &
+                write(nu_diag,*) 'nt_qice',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_qsno) &
+                write(nu_diag,*) 'nt_qsno',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_sice) &
+                write(nu_diag,*) 'nt_sice',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_fbri) &
+                write(nu_diag,*) 'nt_fbri',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_iage) &
+                write(nu_diag,*) 'nt_iage',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_FY) &
+                write(nu_diag,*) 'nt_FY  ',  nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_alvl) &
+                write(nu_diag,*) 'nt_alvl',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_vlvl) &
+                write(nu_diag,*) 'nt_vlvl',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_apnd) &
+                write(nu_diag,*) 'nt_apnd',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_hpnd) &
+                write(nu_diag,*) 'nt_hpnd',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_ipnd) &
+                write(nu_diag,*) 'nt_ipnd',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+             if (nt-k==nt_bgc_N_sk) &
+                write(nu_diag,*) 'nt_bgc_sk',nt,depend(nt),tracer_type(nt),&
+                                              has_dependents(nt)
+          enddo
+          endif ! master_task
 
-      else   ! upwind
-
-         continue
-
-      endif
+          if (trim(advection)=='remap') call init_remap    ! grid quantities
 
       call ice_timer_stop(timer_advect)  ! advection 
 
       end subroutine init_transport
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: transport_remap - wrapper for remapping transport scheme
-!
-! !INTERFACE:
-!
-      subroutine transport_remap (dt)
-!
-! !DESCRIPTION:
 !
 ! This subroutine solves the transport equations for one timestep
 ! using the conservative remapping scheme developed by John Dukowicz
@@ -190,34 +193,34 @@
 ! it does not produce new extrema.  It is second-order accurate in space,
 ! except where gradients are limited to preserve monotonicity. 
 !
-! !REVISION HISTORY:
-!
 ! authors William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_boundary
-      use ice_global_reductions
-      use ice_domain
-      use ice_blocks
-      use ice_state
+
+      subroutine transport_remap (dt)
+
+      use ice_blocks, only: nx_block, ny_block
+      use ice_boundary, only: ice_HaloUpdate
+      use ice_constants, only: c0, &
+          field_loc_center, field_loc_NEcorner, &
+          field_type_scalar, field_type_vector
+      use ice_global_reductions, only: global_sum, global_sum_prod
+      use ice_domain, only: nblocks, distrb_info, blocks_ice, halo_info
+      use ice_domain_size, only: ncat, max_blocks
+      use ice_blocks, only: nx_block, ny_block, block, get_block, nghost
+      use ice_state, only: aice0, aicen, vicen, vsnon, trcrn, ntrcr, &
+          uvel, vvel, bound_state
       use ice_grid, only: tarea, HTE, HTN
-      use ice_exit
-      use ice_calendar, only: istep1, istep, diagfreq
-      use ice_timers
+      use ice_exit, only: abort_ice
+      use ice_calendar, only: istep1
+      use ice_timers, only: ice_timer_start, ice_timer_stop, &
+          timer_advect, timer_bound
       use ice_transport_remap, only: horizontal_remap, make_masks
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       real (kind=dbl_kind), intent(in) ::     &
          dt      ! time step
-!
-!EOP
-!
+
       ! local variables
 
       integer (kind=int_kind) ::     &
-         i, j           ,&! horizontal indices
          iblk           ,&! block index
          ilo,ihi,jlo,jhi,&! beginning and end of physical domain
          n              ,&! ice category index
@@ -229,7 +232,7 @@
          aimask           ! = 1. if ice is present, = 0. otherwise
 
       real (kind=dbl_kind),      &
-         dimension (nx_block,ny_block,max_ntrace,ncat,max_blocks) ::     &
+         dimension (nx_block,ny_block,ntrace,ncat,max_blocks) ::     &
          trm            ,&! mean tracer values in each grid cell
          trmask           ! = 1. if tracer is present, = 0. otherwise
 
@@ -249,29 +252,17 @@
       type (block) :: &
          this_block           ! block information for current block
       
-    !-------------------------------------------------------------------
-    ! If l_fixed_area is true, the area of each departure region is
-    !  computed in advance (e.g., by taking the divergence of the 
-    !  velocity field and passed to locate_triangles.  The departure 
-    !  regions are adjusted to obtain the desired area.
-    ! If false, edgearea is computed in locate_triangles and passed out.
-    !-------------------------------------------------------------------
-
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) ::   &
-         edgearea_e     ,&! area of departure regions for east edges
-         edgearea_n       ! area of departure regions for north edges
-
       ! variables related to optional bug checks
 
       logical (kind=log_kind), parameter ::     &
-         l_conservation_check = .true. ,&! if true, check conservation
-         l_monotonicity_check = .true.   ! if true, check monotonicity
+         l_conservation_check = .false. ,&! if true, check conservation
+         l_monotonicity_check = .false.   ! if true, check monotonicity
 
       real (kind=dbl_kind), dimension(0:ncat) ::     &
          asum_init      ,&! initial global ice area
          asum_final       ! final global ice area
 
-      real (kind=dbl_kind), dimension(max_ntrace,ncat) ::     &
+      real (kind=dbl_kind), dimension(ntrace,ncat) ::     &
          atsum_init     ,&! initial global ice area*tracer
          atsum_final      ! final global ice area*tracer
 
@@ -281,7 +272,7 @@
 
       integer (kind=int_kind) :: alloc_error
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks) :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
          work1
 
       call ice_timer_start(timer_advect)  ! advection 
@@ -302,6 +293,7 @@
     !       Here we assume that aice0 is up to date.
     !-------------------------------------------------------------------
 
+!      !$OMP PARALLEL DO PRIVATE(iblk)
 !      do iblk = 1, nblocks
 !         call aggregate_area (nx_block, ny_block,
 !                              iblk,     &
@@ -309,6 +301,7 @@
 !                              aice (:,:,  iblk),     &
 !                              aice0(:,:,  iblk)) 
 !      enddo
+!      !$OMP END PARALLEL DO
 
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
@@ -320,8 +313,7 @@
 !                           field_loc_center, field_type_scalar)
 
 !      call bound_state (aicen, trcrn,     &
-!                        vicen, vsnon,      &
-!                        eicen, esnon)
+!                        vicen, vsnon)
 
 !      call ice_timer_stop(timer_bound)
 
@@ -339,9 +331,6 @@
 !      call ice_timer_stop(timer_bound)
 
 
-      call t_barrierf('cice_remap_s2t_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_s2t')
-
       !$OMP PARALLEL DO PRIVATE(iblk)
       do iblk = 1, nblocks
 
@@ -351,24 +340,19 @@
 
          call state_to_tracers(nx_block,          ny_block,             &
                                ntrcr,             ntrace,               &
-                               aice0(:,:,  iblk),                       &
-                               aicen(:,:,:,iblk), trcrn(:,:,:,:,iblk),  &
+                               aice0(:,:,  iblk), aicen(:,:,:,iblk),    &
+                               trcrn(:,:,1:ntrcr,:,iblk),               &
                                vicen(:,:,:,iblk), vsnon(:,:,  :,iblk),  &
-                               eicen(:,:,:,iblk), esnon(:,:,  :,iblk),  &
                                aim  (:,:,:,iblk), trm  (:,:,:,:,iblk))
 
       enddo
       !$OMP END PARALLEL DO
 
-      call t_stopf   ('cice_remap_s2t')
-      call t_barrierf('cice_remap_check1_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_check1')
-
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks.
 !---!-------------------------------------------------------------------
 
-      if (l_conservation_check .and. mod(istep,diagfreq) == 0) then
+      if (l_conservation_check) then
 
     !-------------------------------------------------------------------
     ! Compute initial values of globally conserved quantities.
@@ -388,13 +372,7 @@
                                       tarea)
                elseif (tracer_type(nt)==2) then ! depends on another tracer
                   nt1 = depend(nt)
-                  do iblk = 1, nblocks
-                     do j= 1,ny_block  
-                        do i = 1,nx_block
-                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk)
-                        end do
-                     end do
-                  end do
+                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)
                   atsum_init(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -402,14 +380,8 @@
                elseif (tracer_type(nt)==3) then ! depends on two tracers
                   nt1 = depend(nt)
                   nt2 = depend(nt1)
-                  do iblk = 1, nblocks
-                     do j= 1,ny_block  
-                        do i = 1,nx_block
-                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk) &
-	                                                       *trm(i,j,nt2,n,iblk)
-                        end do
-                     end do
-                  end do
+                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)          &
+                                                *trm(:,:,nt2,n,:)
                   atsum_init(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -420,7 +392,7 @@
 
       endif                     ! l_conservation_check
       
-      if (l_monotonicity_check .and. mod(istep,diagfreq) == 0) then
+      if (l_monotonicity_check) then
 
          allocate(tmin(nx_block,ny_block,ntrace,ncat,max_blocks),     &
                   tmax(nx_block,ny_block,ntrace,ncat,max_blocks),     &
@@ -432,7 +404,7 @@
          tmin(:,:,:,:,:) = c0
          tmax(:,:,:,:,:) = c0
 
-         !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
+         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -449,7 +421,8 @@
             call make_masks (nx_block,          ny_block,              &
                              ilo, ihi,          jlo, jhi,              &
                              nghost,            ntrace,                &
-                             has_dependents,    icellsnc(:,iblk),      &
+                             has_dependents,                           &
+                             icellsnc(:,iblk),                         &
                              indxinc(:,:,iblk), indxjnc(:,:,iblk),     &
                              aim(:,:,:,iblk),   aimask(:,:,:,iblk),    &
                              trm(:,:,:,:,iblk), trmask(:,:,:,:,iblk))
@@ -476,7 +449,7 @@
                               field_loc_center, field_type_scalar)
          call ice_timer_stop(timer_bound)
 
-         !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,n)
+         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,n)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -495,70 +468,18 @@
 
       endif                     ! l_monotonicity_check
 
-      call t_stopf   ('cice_remap_check1')
-      call t_barrierf('cice_remap_horz_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_horz')
-
     !-------------------------------------------------------------------
     ! Main remapping routine: Step ice area and tracers forward in time.
     !-------------------------------------------------------------------
-    ! If l_fixed_area is true, compute edgearea by taking the divergence
-    !  of the velocity field.  Otherwise, initialize edgearea.
-    !-------------------------------------------------------------------
-
-         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-         do iblk = 1, nblocks
-         do j = 1, ny_block
-         do i = 1, nx_block
-            edgearea_e(i,j,iblk) = c0
-            edgearea_n(i,j,iblk) = c0
-         enddo
-         enddo
-         enddo
-         !$OMP END PARALLEL DO
-
-         if (l_fixed_area) then
-
-            !$OMP PARALLEL DO PRIVATE(iblk,this_block,i,j,ilo,ihi,jlo,jhi)
-            do iblk = 1, nblocks
-               this_block = get_block(blocks_ice(iblk),iblk)         
-               ilo = this_block%ilo
-               ihi = this_block%ihi
-               jlo = this_block%jlo
-               jhi = this_block%jhi
-
-               do j = jlo, jhi
-               do i = ilo-1, ihi
-                  edgearea_e(i,j,iblk) = (uvel(i,j,iblk) + uvel(i,j-1,iblk)) &
-                                        * p5 * HTE(i,j,iblk) * dt
-               enddo
-               enddo
-
-               do j = jlo-1, jhi
-               do i = ilo, ihi
-                  edgearea_n(i,j,iblk) = (vvel(i,j,iblk) + vvel(i-1,j,iblk)) &
-                                        * p5 * HTN(i,j,iblk) * dt
-               enddo
-               enddo
-
-            enddo  ! iblk
-            !$OMP END PARALLEL DO
-
-         endif
-
+   
          call horizontal_remap (dt,                ntrace,             &
                                 uvel      (:,:,:), vvel      (:,:,:),  &
                                 aim     (:,:,:,:), trm   (:,:,:,:,:),  &
                                 l_fixed_area,                          &
-                                edgearea_e(:,:,:), edgearea_n(:,:,:),  &
                                 tracer_type,       depend,             &
                                 has_dependents,    integral_order,     &
                                 l_dp_midpt)
-
-      call t_stopf   ('cice_remap_horz')
-      call t_barrierf('cice_remap_t2s_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_t2s')
-
+         
     !-------------------------------------------------------------------
     ! Given new fields, recompute state variables.
     !-------------------------------------------------------------------
@@ -569,17 +490,12 @@
          call tracers_to_state (nx_block,          ny_block,            &
                                 ntrcr,             ntrace,              &
                                 aim  (:,:,:,iblk), trm  (:,:,:,:,iblk), &
-                                aice0(:,:,  iblk),                      &
-                                aicen(:,:,:,iblk), trcrn(:,:,:,:,iblk), &
-                                vicen(:,:,:,iblk), vsnon(:,:,  :,iblk), &
-                                eicen(:,:,:,iblk), esnon(:,:,  :,iblk)) 
+                                aice0(:,:,  iblk), aicen(:,:,:,iblk),   &
+                                trcrn(:,:,1:ntrcr,:,iblk),              &
+                                vicen(:,:,:,iblk), vsnon(:,:,  :,iblk))
 
       enddo                     ! iblk
       !$OMP END PARALLEL DO
-
-      call t_stopf   ('cice_remap_t2s')
-      call t_barrierf('cice_remap_bound1_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_bound1')
 
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
@@ -588,13 +504,9 @@
       call ice_timer_start(timer_bound)
 
       call bound_state (aicen, trcrn,     &
-                        vicen, vsnon,      &
-                        eicen, esnon)
+                        vicen, vsnon)
 
       call ice_timer_stop(timer_bound)
-      call t_stopf   ('cice_remap_bound1')
-      call t_barrierf('cice_remap_check2_BARRIER',MPI_COMM_ICE)
-      call t_startf  ('cice_remap_check2')
 
 !---!-------------------------------------------------------------------
 !---! Optional conservation and monotonicity checks
@@ -605,7 +517,7 @@
     ! Check global conservation of area and area*tracers.  (Optional)
     !-------------------------------------------------------------------
 
-      if (l_conservation_check .and. mod(istep,diagfreq) == 0) then
+      if (l_conservation_check) then
 
          do n = 0, ncat
             asum_final(n) = global_sum(aim(:,:,n,:),     distrb_info,      &
@@ -621,13 +533,7 @@
                                       tarea)
                elseif (tracer_type(nt)==2) then ! depends on another tracer
                   nt1 = depend(nt)
-                  do iblk = 1, nblocks
-                     do j= 1,ny_block  
-                        do i = 1,nx_block
-                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk)
-                        end do
-                     end do
-                  end do
+                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)
                   atsum_final(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -635,14 +541,8 @@
                elseif (tracer_type(nt)==3) then ! depends on two tracers
                   nt1 = depend(nt)
                   nt2 = depend(nt1)
-                  do iblk = 1, nblocks
-                     do j= 1,ny_block  
-                        do i = 1,nx_block
-                           work1(i,j,iblk) = trm(i,j,nt,n,iblk)*trm(i,j,nt1,n,iblk) &
-	                                                       *trm(i,j,nt2,n,iblk)
-                        end do
-                     end do
-                  end do
+                  work1(:,:,:) = trm(:,:,nt,n,:)*trm(:,:,nt1,n,:)          &
+                                                *trm(:,:,nt2,n,:)
                   atsum_final(nt,n) =     &
                       global_sum_prod(work1(:,:,:), aim(:,:,n,:),          &
                                       distrb_info,  field_loc_center,      &
@@ -651,15 +551,14 @@
             enddo               ! nt
          enddo                  ! n
 
-
          if (my_task == master_task) then
             call global_conservation (l_stop,     &
                                       asum_init(0), asum_final(0))
 
             if (l_stop) then
-               write (nu_diag,*) 'istep1 =', istep1
+               write (nu_diag,*) 'istep1, my_task, iblk =',     &
+                                  istep1, my_task, iblk
                write (nu_diag,*) 'transport: conservation error, cat 0'
-               l_stop = .false.
                call abort_ice('ice remap transport: conservation error')
             endif
 
@@ -670,10 +569,9 @@
                                       atsum_init(:,n), atsum_final(:,n))
 
                if (l_stop) then
-                  write (nu_diag,*) 'istep1, cat =',     &
-                                     istep1, n
+                  write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
+                                     istep1, my_task, iblk, n
                   write (nu_diag,*) 'transport: conservation error, cat ',n
-                  l_stop = .false.
                   call abort_ice     &
                        ('ice remap transport: conservation error')
                endif
@@ -687,7 +585,8 @@
     ! Check tracer monotonicity.  (Optional)
     !-------------------------------------------------------------------
 
-      if (l_monotonicity_check .and. mod(istep,diagfreq) == 0) then
+      if (l_monotonicity_check) then
+         !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,n,l_stop,istop,jstop)
          do iblk = 1, nblocks
             this_block = get_block(blocks_ice(iblk),iblk)         
             ilo = this_block%ilo
@@ -695,11 +594,14 @@
             jlo = this_block%jlo
             jhi = this_block%jhi
 
+            l_stop = .false.
+            istop = 0
+            jstop = 0
+
             do n = 1, ncat
                call check_monotonicity      &
                                (nx_block,           ny_block,     &
                                 ilo, ihi, jlo, jhi,     &
-                                iblk,     &
                                 tmin(:,:,:,n,iblk), tmax(:,:,:,n,iblk),  &
                                 aim (:,:,  n,iblk), trm (:,:,:,n,iblk),  &
                                 l_stop,     &
@@ -708,14 +610,12 @@
                if (l_stop) then
                   write (nu_diag,*) 'istep1, my_task, iblk, cat =',     &
                                      istep1, my_task, iblk, n
-                  write (nu_diag,*) 'i_glob, j_glob',this_block%i_glob(istop), &
-                                                     this_block%j_glob(jstop)
                   call abort_ice('ice remap transport: monotonicity error')
                endif
-
             enddo               ! n
 
          enddo                  ! iblk
+         !$OMP END PARALLEL DO
 
          deallocate(tmin, tmax, STAT=alloc_error)
          if (alloc_error /= 0) call abort_ice ('deallocation error')
@@ -723,47 +623,35 @@
       endif                     ! l_monotonicity_check
 
       call ice_timer_stop(timer_advect)  ! advection 
-      call t_stopf   ('cice_remap_check2')
-
+           
       end subroutine transport_remap
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: transport_upwind - upwind transport
-!
-! !INTERFACE:
-!
-      subroutine transport_upwind (dt)
-!
-! !DESCRIPTION:
 !
 ! Computes the transport equations for one timestep using upwind. Sets
 ! several fields into a work array and passes it to upwind routine.
-!
-! !REVISION HISTORY:
-!
-! same as module
-!
-! !USES:
-!
-      use ice_boundary
-      use ice_blocks
-      use ice_domain
-      use ice_state
+
+      subroutine transport_upwind (dt)
+
+      use ice_boundary, only: ice_HaloUpdate
+      use ice_blocks, only: nx_block, ny_block, block, get_block, nx_block, ny_block
+      use ice_constants, only: p5, &
+          field_loc_Nface, field_loc_Eface, field_type_vector
+      use ice_domain, only: blocks_ice, halo_info, nblocks
+      use ice_domain_size, only: ncat, max_blocks
+      use ice_state, only: aice0, aicen, vicen, vsnon, trcrn, ntrcr, &
+          uvel, vvel, trcr_depend, bound_state
       use ice_grid, only: HTE, HTN, tarea
-      use ice_timers
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_timers, only: ice_timer_start, ice_timer_stop, &
+          timer_bound, timer_advect
+
       real (kind=dbl_kind), intent(in) ::     &
          dt      ! time step
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::     &
-         narr               ! number of state variable arrays
-                            ! not including eicen, esnon
+         narr               ! max number of state variable arrays
 
       integer (kind=int_kind) ::     &
          i, j, iblk       ,&! horizontal indices
@@ -773,7 +661,7 @@
          uee, vnn           ! cell edge velocities
 
       real (kind=dbl_kind),     &
-         dimension (:,:,:,:), allocatable ::      &
+         dimension (:,:,:,:), allocatable :: &
          works              ! work array
 
       type (block) ::     &
@@ -782,7 +670,6 @@
       call ice_timer_start(timer_advect)  ! advection 
 
       narr = 1 + ncat*(3+ntrcr) ! max number of state variable arrays
-                                ! not including eicen, esnon
 
       allocate (works(nx_block,ny_block,narr,max_blocks))
 
@@ -791,17 +678,13 @@
     ! (Assume velocities are already known for ghost cells, also.)
     !-------------------------------------------------------------------
 !      call bound_state (aicen, trcrn,     &
-!                        vicen, vsnon,     &
-!                        eicen, esnon)
-
-      uee(:,:,:) = c0
-      vnn(:,:,:) = c0
+!                        vicen, vsnon)
 
     !-------------------------------------------------------------------
     ! Average corner velocities to edges.
     !-------------------------------------------------------------------
       
-      !$OMP PARALLEL DO PRIVATE(iblk,this_block,i,j,ilo,ihi,jlo,jhi)
+      !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -825,7 +708,7 @@
                            field_loc_Nface, field_type_vector)
       call ice_timer_stop(timer_bound)
 
-      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi)
+      !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -841,7 +724,7 @@
          call state_to_work (nx_block,             ny_block,             &
                              ntrcr,                                      &
                              narr,                 trcr_depend,          &
-                             aicen (:,:,  :,iblk), trcrn (:,:,:,:,iblk), &
+                             aicen (:,:,  :,iblk), trcrn (:,:,1:ntrcr,:,iblk), &
                              vicen (:,:,  :,iblk), vsnon (:,:,  :,iblk), &
                              aice0 (:,:,    iblk), works (:,:,  :,iblk))
 
@@ -857,36 +740,22 @@
                             HTE(:,:,iblk),  HTN    (:,:,iblk),      &
                             tarea(:,:,iblk))
 
-         call upwind_field (nx_block,       ny_block,               &
-                            ilo, ihi,       jlo, jhi,               &
-                            dt,                                     &
-                            ntilyr,         eicen(:,:,:,iblk),      &
-                            uee(:,:,iblk),  vnn    (:,:,iblk),      &
-                            HTE(:,:,iblk),  HTN    (:,:,iblk),      &
-                            tarea(:,:,iblk))
-
-         call upwind_field (nx_block,       ny_block,               &
-                            ilo, ihi,       jlo, jhi,               &
-                            dt,                                     &
-                            ntslyr,         esnon(:,:,:,iblk),      &
-                            uee(:,:,iblk),  vnn    (:,:,iblk),      &
-                            HTE(:,:,iblk),  HTN    (:,:,iblk),      &
-                            tarea(:,:,iblk))
-
       !-----------------------------------------------------------------
       ! convert work arrays back to state variables
       !-----------------------------------------------------------------
 
-         call work_to_state (nx_block,            ny_block,              &
-                             ntrcr,                                      &
-                             narr,                trcr_depend,           &
-                             aicen(:,:,  :,iblk), trcrn (:,:,:,:,iblk),  &
-                             vicen(:,:,  :,iblk), vsnon (:,:,  :,iblk),  &
+         call work_to_state (nx_block,            ny_block,             &
+                             ntrcr,                                     &
+                             narr,                trcr_depend,          &
+                             aicen(:,:,  :,iblk), trcrn (:,:,1:ntrcr,:,iblk), &
+                             vicen(:,:,  :,iblk), vsnon (:,:,  :,iblk), &
                              aice0(:,:,    iblk), works (:,:,  :,iblk)) 
 
       enddo                     ! iblk
       !$OMP END PARALLEL DO
  
+      deallocate (works)
+
     !-------------------------------------------------------------------
     ! Ghost cell updates for state variables.
     !-------------------------------------------------------------------
@@ -894,14 +763,11 @@
       call ice_timer_start(timer_bound)
 
       call bound_state (aicen, trcrn,     &
-                        vicen, vsnon,      &
-                        eicen, esnon)
+                        vicen, vsnon)
 
       call ice_timer_stop(timer_bound)
 
       call ice_timer_stop(timer_advect)  ! advection 
-
-      deallocate(works)
 
       end subroutine transport_upwind
 
@@ -909,22 +775,6 @@
 ! The next few subroutines (through check_monotonicity) are called
 ! by transport_remap.
 !=======================================================================
-!
-!BOP
-!
-! !IROUTINE: state_to_tracers -fill ice area and tracer arrays
-!
-! !INTERFACE:
-!
-      subroutine state_to_tracers (nx_block, ny_block,   &
-                                   ntrcr,    ntrace,     &
-                                   aice0,                &
-                                   aicen,    trcrn,      &
-                                   vicen,    vsnon,      &
-                                   eicen,    esnon,      &
-                                   aim,      trm)
-!
-! !DESCRIPTION:
 !
 ! Fill ice area and tracer arrays.
 ! Assume that the advected tracers are hicen, hsnon, trcrn, 
@@ -934,18 +784,21 @@
 !   is that a dependent tracer (such as qice) must have a larger
 !   tracer index than the tracer it depends on (i.e., hice).
 !
-! !REVISION HISTORY:
-!
 ! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_itd, only: ilyr1, slyr1
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine state_to_tracers (nx_block, ny_block,   &
+                                   ntrcr,    ntrace,     &
+                                   aice0,    aicen,      &
+                                   trcrn,                &
+                                   vicen,    vsnon,      &
+                                   aim,      trm)
+
+      use ice_constants, only: c0, c1, rhos, Lfresh, puny
+      use ice_domain_size, only: ncat, nslyr
+      use ice_state, only: nt_qsno
+
       integer (kind=int_kind), intent(in) ::     &
-           nx_block, ny_block, &  ! block dimensions
+           nx_block, ny_block, & ! block dimensions
            ntrcr             , & ! number of tracers in use
            ntrace                ! number of tracers in use incl. hi, hs
 
@@ -959,34 +812,22 @@
            vicen   ,&! volume per unit area of ice          (m)
            vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat),     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat),     &
            intent(in) ::     &
            trcrn     ! ice area tracers
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntilyr),     &
-           intent(in) ::     &
-           eicen     ! energy of melting for each ice layer (J/m^2)
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntslyr),     &
-           intent(in) ::     &
-           esnon     ! energy of melting for each snow layer (J/m^2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,0:ncat),     &
             intent(out)::     &
            aim       ! mean ice area in each grid cell
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat),  &
            intent(out) ::     &
            trm       ! mean tracer values in each grid cell
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         worka, &
-         workb
-!
-!EOP
-!
+      ! local variables
+
       integer (kind=int_kind) ::     &
-           i, j, k, n   ,&! standard indices
+           i, j, n      ,&! standard indices
            it, kt       ,&! tracer indices
            ij             ! combined i/j index
 
@@ -999,9 +840,6 @@
 
       integer (kind=int_kind), dimension(0:ncat) ::     &
            icells         ! number of cells with ice
-
-      worka(:,:) = c0
-      workb(:,:) = c0
 
       aim(:,:,0) = aice0(:,:)
 
@@ -1037,78 +875,47 @@
             i = indxi(ij,n)
             j = indxj(ij,n)
             w1 = c1 / aim(i,j,n)
-            worka(i,j) = c1 / vicen(i,j,n)
             trm(i,j,1,n) = vicen(i,j,n) * w1 ! hice
             trm(i,j,2,n) = vsnon(i,j,n) * w1 ! hsno
-            if (trm(i,j,2,n) > puny) then
-               workb(i,j) = c1 / vsnon(i,j,n)
-            else
-               workb(i,j) = c0
-            endif
          enddo
          kt = 2
 
          do it = 1, ntrcr
-            do ij = 1, icells(n)
-               i = indxi(ij,n)
-               j = indxj(ij,n)
-               trm(i,j,kt+it,n) = trcrn(i,j,it,n) ! ice area tracers
-            enddo
+            if (it >= nt_qsno .and. it < nt_qsno+nslyr) then
+               do ij = 1, icells(n)
+                  i = indxi(ij,n)
+                  j = indxj(ij,n)
+                  trm(i,j,kt+it,n) = trcrn(i,j,it,n) + rhos*Lfresh ! snow enthalpy
+               enddo
+            else
+               do ij = 1, icells(n)
+                  i = indxi(ij,n)
+                  j = indxj(ij,n)
+                  trm(i,j,kt+it,n) = trcrn(i,j,it,n) ! other tracers
+               enddo
+            endif
          enddo
-         kt = kt + ntrcr
-
-         do k =1, nilyr
-            do ij = 1, icells(n)
-               i = indxi(ij,n)
-               j = indxj(ij,n)
-               trm(i,j,kt+k,n) = eicen(i,j,ilyr1(n)+k-1)*worka(i,j) ! qice
-            enddo               ! ij
-         enddo                  ! ilyr
-         kt = kt + nilyr
-
-         do k = 1, nslyr
-            do ij = 1, icells(n)
-               i = indxi(ij,n)
-               j = indxj(ij,n)
-               if (trm(i,j,2,n) > puny)    &    ! hsno > puny
-                 trm(i,j,kt+k,n) = esnon(i,j,slyr1(n)+k-1)*workb(i,j) & ! qsno
-                                 + rhos*Lfresh
-            enddo               ! ij
-         enddo                  ! nslyr
-
       enddo                     ! ncat
  
       end subroutine state_to_tracers
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: tracers_to_state - convert tracer array to state variables
-!
-! !INTERFACE:
-!
-      subroutine tracers_to_state (nx_block, ny_block,   &
-                                   ntrcr,    ntrace,     &
-                                   aim,      trm,        &
-                                   aice0,                &
-                                   aicen,    trcrn,      &
-                                   vicen,    vsnon,      &
-                                   eicen,    esnon) 
-!
-! !DESCRIPTION:
 !
 ! Convert area and tracer arrays back to state variables.
 !
-! !REVISION HISTORY:
-!
 ! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-      use ice_itd, only: ilyr1, slyr1
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine tracers_to_state (nx_block, ny_block,   &
+                                   ntrcr,    ntrace,     &
+                                   aim,      trm,        &
+                                   aice0,    aicen,      &
+                                   trcrn,                &
+                                   vicen,    vsnon)
+
+      use ice_constants, only: c0, rhos, Lfresh
+      use ice_domain_size, only: ncat, nslyr
+      use ice_state, only: nt_qsno
+
       integer (kind=int_kind), intent(in) ::     &
            nx_block, ny_block, & ! block dimensions
            ntrcr             , & ! number of tracers in use
@@ -1118,7 +925,7 @@
            intent(in) ::     &
            aim       ! fractional ice area
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrace,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrace,ncat),  &
            intent(in) ::     &
            trm       ! mean tracer values in each grid cell
 
@@ -1132,20 +939,12 @@
            vicen   ,&! volume per unit area of ice          (m)
            vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat),  &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat),  &
            intent(inout) ::     &
            trcrn     ! tracers
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntilyr),     &
-           intent(inout) ::     &
-           eicen ! energy of melting for each ice layer (J/m^2)
+      ! local variables
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntslyr),     &
-           intent(inout) ::     &
-           esnon ! energy of melting for each snow layer (J/m^2)
-!
-!EOP
-!
       integer (kind=int_kind) ::     &
            i, j, k, n      ,&! standard indices
            it, kt          ,&! tracer indices
@@ -1184,74 +983,50 @@
          kt = 2
 
          do it = 1, ntrcr
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-               trcrn(i,j,it,n) = trm(i,j,kt+it,n)  ! ice tracers
-            enddo               ! ij
-         enddo                  ! ntrcr
-         kt = kt + ntrcr
-
-         do k = 1, nilyr
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-               eicen(i,j,ilyr1(n)+k-1) = vicen(i,j,n)*trm(i,j,kt+k,n) 
-            enddo               ! ij
-         enddo                  ! nilyr
-         kt = kt + nilyr
-
-         do k = 1, nslyr
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-               esnon(i,j,slyr1(n)+k-1) = (trm(i,j,kt+k,n) - rhos*Lfresh) &
-                                         * vsnon(i,j,n)
-            enddo               ! ij
-         enddo                  ! nslyr
-
+            if (it >= nt_qsno .and. it < nt_qsno+nslyr) then
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  trcrn(i,j,it,n) = trm(i,j,kt+it,n) - rhos*Lfresh ! snow enthalpy
+               enddo
+               else
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  trcrn(i,j,it,n) = trm(i,j,kt+it,n)  ! other tracers
+               enddo
+            endif
+         enddo
       enddo                     ! ncat
 
       end subroutine tracers_to_state
 
 !=======================================================================
 !
-!BOP
-!
-! !IROUTINE: global_conservation - check for changes in conserved quantities
-!
-! !INTERFACE:
-!
-      subroutine global_conservation (l_stop,                     &
-                                      asum_init,  asum_final,     &
-                                      atsum_init, atsum_final)
-!
-! !DESCRIPTION:
-!
 ! Check whether values of conserved quantities have changed.
 ! An error probably means that ghost cells are treated incorrectly.
 !
-! !REVISION HISTORY:
-!
 ! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine global_conservation (l_stop,                     &
+                                      asum_init,  asum_final,     &
+                                      atsum_init, atsum_final)
+
+      use ice_constants, only: puny
+
       real (kind=dbl_kind), intent(in) ::     &
          asum_init   ,&! initial global ice area
          asum_final    ! final global ice area
 
-      real (kind=dbl_kind), dimension(max_ntrace), intent(in), optional :: &
+      real (kind=dbl_kind), dimension(ntrace), intent(in), optional :: &
          atsum_init  ,&! initial global ice area*tracer
          atsum_final   ! final global ice area*tracer
 
       logical (kind=log_kind), intent(inout) ::     &
          l_stop    ! if true, abort on return
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::     &
            nt            ! tracer index
 
@@ -1296,19 +1071,6 @@
       end subroutine global_conservation
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: local_max_min - compute local max and min of a scalar field
-!
-! !INTERFACE:
-!
-      subroutine local_max_min (nx_block, ny_block,     &
-                                ilo, ihi, jlo, jhi,     &
-                                trm,                    &
-                                tmin,     tmax,         &
-                                aimask,   trmask)
-!
-! !DESCRIPTION:
 !
 ! At each grid point, compute the local max and min of a scalar
 ! field phi: i.e., the max and min values in the nine-cell region
@@ -1317,14 +1079,16 @@
 ! To extend to the neighbors of the neighbors (25 cells in all),
 ! follow this call with a call to quasilocal_max_min.
 !
-! !REVISION HISTORY:
-!
 ! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine local_max_min (nx_block, ny_block,     &
+                                ilo, ihi, jlo, jhi,     &
+                                trm,                    &
+                                tmin,     tmax,         &
+                                aimask,   trmask)
+
+      use ice_constants, only: c1
+
       integer (kind=int_kind), intent(in) ::     &
            nx_block, ny_block,&! block dimensions
            ilo,ihi,jlo,jhi     ! beginning and end of physical domain
@@ -1334,7 +1098,7 @@
            aimask         ! ice area mask
 
       real (kind=dbl_kind), intent(in),               &
-           dimension (nx_block,ny_block,max_ntrace) ::    &
+           dimension (nx_block,ny_block,ntrace) ::    &
            trm          ,&! tracer fields
            trmask         ! tracer mask
 
@@ -1342,9 +1106,9 @@
            dimension (nx_block,ny_block,ntrace) ::    &
            tmin         ,&! local min tracer
            tmax           ! local max tracer
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::     &
            i, j         ,&! horizontal indices
            nt, nt1        ! tracer indices
@@ -1422,30 +1186,17 @@
       end subroutine local_max_min
 
 !=======================================================================
-!BOP
-!
-! !IROUTINE: quasilocal_max_min - look one grid cell farther away
-!
-! !INTERFACE:
-!
-      subroutine quasilocal_max_min (nx_block, ny_block,     &
-                                     ilo, ihi, jlo, jhi,     &
-                                     tmin,     tmax)
-!
-! !DESCRIPTION:
 !
 ! Extend the local max and min by one grid cell in each direction.
 ! Incremental remapping is monotone for the "quasilocal" max and min,
 ! but in rare cases may violate monotonicity for the local max and min.
 !
-! !REVISION HISTORY:
-!
 ! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      subroutine quasilocal_max_min (nx_block, ny_block,     &
+                                     ilo, ihi, jlo, jhi,     &
+                                     tmin,     tmax)
+
       integer (kind=int_kind), intent(in) ::     &
          nx_block, ny_block,&! block dimensions
          ilo,ihi,jlo,jhi     ! beginning and end of physical domain
@@ -1454,9 +1205,9 @@
            dimension (nx_block,ny_block,ntrace) ::     &
            tmin         ,&! local min tracer
            tmax           ! local max tracer
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::     &
            i, j          ,&! horizontal indices
            nt              ! tracer index
@@ -1485,44 +1236,30 @@
 
 !======================================================================
 !
-!BOP
+! At each grid point, make sure that the new tracer values
+! fall between the local max and min values before transport.
 !
-! !IROUTINE: check_monotonicity - check bounds on new tracer values
-!
-! !INTERFACE:
-!
+! author William H. Lipscomb, LANL
+
       subroutine check_monotonicity (nx_block, ny_block,     &
                                      ilo, ihi, jlo, jhi,     &
-                                     iblk,                   &
                                      tmin,     tmax,         &
                                      aim,      trm,          &
                                      l_stop,                 &
                                      istop,    jstop)
-!
-! !DESCRIPTION:
-!
-! At each grid point, make sure that the new tracer values
-! fall between the local max and min values before transport.
-!
-! !REVISION HISTORY:
-!
-! author William H. Lipscomb, LANL
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      use ice_constants, only: c1, puny
+
       integer (kind=int_kind), intent(in) ::     &
            nx_block, ny_block,&! block dimensions
-           ilo,ihi,jlo,jhi   ,&! beginning and end of physical domain
-           iblk                ! block index (diagnostic only)
+           ilo,ihi,jlo,jhi     ! beginning and end of physical domain
 
       real (kind=dbl_kind), intent(in),         &
            dimension (nx_block,ny_block) ::     &
            aim            ! new ice area
 
       real (kind=dbl_kind), intent(in),                &
-           dimension (nx_block,ny_block,max_ntrace) ::     &
+           dimension (nx_block,ny_block,ntrace) ::     &
            trm            ! new tracers
 
       real (kind=dbl_kind), intent(in),                &
@@ -1535,9 +1272,9 @@
 
       integer (kind=int_kind), intent(inout) ::     &
          istop, jstop     ! indices of grid cell where model aborts 
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::     &
            i, j           ,&! horizontal indices
            nt, nt1, nt2     ! tracer indices
@@ -1571,7 +1308,7 @@
             nt1 = depend(nt)
             do j = jlo, jhi
             do i = ilo, ihi
-               if (abs(trm(i,j,nt1)) > puny .and. aim(i,j) > puny) then
+               if (abs(trm(i,j,nt1)) > puny) then
                   l_check(i,j) = .true.
                else
                   l_check(i,j) = .false.
@@ -1586,7 +1323,7 @@
             do j = jlo, jhi
             do i = ilo, ihi
                if (abs(trm(i,j,nt1)) > puny .and.     &
-                   abs(trm(i,j,nt2)) > puny .and. aim(i,j) > puny) then
+                   abs(trm(i,j,nt2)) > puny) then
                   l_check(i,j) = .true.
                else
                   l_check(i,j) = .false.
@@ -1639,12 +1376,9 @@
 !=======================================================================
 ! The remaining subroutines are called by transport_upwind.
 !=======================================================================
-!BOP
 !
-! !IROUTINE: state_to_work - fill work arrays with state variables
-!
-! !INTERFACE:
-!
+! Fill work array with state variables in preparation for upwind transport
+
       subroutine state_to_work (nx_block, ny_block,        &
                                 ntrcr,                     &
                                 narr,     trcr_depend,     &
@@ -1652,27 +1386,16 @@
                                 vicen,    vsnon,           &
                                 aice0,    works)
 
-!
-! !DESCRIPTION:
-!
-! Fill work array with state variables in preparation for upwind transport
-!
-! !REVISION HISTORY:
-!
-! same as module
-!
-! !USES:
-!
-      use ice_itd, only: ilyr1, slyr1
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_domain_size, only: ncat
+      use ice_state, only: nt_alvl, nt_apnd, nt_fbri, &
+                           tr_pond_cesm, tr_pond_lvl, tr_pond_topo
+
       integer (kind=int_kind), intent(in) ::     &
-         nx_block, ny_block ,&! block dimensions
+         nx_block, ny_block, & ! block dimensions
          ntrcr             , & ! number of tracers in use
          narr        ! number of 2D state variable arrays in works array
 
-      integer (kind=int_kind), dimension (max_ntrcr), intent(in) ::     &
+      integer (kind=int_kind), dimension (ntrcr), intent(in) ::     &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat),     &
@@ -1681,7 +1404,7 @@
          vicen   ,&! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat),     &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat),     &
          intent(in) ::     &
          trcrn     ! ice tracers
 
@@ -1692,11 +1415,11 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,narr),     &
          intent (out) ::      &
          works     ! work array
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::      &
-         i, j, k, n, it ,&! counting indices
+         i, j, n, it    ,&! counting indices
          narrays          ! counter for number of state variable arrays
 
       !-----------------------------------------------------------------
@@ -1743,6 +1466,41 @@
                   works(i,j,narrays+it) = vsnon(i,j,n)*trcrn(i,j,it,n)
                enddo
                enddo
+            elseif (trcr_depend(it) == 2+nt_alvl) then
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  works(i,j,narrays+it) = aicen(i,j,n) &
+                                        * trcrn(i,j,nt_alvl,n) &
+                                        * trcrn(i,j,it,n)
+               enddo
+               enddo
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                    tr_pond_cesm .or. tr_pond_topo) then
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  works(i,j,narrays+it) = aicen(i,j,n) &
+                                        * trcrn(i,j,nt_apnd,n) &
+                                        * trcrn(i,j,it,n)
+               enddo
+               enddo
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                    tr_pond_lvl) then
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  works(i,j,narrays+it) = aicen(i,j,n) &
+                                        * trcrn(i,j,nt_alvl,n) &
+                                        * trcrn(i,j,nt_apnd,n) &
+                                        * trcrn(i,j,it,n)
+               enddo
+               enddo
+            elseif (trcr_depend(it) == 2+nt_fbri) then
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  works(i,j,narrays+it) = vicen(i,j,n) &
+                                        * trcrn(i,j,nt_fbri,n) &
+                                        * trcrn(i,j,it,n)
+               enddo
+               enddo
             endif
          enddo
          narrays = narrays + ntrcr
@@ -1755,12 +1513,9 @@
       end subroutine state_to_work
 
 !=======================================================================
-!BOP
 !
-! !IROUTINE: work_to_state - convert work arrays back to state variables
-!
-! !INTERFACE:
-!
+! Convert work array back to state variables
+
       subroutine work_to_state (nx_block, ny_block,        &
                                 ntrcr,                     &
                                 narr,     trcr_depend,     &
@@ -1768,27 +1523,16 @@
                                 vicen,    vsnon,           &
                                 aice0,    works)
 
-!
-! !DESCRIPTION:
-!
-! Convert work array back to state variables
-!
-! !REVISION HISTORY:
-!
-! same as module
-!
-! !USES:
-!
-      use ice_itd, only: ilyr1, slyr1, compute_tracers
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+      use ice_domain_size, only: ncat
+      use ice_blocks, only: 
+      use ice_itd, only: compute_tracers
+
       integer (kind=int_kind), intent (in) ::                       &
          nx_block, ny_block, & ! block dimensions
          ntrcr             , & ! number of tracers in use
          narr        ! number of 2D state variable arrays in works array
 
-      integer (kind=int_kind), dimension (max_ntrcr), intent(in) ::     &
+      integer (kind=int_kind), dimension (ntrcr), intent(in) ::     &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), intent (in) ::                          &
@@ -1800,18 +1544,18 @@
          vicen   ,&! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
          intent(out) ::     &
          trcrn     ! ice tracers
 
       real (kind=dbl_kind), dimension (nx_block,ny_block),          &
          intent(out) ::     &
          aice0     ! concentration of open water
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) ::      &
-         i, j, k, n , it,&! counting indices
+         i, j, n        ,&! counting indices
          narrays        ,&! counter for number of state variable arrays
          icells           ! number of ocean/ice cells
 
@@ -1865,12 +1609,9 @@
       end subroutine work_to_state
 
 !=======================================================================
-!BOP
 !
-! !IROUTINE: upwind_field - advection according to upwind
-!
-! !INTERFACE:
-!
+! upwind transport algorithm
+
       subroutine upwind_field (nx_block, ny_block,   &
                                ilo, ihi, jlo, jhi,   &
                                dt,                   &
@@ -1878,20 +1619,9 @@
                                uee,      vnn,        &
                                HTE,      HTN,        &
                                tarea)
-!
-! !DESCRIPTION:
-!
-! upwind transport algorithm
-!
-! !REVISION HISTORY:
-!
-! same as module
-!
-! !USES:
-!
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
+      use ice_constants, only: p5
+
       integer (kind=int_kind), intent (in) ::     &
          nx_block, ny_block ,&! block dimensions
          ilo,ihi,jlo,jhi    ,&! beginning and end of physical domain
@@ -1912,18 +1642,17 @@
          HTE                ,&! length of east cell edge 
          HTN                ,&! length of north cell edge
          tarea                ! grid cell area
-!
-!EOP
-!
-      integer (kind=int_kind) ::     &
-         i, j, k, n           ! standard indices
 
-      real (kind=dbl_kind) ::        &
-         upwind, y1, y2, a, h   ! function
+      ! local variables
+
+      integer (kind=int_kind) :: &
+         i, j, n              ! standard indices
+
+      real (kind=dbl_kind) :: &
+         upwind, y1, y2, a, h ! function
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         worka, &
-         workb
+         worka, workb
 
     !-------------------------------------------------------------------
     ! Define upwind function
@@ -1934,9 +1663,6 @@
     !-------------------------------------------------------------------
     ! upwind transport
     !-------------------------------------------------------------------
-
-      worka(:,:) = c0
-      workb(:,:) = c0
 
       do n = 1, narrays
 

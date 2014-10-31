@@ -1,38 +1,27 @@
+!  SVN:$Id: ice_timers.F90 707 2013-08-22 21:21:05Z eclare $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_timers
 
-!BOP
-! !MODULE: timers
-!
-! !DESCRIPTION:
 !  This module contains routine for supporting multiple CPU timers
 !  and accumulates time for each individual block and node (task).
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_timers.F90 144 2008-08-12 21:37:19Z eclare $
 !
 ! 2005: Adapted from POP by William Lipscomb
 !       Replaced 'stdout' by 'nu_diag'
 ! 2006 ECH: Replaced 'system_clock' timing mechanism by 'MPI_WTIME'
 !           for MPI runs.  Single-processor runs still use system_clock.
-!
-! !USES:
 
    use ice_kinds_mod
-   use ice_constants
-   use ice_domain
-   use ice_global_reductions
-   use ice_exit
-   use ice_fileunits, only: nu_diag, nu_timing
-   use ice_communicate, only: my_task, master_task, get_num_procs, lprint_stats
-   use ice_gather_scatter, only: gatherArray
+   use ice_constants, only: c0, c1, bignum
+   use ice_domain, only: nblocks, distrb_info
+   use ice_global_reductions, only: global_minval, global_maxval, global_sum
+   use ice_exit, only: abort_ice
+   use ice_fileunits, only: nu_diag
+   use ice_communicate, only: my_task, master_task
 
    implicit none
    private
    save
-
-! !PUBLIC MEMBER FUNCTIONS:
 
    public :: init_ice_timers,     &
              get_ice_timer,       &
@@ -42,9 +31,6 @@
              ice_timer_print,     &
              ice_timer_print_all, &
              ice_timer_check
-
-!EOP
-!BOC
 
 !-----------------------------------------------------------------------
 ! public timers
@@ -58,20 +44,22 @@
       timer_column,           &! column
       timer_thermo,           &! thermodynamics
       timer_sw,               &! radiative transfer
+      timer_ponds,            &! melt ponds
       timer_ridge,            &! ridging
       timer_catconv,          &! category conversions
       timer_couple,           &! coupling
       timer_readwrite,        &! read/write
       timer_diags,            &! diagnostics/history
       timer_hist,             &! diagnostics/history
-#ifdef CCSMCOUPLED
+#if (defined CCSMCOUPLED)
       timer_cplrecv,          &! receive from coupler
       timer_rcvsnd,           &! time between receive to send
       timer_cplsend,          &! send to coupled
       timer_sndrcv,           &! time between send to receive
 #endif
-      timer_bound              ! boundary updates
-!      timer_tmp                ! for temporary timings
+      timer_bound,            &! boundary updates
+      timer_bgc                ! biogeochemistry
+!      timer_tmp               ! for temporary timings
 
 !-----------------------------------------------------------------------
 !
@@ -121,36 +109,16 @@
    real (dbl_kind) ::               &
       clock_rate               ! clock rate in seconds for each cycle
 
-   !----------------------------------------------
-   ! some arrays on which to collect timing info
-   !---------------------------------------------
-   integer (int_kind), public :: timerRoot ! MPI process ID to collect timing information
-
-   real(dbl_kind), public  :: all_ltime(max_timers) ! local times for each timer
-   real(dbl_kind), allocatable :: all_gtime(:)      ! global times for each timer
-
-
-!EOC
 !***********************************************************************
 
  contains
 
 !***********************************************************************
-!BOP
-! !IROUTINE: init_ice_timers
-! !INTERFACE:
 
  subroutine init_ice_timers
 
-! !DESCRIPTION:
 !  This routine initializes machine parameters and timer structures
 !  for computing cpu time from F90 intrinsic timer functions.
-!
-! !REVISION HISTORY:
-!  same as module
-
-!EOP
-!BOC
 
 !-----------------------------------------------------------------------
 !
@@ -166,11 +134,7 @@
 !
 !-----------------------------------------------------------------------
 
-   return
-
    clock_rate = c1
-
-   timerRoot = min(distrb_info%nprocs-1,2)
 
    do n=1,max_timers
       all_timers(n)%name = 'unknown_timer_name'
@@ -194,61 +158,39 @@
    end do
 
    call get_ice_timer(timer_total,    'Total',    nblocks,distrb_info%nprocs)
-#ifdef CCSMCOUPLED
    call get_ice_timer(timer_step,     'TimeLoop', nblocks,distrb_info%nprocs)
-#else
-   call get_ice_timer(timer_step,     'Step',     nblocks,distrb_info%nprocs)
-#endif
    call get_ice_timer(timer_dynamics, 'Dynamics', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_advect,   'Advection',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_column,   'Column',   nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_thermo,   'Thermo',   nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_sw,       'Shortwave',nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_ponds,    'Meltponds',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_ridge,    'Ridging',  nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_catconv,  'Cat Conv', nblocks,distrb_info%nprocs)
-#ifndef CCSMCOUPLED
    call get_ice_timer(timer_couple,   'Coupling', nblocks,distrb_info%nprocs)
-#endif
    call get_ice_timer(timer_readwrite,'ReadWrite',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_diags,    'Diags    ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_hist,     'History  ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bound,    'Bound',    nblocks,distrb_info%nprocs)
-#ifdef CCSMCOUPLED
-   call get_ice_timer(timer_cplrecv,  'Cpl-Imp', nblocks,distrb_info%nprocs)
-   call get_ice_timer(timer_cplsend,  'Cpl-Exp', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_bgc,      'BGC',      nblocks,distrb_info%nprocs)
+#if (defined CCSMCOUPLED)
+   call get_ice_timer(timer_cplrecv,  'Cpl-recv', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_rcvsnd,   'Rcv->Snd', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_cplsend,  'Cpl-Send', nblocks,distrb_info%nprocs)
+   call get_ice_timer(timer_sndrcv,   'Snd->Rcv', nblocks,distrb_info%nprocs)
 #endif
 !   call get_ice_timer(timer_tmp,      '         ',nblocks,distrb_info%nprocs)
 
-   !------------------------------------------------------
-   ! allocate the array of timer values from all processes
-   !------------------------------------------------------
-   if(my_task .eq. timerRoot) then
-     allocate(all_gtime(max_timers*distrb_info%nprocs))
-   else
-     allocate(all_gtime(1))
-   endif
-
-
 !-----------------------------------------------------------------------
-!EOC
 
    end subroutine init_ice_timers
 
 !***********************************************************************
-!BOP
-! !IROUTINE: get_ice_timer
-! !INTERFACE:
 
  subroutine get_ice_timer(timer_id, name_choice, num_blocks, num_nodes)
 
-! !DESCRIPTION:
 !  This routine initializes a timer with a given name and returns a 
 !  timer id.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    character (*), intent(in) :: &
       name_choice               ! input name for this timer
@@ -259,13 +201,9 @@
                                 ! (can be =1 if timer called outside
                                 !  threaded region)
 
-! !OUTPUT PARAMETERS:
-
    integer (int_kind), intent(out) :: &
       timer_id           ! timer number assigned to this timer 
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -282,7 +220,6 @@
 !
 !-----------------------------------------------------------------------
 
-   return
    srch_error = 1
 
    srch_loop: do n=1,max_timers
@@ -315,32 +252,20 @@
                     
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine get_ice_timer
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_clear
-! !INTERFACE:
 
  subroutine ice_timer_clear(timer_id)
 
-! !DESCRIPTION:
 !  This routine resets the time for a timer which has already been
 !  defined.  NOTE: This routine must be called from outside a threaded
 !  region to ensure correct reset of block timers.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                ! timer number
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  if the timer has been defined, reset all times to 0
@@ -348,7 +273,6 @@
 !
 !-----------------------------------------------------------------------
 
-   return
    if (all_timers(timer_id)%in_use) then
       all_timers(timer_id)%node_started  = .false.
       all_timers(timer_id)%num_starts    = 0
@@ -369,27 +293,16 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_clear
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_start
-! !INTERFACE:
 
  subroutine ice_timer_start(timer_id, block_id)
- use perf_mod
 
-! !DESCRIPTION:
 !  This routine starts a given node timer if it has not already
 !  been started by another thread.  If block information is available,
 !  the appropriate block timer is also started.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -405,19 +318,13 @@
    double precision MPI_WTIME
    external MPI_WTIME
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  if timer is defined, start it up
 !
 !-----------------------------------------------------------------------
 
-   return
-
    if (all_timers(timer_id)%in_use) then
-
-      call t_startf(trim(all_timers(timer_id)%name))
 
       !***
       !*** if called from within a block loop, start block timers
@@ -477,26 +384,15 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_start
  
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_stop
-! !INTERFACE:
 
  subroutine ice_timer_stop(timer_id, block_id)
- use perf_mod
 
-! !DESCRIPTION:
 !  This routine stops a given node timer if appropriate.  If block 
 !  information is available the appropriate block timer is also stopped.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -512,8 +408,6 @@
    double precision MPI_WTIME
    external MPI_WTIME
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -529,7 +423,6 @@
 !
 !-----------------------------------------------------------------------
 
-   return
    cycles2 = MPI_WTIME()
 
 !-----------------------------------------------------------------------
@@ -575,8 +468,6 @@
             all_timers(timer_id)%num_starts   = 0
             all_timers(timer_id)%num_stops    = 0
 
-            all_ltime(timer_id) = all_timers(timer_id)%node_accum_time
-
          endif
 
          !$OMP END CRITICAL
@@ -594,11 +485,7 @@
          all_timers(timer_id)%node_accum_time + &
             clock_rate*(cycles2 - cycles1)
 
-         all_ltime(timer_id) = all_timers(timer_id)%node_accum_time
-
       endif
-
-      call t_stopf(trim(all_timers(timer_id)%name))
    else
       call abort_ice &
                  ('ice_timer_stop: attempt to stop undefined timer')
@@ -606,26 +493,16 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_stop
  
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_print
-! !INTERFACE:
 
  subroutine ice_timer_print(timer_id,stats)
 
-! !DESCRIPTION:
 !  Prints the accumulated time for a given timer and optional
 !  statistics for that timer. It is assumed that this routine
 !  is called outside of a block loop.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                ! timer number
@@ -634,11 +511,6 @@
       stats                   ! if true, print statistics for node
                               !   and block times for this timer
 
-   double precision MPI_WTIME
-   external MPI_WTIME
-
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
@@ -649,17 +521,18 @@
       n,icount,        & ! dummy loop index and counter
       nBlocks            
 
+   logical (log_kind) :: &
+      lrestart_timer     ! flag to restart timer if timer is running
+                         ! when this routine is called
+
    real (dbl_kind) :: &
       local_time,       &! temp space for holding local timer results
       min_time,         &! minimum accumulated time
       max_time,         &! maximum accumulated time
       mean_time          ! mean    accumulated time
 
-   real (dbl_kind) :: &
-      cycles1, cycles2   ! temps to hold cycle info before correction
-
    character (41), parameter :: &
-      timer_format = "('Timer ',i3,': ',a20,f11.2,' seconds')"
+      timer_format = "('Timer ',i3,': ',a9,f11.2,' seconds')"
 
    character (49), parameter :: &
       stats_fmt1 = "('  Timer stats (node): min = ',f11.2,' seconds')",&
@@ -670,27 +543,23 @@
 !-----------------------------------------------------------------------
 !
 !  if timer has been defined, check to see whether it is currently
-!  running.  If it is, update to current running time and print the info
-!  (without stopping the timer). 
+!  running.  If it is, stop the timer and print the info.
 !
 !-----------------------------------------------------------------------
 
-   return
    if (all_timers(timer_id)%in_use) then
+      if (all_timers(timer_id)%node_started) then
+        call ice_timer_stop(timer_id)
+        lrestart_timer = .true.
+      else
+        lrestart_timer = .false.
+      endif
 
       !*** Find max node time and print that time as default timer
       !*** result
 
       if (my_task < all_timers(timer_id)%num_nodes) then
-
-         if (all_timers(timer_id)%node_started) then
-            cycles2 = MPI_WTIME()
-            cycles1 = all_timers(timer_id)%node_cycles1
-            local_time = all_timers(timer_id)%node_accum_time + &
-                         clock_rate*(cycles2 - cycles1)
-         else
-            local_time = all_timers(timer_id)%node_accum_time
-         endif
+         local_time = all_timers(timer_id)%node_accum_time
       else
          local_time = c0
       endif
@@ -757,6 +626,7 @@
       endif
       endif
 
+      if (lrestart_timer) call ice_timer_start(timer_id)
    else
       call abort_ice &
                  ('ice_timer_print: attempt to print undefined timer')
@@ -764,40 +634,26 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_print
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_print_all
-! !INTERFACE:
 
  subroutine ice_timer_print_all(stats)
 
-! !DESCRIPTION:
 !  Prints the accumulated time for a all timers and optional
 !  statistics for that timer. It is assumed that this routine
 !  is called outside of a block loop.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    logical (log_kind), intent(in), optional :: &
       stats                   ! if true, print statistics for node
                               !   and block times for this timer
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  local variables
 !
 !-----------------------------------------------------------------------
-
-   integer (int_kind) :: nprocs
 
    integer (int_kind) :: n ! dummy loop index
 
@@ -807,7 +663,6 @@
 !
 !-----------------------------------------------------------------------
 
-   return
    if (my_task == master_task) then
       write(nu_diag,'(/,a19,/)') 'Timing information:'
    endif
@@ -822,45 +677,17 @@
       endif
    end do
 
-   !-----------------------------------------------------
-   ! gather all timing values onto the timeRoot processor
-   !-----------------------------------------------------
-   call gatherArray(all_gtime,all_ltime,max_timers,timerRoot)
-
-   !--------------------------
-   ! write out the timing data
-   !--------------------------
-   if(my_task == timerRoot) then
-     if(lprint_stats) then
-        nprocs = get_num_procs()
-        open(nu_timing,file='timing.bin',recl=8*max_timers*nprocs, &
-           form = 'unformatted', access = 'direct', status='unknown')
-        write(nu_timing,rec=1) all_gtime
-        close(nu_timing)
-     endif
-   endif
-
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_print_all
 
 !***********************************************************************
-!BOP
-! !IROUTINE: ice_timer_check
-! !INTERFACE:
 
  subroutine ice_timer_check(timer_id,block_id)
 
-! !DESCRIPTION:
 !  This routine checks a given timer by stopping and restarting the
 !  timer.  This is primarily used to periodically accumulate time in 
 !  the timer to prevent timer cycles from wrapping around max_cycles.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
 
    integer (int_kind), intent(in) :: &
       timer_id                   ! timer number
@@ -873,15 +700,12 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
-!EOP
-!BOC
 !-----------------------------------------------------------------------
 !
 !  stop and restart the requested timer
 !
 !-----------------------------------------------------------------------
 
-   return
    if (present(block_id)) then
       call ice_timer_stop (timer_id,block_id)
       call ice_timer_start(timer_id,block_id)
@@ -891,7 +715,6 @@
    endif
 
 !-----------------------------------------------------------------------
-!EOC
 
  end subroutine ice_timer_check
 

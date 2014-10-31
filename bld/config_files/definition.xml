@@ -20,7 +20,7 @@ Root directory of CICE source distribution.
 Mode of cice 
 </entry>
 
-<entry id="cice_decomptype" valid_values="cartesian,rake,spacecurve,roundrobin,blkrobin,blkcart,DECOMPTYPE" value="">
+<entry id="cice_decomptype" valid_values="cartesian,rake,spacecurve,roundrobin,sectrobin,sectcart,DECOMPTYPE" value="">
 Type of cice decomposition.
 </entry>
 
@@ -38,6 +38,10 @@ Number of unique latitude points in rectangular lat/lon grid.
 
 <entry id="ntr_aero" valid_values="0,1,2,3,4,5,6" value="3">
 Number of aerosol tracers
+</entry>
+
+<entry id="nbgclyr" valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">
+Number of BGC tracers
 </entry>
 
 <entry id="ntasks" value="">

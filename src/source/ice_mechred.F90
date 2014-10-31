@@ -1,10 +1,6 @@
+!  SVN:$Id: ice_mechred.F90 840 2014-09-28 21:28:15Z tcraig $
 !=======================================================================
-!BOP
-!
-! !MODULE: ice_mechred - driver for mechanical redestribution
-!
-! !DESCRIPTION:
-!
+
 ! Driver for ice mechanical redistribution (ridging)
 !
 ! See these references:
@@ -16,9 +12,9 @@
 ! Hibler, W. D. III, 1980: Modeling a variable thickness sea ice
 !  cover, Mon. Wea. Rev., 108, 1943-1973, 1980.
 !
-! Lipscomb, W. H., E. C. Hunke, W. Maslowski, and J. Jakacki, 2006: 
-!  Ridging, strength, and stability in sea ice models, submitted 
-!  to J. Geophys. Res. 
+! Lipscomb, W. H., E. C. Hunke, W. Maslowski, and J. Jakacki, 2007: 
+!  Improving ridging schemes for high-resolution sea ice models.
+!  J. Geophys. Res. 112, C03S91, doi:10.1029/2005JC003355.
 ! 
 ! Rothrock, D. A., 1975: The energetics of the plastic deformation of
 !  pack ice by ridging, J. Geophys. Res., 80, 4514-4519.
@@ -26,9 +22,6 @@
 ! Thorndike, A. S., D. A. Rothrock, G. A. Maykut, and R. Colony, 
 !  1975: The thickness distribution of sea ice, J. Geophys. Res., 
 !  80, 4501-4513. 
-!
-! !REVISION HISTORY:
-!  SVN:$Id: ice_mechred.F90 53 2007-02-08 00:02:16Z dbailey $
 !
 ! authors: William H. Lipscomb, LANL
 !          Elizabeth C. Hunke, LANL
@@ -38,36 +31,37 @@
 ! 2006: New options for participation and redistribution (WHL)
 ! 2006: Streamlined for efficiency by Elizabeth Hunke
 !       Converted to free source form (F90)
-!
-! !INTERFACE:
-!
+
       module ice_mechred
-!
-! !USES:
-!
+
       use ice_kinds_mod
-      use ice_domain_size
       use ice_constants
-      use ice_fileunits
-      use ice_itd, only: hin_max, ilyr1, slyr1, column_sum, &
+      use ice_domain_size, only: ncat, max_aero, n_aero, nilyr, nslyr, nblyr
+      use ice_fileunits, only: nu_diag
+      use ice_itd, only: hin_max, column_sum, &
                          column_conservation_check, compute_tracers
-!
-!EOP
-!
+
       implicit none
       save
+
+      private
+      public :: ice_strength, ridge_ice
 
 !-----------------------------------------------------------------------
 ! Ridging parameters
 !-----------------------------------------------------------------------
 
-      integer (kind=int_kind) :: & ! defined in namelist 
+      integer (kind=int_kind), public :: & ! defined in namelist 
          kstrength    , & ! 0 for simple Hibler (1979) formulation 
                           ! 1 for Rothrock (1975) pressure formulation 
          krdg_partic  , & ! 0 for Thorndike et al. (1975) formulation 
                           ! 1 for exponential participation function 
          krdg_redist      ! 0 for Hibler (1980) formulation 
                           ! 1 for exponential redistribution function 
+
+      real (kind=dbl_kind), public :: &  
+         mu_rdg           ! gives e-folding scale of ridged ice (m^.5) 
+                          ! (krdg_redist = 1) 
  
       real (kind=dbl_kind), parameter :: & 
          Cf = 17._dbl_kind   , & ! ratio of ridging work to PE change in ridging 
@@ -77,68 +71,61 @@
          Gstar  = p15        , & ! max value of G(h) that participates 
                                  ! (krdg_partic = 0) 
          astar  = p05        , & ! e-folding scale for G(h) participation 
+!echmod         astar  = p1        , & ! e-folding scale for G(h) participation 
                                  ! (krdg_partic = 1) 
          maxraft= c1         , & ! max value of hrmin - hi = max thickness 
                                  ! of ice that rafts (m) 
          Hstar  = c25        , & ! determines mean thickness of ridged ice (m) 
                                  ! (krdg_redist = 0) 
                                  ! Flato & Hibler (1995) have Hstar = 100 
-         mu_rdg = c4         , & ! gives e-folding scale of ridged ice (m^.5) 
-                                 ! (krdg_redist = 1) 
          Pstar = 2.75e4_dbl_kind, & ! constant in Hibler strength formula 
                                  ! (kstrength = 0) 
          Cstar = c20             ! constant in Hibler strength formula 
                                  ! (kstrength = 0) 
 
       logical (kind=log_kind), parameter :: &
-         l_conservation_check = .true.  ! if true, check conservation
-!         l_conservation_check = .false.  ! if true, check conservation
-                                        ! (useful for debugging)
+!         l_conservation_check = .true.  ! if true, check conservation
+         l_conservation_check = .false.  ! if true, check conservation
+                                         ! (useful for debugging)
 
 !=======================================================================
 
       contains
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ridge_ice - driver for mechanical redistribution
-!
-! !DESCRIPTION:
-!
+
 ! Compute changes in the ice thickness distribution due to divergence
 ! and shear.
-! NOTE: This subroutine operates over a single block.
-!
-! !REVISION HISTORY:
 !
 ! author: William H. Lipscomb, LANL
-!
-! !INTERFACE:
-!
+
       subroutine ridge_ice (nx_block,    ny_block,   &
-                            dt_dyn,      dt_thm,     &
+                            dt,          ndtd,       &
                             ntrcr,       icells,     &
                             indxi,       indxj,      &
                             rdg_conv,    rdg_shear,  &
                             aicen,       trcrn,      &
                             vicen,       vsnon,      &
-                            eicen,       esnon,      &
                             aice0,                   &
                             trcr_depend, l_stop,     &
                             istop,       jstop,      &
                             dardg1dt,    dardg2dt,   &
                             dvirdgdt,    opening,    &
+                            fpond,                   &
                             fresh,       fhocn,      &
-                            fsoot)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+                            faero_ocn,               &
+                            aparticn,    krdgn,      &
+                            aredistn,    vredistn,   &
+                            dardg1ndt,   dardg2ndt,  &
+                            dvirdgndt,               &
+                            araftn,      vraftn)
+
+      use ice_state, only: nt_qice, nt_qsno, tr_brine, nt_fbri, nt_sice
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells            , & ! number of cells with ice present
+         ndtd              , & ! number of dynamics subcycles
          ntrcr                 ! number of tracers in use
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
@@ -146,8 +133,7 @@
          indxi, indxj     ! compressed indices for cells with ice
 
       real (kind=dbl_kind), intent(in) :: &
-         dt_dyn  , & ! dynamic time step
-         dt_thm      ! thermodynamic time step for diagnostics
+         dt      ! time step
 
       real (kind=dbl_kind), dimension(nx_block,ny_block), intent(in) :: &
          rdg_conv, & ! normalized energy dissipation due to convergence (1/s)
@@ -159,23 +145,15 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
  
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
          intent(inout) :: & 
          trcrn     ! ice tracers 
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntilyr), &
-         intent(inout) :: & 
-         eicen     ! energy of melting for each ice layer (J/m^2)
- 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntslyr), &
-         intent(inout) :: & 
-         esnon     ! energy of melting for each snow layer (J/m^2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: & 
          aice0     ! concentration of open water
 
-      integer (kind=int_kind), dimension(max_ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension(ntrcr), intent(in) :: &
          trcr_depend
 
       logical (kind=log_kind), intent(out) :: &
@@ -191,22 +169,44 @@
          dardg2dt  , & ! rate of fractional area gain by new ridges (1/s)
          dvirdgdt  , & ! rate of ice volume ridged (m/s)
          opening   , & ! rate of opening due to divergence/shear (1/s)
+         fpond     , & ! fresh water flux to ponds (kg/m^2/s)
          fresh     , & ! fresh water flux to ocean (kg/m^2/s)
          fhocn         ! net heat flux to ocean (W/m^2)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,n_aeromx), &
+      real (kind=dbl_kind), dimension(nx_block,ny_block,ncat), &
+         intent(out), optional :: &
+         dardg1ndt , & ! rate of fractional area loss by ridging ice (1/s)
+         dardg2ndt , & ! rate of fractional area gain by new ridges (1/s)
+         dvirdgndt , & ! rate of ice volume ridged (m/s)
+         aparticn  , & ! participation function
+         krdgn     , & ! mean ridge thickness/thickness of ridging ice
+         araftn    , & ! rafting ice area
+         vraftn    , & ! rafting ice volume 
+         aredistn  , & ! redistribution function: fraction of new ridge area
+         vredistn      ! redistribution function: fraction of new ridge volume
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_aero), &
          intent(inout), optional :: &
-         fsoot      ! 
-!
-!EOP
-!
+         faero_ocn     ! aerosol flux to ocean (kg/m^2/s)
+
+      ! local variables
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
+         eicen     ! energy of melting for each ice layer (J/m^2)
+ 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
+         esnon , &    ! energy of melting for each snow layer (J/m^2)
+         vbrin, &     ! ice volume with defined by brine height (m)
+         sicen        ! Bulk salt in h ice (ppt*m)
+
       real (kind=dbl_kind), dimension (icells) :: &
          asum       , & ! sum of ice and open water area
          aksum      , & ! ratio of area removed to area ridged
          msnow_mlt  , & ! mass of snow added to ocean (kg m-2)
          esnow_mlt  , & ! energy needed to melt snow in ocean (J m-2)
+         mpond      , & ! mass of pond added to ocean (kg m-2)
          closing_net, & ! net rate at which area is removed    (1/s)
-                        ! (ridging ice area - area of new ridges) / dt_dyn
+                        ! (ridging ice area - area of new ridges) / dt
          divu_adv   , & ! divu as implied by transport scheme  (1/s)
          opning     , & ! rate of opening due to divergence/shear
                         ! opning is a local variable;
@@ -216,8 +216,8 @@
          virdg      , & ! ice volume ridged
          aopen          ! area opening due to divergence/shear
 
-      real (kind=dbl_kind), dimension (icells,n_aeromx) :: &
-         msoot       ! mass of soot added to ocean (kg m-2)
+      real (kind=dbl_kind), dimension (icells,max_aero) :: &
+         maero          ! aerosol mass added to ocean (kg m-2)
 
       real (kind=dbl_kind), dimension (icells,0:ncat) :: &
          apartic          ! participation function; fraction of ridging
@@ -227,12 +227,18 @@
          hrmin        , & ! minimum ridge thickness
          hrmax        , & ! maximum ridge thickness (krdg_redist = 0)
          hrexp        , & ! ridge e-folding thickness (krdg_redist = 1) 
-         krdg             ! mean ridge thickness/thickness of ridging ice
+         krdg         , & ! mean ridge thickness/thickness of ridging ice
+         ardg1n       , & ! area of ice ridged
+         ardg2n       , & ! area of new ridges
+         virdgn       , & ! ridging ice volume
+         mraftn           ! rafting ice mask 
 
       real (kind=dbl_kind), dimension (icells) :: &
          vice_init, vice_final, & ! ice volume summed over categories
          vsno_init, vsno_final, & ! snow volume summed over categories
          eice_init, eice_final, & ! ice energy summed over layers
+         vbri_init, vbri_final, & ! ice volume in fbri*vicen summed over categories
+         Shi_init , Shi_final , & ! ice bulk salinity summed over categories
          esno_init, esno_final    ! snow energy summed over layers
 
       integer (kind=int_kind), parameter :: &
@@ -242,17 +248,17 @@
          i,j          , & ! horizontal indices
          n            , & ! thickness category index
          niter        , & ! iteration counter
-         ij               ! horizontal index, combines i and j loops
+         ij           , & ! horizontal index, combines i and j loops
+         k                ! vertical index
 
       real (kind=dbl_kind) :: &
-         dti              ! 1 / dt_dyn or 1 / dt_thm
+         dti              ! 1 / dt
 
       logical (kind=log_kind) :: &
-         iterate_ridging, & ! if true, repeat the ridging
-         asum_error         ! flag for asum .ne. 1
+         iterate_ridging  ! if true, repeat the ridging
 
       character (len=char_len) :: &
-         fieldid            ! field identifier
+         fieldid          ! field identifier
 
       !-----------------------------------------------------------------
       ! Initialize
@@ -265,10 +271,15 @@
       do ij = 1, icells
          msnow_mlt(ij) = c0
          esnow_mlt(ij) = c0
-         msoot    (ij,:) = c0
+         maero    (ij,:) = c0
+         mpond    (ij) = c0
          ardg1    (ij) = c0
          ardg2    (ij) = c0
          virdg    (ij) = c0
+         ardg1n   (ij,:) = c0
+         ardg2n   (ij,:) = c0
+         virdgn   (ij,:) = c0
+         mraftn   (ij,:) = c0
 !         aopen    (ij) = c0
       enddo
 
@@ -285,7 +296,7 @@
       !-----------------------------------------------------------------
       call ridge_prep (nx_block, ny_block,      &
                        icells,   indxi,  indxj, &
-                       dt_dyn,                  &
+                       dt,                      &
                        rdg_conv,  rdg_shear,    &
                        asum,      closing_net,  &
                        divu_adv,  opning)
@@ -295,6 +306,48 @@
       !-----------------------------------------------------------------
 
       if (l_conservation_check) then
+
+      eicen(:,:,:) = c0
+      esnon(:,:,:) = c0
+      vbrin(:,:,:) = c0
+      sicen(:,:,:) = c0
+
+      do n = 1, ncat
+      do j = 1, ny_block
+      do i = 1, nx_block     
+        vbrin(i,j,n) = vicen(i,j,n)
+        if (tr_brine) vbrin(i,j,n) =  trcrn(i,j,nt_fbri,n) * vicen(i,j,n)
+      enddo
+      enddo     
+
+      do k = 1, nilyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         eicen(i,j,n) = eicen(i,j,n) + trcrn(i,j,nt_qice+k-1,n) &
+                      * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+      do k = 1, nslyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         esnon(i,j,n) = esnon(i,j,n) + trcrn(i,j,nt_qsno+k-1,n) &
+                      * vsnon(i,j,n)/real(nslyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+
+
+      do k = 1, nilyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         sicen(i,j,n) = sicen(i,j,n) + trcrn(i,j,nt_sice+k-1,n) &
+                      * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+
+      enddo
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
@@ -308,13 +361,23 @@
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
-                          ntilyr,                   &
+                          ncat,                     &
                           eicen,      eice_init)
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
-                          ntslyr,                   &
+                          ncat,                     &
                           esnon,      esno_init)
+
+         call column_sum (nx_block, ny_block,       &
+                          icells,   indxi,   indxj, &
+                          ncat,                     &
+                          vbrin,    vbri_init)
+
+         call column_sum (nx_block, ny_block,       &
+                          icells,   indxi,   indxj, &
+                          ncat,                     &
+                          sicen,    Shi_init)
 
       endif            
 
@@ -331,7 +394,8 @@
                          aice0,                      &
                          aksum,     apartic,         &
                          hrmin,     hrmax,           &
-                         hrexp,     krdg)
+                         hrexp,     krdg,            &
+                         aparticn,  krdgn,    mraftn)
 
       !-----------------------------------------------------------------
       ! Redistribute area, volume, and energy.
@@ -339,10 +403,9 @@
 
          call ridge_shift (nx_block,  ny_block,        &
                            icells,    indxi,    indxj, &
-                           ntrcr,     dt_dyn,          &
+                           ntrcr,     dt,              &
                            aicen,     trcrn,           &
                            vicen,     vsnon,           &
-                           eicen,     esnon,           &
                            aice0,     trcr_depend,     &
                            aksum,     apartic,         &
                            hrmin,     hrmax,           &
@@ -350,10 +413,13 @@
                            closing_net, opning,        &
                            ardg1,     ardg2,           &
                            virdg,     aopen,           &
+                           ardg1n,    ardg2n,          &
+                           virdgn,                     &
                            msnow_mlt, esnow_mlt,       &
-                           msoot,                      &
+                           maero,     mpond,           &
                            l_stop,                     &
-                           istop,     jstop)
+                           istop,     jstop,           &
+                           aredistn,  vredistn)
 
          if (l_stop) return
 
@@ -370,7 +436,7 @@
 
          call ridge_check (nx_block,   ny_block,        &
                            icells,     indxi,    indxj, &
-                           dt_dyn,                      &
+                           dt,                          &
                            asum,       closing_net,     &
                            divu_adv,   opning,          &
                            iterate_ridging)
@@ -392,7 +458,7 @@
             l_stop = .true.
             return
          endif
-            
+
       enddo                     ! niter
 
       !-----------------------------------------------------------------
@@ -401,6 +467,49 @@
       !-----------------------------------------------------------------
 
       if (l_conservation_check) then
+
+      eicen(:,:,:) = c0
+      esnon(:,:,:) = c0
+      sicen(:,:,:) = c0
+      vbrin(:,:,:) = c0
+
+      do n = 1, ncat
+      do k = 1, nilyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         eicen(i,j,n) = eicen(i,j,n) + trcrn(i,j,nt_qice+k-1,n) &
+                      * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+      do k = 1, nslyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         esnon(i,j,n) = esnon(i,j,n) + trcrn(i,j,nt_qsno+k-1,n) &
+                      * vsnon(i,j,n)/real(nslyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+
+     
+      do j = 1, ny_block
+      do i = 1, nx_block
+         vbrin(i,j,n) =  vicen(i,j,n)
+         if (tr_brine)  vbrin(i,j,n) =  trcrn(i,j,nt_fbri,n) * vbrin(i,j,n)
+      enddo
+      enddo
+      
+
+      do k = 1, nilyr
+      do j = 1, ny_block
+      do i = 1, nx_block
+         sicen(i,j,n) = sicen(i,j,n) + trcrn(i,j,nt_sice+k-1,n) &
+                      * vicen(i,j,n)/real(nilyr,kind=dbl_kind)
+      enddo
+      enddo
+      enddo
+
+      enddo
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
@@ -414,13 +523,23 @@
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
-                          ntilyr,                   &
+                          ncat,                     &
                           eicen,      eice_final)
 
          call column_sum (nx_block,   ny_block,     &
                           icells,   indxi,   indxj, &
-                          ntslyr,                   &
+                          ncat,                     &
                           esnon,      esno_final)
+
+         call column_sum (nx_block, ny_block,       &
+                          icells,   indxi,   indxj, &
+                          ncat,                     &
+                          sicen,    Shi_final)
+
+         call column_sum (nx_block, ny_block,       &
+                          icells,   indxi,   indxj, &
+                          ncat,                     &
+                          vbrin,    vbri_final)
 
          do ij = 1, icells
             vsno_final(ij) = vsno_final(ij) + msnow_mlt(ij)/rhos
@@ -463,15 +582,32 @@
                                          puny*Lfresh*rhos,          &
                                          l_stop,                    &
                                          istop,     jstop)
-         if (l_stop) return
-         
+         if (l_stop) return         
+
+         fieldid = 'sice, ridging'
+         call column_conservation_check (nx_block,  ny_block,      &
+                                         icells,    indxi,  indxj, &
+                                         fieldid,                  &
+                                         Shi_init,  Shi_final,     &
+                                         puny,      l_stop,        &
+                                         istop,     jstop)
+         if (l_stop) return         
+
+         fieldid = 'vbrin, ridging'
+         call column_conservation_check (nx_block,  ny_block,      &
+                                         icells,   indxi,   indxj, &
+                                         fieldid,                  &
+                                         vbri_init, vbri_final,    &
+                                         puny*c10,      l_stop,        &
+                                         istop,     jstop)
+         if (l_stop) return         
       endif                     ! l_conservation_check            
 
       !-----------------------------------------------------------------
       ! Compute ridging diagnostics.
       !-----------------------------------------------------------------
 
-      dti = c1/dt_dyn
+      dti = c1/dt
 
       if (present(dardg1dt)) then
          do ij = 1, icells
@@ -501,20 +637,60 @@
             opening(i,j) = aopen(ij)*dti
          enddo
       endif
+      if (present(dardg1ndt)) then
+         do n = 1, ncat
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            dardg1ndt(i,j,n) = ardg1n(ij,n)*dti
+         enddo
+         enddo
+      endif
+      if (present(dardg2ndt)) then
+         do n = 1, ncat
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            dardg2ndt(i,j,n) = ardg2n(ij,n)*dti
+         enddo
+         enddo
+      endif
+      if (present(dvirdgndt)) then
+         do n = 1, ncat
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            dvirdgndt(i,j,n) = virdgn(ij,n)*dti
+         enddo
+         enddo
+      endif
+      if (present(araftn)) then
+         do n = 1, ncat
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            araftn(i,j,n) = mraftn(ij,n)*ardg2n(ij,n)
+!            araftn(i,j,n) = mraftn(ij,n)*ardg1n(ij,n)*p5
+         enddo
+         enddo
+      endif
+      if (present(vraftn)) then
+         do n = 1, ncat
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            vraftn(i,j,n) = mraftn(ij,n)*virdgn(ij,n)
+         enddo
+         enddo
+      endif
 
       !-----------------------------------------------------------------
       ! Update fresh water and heat fluxes due to snow melt.
       !-----------------------------------------------------------------
 
-      dti = c1/dt_thm
+      ! use thermodynamic time step (ndtd*dt here) to average properly
+      dti = c1/(ndtd*dt)
 
-      if (present(fsoot)) then
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-            fsoot(i,j,:) = fsoot(i,j,:) + msoot(ij,:)*dti
-         enddo
-      endif
       if (present(fresh)) then
          do ij = 1, icells
             i = indxi(ij)
@@ -527,6 +703,20 @@
             i = indxi(ij)
             j = indxj(ij)
             fhocn(i,j) = fhocn(i,j) + esnow_mlt(ij)*dti
+         enddo
+      endif
+      if (present(faero_ocn)) then
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            faero_ocn(i,j,:) = faero_ocn(i,j,:) + maero(ij,:)*dti
+         enddo
+      endif
+      if (present(fpond)) then
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+            fpond(i,j) = fpond(i,j) - mpond(ij) ! units change later
          enddo
       endif
 
@@ -557,33 +747,20 @@
       end subroutine ridge_ice
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: asum_ridging - find total fractional area
-!
-! !DESCRIPTION:
-!
+
 ! Find the total area of ice plus open water in each grid cell.
 !
 ! This is similar to the aggregate_area subroutine except that the
 ! total area can be greater than 1, so the open water area is
 ! included in the sum instead of being computed as a residual.
 !
-! !REVISION HISTORY:
-!
 ! author: William H. Lipscomb, LANL
-!
-! !INTERFACE:
-!
+
       subroutine asum_ridging (nx_block, ny_block,        &
                                icells,   indxi,    indxj, &
                                aicen,    aice0,           &
                                asum)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells                ! number of cells with ice present
@@ -602,9 +779,9 @@
 
       real (kind=dbl_kind), dimension (icells), intent(out):: &
          asum           ! sum of ice and open water area
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
          i, j, n, &
          ij               ! horizontal index, combines i and j loops
@@ -636,30 +813,18 @@
       end subroutine asum_ridging
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ridge_prep - preparation for ridging
-!
-! !DESCRIPTION: Initialize arrays, compute area of closing and opening
-!
-!
-! !REVISION HISTORY:
+
+! Initialize arrays, compute area of closing and opening
 !
 ! author: William H. Lipscomb, LANL
-!
-! !INTERFACE:
-!
+
       subroutine ridge_prep (nx_block,   ny_block,        &
                              icells,     indxi,    indxj, &
                              dt,                          &
                              rdg_conv,   rdg_shear,       &
                              asum,       closing_net,     &
                              divu_adv,   opning)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells                ! number of cells with ice present
@@ -685,9 +850,9 @@
          closing_net, & ! net rate at which area is removed    (1/s)
          divu_adv   , & ! divu as implied by transport scheme  (1/s)
          opning         ! rate of opening due to divergence/shear
-!
-!EOP
-!
+
+      ! local variables
+
       real (kind=dbl_kind), parameter :: &
          big = 1.0e+8_dbl_kind
 
@@ -721,6 +886,9 @@
       !  The GROSS closing rate is equal to the first two terms (open
       !  water closing and thin ice ridging) without the third term
       !  (thick, newly ridged ice).
+      !
+      ! rdg_conv is calculated differently in EAP (update_ice_rdg) and 
+      ! represents closing_net directly.  In that case, rdg_shear=0.
       !-----------------------------------------------------------------
 
          closing_net(ij) = Cs*rdg_shear(i,j) + rdg_conv(i,j)
@@ -750,12 +918,7 @@
       end subroutine ridge_prep
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ridge_itd - thickness distribution of ridging and ridged ice
-!
-! !DESCRIPTION:
-!
+
 ! Compute the thickness distribution of the ice and open water
 ! participating in ridging and of the resulting ridges.
 !
@@ -766,27 +929,20 @@
 ! The new exponential redistribution function (krdg_redist = 1) improves 
 !  agreement between ITDs of modeled and observed ridges.   
 !
-! !REVISION HISTORY:
-!
 ! author: William H. Lipscomb, LANL
 !
 ! 2006: Changed subroutine name to ridge_itd
 !       Added new options for ridging participation and redistribution.  
-!
-! !INTERFACE:
-!
+
       subroutine ridge_itd (nx_block,    ny_block,        &
                             icells,      indxi,    indxj, &
                             aicen,       vicen,           &
                             aice0,                        &
                             aksum,       apartic,         &
                             hrmin,       hrmax,           &
-                            hrexp,       krdg)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+                            hrexp,       krdg,            &
+                            aparticn,    krdgn,    mraft)
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells                ! number of cells with ice present
@@ -794,7 +950,6 @@
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi, indxj     ! compressed indices for cells with ice
-
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
          intent(in) :: &
@@ -818,9 +973,19 @@
          hrmax        , & ! maximum ridge thickness (krdg_redist = 0)
          hrexp        , & ! ridge e-folding thickness (krdg_redist = 1) 
          krdg             ! mean ridge thickness/thickness of ridging ice
-!
-!EOP
-!
+
+      ! diagnostic, category values
+      real (kind=dbl_kind), dimension(nx_block,ny_block,ncat), &
+         intent(out), optional :: &
+         aparticn  , & ! participation function
+         krdgn         ! mean ridge thickness/thickness of ridging ice
+
+      real (kind=dbl_kind), dimension (icells,ncat), &
+         intent(out), optional :: &
+         mraft            ! rafting ice mask 
+
+      ! local variables
+
       integer (kind=int_kind) :: &
          i,j          , & ! horizontal indices
          n            , & ! thickness category index
@@ -838,7 +1003,6 @@
 
       real (kind=dbl_kind) :: &
          hi           , & ! ice thickness for each cat (m)
-         hieff        , & ! effective ice thickness (m) (krdg_redist = 2)
          hrmean       , & ! mean ridge thickness (m)
          xtmp             ! temporary variable
 
@@ -978,7 +1142,7 @@
       !-----------------------------------------------------------------
       ! Compute variables related to ITD of ridged ice:
       ! 
-      ! krdg = mean ridge thickness/ thickness of ridging ice
+      ! krdg   = mean ridge thickness / thickness of ridging ice
       ! hrmin  = min ridge thickness
       ! hrmax  = max ridge thickness (krdg_redist = 0)
       ! hrexp  = ridge e-folding scale (krdg_redist = 1)
@@ -1010,6 +1174,8 @@
                   hrmax(ij,n) = max(hrmax(ij,n), hrmin(ij,n)+puny) 
                   hrmean = p5 * (hrmin(ij,n) + hrmax(ij,n)) 
                   krdg(ij,n) = hrmean / hi 
+
+                  ! diagnostic rafting mask not implemented
                endif 
 
             enddo               ! ij
@@ -1055,6 +1221,14 @@
                   hrmin(ij,n) = min(c2*hi, hi + maxraft)
                   hrexp(ij,n) = mu_rdg * sqrt(hi)
                   krdg(ij,n) = (hrmin(ij,n) + hrexp(ij,n)) / hi
+
+   !echmod:  check computational efficiency
+                  ! diagnostic rafting mask
+                  if (present(mraft)) then
+                     mraft(ij,n) = max(c0, sign(c1, hi+maxraft-hrmin(ij,n)))
+                     xtmp = mraft(ij,n)*((c2*hi+hrexp(ij,n))/hi - krdg(ij,n))
+                     mraft(ij,n) = max(c0, sign(c1, puny-abs(xtmp)))
+                  endif
                endif
             enddo
          enddo
@@ -1083,30 +1257,55 @@
          enddo
       enddo
 
+      ! diagnostics
+      if (present(aparticn)) then
+      do n = 1, ncat
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+         do ij = 1, icells
+         i = indxi(ij)
+         j = indxj(ij)
+               aparticn(i,j,n) = apartic(ij,n)
+         enddo
+      enddo
+      endif
+      if (present(krdgn)) then
+      do n = 1, ncat
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+         do ij = 1, icells
+         i = indxi(ij)
+         j = indxj(ij)
+               krdgn(i,j,n) = krdg(ij,n)
+         enddo
+      enddo
+      endif
+
       end subroutine ridge_itd
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ridge_shift - shift ridging ice among thickness categories
-!
-! !DESCRIPTION:
-!
+
 ! Remove area, volume, and energy from each ridging category
 ! and add to thicker ice categories.
 !
-! !REVISION HISTORY:
+! Tracers:  Ridging conserves ice volume and therefore conserves volume
+! tracers. It does not conserve ice area, and therefore a portion of area 
+! tracers are lost (corresponding to the net closing).  Area tracers on 
+! ice that participates in ridging are carried onto the resulting ridged
+! ice (except the portion that are lost due to closing).  Therefore, 
+! tracers must be decremented if they are lost to the ocean during ridging
+! (e.g. snow, ponds) or if they are being carried only on the level ice 
+! area. 
 !
 ! author: William H. Lipscomb, LANL
-!
-! !INTERFACE:
-!
+
       subroutine ridge_shift (nx_block,    ny_block,        &
                               icells,      indxi,    indxj, &
                               ntrcr,       dt,              &
                               aicen,       trcrn,           &
                               vicen,       vsnon,           &
-                              eicen,       esnon,           &
                               aice0,       trcr_depend,     &   
                               aksum,       apartic,         &
                               hrmin,       hrmax,           &
@@ -1114,18 +1313,20 @@
                               closing_net, opning,          &
                               ardg1,       ardg2,           &
                               virdg,       aopen,           &
+                              ardg1nn,     ardg2nn,         &
+                              virdgnn,                      &
                               msnow_mlt,   esnow_mlt,       &
-                              msoot,                        &
+                              maero,       mpond,           &
                               l_stop,                       &
-                              istop,       jstop)
-!
-! !USES:
-!
-      use ice_state, only: nt_aero, &
-                           nt_alvl, nt_vlvl, tr_lvl
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+                              istop,       jstop,           &
+                              aredistn,    vredistn)
+
+      use ice_state, only: nt_qsno, &
+                           nt_alvl, nt_vlvl, nt_aero, tr_lvl, tr_aero, &
+                           nt_apnd, nt_hpnd, nt_ipnd, tr_pond, &
+                           tr_pond_cesm, tr_pond_lvl, tr_pond_topo, &
+                           nt_fbri
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells            , & ! number of cells with ice present
@@ -1138,12 +1339,12 @@
       real (kind=dbl_kind), intent(in) :: &
          dt                  ! time step (s)
 
-      integer (kind=int_kind), dimension (max_ntrcr), intent(in) :: &
+      integer (kind=int_kind), dimension (ntrcr), intent(in) :: &
          trcr_depend ! = 0 for aicen tracers, 1 for vicen, 2 for vsnon
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
-         aice0     ! concentration of open water
+         aice0      ! concentration of open water
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
          intent(inout) :: &
@@ -1151,17 +1352,9 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_ntrcr,ncat), &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
          intent(inout) :: &
          trcrn     ! ice tracers
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntilyr), &
-         intent(inout) :: &
-         eicen     ! energy of melting for each ice layer (J/m^2)
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,ntslyr), &
-         intent(inout) :: &
-         esnon     ! energy of melting for each snow layer (J/m^2)
 
       real (kind=dbl_kind), dimension (icells), intent(in) :: &
          aksum             ! ratio of area removed to area ridged
@@ -1184,21 +1377,32 @@
          virdg      , & ! ice volume ridged (m)
          aopen          ! area opened due to divergence/shear
 
+      real (kind=dbl_kind), dimension(icells,ncat), intent(inout) :: &
+         ardg1nn    , & ! area of ice ridged
+         ardg2nn    , & ! area of new ridges
+         virdgnn        ! ridging ice volume
+
       real (kind=dbl_kind), dimension(icells), intent(inout) :: &
          msnow_mlt, & ! mass of snow added to ocean (kg m-2)
-         esnow_mlt    ! energy needed to melt snow in ocean (J m-2)
+         esnow_mlt, & ! energy needed to melt snow in ocean (J m-2)
+         mpond        ! mass of pond added to ocean (kg m-2)
 
-      real (kind=dbl_kind), dimension(icells,n_aeromx), intent(inout) :: &
-         msoot      ! mass of soot added to ocean (kg m-2)
+      real (kind=dbl_kind), dimension(icells,max_aero), intent(inout) :: &
+         maero        ! aerosol mass added to ocean (kg m-2)
 
       logical (kind=log_kind), intent(inout) :: &
          l_stop   ! if true, abort on return
 
       integer (kind=int_kind), intent(inout) :: &
          istop, jstop ! indices of grid cell where model aborts
-!
-!EOP
-!
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
+         intent(inout), optional :: &
+         aredistn  , & ! redistribution function: fraction of new ridge area
+         vredistn      ! redistribution function: fraction of new ridge volume
+
+      ! local variables
+
       integer (kind=int_kind) :: &
          i,j           , & ! horizontal indices
          n, nr         , & ! thickness category indices
@@ -1206,25 +1410,17 @@
          it            , & ! tracer index
          ij, m         , & ! horizontal indices, combine i and j loops
          iridge            ! number of cells with nonzero ridging
-      integer (kind=int_kind) :: &
-         iaero             ! index for number of aerosol tracers
 
       integer (kind=int_kind), dimension (icells) :: &
-         indxii, indxjj  , & ! compressed indices
-         indxij              ! compressed indices
+         indxii, indxjj, & ! compressed indices
+         indxij            ! compressed indices
 
       real (kind=dbl_kind), dimension (icells,ncat) :: &
          aicen_init    , & ! ice area before ridging
          vicen_init    , & ! ice volume before ridging
          vsnon_init        ! snow volume before ridging
 
-      real (kind=dbl_kind), dimension (icells,ntilyr) :: &
-         eicen_init        ! ice energy before ridging
-
-      real (kind=dbl_kind), dimension (icells,ntslyr) :: &
-         esnon_init        ! snow energy before ridging
-
-      real (kind=dbl_kind), dimension(icells,max_ntrcr,ncat) :: &
+      real (kind=dbl_kind), dimension(icells,ntrcr,ncat) :: &
          atrcrn            ! aicen*trcrn
 
       real (kind=dbl_kind), dimension (icells) :: &
@@ -1237,16 +1433,13 @@
          ardg1n        , & ! area of ice ridged
          ardg2n        , & ! area of new ridges
          virdgn        , & ! ridging ice volume
-         vsrdgn        , & ! ridging snow volume
+         vsrdgn        , & ! ridging snow volume 
          dhr           , & ! hrmax - hrmin
          dhr2          , & ! hrmax^2 - hrmin^2
          farea         , & ! fraction of new ridge area going to nr
          fvol              ! fraction of new ridge volume going to nr
 
-      real (kind=dbl_kind), dimension (icells,nilyr) :: &
-         eirdgn            ! ridging ice energy
-
-      real (kind=dbl_kind), dimension (icells,nslyr) :: &
+      real (kind=dbl_kind) :: &
          esrdgn            ! ridging snow energy
 
       real (kind=dbl_kind) :: &
@@ -1280,7 +1473,42 @@
                   i = indxi(ij)
                   j = indxj(ij)
                   atrcrn(ij,it,n) = vsnon(i,j,n)*trcrn(i,j,it,n)
-               enddo 
+               enddo
+            elseif (trcr_depend(it) == 2+nt_fbri) then ! brine tracer
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  atrcrn(ij,it,n) = vicen(i,j,n) &
+                                  * trcrn(i,j,nt_fbri,n) &
+                                  * trcrn(i,j,it,n)
+               enddo
+            elseif (trcr_depend(it) == 2+nt_alvl) then ! level ice tracer
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  atrcrn(ij,it,n) = aicen(i,j,n) &
+                                  * trcrn(i,j,nt_alvl,n) &
+                                  * trcrn(i,j,it,n)
+               enddo
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                   (tr_pond_cesm .or. tr_pond_topo)) then ! CESM or topo pond area tracer
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  atrcrn(ij,it,n) = aicen(i,j,n) &
+                                  * trcrn(i,j,nt_apnd,n) &
+                                  * trcrn(i,j,it,n)
+               enddo
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                    tr_pond_lvl) then ! level-ice pond area tracer
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  atrcrn(ij,it,n) = aicen(i,j,n) &
+                                  * trcrn(i,j,nt_alvl,n) &
+                                  * trcrn(i,j,nt_apnd,n) &
+                                  * trcrn(i,j,it,n)
+               enddo
             endif
          enddo
       enddo
@@ -1385,22 +1613,6 @@
          enddo
       enddo
 
-      do n = 1, ntilyr
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-            eicen_init(ij,n) = eicen(i,j,n)
-         enddo
-      enddo
-
-      do n = 1, ntslyr
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-            esnon_init(ij,n) = esnon(i,j,n)
-         enddo
-      enddo
-
       !-----------------------------------------------------------------
       ! Compute the area, volume, and energy of ice ridging in each
       !  category, along with the area of the resulting ridge.
@@ -1413,6 +1625,7 @@
       !-----------------------------------------------------------------
 
          iridge = 0
+
          do ij = 1, icells
             i = indxi(ij)
             j = indxj(ij)
@@ -1468,7 +1681,7 @@
             vsrdgn(ij) = vsnon_init(m,n) * afrac(ij)
 
             aicen(i,j,n) = aicen(i,j,n) - ardg1n(ij)
-            vicen(i,j,n) = vicen(i,j,n) - virdgn(ij)
+            vicen(i,j,n) = vicen(i,j,n) - virdgn(ij)           
             vsnon(i,j,n) = vsnon(i,j,n) - vsrdgn(ij)
 
       !-----------------------------------------------------------------
@@ -1479,37 +1692,29 @@
             ardg2(m) = ardg2(m) + ardg2n(ij)
             virdg(m) = virdg(m) + virdgn(ij)
 
-      !-----------------------------------------------------------------
-      ! Decrement level ice area and volume tracers
-      !-----------------------------------------------------------------
-
-            if (tr_lvl) then
-
-               ! Assume level and ridged ice both ridge, proportionally.
-               ! Subtract the level ice portion of the ridging ice from
-               ! the level ice tracers.
-               atrcrn(m,nt_alvl,n) = atrcrn(m,nt_alvl,n) * (c1 - afrac(ij))
-               atrcrn(m,nt_vlvl,n) = atrcrn(m,nt_vlvl,n) * (c1 - afrac(ij))
-
-            endif
+            ardg1nn(m,n) = ardg1n(ij)
+            ardg2nn(m,n) = ardg2n(ij)
+            virdgnn(m,n) = virdgn(ij)
 
       !-----------------------------------------------------------------
-      !  Place part of the snow lost by ridging into the ocean.
+      !  Place part of the snow and tracer lost by ridging into the ocean.
       !-----------------------------------------------------------------
 
             msnow_mlt(m) = msnow_mlt(m) + rhos*vsrdgn(ij)*(c1-fsnowrdg)
 
-      !-----------------------------------------------------------------
-      !  Place part of the soot lost by ridging into the ocean.
-      !-----------------------------------------------------------------
-
-            if (n_aero >= 1) then
-               do iaero=1,n_aero
-                msoot(m,iaero) = msoot(m,iaero) &
+            if (tr_aero) then
+               do it = 1, n_aero
+                  maero(m,it) = maero(m,it) &
                         + vsrdgn(ij)*(c1-fsnowrdg) &
-                        *(trcrn(i,j,nt_aero  +4*(iaero-1),n)   &
-                        + trcrn(i,j,nt_aero+1+4*(iaero-1),n))
+                        *(trcrn(i,j,nt_aero  +4*(it-1),n)   &
+                        + trcrn(i,j,nt_aero+1+4*(it-1),n))
                enddo
+            endif
+
+            if (tr_pond_topo) then
+               mpond(m) = mpond(m) + ardg1n(ij) &
+                                   * trcrn(i,j,nt_apnd,n) &
+                                   * trcrn(i,j,nt_hpnd,n)
             endif
 
       !-----------------------------------------------------------------
@@ -1523,26 +1728,6 @@
          enddo                  ! ij
 
       !-----------------------------------------------------------------
-      ! Subtract ice energy from ridging category n.
-      !-----------------------------------------------------------------
-
-         do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC
-!ocl novrec      !Fujitsu
-            do ij = 1, iridge
-               i = indxii(ij)
-               j = indxjj(ij)
-               m = indxij(ij)
-
-               eirdgn(ij,k) = eicen_init(m,ilyr1(n)+k-1) * afrac(ij)
-               eicen(i,j,ilyr1(n)+k-1) = eicen (i,j,ilyr1(n)+k-1) &
-                                       - eirdgn(ij,k)
-            enddo
-         enddo
-
-      !-----------------------------------------------------------------
-      ! Subtract snow energy from ridging category n.
       ! Increment energy needed to melt snow in ocean.
       ! Note that esnow_mlt < 0; the ocean must cool to melt snow.
       !-----------------------------------------------------------------
@@ -1555,12 +1740,8 @@
                i = indxii(ij)
                j = indxjj(ij)
                m = indxij(ij)
-
-               esrdgn(ij,k) = esnon_init(m,slyr1(n)+k-1) * afrac(ij)
-               esnon(i,j,slyr1(n)+k-1) = esnon (i,j,slyr1(n)+k-1) &
-                                       - esrdgn(ij,k)
-               esnow_mlt(m) = esnow_mlt(m) &
-                              + esrdgn(ij,k)*(c1-fsnowrdg)
+               esrdgn = vsrdgn(ij) * trcrn(i,j,nt_qsno+k-1,n)
+               esnow_mlt(m) = esnow_mlt(m) + esrdgn*(c1-fsnowrdg)
            enddo
          enddo
 
@@ -1577,7 +1758,7 @@
                   i = indxii(ij)
                   j = indxjj(ij)
                   m = indxij(ij)
-                  atrcrn(m,it,n) = atrcrn(m,it,n) &
+                  atrcrn(m,it,n) = atrcrn(m,it,n) &        
                                    - ardg1n(ij)*trcrn(i,j,it,n)
                enddo
 
@@ -1604,9 +1785,61 @@
                   atrcrn(m,it,n) = atrcrn(m,it,n) &
                                    - vsrdgn(ij)*trcrn(i,j,it,n)
                enddo
+
+            elseif (trcr_depend(it) == 2+nt_alvl) then ! level ice tracer
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  m = indxij(ij)
+                  atrcrn(m,it,n) = atrcrn(m,it,n) &
+                                   - ardg1n(ij)*trcrn(i,j,nt_alvl,n)*trcrn(i,j,it,n)
+               enddo
+
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                   (tr_pond_cesm .or. tr_pond_topo)) then ! CESM or topo pond area tracer
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  m = indxij(ij)
+                  atrcrn(m,it,n) = atrcrn(m,it,n) &
+                                   - ardg1n(ij)*trcrn(i,j,nt_apnd,n)*trcrn(i,j,it,n)
+               enddo
+
+            elseif (trcr_depend(it) == 2+nt_apnd .and. &
+                    tr_pond_lvl) then ! level-ice pond area tracer
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  m = indxij(ij)
+                  atrcrn(m,it,n) = atrcrn(m,it,n) &
+                                   - ardg1n(ij) &
+                                   * trcrn(i,j,nt_alvl,n) &
+                                   * trcrn(i,j,nt_apnd,n) &
+                                   * trcrn(i,j,it,n)
+               enddo
+
+            elseif (trcr_depend(it) == 2+nt_fbri) then ! brine tracer
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  m = indxij(ij)
+                  atrcrn(m,it,n) = atrcrn(m,it,n) &
+                                   - virdgn(ij)*trcrn(i,j,it,n)*trcrn(i,j,nt_fbri,n)  
+               enddo
             endif               ! trcr_depend
          enddo                  ! ntrcr
-
 
       !-----------------------------------------------------------------
       ! Add area, volume, and energy of new ridge to each category nr.
@@ -1679,10 +1912,27 @@
                      expL = exp(-(hL-hi1)/hexp)
                      farea(ij) = expL
                      fvol (ij) = (hL + hexp)*expL / (hi1 + hexp)
-
                   enddo
 
                endif            ! nr < ncat
+
+               ! diagnostics
+               if (n ==1) then  ! only for thinnest ridging ice
+               if (present(aredistn)) then
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  aredistn(i,j,nr) = farea(ij)*ardg2n(ij)
+               enddo
+               endif
+               if (present(vredistn)) then
+               do ij = 1, iridge
+                  i = indxii(ij)
+                  j = indxjj(ij)
+                  vredistn(i,j,nr) = fvol(ij)*virdgn(ij)
+               enddo
+               endif
+               endif
 
             endif               ! krdg_redist
 
@@ -1696,6 +1946,7 @@
             do ij = 1, iridge
                i = indxii(ij)
                j = indxjj(ij)
+               m = indxij(ij)
                aicen(i,j,nr) = aicen(i,j,nr) + farea(ij)*ardg2n(ij)
                vicen(i,j,nr) = vicen(i,j,nr) + fvol(ij) *virdgn(ij)
                vsnon(i,j,nr) = vsnon(i,j,nr) &
@@ -1703,45 +1954,19 @@
             enddo
 
       !-----------------------------------------------------------------
-      ! Transfer ice energy to category nr
-      !-----------------------------------------------------------------
-            do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC
-!ocl novrec      !Fujitsu
-               do ij = 1, iridge
-                  i = indxii(ij)
-                  j = indxjj(ij)
-                  eicen(i,j,ilyr1(nr)+k-1) = eicen(i,j,ilyr1(nr)+k-1) &
-                                           + fvol(ij)*eirdgn(ij,k)
-               enddo            ! ij
-            enddo               ! k
-
-      !-----------------------------------------------------------------
-      ! Transfer snow energy to category nr
-      !-----------------------------------------------------------------
-            do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC
-!ocl novrec      !Fujitsu
-               do ij = 1, iridge
-                  i = indxii(ij)
-                  j = indxjj(ij)
-                  esnon(i,j,slyr1(nr)+k-1) = esnon(i,j,slyr1(nr)+k-1) &
-                                    + fvol(ij)*esrdgn(ij,k)*fsnowrdg
-               enddo            ! ij
-            enddo               ! k
-
-      !-----------------------------------------------------------------
       ! Transfer area-weighted and volume-weighted tracers to category nr.
       ! Note: The global sum aicen*trcrn of ice area tracers 
       !       (trcr_depend = 0) is not conserved by ridging.
       !       However, ridging conserves the global sum of volume
       !       tracers (trcr_depend = 1 or 2).
+      ! Tracers associated with level ice, or that are otherwise lost
+      ! from ridging ice, are not transferred.
+      ! We assume that all pond water is lost from ridging ice.
       !-----------------------------------------------------------------
 
             do it = 1, ntrcr
                if (trcr_depend(it) == 0) then  ! ice area tracer
+                  if (it /= nt_alvl) then
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
@@ -1751,9 +1976,10 @@
                      m = indxij(ij)
                      atrcrn(m,it,nr) = atrcrn(m,it,nr) &
                                 + farea(ij)*ardg2n(ij)*trcrn(i,j,it,n)
-
                   enddo
+                  endif
                elseif (trcr_depend(it) == 1) then ! ice volume tracer
+                  if (it /= nt_vlvl) then
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
@@ -1763,8 +1989,8 @@
                      m = indxij(ij)
                      atrcrn(m,it,nr) = atrcrn(m,it,nr) &
                                  + fvol(ij)*virdgn(ij)*trcrn(i,j,it,n)
-
                   enddo
+                  endif
                elseif (trcr_depend(it) == 2) then ! snow volume tracer
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
@@ -1775,14 +2001,23 @@
                      m = indxij(ij)
                      atrcrn(m,it,nr) = atrcrn(m,it,nr) &
                         + fvol(ij)*vsrdgn(ij)*fsnowrdg*trcrn(i,j,it,n)
-
+                  enddo
+               elseif (trcr_depend(it) == 2+nt_fbri) then  ! brine tracer
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+                  do ij = 1, iridge
+                     i = indxii(ij)
+                     j = indxjj(ij)
+                     m = indxij(ij)
+                     atrcrn(m,it,nr) = atrcrn(m,it,nr) & ! 
+                         + fvol(ij)*virdgn(ij)*trcrn(i,j,nt_fbri,n)*trcrn(i,j,it,n)
                   enddo
                endif            ! trcr_depend
             enddo               ! ntrcr
 
          enddo                  ! nr (new ridges)
       enddo                     ! n (ridging categories)
-
 
       !-----------------------------------------------------------------
       ! Compute new tracers
@@ -1800,29 +2035,18 @@
       end subroutine ridge_shift
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ridge_check - check for ice area > 1
-!
-! !DESCRIPTION: Make sure ice area <=1.  If not, prepare to repeat ridging.
-!
-! !REVISION HISTORY:
+
+! Make sure ice area <=1.  If not, prepare to repeat ridging.
 !
 ! authors William H. Lipscomb, LANL
-!
-! !INTERFACE:
-!
+
       subroutine ridge_check (nx_block,  ny_block,        &
                               icells,    indxi,    indxj, &
                               dt,                         &
                               asum,      closing_net,     &
                               divu_adv,  opning,          &
                               iterate_ridging)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          icells                ! number of cells with ice present
@@ -1846,9 +2070,9 @@
 
       logical (kind=log_kind), intent(out) :: &
          iterate_ridging      ! if true, repeat the ridging
-!
-!EOP
-!
+
+      ! local variables
+
       integer (kind=int_kind) :: &
          ij               ! horizontal index, combines i and j loops
 
@@ -1869,12 +2093,7 @@
       end subroutine ridge_check
 
 !=======================================================================
-!BOP
-!
-! !ROUTINE: ice_strength - compute ice strength
-!
-! !DESCRIPTION:
-!
+
 ! Compute the strength of the ice pack, defined as the energy (J m-2)
 ! dissipated per unit area removed from the ice pack under compression,
 ! and assumed proportional to the change in potential energy caused
@@ -1886,13 +2105,9 @@
 ! Hibler, W. D. III, 1979: A dynamic-thermodynamic sea ice model,
 !  J. Phys. Oceanog., 9, 817-846.
 !
-! !REVISION HISTORY:
-!
 ! authors: William H. Lipscomb, LANL
 !          Elizabeth C. Hunke, LANL
-!
-! !INTERFACE:
-!
+
       subroutine ice_strength (nx_block, ny_block, &
                                ilo, ihi, jlo, jhi, &
                                icells,             &
@@ -1900,11 +2115,7 @@
                                aice,     vice,     &
                                aice0,    aicen,    &
                                vicen,    strength)
-!
-! !USES:
-!
-! !INPUT/OUTPUT PARAMETERS:
-!
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          ilo,ihi,jlo,jhi       ! beg and end of physical domain
@@ -1929,11 +2140,9 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out) :: &
          strength   ! ice strength (N/m)
-!
-!EOP
-!
-! LOCAL VARIABLES
-!
+
+      ! local variables
+
       real (kind=dbl_kind), dimension (icells) :: &
          asum         , & ! sum of ice and open water area
          aksum            ! ratio of area removed to area ridged
