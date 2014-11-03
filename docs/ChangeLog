@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20141103
+Originator: dbailey
+Date: Nov3, 2014
+Version: 5.0
+One-line Summary: Fix blkmask changes.
+
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_27_cice5.0.4
 Originator: dbailey
 Date: Oct 31, 2014
