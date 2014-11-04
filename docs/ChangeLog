@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20141104
+Originator: tcraig
+Date: Nov 4, 2014
+Version: 5.0
+One-line Summary: Merge in latest rasm changes, initialization of Cdn_atm
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_flux.F90
+M       src/drivers/cesm/ice_import_export.F90
+M       src/io_pio/ice_history_write.F90
+===============================================================
 cice5_20141103
 Originator: dbailey
 Date: Nov3, 2014

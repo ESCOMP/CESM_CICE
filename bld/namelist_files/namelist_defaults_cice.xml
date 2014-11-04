@@ -12,19 +12,8 @@
 <restart_ext> .false. </restart_ext>
 <restart_file>'unknown'</restart_file>
 <ice_ic>'none'</ice_ic>
-<!----
-<ice_ic>default</ice_ic>
-<ice_ic hgrid='gx1v6'>ice/cice/iced.0001-01-01.gx1v6_20080212</ice_ic> 
-<ice_ic hgrid='gx3v7'>ice/cice/iced.0001-01-01.gx3v7_20080212</ice_ic> 
------->
-<!----- 1989 RASM files                                                                         
-<ice_ic hgrid='ar9v3'>ice/cice/iced.1989-09-01.ar9v3_20130615.nc</ice_ic>                       
-<ice_ic hgrid='ar9v4'>ice/cice/iced.1989-09-01.ar9v3_20130615.nc</ice_ic>                       
------->
-<!----
-<ice_ic hgrid='ar9v3'>ice/cice/iced.1979-09-01.ar9v3_20131127.nc</ice_ic>
-<ice_ic hgrid='ar9v4'>ice/cice/iced.1979-09-01.ar9v3_20131127.nc</ice_ic>
----->
+<ice_ic hgrid='ar9v3'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
+<ice_ic hgrid='ar9v4'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
 
 <dt> 3600.0 </dt> 
 
@@ -121,10 +110,10 @@
 <rsnw_mlt cam4='.true.'> 1500. </rsnw_mlt>
 
 <R_snw              >  1.75 </R_snw>
+<R_snw cam4='.true.'>  1.50 </R_snw>
 <R_snw hgrid='gx3v7'> -2.00 </R_snw>
 <R_snw hgrid="ar9v3">  0.00 </R_snw>
 <R_snw hgrid="ar9v4">  0.00 </R_snw>
-<R_snw cam4='.true.'>  1.50 </R_snw>
 
 <R_ice              >  0.0 </R_ice>
 <R_pnd              >  0.0 </R_pnd>

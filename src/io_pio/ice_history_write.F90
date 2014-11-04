@@ -581,7 +581,6 @@
 
         do n = n4Dicum + 1, n4Dscum
           if (avail_hist_fields(n)%vhistfreq == histfreq(ns) .or. write_ic) then
-            write(nu_diag, *) trim(avail_hist_fields(n)%vname)
             status  = pio_def_var(File, trim(avail_hist_fields(n)%vname), &
                              pio_real, dimidcz, varid)
             status = pio_put_att(File,varid,'units', &
