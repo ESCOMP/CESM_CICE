@@ -36,8 +36,40 @@ Number of unique longitude points in rectangular lat/lon grid.
 Number of unique latitude points in rectangular lat/lon grid.
 </entry>
 
+<entry id="nicelyr" value="4">
+Number of sea ice layers
+</entry>
+
+<entry id="nsnwlyr" value="1">
+Number of snow layers
+</entry>
+
 <entry id="ntr_aero" valid_values="0,1,2,3,4,5,6" value="3">
 Number of aerosol tracers
+</entry>
+
+<entry id="trage" valid_values="0,1" value="1">
+Age tracer
+</entry>
+
+<entry id="trfy" valid_values="0,1" value="1">
+First-year ice tracer
+</entry>
+
+<entry id="trpnd" valid_values="0,1" value="1">
+Pond tracer
+</entry>
+
+<entry id="trlvl" valid_values="0,1" value="1">
+Level ice tracer
+</entry>
+
+<entry id="trbri" valid_values="0,1" value="1">
+Brine tracer
+</entry>
+
+<entry id="trbgcs" valid_values="0,1" value="1">
+Skeletal layer BGC
 </entry>
 
 <entry id="nbgclyr" valid_values="0,1,2,3,4,5,6,7,8,9,10" value="0">

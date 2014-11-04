@@ -134,6 +134,15 @@ GetOptions(
     "nx=i"                      => \$opts{'nx'},
     "ny=i"                      => \$opts{'ny'},
     "ntr_aero=s"                => \$opts{'ntr_aero'},
+    "nicelyr=s"                 => \$opts{'nicelyr'},
+    "nsnwlyr=s"                 => \$opts{'nsnwlyr'},
+    "trlvl=s"                   => \$opts{'trlvl'},
+    "trpnd=s"                   => \$opts{'trpnd'},
+    "trage=s"                   => \$opts{'trage'},
+    "trfy=s"                    => \$opts{'trfy'},
+    "trbri=s"                   => \$opts{'trbri'},
+    "trbgcs=s"                  => \$opts{'trbgcs'},
+    "nbgclyr=s"                 => \$opts{'nbgclyr'},
     "ntasks=s"                  => \$opts{'ntasks'},
     "nthreads=s"                => \$opts{'nthreads'},
     "nodecomp!"	                => \$opts{'nodecomp'},
@@ -293,11 +302,47 @@ EOF
 }
 if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 
+if (defined $opts{'nsnwlyr'}) {
+    $cfg_ref->set('nsnwlyr', $opts{'nsnwlyr'});
+} else {
+    $cfg_ref->set('nsnwlyr', 1);
+}
+
 # Tracers
 if (defined $opts{'ntr_aero'}) {
     $cfg_ref->set('ntr_aero', $opts{'ntr_aero'});
 } else {
     $cfg_ref->set('ntr_aero', 0);
+}
+
+if (defined $opts{'trage'}) {
+    $cfg_ref->set('trage', $opts{'trage'});
+} else {
+    $cfg_ref->set('trage', 1);
+}
+
+if (defined $opts{'trfy'}) {
+    $cfg_ref->set('trfy', $opts{'trfy'});
+} else {
+    $cfg_ref->set('trfy', 1);
+}
+
+if (defined $opts{'trpnd'}) {
+    $cfg_ref->set('trpnd', $opts{'trpnd'});
+} else {
+    $cfg_ref->set('trpnd', 1);
+}
+
+if (defined $opts{'trlvl'}) {
+    $cfg_ref->set('trlvl', $opts{'trlvl'});
+} else {
+    $cfg_ref->set('trlvl', 0);
+}
+
+if (defined $opts{'trbri'}) {
+    $cfg_ref->set('trbri', $opts{'trbri'});
+} else {
+    $cfg_ref->set('trbri', 0);
 }
 
 #BGC
@@ -309,6 +354,12 @@ if (defined $opts{'nbgclyr'}) {
     } else {
 	$cfg_ref->set('nbgclyr', 3);
     }
+}
+
+if (defined $opts{'trbgcs'}) {
+    $cfg_ref->set('trbgcs', $opts{'trbgcs'});
+} else {
+    $cfg_ref->set('trbgcs', 0);
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -331,6 +382,16 @@ $cfg_ref->set('nlon',$nlon);
 if ($hgrid =~ 'ar9v4') {
     $cfg_ref->set('nlat',720);
     $cfg_ref->set('nlon',1280);
+}
+
+if (defined $opts{'nicelyr'}) {
+    $cfg_ref->set('nicelyr', $opts{'nicelyr'});
+} else {
+    if ($hgrid =~ m/ar9v.*/ ) {
+       $cfg_ref->set('nicelyr', 7);
+    } else {
+       $cfg_ref->set('nicelyr', 4);
+    }
 }
 
 # Override resolution settings to configure for SCAM mode.  The override is needed
@@ -359,22 +420,23 @@ if ($ntr_aero gt "6"){
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
 EOF
 }
+
+my $nicelyr = $cfg_ref->get('nicelyr');
+my $nsnwlyr = $cfg_ref->get('nsnwlyr');
 my $nbgclyr = $cfg_ref->get('nbgclyr');
+my $trage   = $cfg_ref->get('trage');
+my $trfy    = $cfg_ref->get('trfy');
+my $trlvl   = $cfg_ref->get('trlvl');
+my $trpnd   = $cfg_ref->get('trpnd');
+my $trbri   = $cfg_ref->get('trbri');
+my $trbgcs  = $cfg_ref->get('trbgcs');
 
-#my $cice_cppdefs = " -DCCSMCOUPLED           -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNICELYR=4 -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=0 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
-
-my $cice_cppdefs = " -DCCSMCOUPLED -Dcoupled -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=1 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
-
-# stand-alone cice5.0.4
-#my $cice_cppdefs = " -DCCSMCOUPLED  -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=0 -DNBGCLYR=7 -DNICELYR=7 -DNSNWLYR=1 -DTRAGE=1 -DTRFY=1 -DTRLVL=1 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0";
+my $cice_cppdefs = " -DCCSMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNICELYR=$nicelyr -DNSNWLYR=$nsnwlyr -DTRAGE=$trage -DTRFY=$trfy -DTRLVL=$trlvl -DTRPND=$trpnd -DTRBRI=$trbri -DTRBGCS=$trbgcs";
 
 # Trigger RASM options with ar9v grid, otherwise set CESM options
 if ($hgrid =~ m/ar9v.*/ ) {
-    $cice_cppdefs = "$cice_cppdefs -DNICELYR=7 -DRASM_MODS";
-} else {
-    $cice_cppdefs = "$cice_cppdefs -DNICELYR=4";
+    $cice_cppdefs = "$cice_cppdefs -DRASM_MODS";
 }
-
 #-----------------------------------------------------------------------------------------------
 # Determine if will set the cice decomposition
 my $set_decomp = (defined $opts{'nodecomp'}) ? 0 : 1;
