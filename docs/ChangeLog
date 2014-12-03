@@ -1,4 +1,26 @@
 ===============================================================
+cice5_20141204
+Originator: dbailey
+Date: Dec 4, 2014
+Version: 5.0
+One-line Summary: NAG compiler changes.
+
+M       bld/build-namelist
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_mushy.F90
+M       src/source/ice_zbgc.F90
+M       src/source/ice_fileunits.F90
+
+===============================================================
+cice5_20141203
+Originator: dbailey
+Date: Dec 3, 2014
+Version: 5.0
+One-line Summary: One more cam5 to cam4.
+
+M       bld/namelist_files/namelist_definition.xml
+
+===============================================================
 cice5_20141105
 Originator: dbailey
 Date: Nov 5, 2014

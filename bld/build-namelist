@@ -912,7 +912,7 @@ add_default($nl, 'f_PPnet');
 # Write cice namelist file 
 
 # Sea ice component 
-my @groups = qw(setup_nml grid_nml domain_nml tracer_nml thermo_nml dynamics_nml shortwave_nml ponds_nml zbgc_nml forcing_nml icefields_bgc_nml icefields_drag_nml icefields_mechred_nml icefields_pond_nml icefields_nml ice_prescribed_nml);
+my @groups = qw(setup_nml grid_nml tracer_nml thermo_nml dynamics_nml shortwave_nml ponds_nml forcing_nml domain_nml zbgc_nml icefields_bgc_nml icefields_drag_nml icefields_mechred_nml icefields_pond_nml icefields_nml ice_prescribed_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
 if ($print>=2) { print "Writing sea ice component namelist to $outfile $eol"; }

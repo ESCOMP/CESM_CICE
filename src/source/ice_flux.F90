@@ -18,11 +18,7 @@
       use ice_blocks, only: nx_block, ny_block
       use ice_domain_size, only: max_blocks, ncat, max_aero, max_nstrm, nilyr
       use ice_constants, only: c0, c1, c5, c10, c20, c180, dragio, &
-          depressT, stefan_boltzmann, Tffresh, emissivity, iceruf
-      use ice_atmo, only: formdrag, &
-          hfreebd, hdraft, hridge, distrdg, hkeel, dkeel, lfloe, dfloe, &
-          Cdn_atm_skin, Cdn_atm_floe, Cdn_atm_pond, Cdn_atm_rdg, &
-          Cdn_ocn_skin, Cdn_ocn_floe, Cdn_ocn_keel, Cdn_atm_ocn
+          depressT, stefan_boltzmann, Tffresh, emissivity
 
       implicit none
       private
@@ -216,7 +212,7 @@
        ! internal
 
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,max_blocks), public, save :: &
+         dimension (nx_block,ny_block,max_blocks), public :: &
          fswfac  , & ! for history
          scale_factor! scaling factor for shortwave components
 
@@ -550,7 +546,7 @@
                           dkeel, lfloe, dfloe, Cdn_atm, Cdn_atm_rdg, &
                           Cdn_atm_floe, Cdn_atm_pond, Cdn_atm_skin, &
                           Cdn_atm_ocn, Cdn_ocn, Cdn_ocn_keel, &
-                          Cdn_ocn_floe, Cdn_ocn_skin
+                          Cdn_ocn_floe, Cdn_ocn_skin, formdrag
       use ice_state, only: aice, vice, trcr, tr_iage, nt_iage
       use ice_constants, only: vonkar,zref,iceruf
 
@@ -591,6 +587,7 @@
 
       if (formdrag) then
         Cdn_atm_rdg (:,:,:) = c0
+        Cdn_atm_ocn (:,:,:) = c0
         Cdn_atm_floe(:,:,:) = c0
         Cdn_atm_pond(:,:,:) = c0
         Cdn_atm_skin(:,:,:) = c0
