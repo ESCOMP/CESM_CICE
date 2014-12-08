@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20141208
+Originator: dbailey
+Date: Dec 8, 2014
+Version: 5.0
+One-line Summary: Workaround for out-of-bounds problem.
+
+M       src/source/ice_itd.F90
+
+===============================================================
 cice5_20141204
 Originator: dbailey
 Date: Dec 4, 2014
