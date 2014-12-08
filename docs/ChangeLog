@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20141209
+Originator: dbailey
+Date: Dec 9, 2014
+Version: 5.0
+One-line Summary: Use new CICE5 initial files.
+
+M       bld/build-namelist
+
+===============================================================
 cice5_20141208
 Originator: dbailey
 Date: Dec 8, 2014
