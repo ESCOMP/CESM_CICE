@@ -1888,7 +1888,7 @@
       istop = 0
       jstop = 0
 
-      zspace = c1/(real(nblyr,kind=dbl_kind)) 
+      zspace = c1/max(c1,(real(nblyr,kind=dbl_kind)))
       
       !-----------------------------------------------------------------
       ! I. Zap categories with very small areas.

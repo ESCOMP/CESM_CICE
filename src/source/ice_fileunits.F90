@@ -147,9 +147,10 @@
 
    ! local variables
 
+#ifndef CCSMCOUPLED
    integer (kind=int_kind) :: n  ! dummy loop index
-
    logical (kind=log_kind) :: alreadyInUse
+#endif
 
 #ifdef CCSMCOUPLED
    iunit = shr_file_getUnit()
