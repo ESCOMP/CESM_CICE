@@ -699,7 +699,7 @@
       !-----------------------------------------------------------------
 
         status = pio_inq_varid(File,'time',varid)
-        call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+        call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
         status = pio_put_var(File,varid,ltime)
 
       !-----------------------------------------------------------------
@@ -708,7 +708,7 @@
 
         if (hist_avg .and. histfreq(ns) /= '1') then
           status = pio_inq_varid(File,'time_bounds',varid)
-          call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+          call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
           time_bounds=(/time_beg(ns),time_end(ns)/)
           bnd_start  = (/1,1/)
           bnd_length = (/2,1/)
@@ -843,7 +843,7 @@
             if (status /= pio_noerr) call abort_ice( &
                'ice: Error getting varid for '//avail_hist_fields(n)%vname)
             workr2(:,:,:) = a2D(:,:,n,:)
-            call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+            call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
             call pio_write_darray(File, varid, iodesc2d,&
                                   workr2, status, fillval=spval_dbl)
          endif
@@ -864,7 +864,7 @@
                workr3(:,:,j,i) = a3Dc(:,:,i,nn,j)
             enddo
             enddo
-            call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+            call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
             call pio_write_darray(File, varid, iodesc3dc,&
                                   workr3, status, fillval=spval_dbl)
          endif
@@ -884,7 +884,7 @@
                workr3(:,:,j,i) = a3Dz(:,:,i,nn,j)
             enddo
             enddo
-            call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+            call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
             call pio_write_darray(File, varid, iodesc3di,&
                                   workr3, status, fillval=spval_dbl)
          endif
@@ -904,7 +904,7 @@
                workr3(:,:,j,i) = a3Db(:,:,i,nn,j)
             enddo
             enddo
-            call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+            call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
             call pio_write_darray(File, varid, iodesc3db,&
                                   workr3, status, fillval=spval_dbl)
          endif
@@ -926,7 +926,7 @@
             enddo ! k
             enddo ! i
             enddo ! j
-            call pio_setframe(varid, int(1,kind=PIO_OFFSET))
+            call pio_setframe(File, varid, int(1,kind=PIO_OFFSET_KIND))
             call pio_write_darray(File, varid, iodesc4di,&
                                   workr4, status, fillval=spval_dbl)
          endif

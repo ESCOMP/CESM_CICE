@@ -136,7 +136,7 @@
 
       type(block) :: this_block 
 
-      integer(kind=int_kind), pointer :: dof2d(:)
+      integer(kind=pio_offset_kind), pointer :: dof2d(:)
 
       allocate(dof2d(nx_block*ny_block*nblocks))
 
@@ -183,7 +183,7 @@
 
       type(block) :: this_block 
 
-      integer(kind=int_kind), pointer :: dof3d(:)
+      integer(kind=pio_offset_kind), pointer :: dof3d(:)
 
       allocate(dof3d(nx_block*ny_block*nblocks*ndim3))
 
@@ -233,7 +233,7 @@
 
       type(block) :: this_block 
 
-      integer(kind=int_kind), pointer :: dof3d(:)
+      integer(kind=pio_offset_kind), pointer :: dof3d(:)
 
       allocate(dof3d(nx_block*ny_block*nblocks*ndim3))
 
@@ -280,7 +280,7 @@
 
       type(block) :: this_block 
 
-      integer(kind=int_kind), pointer :: dof4d(:)
+      integer(kind=pio_offset_kind), pointer :: dof4d(:)
 
       allocate(dof4d(nx_block*ny_block*nblocks*ndim3*ndim4))
 
