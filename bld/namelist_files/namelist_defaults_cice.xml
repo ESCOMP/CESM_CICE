@@ -110,10 +110,10 @@
 <rsnw_mlt cam4='.true.'> 1500. </rsnw_mlt>
 
 <R_snw              >  1.75 </R_snw>
-<R_snw cam4='.true.'>  1.50 </R_snw>
 <R_snw hgrid='gx3v7'> -2.00 </R_snw>
 <R_snw hgrid="ar9v3">  0.00 </R_snw>
 <R_snw hgrid="ar9v4">  0.00 </R_snw>
+<R_snw cam4='.true.'>  1.50 </R_snw>
 
 <R_ice              >  0.0 </R_ice>
 <R_pnd              >  0.0 </R_pnd>

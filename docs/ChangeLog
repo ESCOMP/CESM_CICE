@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20150120
+Originator: dbailey
+Date: Jan 20, 2015
+Version: 5.0
+One-line Summary: Workaround for Intel and namelist default fix.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_grid.F90
+
+===============================================================
 cice5_20150113
 Originator: dbailey
 Date: Jan 13, 2015
