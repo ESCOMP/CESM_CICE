@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20150121
+Originator: dbailey
+Date: Jan 20, 2015
+Version: 5.0
+One-line Summary: Need CICE4 conduction scheme.
+
+conduct = 'MU71'
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20150120
 Originator: dbailey
 Date: Jan 20, 2015

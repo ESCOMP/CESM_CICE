@@ -129,7 +129,7 @@
 <ktherm hgrid="ar9v4"          > 1 </ktherm> 
 <ktherm                        > 1 </ktherm> 
 
-<conduct                       > 'bubbly' </conduct> 
+<conduct                       > 'MU71' </conduct> 
 <a_rapid_mode                  > 0.5e-03 </a_rapid_mode> 
 <rac_rapid_mode                > 10 </rac_rapid_mode> 
 <aspect_rapid_mode             > 1.0 </aspect_rapid_mode> 
