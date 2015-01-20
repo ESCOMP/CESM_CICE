@@ -398,7 +398,7 @@ if ( defined $opts{'caseroot'} ) {
     if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
 	my $ice_ic;
         #standard cice filename
-	$ice_ic = "${RUN_REFCASE}_4lyr.cice5.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
+	$ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
         #print "ice_ic 1 = ${ice_ic} $eol";
         #print "Check ${RUNDIR}/${RUN_REFCASE}_4lyr.cice5${INST_STRING}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc $eol";
 	if (-e "${RUNDIR}/${RUN_REFCASE}_4lyr.cice5${INST_STRING}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc") {

@@ -437,7 +437,15 @@
          if (my_task == master_task) &
             write(nu_diag,*)'Parallel restart file read: ',vname
 
+         call pio_seterrorhandling(File, PIO_BROADCAST_ERROR)
+
          status = pio_inq_varid(File,trim(vname),vardesc)
+
+         if (status /= 0) then
+            call abort_ice("CICE4 restart? Missing variable: ",trim(vname))
+         endif
+
+         call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
 
          if (ndim3 == ncat) then
             allocate(work3(nx_block,ny_block,nblocks,ndim3))

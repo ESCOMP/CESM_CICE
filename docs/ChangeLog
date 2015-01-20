@@ -1,4 +1,21 @@
 ===============================================================
+cice5_20150122
+Originator: dbailey
+Date: Jan 20, 2015
+Version: 5.0
+One-line Summary: Handling of initial files and RASM default.
+
+Back to original handling of CICE5 initial files. Looks for file
+named cice5.r and if it cannot find one, uses cice.r file. Will
+abort gracefully if this is CICE4 initial file format.
+
+RASM needed the bubbly conduction instead of MU71.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/io_pio/ice_restart.F90
+
+===============================================================
 cice5_20150121
 Originator: dbailey
 Date: Jan 20, 2015
