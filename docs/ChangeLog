@@ -1,4 +1,18 @@
 ===============================================================
+cice5_20150124
+Originator: dbailey
+Date: Jan 21, 2015
+Version: 5.0
+One-line Summary: iblk needs to be passed to ice_timers
+
+In threaded regions, the call to ice_timer_start and ice_timer_stop
+needs the block index iblk.
+
+M       src/mpi/ice_timers.F90
+M       src/source/ice_step_mod.F90
+M       src/drivers/cesm/CICE_RunMod.F90
+
+===============================================================
 cice5_20150123
 Originator: dbailey
 Date: Jan 21, 2015

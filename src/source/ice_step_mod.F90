@@ -69,7 +69,7 @@
       type (block) :: &
          this_block      ! block information for current block
 
-      call ice_timer_start(timer_sw)      ! shortwave
+      call ice_timer_start(timer_sw,iblk)      ! shortwave
 
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -140,7 +140,7 @@
             enddo
          enddo                  ! ncat
 
-      call ice_timer_stop(timer_sw)     ! shortwave
+      call ice_timer_stop(timer_sw,iblk)     ! shortwave
 
       end subroutine prep_radiation
 
@@ -588,7 +588,8 @@
       ! the surface fluxes are merged, below.
       !-----------------------------------------------------------------
 
-         call ice_timer_start(timer_ponds)
+         call ice_timer_start(timer_ponds,iblk)
+
          if (tr_pond) then
 
             if (tr_pond_cesm) then
@@ -654,7 +655,7 @@
             endif
 
          endif
-         call ice_timer_stop(timer_ponds)
+         call ice_timer_stop(timer_ponds,iblk)
 
       !-----------------------------------------------------------------
       ! Increment area-weighted fluxes.
@@ -696,7 +697,7 @@
       !-----------------------------------------------------------------
       ! Calculate ponds from the topographic scheme
       !-----------------------------------------------------------------
-         call ice_timer_start(timer_ponds)
+         call ice_timer_start(timer_ponds,iblk)
          if (tr_pond_topo) then
             call compute_ponds_topo(nx_block, ny_block,                        &
                                     ilo, ihi, jlo, jhi,                        &
@@ -713,7 +714,7 @@
                                     trcrn(:,:,nt_hpnd,:,iblk),                 &
                                     trcrn(:,:,nt_ipnd,:,iblk))
          endif
-         call ice_timer_stop(timer_ponds)
+         call ice_timer_stop(timer_ponds,iblk)
 
       end subroutine step_therm1
 
@@ -798,7 +799,7 @@
       ! thickness categories.
       !-----------------------------------------------------------------
 
-         call ice_timer_start(timer_catconv)    ! category conversions
+         call ice_timer_start(timer_catconv,iblk)    ! category conversions
 
       !-----------------------------------------------------------------
       ! Compute fractional ice area in each grid cell.
@@ -855,7 +856,7 @@
 
          endif  ! kitd = 1
 
-         call ice_timer_stop(timer_catconv)    ! category conversions
+         call ice_timer_stop(timer_catconv,iblk)    ! category conversions
 
       !-----------------------------------------------------------------
       ! Add frazil ice growing in leads.
@@ -1378,7 +1379,7 @@
       type (block) :: &
          this_block      ! block information for current block
 
-      call ice_timer_start(timer_sw)      ! shortwave
+      call ice_timer_start(timer_sw,iblk)      ! shortwave
 
       ! Initialize
       do n = 1, ncat
@@ -1444,7 +1445,7 @@
 
       endif   ! shortwave
 
-      call ice_timer_stop(timer_sw)     ! shortwave
+      call ice_timer_stop(timer_sw,iblk)     ! shortwave
 
       end subroutine step_radiation
 
