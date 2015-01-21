@@ -89,8 +89,8 @@
             status = pio_get_att(File, pio_global, 'mday', mday)
             status = pio_get_att(File, pio_global, 'sec', sec)
          endif
-         endif ! use namelist values if use_restart_time = F
          call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)
+         endif ! use namelist values if use_restart_time = F
       endif
 
       if (my_task == master_task) then
@@ -437,12 +437,12 @@
          if (my_task == master_task) &
             write(nu_diag,*)'Parallel restart file read: ',vname
 
-         call pio_seterrorhandling(File, PIO_BROADCAST_ERROR)
+         call pio_seterrorhandling(File, PIO_BCAST_ERROR)
 
          status = pio_inq_varid(File,trim(vname),vardesc)
 
          if (status /= 0) then
-            call abort_ice("CICE4 restart? Missing variable: ",trim(vname))
+            call abort_ice("CICE4 restart? Missing variable: "//trim(vname))
          endif
 
          call pio_seterrorhandling(File, PIO_INTERNAL_ERROR)

@@ -339,6 +339,8 @@
 
          !*** start block timer
 
+         !$OMP CRITICAL
+
          all_timers(timer_id)%block_started(block_id) = .true.
          all_timers(timer_id)%block_cycles1(block_id) = MPI_WTIME()
 
@@ -347,8 +349,6 @@
          !*** of number of start requests in order to match
          !*** start and stop requests
  
-         !$OMP CRITICAL
-
          if (.not. all_timers(timer_id)%node_started) then
             all_timers(timer_id)%node_started = .true.
             all_timers(timer_id)%num_starts   = 1
@@ -367,6 +367,8 @@
 
       else
 
+         !$OMP CRITICAL
+
          !*** stop timer if already started
          if (all_timers(timer_id)%node_started)  &
                                         call ice_timer_stop(timer_id)
@@ -375,6 +377,8 @@
 
          all_timers(timer_id)%node_started = .true.
          all_timers(timer_id)%node_cycles1 = MPI_WTIME()
+
+         !$OMP END CRITICAL
 
       endif
    else
@@ -423,7 +427,9 @@
 !
 !-----------------------------------------------------------------------
 
+   !$OMP CRITICAL
    cycles2 = MPI_WTIME()
+   !$OMP END CRITICAL
 
 !-----------------------------------------------------------------------
 !
@@ -478,12 +484,16 @@
 
       else
 
+         !$OMP CRITICAL
+
          all_timers(timer_id)%node_started = .false.
          cycles1 = all_timers(timer_id)%node_cycles1
 
          all_timers(timer_id)%node_accum_time = &
          all_timers(timer_id)%node_accum_time + &
             clock_rate*(cycles2 - cycles1)
+
+         !$OMP END CRITICAL
 
       endif
    else

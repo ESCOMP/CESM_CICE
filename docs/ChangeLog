@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20150123
+Originator: dbailey
+Date: Jan 21, 2015
+Version: 5.0
+One-line Summary: Handling of initial files and MPI_WTIME fix.
+
+M       bld/build-namelist
+M       src/mpi/ice_timers.F90
+M       src/io_pio/ice_restart.F90
+
+===============================================================
 cice5_20150122
 Originator: dbailey
 Date: Jan 20, 2015
