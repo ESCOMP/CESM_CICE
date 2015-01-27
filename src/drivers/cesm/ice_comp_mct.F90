@@ -236,14 +236,15 @@ contains
     inst_name   = seq_comm_name(ICEID)
     inst_index  = seq_comm_inst(ICEID)
     inst_suffix = seq_comm_suffix(ICEID)
-
-    write(nu_diag,*) trim(subname),'inst_name   = ',trim(inst_name)
-    write(nu_diag,*) trim(subname),'inst_index  = ',inst_index
-    write(nu_diag,*) trim(subname),'inst_suffix = ',trim(inst_suffix)
-
     call t_startf ('cice_init')
     call cice_init( mpicom_loc )
     call t_stopf ('cice_init')
+
+    if (my_task == master_task) then
+       write(nu_diag,*) trim(subname),' inst_name   = ',trim(inst_name)
+       write(nu_diag,*) trim(subname),' inst_index  = ',inst_index
+       write(nu_diag,*) trim(subname),' inst_suffix = ',trim(inst_suffix)
+    endif
 
     !---------------------------------------------------------------------------
     ! Reset shr logging to my log file

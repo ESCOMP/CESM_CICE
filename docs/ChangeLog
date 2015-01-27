@@ -1,4 +1,17 @@
 ===============================================================
+cice5_20150127
+Originator: jedwards
+Date: Jan 27, 2015
+Version: 5.0
+One-line Summary: pio interface cleanup
+
+M            src/source/ice_grid.F90
+M            src/io_pio/ice_restart.F90
+M            src/io_pio/ice_pio.F90
+M            src/io_pio/ice_history_write.F90
+M            src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20150124
 Originator: dbailey
 Date: Jan 21, 2015

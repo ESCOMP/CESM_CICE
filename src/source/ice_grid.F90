@@ -1342,11 +1342,12 @@
       ! local variables
 
       integer (kind=int_kind) :: &
-         i, j, nyg, &
+         i, j,  &
          im1     ! i-1
 
       real (kind=dbl_kind), dimension(:,:), allocatable :: &
          work_g2
+
 
       if (my_task == master_task) then
          allocate(work_g2(nx_global,ny_global))
@@ -1366,11 +1367,16 @@
          enddo
       enddo
       ! extrapolate to obtain dyu along j=ny_global
-      ! workaround for intel compiler
-      nyg = ny_global
+      !
+      ! using NYGLOB to prevent a compile time out of bounds error when
+      ! ny_global=1 as in the se dycore, this code is not exersized in prescribed mode.
+      !
+#if (NYGLOB>2)
       do i = 1, nx_global
-         work_g2(i,nyg) = c2*work_g(i,nyg-1) - work_g(i,nyg-2) ! dyu
+         work_g2(i,ny_global) = c2*work_g(i,ny_global-1) - &
+            work_g(i,ny_global-2) ! dyu
       enddo
+#endif
       endif
       call scatter_global(HTE, work_g, master_task, distrb_info, &
                           field_loc_Eface, field_type_scalar)
