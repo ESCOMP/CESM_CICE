@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150128
+Originator: jedwards
+Date: Jan 28, 2015
+Version: 5.0
+One-line Summary:pio interface fix 
+
+M       src/io_pio/ice_restart.F90
+
+===============================================================
 cice5_20150127
 Originator: jedwards
 Date: Jan 27, 2015

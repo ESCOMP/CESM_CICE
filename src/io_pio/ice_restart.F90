@@ -1,3 +1,4 @@
+
 !  SVN:$Id: ice_restart.F90 607 2013-03-29 15:49:42Z eclare $
 !=======================================================================
 !
@@ -530,6 +531,7 @@
       integer (kind=int_kind) :: &
         j,     &      ! dimension counter
         n,     &      ! dimension counter
+        ndims, &  ! number of variable dimensions
         status        ! status variable from netCDF routine
 
       real (kind=dbl_kind) :: amin,amax,asum
@@ -539,15 +541,17 @@
             write(nu_diag,*)'Parallel restart file write: ',vname
 
          status = pio_inq_varid(File,trim(vname),vardesc)
+         
+         status = pio_inq_varndims(File, vardesc, ndims)
 
-         if (ndim3 == ncat .and. ncat>1) then 
+         if (ndims==3) then 
             call pio_write_darray(File, vardesc, iodesc3d_ncat,work(:,:,:,1:nblocks), &
                  status, fillval=c0)
-         elseif (ndim3 == 1) then
-            call pio_write_darray(File, vardesc, iodesc2d, work(:,:,:,1:nblocks), &
+         elseif (ndims == 2) then
+            call pio_write_darray(File, vardesc, iodesc2d, work(:,:,1,1:nblocks), &
                  status, fillval=c0)
          else
-            write(nu_diag,*) "ndim3 not supported",ndim3
+            write(nu_diag,*) "ndims not supported",ndims,ndim3
          endif
 
          if (diag) then
