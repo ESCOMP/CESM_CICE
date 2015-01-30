@@ -1,4 +1,25 @@
 ===============================================================
+cice5_20150130
+Originator: dbailey
+Date: Jan 30, 2015
+Version: 5.0
+One-line Summary: Fixes to CICE4 physics options.
+
+1. Change default conduct to MU71 and mu_rdg to 4.
+2. Change hi_min
+3. Change kalg to 0.
+4. Set l_winter to .false.
+5. Reset frac and dTemp in Iswabs and Sswabs correction.
+6. Prescribed ice fixes.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_itd.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_bl99.F90
+M       src/drivers/cesm/ice_prescribed_mod.F90
+
+===============================================================
 cice5_20150129
 Originator: tcraig
 Date: Jan 29, 2015

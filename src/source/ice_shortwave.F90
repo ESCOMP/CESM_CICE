@@ -1362,7 +1362,7 @@
                                          trcrn(:,:,nt_Tsfc,n),       &
                                          fsn,                 fpn,   &
                                          hpn)
-            apeffn(:,:,n) = fpn(i,j) ! for history
+            apeffn(:,:,n) = fpn(:,:) ! for history
             fpn = c0
             hpn = c0
          endif
@@ -1667,6 +1667,7 @@
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
 
+
 #ifdef RASM_MODS
          if (alvdr(i,j)>1.or.alvdf(i,j)>1.or.alidr(i,j)>1.or.alidf(i,j)>1) then
             write(6,*)'Ice Albedo Calculations'
@@ -1790,6 +1791,7 @@
          albpnd(i,j) = albpnd(i,j) &
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
+
 
 #ifdef RASM_MODS
          if (alvdr(i,j)>1.or.alvdf(i,j)>1.or.alidr(i,j)>1.or.alidf(i,j)>1) then
@@ -2378,8 +2380,9 @@
          fr_max = 1.00_dbl_kind, & ! snow grain adjustment factor max
          fr_min = 0.80_dbl_kind, & ! snow grain adjustment factor min
       ! algae absorption coefficient for 0.5 m thick layer
-         kalg   = 0.60_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
-!cesm turns kalg off         kalg   = 0.00_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
+!         kalg   = 0.60_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
+!         CESM turns algae off
+          kalg   = 0.00_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
       ! tuning parameters
       ! ice and pond scat coeff fractional change for +- one-sigma in albedo
          fp_ice = 0.15_dbl_kind, & ! ice fraction of scat coeff for + stn dev in alb
@@ -3068,7 +3071,6 @@
             i = indxi_DE(ij)
             j = indxj_DE(ij)
             Iswabs(i,j,k) = Iswabs(i,j,k) + Iabs(ij,k)*fi(i,j)
-
             ! bgc layer 
             fswpenl(i,j,k) = fswpenl(i,j,k) + fthrul(ij,k)* fi(i,j)
             if (k == nilyr) then
