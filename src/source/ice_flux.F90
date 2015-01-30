@@ -136,6 +136,7 @@
          dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          fsurfn_f   , & ! net flux to top surface, excluding fcondtop
          fcondtopn_f, & ! downward cond flux at top surface (W m-2)
+         fsensn_f   , & ! sensible heat flux (W m-2)
          flatn_f        ! latent heat flux (W m-2)
 
        ! in from atmosphere
@@ -275,7 +276,8 @@
          dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          fsurfn,   & ! category fsurf
          fcondtopn,& ! category fcondtop
-         flatn       ! cagegory latent heat flux
+         fsensn,   & ! category sensible heat flux
+         flatn       ! category latent heat flux
 
       ! As above but these remain grid box mean values i.e. they are not
       ! divided by aice at end of ice_dynamics.  These are used in
@@ -367,6 +369,7 @@
          enddo
          fcondtopn_f(:,:,:,:) = 0.0_dbl_kind ! conductive heat flux (W/m^2)
          flatn_f(:,:,:,:) = -1.0_dbl_kind    ! latent heat flux (W/m^2)
+         fsensn_f(:,:,:,:) = c0              ! sensible heat flux (W/m^2)
       elseif (l_winter) then
          !typical winter values
          potT  (:,:,:) = 253.0_dbl_kind  ! air potential temp (K)
@@ -383,6 +386,7 @@
          enddo
          fsurfn_f = fcondtopn_f          ! surface heat flux (W/m^2)
          flatn_f(:,:,:,:) = c0           ! latent heat flux (kg/m2/s)
+         fsensn_f(:,:,:,:) = c0              ! sensible heat flux (W/m^2)
       else
          !typical summer values
          potT  (:,:,:) = 273.0_dbl_kind  ! air potential temp (K)
@@ -399,6 +403,7 @@
          enddo
          fcondtopn_f(:,:,:,:) = 0.0_dbl_kind ! conductive heat flux (W/m^2)
          flatn_f(:,:,:,:) = -2.0_dbl_kind    ! latent heat flux (W/m^2)
+         fsensn_f(:,:,:,:) = c0              ! sensible heat flux (W/m^2)
       endif !     l_winter
 
       faero_atm (:,:,:,:) = c0           ! aerosol deposition rate (kg/m2/s)
@@ -570,6 +575,7 @@
       fsurfn    (:,:,:,:) = c0
       fcondtopn (:,:,:,:) = c0
       flatn     (:,:,:,:) = c0
+      fsensn    (:,:,:,:) = c0
       fpond      (:,:,:) = c0
       fresh_ai  (:,:,:) = c0
       fsalt_ai  (:,:,:) = c0
@@ -995,6 +1001,7 @@
                               indxi,     indxj,    &
                               aicen,               &
                               flatn,               &
+                              fsensn,              &
                               fsurfn,              &
                               fcondtopn)
 
@@ -1017,6 +1024,7 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out):: &
          flatn       , & ! latent heat flux   (W/m^2) 
+         fsensn      , & ! sensible heat flux   (W/m^2) 
          fsurfn      , & ! net flux to top surface, not including fcondtopn
          fcondtopn       ! downward cond flux at top surface (W m-2)
 
@@ -1051,6 +1059,7 @@
             fsurfn(i,j)   = fsurfn_f(i,j,n,iblk)*raicen
             fcondtopn(i,j)= fcondtopn_f(i,j,n,iblk)*raicen
             flatn(i,j)    = flatn_f(i,j,n,iblk)*raicen
+            fsensn(i,j)   = fsensn_f(i,j,n,iblk)*raicen
 
          enddo
 

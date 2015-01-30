@@ -31,6 +31,9 @@
       real (kind=dbl_kind), parameter :: &
          cprho = cp_ocn*rhow
 
+      character(len=char_len), public :: &
+         tfrz_option
+
 !=======================================================================
 
       contains

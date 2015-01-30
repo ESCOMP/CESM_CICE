@@ -242,6 +242,11 @@
                        'U grid center latitude',  'degrees_north')
       coord_bounds(ind) = 'latu_bounds'
 
+      var_nz(1) = coord_attributes('NCAT', 'category maximum thickness', 'm')
+      var_nz(2) = coord_attributes('VGRDi', 'vertical ice levels', '1')
+      var_nz(3) = coord_attributes('VGRDs', 'vertical snow levels', '1')
+      var_nz(4) = coord_attributes('VGRDb', 'vertical ice-bio levels', '1')
+
       !-----------------------------------------------------------------
       ! define information for optional time-invariant variables
       !-----------------------------------------------------------------
@@ -319,13 +324,20 @@
           endif          
         enddo
 
-        if (igrdz(n_NCAT)) then
-           status = pio_def_var(File, 'NCAT', &
-                                pio_real, (/cmtid/), varid)
-           status = pio_put_att(File,varid,'long_name',&
-                               'category maximum thickness')
-           status = pio_put_att(File, varid, 'units', 'm')
-        endif
+        ! Extra dimensions (NCAT, NZILYR, NZSLYR, NZBLYR)
+          dimidex(1)=cmtid
+          dimidex(2)=kmtidi
+          dimidex(3)=kmtids
+          dimidex(4)=kmtidb
+
+	do i = 1, nvarz
+           if (igrdz(i)) then
+              status = pio_def_var(File, trim(var_nz(i)%short_name), pio_real, &
+                                   (/dimidex(i)/), varid)
+              status = pio_put_att(File, varid, 'long_name', var_nz(i)%long_name)
+              status = pio_put_att(File, varid, 'units'    , var_nz(i)%units)
+           endif
+        enddo
 
         ! Attributes for tmask defined separately, since it has no units
         if (igrd(n_tmask)) then
@@ -692,8 +704,9 @@
                                current_time(3:4)
 1000    format('This dataset was created on ', &
                 a,'-',a,'-',a,' at ',a,':',a)
-
         status = pio_put_att(File,pio_global,'history',trim(start_time))
+
+        status = pio_put_att(File,pio_global,'io_flavor','io_pio')
 
       !-----------------------------------------------------------------
       ! end define mode
@@ -744,10 +757,23 @@
                workr2, status, fillval=spval_dbl)
         enddo
 
-        if (igrdz(n_NCAT)) then
-           status = pio_inq_varid(File, 'NCAT', varid)
-           status = pio_put_var(File,varid,hin_max(1:ncat_hist)) 
-        endif
+        ! Extra dimensions (NCAT, VGRD*)
+
+	do i = 1, nvarz
+          if (igrdz(i)) then
+            status = pio_inq_varid(File, var_nz(i)%short_name, varid)
+            SELECT CASE (var_nz(i)%short_name)
+              CASE ('NCAT')
+                status = pio_put_var(File, varid, hin_max(1:ncat_hist)) 
+              CASE ('VGRDi')
+                status = pio_put_var(File, varid, (/(k, k=1,nzilyr)/))
+              CASE ('VGRDs')
+                status = pio_put_var(File, varid, (/(k, k=1,nzslyr)/))
+              CASE ('VGRDb')
+                status = pio_put_var(File, varid, (/(k, k=1,nzblyr)/))
+             END SELECT
+           endif
+        enddo
 
       !-----------------------------------------------------------------
       ! write grid masks, area and rotation angle

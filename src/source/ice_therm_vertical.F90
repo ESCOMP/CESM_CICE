@@ -148,12 +148,12 @@
 
       ! coupler fluxes to atmosphere
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out):: &
-         fsensn  , & ! sensible heat flux (W/m^2) 
          flwoutn , & ! outgoing longwave radiation (W/m^2) 
          evapn       ! evaporative water flux (kg/m^2/s) 
 
       ! Note: these are intent out if calc_Tsfc = T, otherwise intent in
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(inout):: &
+         fsensn   , & ! sensible heat flux (W/m^2) 
          flatn    , & ! latent heat flux   (W/m^2) 
          fsurfn   , & ! net flux to top surface, excluding fcondtopn
          fcondtopn    ! downward cond flux at top surface (W m-2)
@@ -242,7 +242,6 @@
 
       do j=1, ny_block
       do i=1, nx_block
-         fsensn (i,j) = c0
          flwoutn(i,j) = c0
          evapn  (i,j) = c0
 
@@ -264,6 +263,7 @@
       if (calc_Tsfc) then
          do j=1, ny_block
          do i=1, nx_block
+            fsensn   (i,j) = c0
             flatn    (i,j) = c0
             fsurfn   (i,j) = c0
             fcondtopn(i,j) = c0
@@ -2215,24 +2215,29 @@
       !-----------------------------------------------------------------
 
       do k2 = 1, nlyr
-
          do ij = 1, icells
             hq(ij,k2) = c0
          enddo
+      enddo                     ! k
 
-         do k1 = 1, nlyr
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
-            do ij = 1, icells
-               hovlp = min (z1(ij,k1+1), z2(ij,k2+1)) &
-                     - max (z1(ij,k1),   z2(ij,k2))
-               hovlp = max (hovlp, c0)
-
-               hq(ij,k2) = hq(ij,k2) + hovlp*qn(ij,k1)
-            enddo               ! ij
-         enddo                  ! kold
-      enddo                     ! k
+      do ij = 1, icells
+         k1 = 1
+         k2 = 1
+         do while (k1 <= nlyr .and. k2 <= nlyr)
+            hovlp = min (z1(ij,k1+1), z2(ij,k2+1)) &
+                  - max (z1(ij,k1),   z2(ij,k2))
+            hovlp = max (hovlp, c0)
+            hq(ij,k2) = hq(ij,k2) + hovlp*qn(ij,k1)
+            if (z1(ij,k1+1) > z2(ij,k2+1)) then
+               k2 = k2 + 1
+            else
+               k1 = k1 + 1
+            endif
+         enddo                  ! while
+      enddo                     ! ij
 
       !-----------------------------------------------------------------
       ! Compute new enthalpies.

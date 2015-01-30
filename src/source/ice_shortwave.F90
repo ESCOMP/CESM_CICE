@@ -229,7 +229,8 @@
                           Sswabsn(:,:,:,:,iblk), Iswabsn(:,:,:,:,iblk),   &
                           albicen(:,:,:,iblk),   albsnon(:,:,:,iblk),     &
                           albpndn(:,:,:,iblk),   apeffn(:,:,:,iblk),      &
-                          dhsn(:,:,:,iblk),      ffracn(:,:,:,iblk))
+                          dhsn(:,:,:,iblk),      ffracn(:,:,:,iblk),      &
+                          initonly = .true.       )
 
          enddo
          !$OMP END PARALLEL DO
@@ -1085,12 +1086,13 @@
                           Sswabsn,  Iswabsn,   &
                           albicen,  albsnon,   &
                           albpndn,  apeffn,    &
-                          dhsn,     ffracn)
+                          dhsn,     ffracn,    &
+                          initonly     )
 
       use ice_calendar, only: dt
       use ice_meltpond_cesm, only: hs0
       use ice_meltpond_topo, only: hp1
-      use ice_meltpond_lvl, only: hs1, pndaspect, snowinfil
+      use ice_meltpond_lvl, only: hs1, pndaspect
       use ice_orbital, only: compute_coszen
       use ice_state, only: ntrcr, nt_Tsfc, nt_alvl, nt_apnd, nt_hpnd, nt_ipnd, &
                            tr_pond_cesm, tr_pond_lvl, tr_pond_topo
@@ -1148,6 +1150,9 @@
       real(kind=dbl_kind), dimension(nx_block,ny_block,nilyr+1,ncat), intent(inout) :: &
            fswpenln    ! visible SW entering ice layers (W m-2)
 
+      logical (kind=log_kind), optional :: &
+           initonly    ! flag to indicate init only, default is false
+
       ! local temporary variables
 
       integer (kind=int_kind) :: &
@@ -1185,8 +1190,16 @@
          spn         , & ! snow depth on refrozen pond (m)
          tmp             ! 0 or 1
 
+      logical (kind=log_kind) :: &
+         linitonly       ! local initonly value
+
       real (kind=dbl_kind), parameter :: & 
          argmax = c10    ! maximum argument of exponential
+
+      linitonly = .false.
+      if (present(initonly)) then
+         linitonly = initonly
+      endif
 
       exp_min = exp(-argmax)
 
@@ -1261,16 +1274,17 @@
 
                fpn(i,j) = c0  ! fraction of ice covered in pond
                hpn(i,j) = c0  ! pond depth over fpn
+
                ! refrozen pond lid thickness avg over ice
                ! allow snow to cover pond ice
                ipn = trcrn(i,j,nt_alvl,n) * trcrn(i,j,nt_apnd,n) &
                                           * trcrn(i,j,nt_ipnd,n)
                dhs = dhsn(i,j,n) ! snow depth difference, sea ice - pond
-               if (ipn > puny .and. &
+               if (.not. linitonly .and. ipn > puny .and. &
                    dhs < puny .and. fsnow(i,j)*dt > hs_min) &
                    dhs = hsn(i,j) - fsnow(i,j)*dt ! initialize dhs>0
                spn = hsn(i,j) - dhs   ! snow depth on pond ice
-               if (ipn*spn < puny) dhs = c0
+               if (.not. linitonly .and. ipn*spn < puny) dhs = c0
                dhsn(i,j,n) = dhs ! save: constant until reset to 0
 
                ! not using ipn assumes that lid ice is perfectly clear
@@ -1293,7 +1307,7 @@
 
                ! infiltrate snow
                hp = hpn(i,j)
-               if (snowinfil .and. hp > puny) then
+               if (hp > puny) then
                   hs = hsn(i,j)
                   rp = rhofresh*hp/(rhofresh*hp + rhos*hs)
                   if (rp < p15) then
@@ -1310,7 +1324,7 @@
                   endif
                   fsn(i,j) = min(fsn(i,j), c1-fpn(i,j))
 
-               endif ! snowinfil
+               endif ! hp > puny
 
                ! endif    ! masking by lid ice
                apeffn(i,j,n) = fpn(i,j) ! for history

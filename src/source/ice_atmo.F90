@@ -17,6 +17,7 @@
       use ice_blocks, only: nx_block, ny_block
       use ice_constants
       use ice_domain_size, only: max_blocks
+      use ice_communicate, only: my_task
 
       implicit none
       save
@@ -651,6 +652,10 @@
                                       dkeel,    lfloe,           &
                                       dfloe,    ncat)
 
+      use ice_fileunits, only: nu_diag
+      use ice_communicate, only: my_task, master_task
+      use ice_exit, only: abort_ice
+
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
          ilo,ihi,jlo,jhi,    & ! beginning and end of physical domain
@@ -918,6 +923,25 @@
       !------------------------------------------------------------
       ! Keel effect (ocean)
       !------------------------------------------------------------
+
+          if (hkeel(i,j)<hdraft(i,j)) then
+            write(nu_diag,*) 'mytask: ',my_task
+            write(nu_diag,*) 'ai: ',ai
+            write(nu_diag,*) 'hdraft: ',hdraft(i,j)
+            write(nu_diag,*) 'hfreebd: ',hfreebd(i,j)
+            write(nu_diag,*) 'hridge: ',hridge(i,j)
+            write(nu_diag,*) 'hkeel: ',hkeel(i,j)
+            write(nu_diag,*) 'dkeel: ',dkeel(i,j)
+            write(nu_diag,*) 'hkeel-hdraft: ',tmp1
+            write(nu_diag,*) 'vice: ',vice(i,j)
+            write(nu_diag,*) 'vsno: ',vsno(i,j)
+            write(nu_diag,*) 'alvl: ',alvl(i,j,:)
+            write(nu_diag,*) 'vlvl: ',vlvl(i,j,:)
+            write(nu_diag,*) 'aicen: ',aicen(i,j,:)
+            write(nu_diag,*) 'vicen: ',vicen(i,j,:)
+            write(nu_diag,*) 'vsnon: ',vsnon(i,j,:)
+            call abort_ice('Unphysical keel or draft depth')
+          endif
 
           scw = c1 - exp(-sHGB*dkeel(i,j)/tmp1) 
           ctecwk = crw*p5

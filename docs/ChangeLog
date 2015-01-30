@@ -1,4 +1,50 @@
 ===============================================================
+cice5_20150129
+Originator: tcraig
+Date: Jan 29, 2015
+Version: 5.0
+One-line Summary: Merge with RASM and LANL repos
+- remove snowinfil option
+- some new logic in ice_therm_vertical in "Compute h*q for new layers (k2) given overlap with old layers (k1)"
+- fix restart bug in tr_pond_lvl code in run_dEdd.
+- add new output fields uatm, vatm, fsensn_ai
+- add tfrz namelist to be able to switch between different freezing temperature equations.
+  add linear_salt and mushy_layer freezing equations to the default minus1point8 version.
+- add support for year_init values of 1 (cice default is still zero, but CESM and RASM are going
+  to move to 1 as the default).
+- add missing coordinate attributes to history files for CF compliance
+- add check and abort in neutral_drag_coeffs for hkeel<hdraft
+- minor fix to dhlid default setting (changed from 0 to c0)
+- modification in bl99 for Tsf setting
+- update ar9 namelist defaults
+- add io_flavor attribute to history files (io_pio, io_netcdf)
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/io_netcdf/ice_history_write.F90
+M       src/source/ice_init.F90
+M       src/source/ice_itd.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_ocean.F90
+M       src/source/ice_meltpond_lvl.F90
+M       src/source/ice_therm_vertical.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_bl99.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_atmo.F90
+M       src/source/ice_history.F90
+M       src/input_templates/gx1/ice_in
+M       src/input_templates/gx3/ice_in
+M       src/input_templates/run_ice.Linux.NCAR.yellowstone
+M       src/input_templates/col/ice_in
+M       src/io_pio/ice_history_write.F90
+M       src/drivers/cesm/ice_comp_esmf.F90
+M       src/drivers/cesm/ice_import_export.F90
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20150128
 Originator: jedwards
 Date: Jan 28, 2015

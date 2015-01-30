@@ -159,7 +159,7 @@ id="year_init"
 type="integer"  
 category="setup" 
 group="setup_nml" >
-Initial year. (Default: 0)
+Initial year. (Default: 1)
 </entry>
 
 <entry 
@@ -863,15 +863,6 @@ Default: 'cesm'
 </entry>
 
 <entry 
-id="snowinfil" 
-type="logical"  
-category="parameterizations"
-group="ponds_nml" >
-snow infiltration
-Default: true
-</entry>
-
-<entry 
 id="rfracmin" 
 type="real"  
 category="parameterizations"
@@ -1069,6 +1060,16 @@ category="forcing"
 group="forcing_nml" >
 calculate form drag
 Default: false
+</entry>
+
+<entry
+id="tfrz_option"
+type="char*80"
+category="forcing"
+group="forcing_nml" >
+valid_values="minus1point8,mushy_layer">
+freezing temperature formulation
+Default: 'minus1point8'
 </entry>
 
 <entry
@@ -1538,6 +1539,20 @@ group="icefields_nml" >
 
 <entry
 id="f_vvel"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_uatm"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_vatm"
 type="char*5"
 category="history"
 group="icefields_nml" >
@@ -2147,6 +2162,13 @@ group="icefields_nml" >
 
 <entry
 id="f_flatn_ai"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_fsensn_ai"
 type="char*5"
 category="history"
 group="icefields_nml" >

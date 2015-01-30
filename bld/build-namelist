@@ -432,6 +432,7 @@ if ( defined $opts{'caseroot'} ) {
 #add_default($nl, 'dt', 'val'=>"$dt");
 #add_default($nl, 'runid', 'val'=>"$CASE");
 add_default($nl, 'ndtd');
+add_default($nl, 'year_init');
 add_default($nl, 'histfreq');
 add_default($nl, 'histfreq_n');
 add_default($nl, 'hist_avg');
@@ -471,6 +472,7 @@ add_default($nl, 'kcatbound');
 add_default($nl, 'formdrag');
 add_default($nl, 'highfreq');
 add_default($nl, 'natmiter');
+add_default($nl, 'tfrz_option');
 
 ##################################
 # namelist group: shortwave_nml     #
@@ -534,7 +536,6 @@ add_default($nl, 'hs0');
 add_default($nl, 'hs1');
 add_default($nl, 'dpscale');
 add_default($nl, 'frzpnd');
-add_default($nl, 'snowinfil');
 add_default($nl, 'rfracmin');
 add_default($nl, 'rfracmax');
 add_default($nl, 'pndaspect');
@@ -705,6 +706,8 @@ add_default($nl, 'f_Tsfc');
 add_default($nl, 'f_aice');
 add_default($nl, 'f_uvel');
 add_default($nl, 'f_vvel');
+add_default($nl, 'f_uatm');
+add_default($nl, 'f_vatm');
 add_default($nl, 'f_fswdn');
 add_default($nl, 'f_flwdn');
 add_default($nl, 'f_snow');
@@ -792,6 +795,7 @@ add_default($nl, 'f_fsurfn_ai');
 add_default($nl, 'f_fcondtopn_ai');
 add_default($nl, 'f_fmelttn_ai');
 add_default($nl, 'f_flatn_ai');
+add_default($nl, 'f_fsensn_ai');
 add_default($nl, 'f_Tinz');
 add_default($nl, 'f_Sinz');
 add_default($nl, 'f_Tsnz');

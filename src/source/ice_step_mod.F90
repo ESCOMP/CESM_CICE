@@ -170,7 +170,7 @@
       use ice_fileunits, only: nu_diag
       use ice_flux, only: frzmlt, sst, Tf, strocnxT, strocnyT, rside, &
           meltsn, melttn, meltbn, congeln, snoicen, dsnown, uatm, vatm, &
-          wind, rhoa, potT, Qa, zlvl, strax, stray, flatn, fsurfn, fcondtopn, &
+          wind, rhoa, potT, Qa, zlvl, strax, stray, flatn, fsensn, fsurfn, fcondtopn, &
           flw, fsnow, fpond, sss, mlt_onset, frz_onset, faero_atm, faero_ocn, &
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
           flat, fswabs, flwout, evap, Tref, Qref, Uref, fresh, fsalt, fhocn, &
@@ -215,7 +215,6 @@
 
       ! 2D coupler variables (computed for each category, then aggregated)
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
-         fsensn      , & ! surface downward sensible heat     (W/m^2)
          fswabsn     , & ! shortwave absorbed by ice          (W/m^2)
          flwoutn     , & ! upward LW at surface               (W/m^2)
          evapn       , & ! flux of vapor, atmos to ice   (kg m-2 s-1)
@@ -490,6 +489,7 @@
                                 indxi,     indxj,     &
                                 aicen    (:,:,n,iblk),&
                                 flatn    (:,:,n,iblk),&
+                                fsensn   (:,:,n,iblk),&
                                 fsurfn   (:,:,n,iblk),&
                                 fcondtopn(:,:,n,iblk) )
             endif
@@ -513,7 +513,7 @@
                                 Iswabsn(:,:,:,n,iblk),                    &
                                 fsurfn(:,:,n,iblk),                       &
                                 fcondtopn(:,:,n,iblk),                    &
-                                fsensn,              flatn(:,:,n,iblk),   &
+                                fsensn(:,:,n,iblk),  flatn(:,:,n,iblk),   &
                                 flwoutn,                                  &
                                 evapn,               freshn,              &
                                 fsaltn,              fhocnn,              &
@@ -669,7 +669,7 @@
                             strairxn,           strairyn,             &
                             Cdn_atm_ocn_n,                            &
                             fsurfn(:,:,n,iblk), fcondtopn(:,:,n,iblk),&
-                            fsensn,             flatn(:,:,n,iblk),    &
+                            fsensn(:,:,n,iblk), flatn(:,:,n,iblk),    &
                             fswabsn,            flwoutn,              &
                             evapn,                                    &
                             Trefn,              Qrefn,                &
