@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150131
+Originator: jedwards
+Date: Jan 31, 2015
+Version: 5.0
+One-line Summary: fix history write bug
+
+M  io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20150130
 Originator: dbailey
 Date: Jan 30, 2015
