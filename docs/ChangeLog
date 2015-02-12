@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150211
+Originator: dbailey
+Date: Feb 11, 2015
+Version: 5.0
+One-line Summary: Mask halo issue with tripole grids.
+
+M       src/mpi/ice_boundary.F90
+
+===============================================================
 cice5_20150131
 Originator: jedwards
 Date: Jan 31, 2015
