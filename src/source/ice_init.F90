@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_init.F90 861 2014-10-21 16:44:30Z tcraig $
+!  SVN:$Id: ice_init.F90 923 2015-03-02 20:33:57Z tcraig $
 !=======================================================================
 
 ! parameter and variable initializations
@@ -59,7 +59,7 @@
       use ice_itd, only: kitd, kcatbound
       use ice_ocean, only: oceanmixed_ice, tfrz_option
       use ice_firstyear, only: restart_FY
-      use ice_flux, only: update_ocn_f
+      use ice_flux, only: update_ocn_f, l_mpond_fresh
       use ice_forcing, only: &
           ycycle,          fyear_init,    dbug, &
           atm_data_type,   atm_data_dir,  precip_units, &
@@ -68,11 +68,11 @@
           oceanmixed_file, restore_sst,   trestore
       use ice_grid, only: grid_file, gridcpl_file, kmt_file, grid_type, grid_format
       use ice_lvl, only: restart_lvl
-      use ice_mechred, only: kstrength, krdg_partic, krdg_redist, mu_rdg
+      use ice_mechred, only: kstrength, krdg_partic, krdg_redist, mu_rdg, Cf
       use ice_dyn_shared, only: ndte, kdyn, revised_evp, yield_curve
       use ice_shortwave, only: albicev, albicei, albsnowv, albsnowi, ahmax, &
                                shortwave, albedo_type, R_ice, R_pnd, &
-                               R_snw, dT_mlt, rsnw_mlt
+                               R_snw, dT_mlt, rsnw_mlt, kalg
       use ice_atmo, only: atmbndy, calc_strair, formdrag, highfreq, natmiter
       use ice_transport_driver, only: advection
       use ice_state, only: tr_iage, tr_FY, tr_lvl, tr_pond, &
@@ -86,7 +86,7 @@
                                   rfracmin, rfracmax, pndaspect, hs1
       use ice_aerosol, only: restart_aero
       use ice_therm_shared, only: ktherm, calc_Tsfc, conduct
-      use ice_therm_vertical, only: ustar_min
+      use ice_therm_vertical, only: ustar_min, fbot_xfer_type
       use ice_therm_mushy, only: a_rapid_mode, Rac_rapid_mode, aspect_rapid_mode, &
                                  dSdt_slow_mode, phi_c_slow_mode, &
                                  phi_i_mushy
@@ -137,13 +137,14 @@
       namelist /dynamics_nml/ &
         kdyn,           ndte,           revised_evp,    yield_curve,    &
         advection,                                                      &
-        kstrength,      krdg_partic,    krdg_redist,    mu_rdg
+        kstrength,      krdg_partic,    krdg_redist,    mu_rdg,         &
+        Cf
 
       namelist /shortwave_nml/ &
         shortwave,      albedo_type,                                    &
         albicev,        albicei,         albsnowv,      albsnowi,       &
         ahmax,          R_ice,           R_pnd,         R_snw,          &
-        dT_mlt,         rsnw_mlt
+        dT_mlt,         rsnw_mlt,        kalg
 
       namelist /ponds_nml/ &
         hs0,            dpscale,         frzpnd,                        &
@@ -153,10 +154,12 @@
       namelist /forcing_nml/ &
         atmbndy,        fyear_init,      ycycle,        atm_data_format,&
         atm_data_type,  atm_data_dir,    calc_strair,   calc_Tsfc,      &
-        precip_units,   update_ocn_f,    ustar_min,     tfrz_option,    &
+        precip_units,   update_ocn_f,    l_mpond_fresh, ustar_min,      &
+        fbot_xfer_type,                                                 &
         oceanmixed_ice, ocn_data_format, sss_data_type, sst_data_type,  &
         ocn_data_dir,   oceanmixed_file, restore_sst,   trestore,       &
-        restore_ice,    formdrag,        highfreq,      natmiter
+        restore_ice,    formdrag,        highfreq,      natmiter,       &
+        tfrz_option
 
       namelist /tracer_nml/   &
         tr_iage, restart_age, &
@@ -227,6 +230,7 @@
       krdg_partic = 1        ! 1 = new participation, 0 = Thorndike et al 75
       krdg_redist = 1        ! 1 = new redistribution, 0 = Hibler 80
       mu_rdg = 3             ! e-folding scale of ridged ice, krdg_partic=1 (m^0.5)
+      Cf = 17.0_dbl_kind     ! ratio of ridging work to PE change in ridging 
       advection  = 'remap'   ! incremental remapping transport scheme
       shortwave = 'default'  ! 'default' or 'dEdd' (delta-Eddington)
       albedo_type = 'default'! or 'constant'
@@ -235,12 +239,17 @@
       calc_Tsfc = .true.     ! calculate surface temperature
       update_ocn_f = .false. ! include fresh water and salt fluxes for frazil
       ustar_min = 0.005      ! minimum friction velocity for ocean heat flux (m/s)
+      l_mpond_fresh = .false.     ! logical switch for including meltpond freshwater
+                                  ! flux feedback to ocean model
+      fbot_xfer_type = 'constant' ! transfer coefficient type for ocn heat flux
       R_ice     = 0.00_dbl_kind   ! tuning parameter for sea ice
       R_pnd     = 0.00_dbl_kind   ! tuning parameter for ponded sea ice
       R_snw     = 1.50_dbl_kind   ! tuning parameter for snow over sea ice
       dT_mlt    = 1.5_dbl_kind    ! change in temp to give non-melt to melt change
                                   ! in snow grain radius
       rsnw_mlt  = 1500._dbl_kind  ! maximum melting snow grain radius
+      kalg      = 0.60_dbl_kind   ! algae absorption coefficient for 0.5 m thick layer
+                                  ! 0.5 m path of 75 mg Chl a / m2
       hp1       = 0.01_dbl_kind   ! critical pond lid thickness for topo ponds
       hs0       = 0.03_dbl_kind   ! snow depth for transition to bare sea ice (m)
       hs1       = 0.03_dbl_kind   ! snow depth for transition to bare pond ice (m)
@@ -267,8 +276,8 @@
       natmiter        = 5         ! number of iterations for atm boundary layer calcs
       precip_units    = 'mks'     ! 'mm_per_month' or
                                   ! 'mm_per_sec' = 'mks' = kg/m^2 s
+      tfrz_option     = 'mushy'   ! freezing temp formulation
       oceanmixed_ice  = .false.   ! if true, use internal ocean mixed layer
-      tfrz_option     = 'minus1point8' ! freezing temp formulation
       ocn_data_format = 'bin'     ! file format ('bin'=binary or 'nc'=netcdf)
       sss_data_type   = 'default'
       sst_data_type   = 'default'
@@ -518,10 +527,10 @@
          frzpnd = 'cesm'
       endif
 
-      if (trim(shortwave) /= 'dEdd' .and. tr_pond) then
+      if (trim(shortwave) /= 'dEdd' .and. tr_pond .and. calc_tsfc) then
          if (my_task == master_task) then
             write (nu_diag,*) 'WARNING: Must use dEdd shortwave'
-            write (nu_diag,*) 'WARNING: with tr_pond.'
+            write (nu_diag,*) 'WARNING: with tr_pond and calc_tsfc=T.'
             write (nu_diag,*) 'WARNING: Setting shortwave = dEdd'
          endif
          shortwave = 'dEdd'
@@ -557,6 +566,23 @@
             write (nu_diag,*) 'WARNING: Setting calc_Tsfc = T'
          endif
          calc_Tsfc = .true.
+      endif
+
+      if (ktherm == 1 .and. trim(tfrz_option) /= 'linear_salt') then
+         if (my_task == master_task) then
+         write (nu_diag,*) &
+         'WARNING: ktherm = 1 and tfrz_option = ',trim(tfrz_option)
+         write (nu_diag,*) &
+         'WARNING: For consistency, set tfrz_option = linear_salt'
+         endif
+      endif
+      if (ktherm == 2 .and. trim(tfrz_option) /= 'mushy') then
+         if (my_task == master_task) then
+         write (nu_diag,*) &
+         'WARNING: ktherm = 2 and tfrz_option = ',trim(tfrz_option)
+         write (nu_diag,*) &
+         'WARNING: For consistency, set tfrz_option = mushy'
+         endif
       endif
 
       if (trim(atm_data_type) == 'hadgem' .and. & 
@@ -601,6 +627,15 @@
          tr_lvl = .true.
       endif
       endif
+
+      if (trim(fbot_xfer_type) == 'Cdn_ocn' .and. .not. formdrag)  then
+         if (my_task == master_task) then
+            write (nu_diag,*) 'WARNING: formdrag=F but fbot_xfer_type=Cdn_ocn'
+            write (nu_diag,*) 'WARNING: Setting fbot_xfer_type = constant'
+         endif
+         fbot_xfer_type = 'constant'
+      endif
+
 
       call broadcast_scalar(days_per_year,      master_task)
       call broadcast_scalar(use_leap_years,     master_task)
@@ -652,6 +687,7 @@
       call broadcast_scalar(krdg_partic,        master_task)
       call broadcast_scalar(krdg_redist,        master_task)
       call broadcast_scalar(mu_rdg,             master_task)
+      call broadcast_scalar(Cf,                 master_task)
       call broadcast_scalar(advection,          master_task)
       call broadcast_scalar(shortwave,          master_task)
       call broadcast_scalar(albedo_type,        master_task)
@@ -662,6 +698,7 @@
       call broadcast_scalar(R_snw,              master_task)
       call broadcast_scalar(dT_mlt,             master_task)
       call broadcast_scalar(rsnw_mlt,           master_task)
+      call broadcast_scalar(kalg,               master_task)
       call broadcast_scalar(hp1,                master_task)
       call broadcast_scalar(hs0,                master_task)
       call broadcast_scalar(hs1,                master_task)
@@ -687,7 +724,9 @@
       call broadcast_scalar(highfreq,           master_task)
       call broadcast_scalar(natmiter,           master_task)
       call broadcast_scalar(update_ocn_f,       master_task)
+      call broadcast_scalar(l_mpond_fresh,      master_task)
       call broadcast_scalar(ustar_min,          master_task)
+      call broadcast_scalar(fbot_xfer_type,     master_task)
       call broadcast_scalar(precip_units,       master_task)
       call broadcast_scalar(oceanmixed_ice,     master_task)
       call broadcast_scalar(tfrz_option,        master_task)
@@ -788,7 +827,7 @@
          write(nu_diag,*)    ' pointer_file              = ', &
                                trim(pointer_file)
          write(nu_diag,*)    ' use_restart_time          = ', use_restart_time
-         write(nu_diag,*   ) ' ice_ic                    = ', &
+         write(nu_diag,*)    ' ice_ic                    = ', &
                                trim(ice_ic)
          write(nu_diag,*)    ' grid_type                 = ', &
                                trim(grid_type)
@@ -819,6 +858,8 @@
                                krdg_redist
          if (krdg_redist == 1) &
          write(nu_diag,1000) ' mu_rdg                    = ', mu_rdg
+         if (kstrength == 1) &
+         write(nu_diag,1000) ' Cf                        = ', Cf
          write(nu_diag,1030) ' advection                 = ', &
                                trim(advection)
          write(nu_diag,1030) ' shortwave                 = ', &
@@ -830,6 +871,7 @@
          write(nu_diag,1000) ' R_snw                     = ', R_snw
          write(nu_diag,1000) ' dT_mlt                    = ', dT_mlt
          write(nu_diag,1000) ' rsnw_mlt                  = ', rsnw_mlt
+         write(nu_diag,1000) ' kalg                      = ', kalg
          write(nu_diag,1000) ' hp1                       = ', hp1
          write(nu_diag,1000) ' hs0                       = ', hs0
          else
@@ -885,7 +927,10 @@
          endif 
 
          write(nu_diag,1010) ' update_ocn_f              = ', update_ocn_f
+         write(nu_diag,1010) ' l_mpond_fresh             = ', l_mpond_fresh
          write(nu_diag,1005) ' ustar_min                 = ', ustar_min
+         write(nu_diag, *)   ' fbot_xfer_type            = ', &
+                               trim(fbot_xfer_type)
          write(nu_diag,1010) ' oceanmixed_ice            = ', &
                                oceanmixed_ice
          write(nu_diag,*)    ' tfrz_option               = ', &

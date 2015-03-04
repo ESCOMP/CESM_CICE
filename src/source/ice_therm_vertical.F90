@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_therm_vertical.F90 840 2014-09-28 21:28:15Z tcraig $
+!  SVN:$Id: ice_therm_vertical.F90 915 2015-02-08 02:50:33Z tcraig $
 !=========================================================================
 !
 ! Update ice and snow internal temperatures and compute
@@ -49,6 +49,9 @@
 
       real (kind=dbl_kind), public :: &
          ustar_min       ! minimum friction velocity for ice-ocean heat flux
+
+      character (len=char_len), public :: &
+         fbot_xfer_type  ! transfer coefficient type for ice-ocean heat flux
 
 !=======================================================================
 
@@ -609,7 +612,7 @@
                                         sst,      Tf,       &
                                         strocnxT, strocnyT, &
                                         Tbot,     fbot,     &
-                                        rside)
+                                        rside,    Cdn_ocn)
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -624,6 +627,7 @@
          frzmlt  , & ! freezing/melting potential (W/m^2)
          sst     , & ! sea surface temperature (C)
          Tf      , & ! freezing temperature (C)
+         Cdn_ocn , & ! ocean-ice neutral drag coefficient
          strocnxT, & ! ice-ocean stress, x-direction
          strocnyT    ! ice-ocean stress, y-direction
 
@@ -666,11 +670,8 @@
 
       ! Parameters for bottom melting
 
-      ! 0.006 = unitless param for basal heat flx ala McPhee and Maykut
-
-      real (kind=dbl_kind), parameter :: &
-         cpchr = -cp_ocn*rhow*0.006_dbl_kind
-
+      real (kind=dbl_kind) :: &
+         cpchr         ! -cp_ocn*rhow*exchange coefficient
 
       ! Parameters for lateral melting
 
@@ -725,7 +726,17 @@
          ustar = sqrt (sqrt(strocnxT(i,j)**2+strocnyT(i,j)**2)/rhow)
          ustar = max (ustar,ustar_min)
 
+         if (trim(fbot_xfer_type) == 'Cdn_ocn') then
+            ! Note: Cdn_ocn has already been used for calculating ustar 
+            ! (formdrag only) --- David Schroeder (CPOM)
+            cpchr = -cp_ocn*rhow*Cdn_ocn(i,j)
+         else ! fbot_xfer_type == 'constant'
+            ! 0.006 = unitless param for basal heat flx ala McPhee and Maykut
+            cpchr = -cp_ocn*rhow*0.006_dbl_kind
+         endif
+
          fbot(i,j) = cpchr * deltaT * ustar ! < 0
+
          fbot(i,j) = max (fbot(i,j), frzmlt(i,j)) ! frzmlt < fbot < 0
 
 !!! uncomment to use all frzmlt for standalone runs
@@ -2245,8 +2256,6 @@
 
       do k = 1, nlyr
          do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
             qn(ij,k) = hq(ij,k) * rhlyr(ij)
          enddo                  ! ij
       enddo                     ! k

@@ -100,24 +100,26 @@
 
 <dT_mlt              > 1.00 </dT_mlt>
 <dT_mlt hgrid='gx3v7'> 2.00 </dT_mlt>
-<dT_mlt hgrid="ar9v3"> 1.50 </dT_mlt>
-<dT_mlt hgrid="ar9v4"> 1.50 </dT_mlt>
+<dT_mlt hgrid="ar9v3"> 1.00 </dT_mlt>
+<dT_mlt hgrid="ar9v4"> 1.00 </dT_mlt>
 <dT_mlt cam4='.true.'> 1.50 </dT_mlt>
 
 <rsnw_mlt              > 1000. </rsnw_mlt>
 <rsnw_mlt hgrid='gx3v7'> 2000. </rsnw_mlt>
-<rsnw_mlt hgrid="ar9v3"> 1500. </rsnw_mlt>
-<rsnw_mlt hgrid="ar9v4"> 1500. </rsnw_mlt>
+<rsnw_mlt hgrid="ar9v3"> 1000. </rsnw_mlt>
+<rsnw_mlt hgrid="ar9v4"> 1000. </rsnw_mlt>
 <rsnw_mlt cam4='.true.'> 1500. </rsnw_mlt>
 
 <R_snw              >  1.75 </R_snw>
 <R_snw hgrid='gx3v7'> -2.00 </R_snw>
-<R_snw hgrid="ar9v3">  0.00 </R_snw>
-<R_snw hgrid="ar9v4">  0.00 </R_snw>
+<R_snw hgrid="ar9v3"> -1.00 </R_snw>
+<R_snw hgrid="ar9v4"> -1.00 </R_snw>
 <R_snw cam4='.true.'>  1.50 </R_snw>
 
 <R_ice              >  0.0 </R_ice>
 <R_pnd              >  0.0 </R_pnd>
+
+<kalg               >  0.0 </kalg>
 
 <!--- parameterization information --->
 <!--- thermo settings --->
@@ -164,7 +166,14 @@
 
 <krdg_partic>1</krdg_partic>
 <krdg_redist>1</krdg_redist>
+
 <mu_rdg>4.0</mu_rdg>
+<mu_rdg hgrid="ar9v3" >4.0</mu_rdg>
+<mu_rdg hgrid="ar9v4" >4.0</mu_rdg>
+
+<Cf>17.0</Cf>
+<Cf hgrid="ar9v3">21.3</Cf>
+<Cf hgrid="ar9v4">21.3</Cf>
 
 <!--------------------------->
 <!-- ice_nml settings ------->
@@ -269,11 +278,19 @@
 <hs0> 0.03 </hs0>
 <hs1> 0.03 </hs1>
 <dpscale> 1.0e-3 </dpscale>
+
 <frzpnd               > cesm </frzpnd>
 <frzpnd hgrid="ar9v3" > hlid </frzpnd>
 <frzpnd hgrid="ar9v4" > hlid </frzpnd>
+
 <rfracmin> 0.15 </rfracmin>
+<rfracmax hgrid="ar9v3" > 0.15 </rfracmax>
+<rfracmax hgrid="ar9v4" > 0.15 </rfracmax>
+
 <rfracmax> 0.85 </rfracmax>
+<rfracmax hgrid="ar9v3" > 1.00 </rfracmax>
+<rfracmax hgrid="ar9v4" > 1.00 </rfracmax>
+
 <pndaspect> 0.8 </pndaspect>
 
 <!--------------------------->
@@ -309,7 +326,9 @@
 <natmiter hgrid="ar9v3"  > 25 </natmiter>
 <natmiter hgrid="ar9v4"  > 25 </natmiter>
 
-<tfrz_option             >'minus1point8'</tfrz_option>
+<tfrz_option             >'minus1p8'</tfrz_option>
+<fbot_xfer_type          >'constant'</fbot_xfer_type>
+<l_mpond_fresh           >.false.</l_mpond_fresh>
 
 <!-------------------------------------------------------------->
 <!-- Prescribed namelist-                                    --->
@@ -496,6 +515,10 @@
 <f_fswabs cice_mode='prescribed'>'xxxxx'</f_fswabs>
 
 <f_fswabs_ai                       >'xxxxx'</f_fswabs_ai>
+<f_fswabs_ai hgrid="ar9v4"         >'mdhxx'</f_fswabs_ai>
+<f_fswabs_ai cice_mode='prescribed'>'xxxxx'</f_fswabs_ai>
+
+<f_fswint_ai                       >'xxxxx'</f_fswint_ai>
 <f_fswabs_ai hgrid="ar9v4"         >'mdhxx'</f_fswabs_ai>
 <f_fswabs_ai cice_mode='prescribed'>'xxxxx'</f_fswabs_ai>
 
@@ -785,6 +808,11 @@
 <f_vicen hgrid="ar9v3"         >'mxxxx'</f_vicen>
 <f_vicen hgrid="ar9v4"         >'mdhxx'</f_vicen>
 
+<f_vsnon                       >'mxxxx'</f_vsnon>
+<f_vsnon cice_mode='prescribed'>'xxxxx'</f_vsnon>
+<f_vsnon hgrid="ar9v3"         >'mxxxx'</f_vsnon>
+<f_vsnon hgrid="ar9v4"         >'mdhxx'</f_vsnon>
+
 <f_trsig                       >'xxxxx'</f_trsig>
 <f_trsig hgrid="ar9v4"         >'mdhxx'</f_trsig>
 <f_trsig cice_mode='prescribed'>'xxxxx'</f_trsig>
@@ -825,6 +853,9 @@
 <f_fsensn_ai                       >'xxxxx'</f_fsensn_ai>
 <f_fsensn_ai hgrid="ar9v4"         >'mdhxx'</f_fsensn_ai>
 <f_fsensn_ai cice_mode='prescribed'>'xxxxx'</f_fsensn_ai>
+
+<f_keffn_Top                       >'xxxxx'</f_keffn_Top>
+<f_keffn_Top cice_mode='prescribed'>'xxxxx'</f_keffn_Top>
 
 <f_Tinz                       >'xxxxx'</f_Tinz>
 <f_Tinz cice_mode='prescribed'>'xxxxx'</f_Tinz>

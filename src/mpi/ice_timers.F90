@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_timers.F90 707 2013-08-22 21:21:05Z eclare $
+!  SVN:$Id: ice_timers.F90 907 2015-01-30 04:53:04Z tcraig $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_timers
@@ -339,7 +339,6 @@
 
          !*** start block timer
 
-
          all_timers(timer_id)%block_started(block_id) = .true.
          all_timers(timer_id)%block_cycles1(block_id) = MPI_WTIME()
 
@@ -361,7 +360,6 @@
          endif
 
          !$OMP END CRITICAL
-
 
       !***
       !*** if called from outside a block loop, start node timer

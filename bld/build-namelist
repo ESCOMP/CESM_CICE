@@ -473,6 +473,8 @@ add_default($nl, 'formdrag');
 add_default($nl, 'highfreq');
 add_default($nl, 'natmiter');
 add_default($nl, 'tfrz_option');
+add_default($nl, 'fbot_xfer_type');
+add_default($nl, 'l_mpond_fresh');
 
 ##################################
 # namelist group: shortwave_nml     #
@@ -497,6 +499,7 @@ if ($cam4) {
     add_default($nl, 'R_snw'       );
     add_default($nl, 'dT_mlt'   );
     add_default($nl, 'rsnw_mlt');
+    add_default($nl, 'kalg');
 }    
 
 
@@ -526,6 +529,7 @@ add_default($nl, 'kstrength');
 add_default($nl, 'krdg_partic');
 add_default($nl, 'krdg_redist');
 add_default($nl, 'mu_rdg');
+add_default($nl, 'Cf');
 
 ##################################
 # namelist group: ponds_nml     #
@@ -723,6 +727,7 @@ add_default($nl, 'f_frzmlt');
 add_default($nl, 'f_fswfac');
 add_default($nl, 'f_fswabs');
 add_default($nl, 'f_fswabs_ai');
+add_default($nl, 'f_fswint_ai');
 add_default($nl, 'f_albsni');
 add_default($nl, 'f_alvdr');
 add_default($nl, 'f_alidr');
@@ -786,6 +791,7 @@ add_default($nl, 'f_hisnap');
 add_default($nl, 'f_aisnap');
 add_default($nl, 'f_aicen');
 add_default($nl, 'f_vicen');
+add_default($nl, 'f_vsnon');
 add_default($nl, 'f_trsig');
 add_default($nl, 'f_icepresent');
 add_default($nl, 'f_fsurf_ai');
@@ -796,6 +802,7 @@ add_default($nl, 'f_fcondtopn_ai');
 add_default($nl, 'f_fmelttn_ai');
 add_default($nl, 'f_flatn_ai');
 add_default($nl, 'f_fsensn_ai');
+add_default($nl, 'f_keffn_top');
 add_default($nl, 'f_Tinz');
 add_default($nl, 'f_Sinz');
 add_default($nl, 'f_Tsnz');

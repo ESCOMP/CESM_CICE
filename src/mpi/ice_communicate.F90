@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_communicate.F90 700 2013-08-15 19:17:39Z eclare $
+!  SVN:$Id: ice_communicate.F90 821 2014-08-26 19:58:10Z tcraig $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_communicate
@@ -17,6 +17,10 @@
 
 #if defined key_oasis4
    use cpl_oasis4
+#endif
+
+#if defined key_iomput
+   use lib_mpp, only:   mpi_comm_opa      ! MPP library
 #endif
 
    implicit none
@@ -76,6 +80,8 @@
    else
 #if (defined key_oasis3 || defined key_oasis3mct || defined key_oasis4)
      ice_comm = localComm       ! communicator from NEMO/OASISn 
+#elif defined key_iomput
+    ice_comm = mpi_comm_opa    ! communicator from NEMO/XIOS
 #else
      ice_comm = MPI_COMM_WORLD  ! Global communicator 
 #endif 

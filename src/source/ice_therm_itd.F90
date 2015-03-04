@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_therm_itd.F90 861 2014-10-21 16:44:30Z tcraig $
+!  SVN:$Id: ice_therm_itd.F90 923 2015-03-02 20:33:57Z tcraig $
 !=======================================================================
 !
 ! Thermo calculations after call to coupler, related to ITD:
@@ -22,7 +22,7 @@
       use ice_kinds_mod
       use ice_constants
       use ice_communicate, only: my_task, master_task
-      use ice_domain_size, only: nilyr, nslyr, nblyr, ncat, max_aero, &
+      use ice_domain_size, only: nilyr, nslyr, ncat, max_aero, &
                                  n_aero, max_ntrcr
       use ice_fileunits, only: nu_diag
 

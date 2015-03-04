@@ -105,11 +105,12 @@
 
       ! dEdd tuning parameters, set in namelist
       real (kind=dbl_kind), public :: &
-         R_ice , & ! sea ice tuning parameter; +1 > 1sig increase in albedo
-         R_pnd , & ! ponded ice tuning parameter; +1 > 1sig increase in albedo
-         R_snw , & ! snow tuning parameter; +1 > ~.01 change in broadband albedo
-         dT_mlt, & ! change in temp for non-melt to melt snow grain radius change (C)
-         rsnw_mlt  ! maximum melting snow grain radius (10^-6 m)
+         R_ice ,   & ! sea ice tuning parameter; +1 > 1sig increase in albedo
+         R_pnd ,   & ! ponded ice tuning parameter; +1 > 1sig increase in albedo
+         R_snw ,   & ! snow tuning parameter; +1 > ~.01 change in broadband albedo
+         dT_mlt,   & ! change in temp for non-melt to melt snow grain radius change (C)
+         rsnw_mlt, & ! maximum melting snow grain radius (10^-6 m)
+         kalg        ! algae absorption coefficient for 0.5 m thick layer
 
       real (kind=dbl_kind), parameter, public :: &
          hi_ssl = 0.050_dbl_kind, & ! ice surface scattering layer thickness (m)
@@ -1666,18 +1667,6 @@
          albice(i,j) = albice(i,j) &
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
-
-
-#ifdef RASM_MODS
-         if (alvdr(i,j)>1.or.alvdf(i,j)>1.or.alidr(i,j)>1.or.alidf(i,j)>1) then
-            write(6,*)'Ice Albedo Calculations'
-            write(6,*)'alvdr(i,j),avdrl(i,j),fi(i,j) ',alvdr(i,j),avdrl(i,j),fi(i,j)
-            write(6,*)'alvdf(i,j),avdfl(i,j),fi(i,j) ',alvdf(i,j),avdfl(i,j),fi(i,j)
-            write(6,*)'alidr(i,j),aidrl(i,j),fi(i,j) ',alidr(i,j),aidrl(i,j),fi(i,j)
-            write(6,*)'alidf(i,j),aidfl(i,j),fi(i,j) ',alidf(i,j),aidfl(i,j),fi(i,j)
-         endif
-#endif
-
       enddo
 
 !DIR$ CONCURRENT !Cray
@@ -1728,17 +1717,6 @@
          albsno(i,j) = albsno(i,j) &
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
-
-#ifdef RASM_MODS
-         if (alvdr(i,j)>1.or.alvdf(i,j)>1.or.alidr(i,j)>1.or.alidf(i,j)>1) then
-            write(6,*)'Snow Albedo Calculations'
-            write(6,*)'alvdr(i,j),avdrl(i,j),fs(i,j) ',alvdr(i,j),avdrl(i,j),fs(i,j)
-            write(6,*)'alvdf(i,j),avdfl(i,j),fs(i,j) ',alvdf(i,j),avdfl(i,j),fs(i,j)
-            write(6,*)'alidr(i,j),aidrl(i,j),fs(i,j) ',alidr(i,j),aidrl(i,j),fs(i,j)
-            write(6,*)'alidf(i,j),aidfl(i,j),fs(i,j) ',alidf(i,j),aidfl(i,j),fs(i,j)
-         endif
-#endif
-
       enddo
 
 !DIR$ CONCURRENT !Cray
@@ -1791,18 +1769,6 @@
          albpnd(i,j) = albpnd(i,j) &
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
-
-
-#ifdef RASM_MODS
-         if (alvdr(i,j)>1.or.alvdf(i,j)>1.or.alidr(i,j)>1.or.alidf(i,j)>1) then
-            write(6,*)'Melt Ponds Albedo Calculations'
-            write(6,*)'alvdr,avdrl,fp,fs,fi',alvdr(i,j),avdrl(i,j),fp(i,j),fs(i,j),fi(i,j)
-            write(6,*)'alvdf,avdfl,fp,fs,fi',alvdf(i,j),avdfl(i,j),fp(i,j),fs(i,j),fi(i,j)
-            write(6,*)'alidr,aidrl,fp,fs,fi',alidr(i,j),aidrl(i,j),fp(i,j),fs(i,j),fi(i,j)
-            write(6,*)'alidf,aidfl,fp,fs,fi',alidf(i,j),aidfl(i,j),fp(i,j),fs(i,j),fi(i,j)
-         endif
-#endif
-
       enddo
 
       dbug = .false.
@@ -2379,10 +2345,6 @@
          rhoi   = 917.0_dbl_kind,& ! pure ice mass density (kg/m3)
          fr_max = 1.00_dbl_kind, & ! snow grain adjustment factor max
          fr_min = 0.80_dbl_kind, & ! snow grain adjustment factor min
-      ! algae absorption coefficient for 0.5 m thick layer
-!         kalg   = 0.60_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
-!         CESM turns algae off
-          kalg   = 0.00_dbl_kind, & ! for 0.5 m path of 75 mg Chl a / m2
       ! tuning parameters
       ! ice and pond scat coeff fractional change for +- one-sigma in albedo
          fp_ice = 0.15_dbl_kind, & ! ice fraction of scat coeff for + stn dev in alb

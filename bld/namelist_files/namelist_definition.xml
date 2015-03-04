@@ -707,6 +707,15 @@ group="dynamics_nml" >
 e-folding scale of ridged ice
 </entry>
 
+<entry 
+id="Cf"
+type="real"  
+category="parameterizations" 
+group="dynamics_nml" >
+Ratio of ridging work to PE change in ridging
+</entry>
+
+
 <!----------------------------->
 <!--- Shortwave_nml Ice albedos    ---->
 <!----------------------------->
@@ -812,6 +821,15 @@ group="shortwave_nml" >
 maximum melting snow grain radius tunable parameter for dEdd albedo
 </entry>
 
+<entry 
+id="kalg" 
+type="real"  
+category="swrad" 
+group="shortwave_nml" >
+algae absorption coefficient for 0.5 m thick layer
+</entry>
+
+<!----------------------------->
 <!----------------------------->
 <!---ponds_nml information----->
 <!----------------------------->
@@ -1067,9 +1085,19 @@ id="tfrz_option"
 type="char*80"
 category="forcing"
 group="forcing_nml" >
-valid_values="minus1point8,mushy_layer">
+valid_values="minus1p8,linear_salt,mushy">
 freezing temperature formulation
-Default: 'minus1point8'
+Default: 'minus1p8'
+</entry>
+
+<entry
+id="fbot_xfer_type"
+type="char*80"
+category="forcing"
+group="forcing_nml" >
+valid_values="constant,Cdn_ocn">
+transfer coefficient type for ocn heat flux
+Default: 'constant'
 </entry>
 
 <entry
@@ -1088,6 +1116,15 @@ category="forcing"
 group="forcing_nml" >
 number of iterations for atm boundary layer calculations
 Default: 5
+</entry>
+
+<entry
+id="l_mpond_fresh"
+type="logical"
+category="forcing"
+group="forcing_nml" >
+switch for including meltpond freshwater flux feedback to ocean model
+Default: false
 </entry>
 
 
@@ -1664,6 +1701,13 @@ group="icefields_nml" >
 </entry>
 
 <entry
+id="f_fswint_ai"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
 id="f_albsni"
 type="char*5"
 category="history"
@@ -2105,6 +2149,13 @@ group="icefields_nml" >
 </entry>
 
 <entry
+id="f_vsnon"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
 id="f_trsig"
 type="char*5"
 category="history"
@@ -2169,6 +2220,13 @@ group="icefields_nml" >
 
 <entry
 id="f_fsensn_ai"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_keffn_top"
 type="char*5"
 category="history"
 group="icefields_nml" >

@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_ocean.F90 704 2013-08-20 23:43:58Z eclare $
+!  SVN:$Id: ice_ocean.F90 897 2015-01-22 01:15:53Z tcraig $
 !=======================================================================
 
 ! Ocean mixed layer calculation (internal to sea ice model).
@@ -32,7 +32,10 @@
          cprho = cp_ocn*rhow
 
       character(len=char_len), public :: &
-         tfrz_option
+         tfrz_option              ! form of ocean freezing temperature
+                                  ! 'minus1p8' = -1.8 C
+                                  ! 'linear_salt' = -depressT * sss
+                                  ! 'mushy' conforms with ktherm=2
 
 !=======================================================================
 

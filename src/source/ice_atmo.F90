@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_atmo.F90 861 2014-10-21 16:44:30Z tcraig $
+!  SVN:$Id: ice_atmo.F90 922 2015-03-02 18:55:01Z tcraig $
 !=======================================================================
 
 ! Atmospheric boundary interface (stability based flux calculations)
@@ -17,7 +17,6 @@
       use ice_blocks, only: nx_block, ny_block
       use ice_constants
       use ice_domain_size, only: max_blocks
-      use ice_communicate, only: my_task
 
       implicit none
       save
@@ -624,14 +623,15 @@
 
 !=======================================================================
 
-! neutral drag coefficients for ocean and atmosphere 
-! also compute the intermediate necessary variables ridge height, 
-! distance, floe size...	 
+! Neutral drag coefficients for ocean and atmosphere also compute the 
+! intermediate necessary variables ridge height, distance, floe size	 
+! based upon Tsamados et al. (2014), JPO, DOI: 10.1175/JPO-D-13-0215.1.
+! Places where the code varies from the paper are commented.
 !
 ! authors: Michel Tsamados, CPOM
 !          David Schroeder, CPOM
 !
-! changes: Andrew Roberts, NPS (adjusted for fully coupled models)
+! changes: Andrew Roberts, NPS (RASM/CESM coupling and documentation)
 
 
       subroutine neutral_drag_coeffs (nx_block, ny_block, &
@@ -651,10 +651,6 @@
                                       distrdg,  hkeel,           &
                                       dkeel,    lfloe,           &
                                       dfloe,    ncat)
-
-      use ice_fileunits, only: nu_diag
-      use ice_communicate, only: my_task, master_task
-      use ice_exit, only: abort_ice
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -881,7 +877,9 @@
       
         ! hridge, hkeel, distrdg and dkeel estimates from CICE for 
         ! simple triangular geometry
+
         if (ardg > p001) then 
+
           ! see Eq. 25 and Eq. 26
           hridge(i,j) = vrdg/ardg*c2 &
                       * (alpha2+beta2*hkoverhr/dkoverdr*tanar/tanak) &
@@ -891,27 +889,38 @@
           hkeel(i,j) = hkoverhr * hridge(i,j)
           dkeel(i,j) = dkoverdr * distrdg(i,j)
 
-          tmp1 = hridge(i,j) - hfreebd(i,j)
+          ! Use the height of ridges relative to the mean freeboard of
+          ! the pack.  Therefore skin drag and ridge drag differ in
+          ! this code as compared to  Tsamados et al. (2014) equations
+          ! 10 and 18, which reference both to sea level. 
+          tmp1 = max(c0,hridge(i,j) - hfreebd(i,j))
 
       !------------------------------------------------------------
       ! Skin drag (atmo)
       !------------------------------------------------------------	  
 
-          Cdn_atm_skin(i,j) = ai * csa*(c1 - mrdg*tmp1/distrdg(i,j))
+          Cdn_atm_skin(i,j) = csa*(c1 - mrdg*tmp1/distrdg(i,j))
           Cdn_atm_skin(i,j) = max(min(Cdn_atm_skin(i,j),camax),c0)
 
       !------------------------------------------------------------
       ! Ridge effect (atmo)
       !------------------------------------------------------------
 
-          sca = c1 - exp(-sHGB*distrdg(i,j)/tmp1) ! see Eq. 9
-          ctecar = cra*p5
-          ! hridge relative to sea level
-          Cdn_atm_rdg(i,j) = ai * ctecar*tmp1/distrdg(i,j)*sca* &
-                     (log(tmp1*icerufi)/log(zref*icerufi))**c2
-          Cdn_atm_rdg(i,j) = min(Cdn_atm_rdg(i,j),camax)
+          if (tmp1 > puny) then
+            sca = c1 - exp(-sHGB*distrdg(i,j)/tmp1) ! see Eq. 9
+            ctecar = cra*p5
+            Cdn_atm_rdg(i,j) = ctecar*tmp1/distrdg(i,j)*sca* &
+                       (log(tmp1*icerufi)/log(zref*icerufi))**c2
+            Cdn_atm_rdg(i,j) = min(Cdn_atm_rdg(i,j),camax)
+          endif
 
-          tmp1 = hkeel(i,j) - hdraft(i,j)
+          ! Use the depth of keels relative to the mean draft of
+          ! the pack.  Therefore skin drag and keel drag differ in
+          ! this code as compared to  Tsamados et al. (2014) equations
+          ! 11 and 19, which reference both to  sea level. In some
+          ! circumstances, hkeel can be less than hdraft because hkoverhr
+          ! is constant, and max(c0,...) temporarily addresses this.
+          tmp1 = max(c0,hkeel(i,j) - hdraft(i,j))
 
       !------------------------------------------------------------
       ! Skin drag bottom ice (ocean)
@@ -924,31 +933,14 @@
       ! Keel effect (ocean)
       !------------------------------------------------------------
 
-          if (hkeel(i,j)<hdraft(i,j)) then
-            write(nu_diag,*) 'mytask: ',my_task
-            write(nu_diag,*) 'ai: ',ai
-            write(nu_diag,*) 'hdraft: ',hdraft(i,j)
-            write(nu_diag,*) 'hfreebd: ',hfreebd(i,j)
-            write(nu_diag,*) 'hridge: ',hridge(i,j)
-            write(nu_diag,*) 'hkeel: ',hkeel(i,j)
-            write(nu_diag,*) 'dkeel: ',dkeel(i,j)
-            write(nu_diag,*) 'hkeel-hdraft: ',tmp1
-            write(nu_diag,*) 'vice: ',vice(i,j)
-            write(nu_diag,*) 'vsno: ',vsno(i,j)
-            write(nu_diag,*) 'alvl: ',alvl(i,j,:)
-            write(nu_diag,*) 'vlvl: ',vlvl(i,j,:)
-            write(nu_diag,*) 'aicen: ',aicen(i,j,:)
-            write(nu_diag,*) 'vicen: ',vicen(i,j,:)
-            write(nu_diag,*) 'vsnon: ',vsnon(i,j,:)
-            call abort_ice('Unphysical keel or draft depth')
-          endif
+          if (tmp1 > puny) then
+            scw = c1 - exp(-sHGB*dkeel(i,j)/tmp1) 
+            ctecwk = crw*p5
 
-          scw = c1 - exp(-sHGB*dkeel(i,j)/tmp1) 
-          ctecwk = crw*p5
-          ! hkeel relative to sea level
-          Cdn_ocn_keel(i,j) = ctecwk*ai*tmp1/dkeel(i,j)*scw* &
-                     (log(tmp1*icerufi)/log(zref*icerufi))**c2  
-          Cdn_ocn_keel(i,j) = max(min(Cdn_ocn_keel(i,j),cwmax),c0)
+            Cdn_ocn_keel(i,j) = ctecwk*tmp1/dkeel(i,j)*scw* &
+                        (log(tmp1*icerufi)/log(zref*icerufi))**c2  
+            Cdn_ocn_keel(i,j) = max(min(Cdn_ocn_keel(i,j),cwmax),c0)
+          endif
   
         endif ! ardg > 0.001
 
@@ -959,7 +951,7 @@
         if (hfreebd(i,j) > puny) then
           sca = c1 - exp(-sl*beta*(c1-ai))
           ctecaf = cfa*p5*(log(hfreebd(i,j)*ocnrufi)/log(zref*ocnrufi))**c2*sca
-          Cdn_atm_floe(i,j) = ctecaf * hfreebd(i,j) * ai / lfloe(i,j)  
+          Cdn_atm_floe(i,j) = ctecaf * hfreebd(i,j) / lfloe(i,j)  
           Cdn_atm_floe(i,j) = max(min(Cdn_atm_floe(i,j),camax),c0)
         endif
 
@@ -970,7 +962,7 @@
         if (hfreebd(i,j) > puny) then
           sca = (apond)**(c1/(zref*beta))
           lp  = lpmin*(1-apond)+lpmax*apond
-          Cdn_atm_pond(i,j) = ai * cpa*p5*sca*apond*hfreebd(i,j)/lp &
+          Cdn_atm_pond(i,j) = cpa*p5*sca*apond*hfreebd(i,j)/lp &
                    * (log(hfreebd(i,j)*ocnrufi)/log(zref*ocnrufi))**c2
           Cdn_atm_pond(i,j) = min(Cdn_atm_pond(i,j),camax)
         endif
@@ -982,7 +974,7 @@
         if (hdraft(i,j) > puny) then
           scw = c1 - exp(-sl*beta*(c1-ai))
           ctecwf = cfw*p5*(log(hdraft(i,j)*ocnrufi)/log(zref*ocnrufi))**c2*scw
-          Cdn_ocn_floe(i,j) = ctecwf * hdraft(i,j) * ai / lfloe(i,j)
+          Cdn_ocn_floe(i,j) = ctecwf * hdraft(i,j) / lfloe(i,j)
           Cdn_ocn_floe(i,j) = max(min(Cdn_ocn_floe(i,j),cwmax),c0)
         endif
 

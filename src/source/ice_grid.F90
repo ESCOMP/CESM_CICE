@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_grid.F90 861 2014-10-21 16:44:30Z tcraig $
+!  SVN:$Id: ice_grid.F90 907 2015-01-30 04:53:04Z tcraig $
 !=======================================================================
 
 ! Spatial grids, masks, and boundary conditions
@@ -1342,12 +1342,11 @@
       ! local variables
 
       integer (kind=int_kind) :: &
-         i, j,  &
+         i, j, &
          im1     ! i-1
 
       real (kind=dbl_kind), dimension(:,:), allocatable :: &
          work_g2
-
 
       if (my_task == master_task) then
          allocate(work_g2(nx_global,ny_global))
@@ -1367,14 +1366,13 @@
          enddo
       enddo
       ! extrapolate to obtain dyu along j=ny_global
-      !
-      ! using NYGLOB to prevent a compile time out of bounds error when
-      ! ny_global=1 as in the se dycore, this code is not exersized in prescribed mode.
-      !
+      ! for CESM: use NYGLOB to prevent a compile time out of bounds 
+      ! error when ny_global=1 as in the se dycore; this code is not 
+      ! exersized in prescribed mode.
 #if (NYGLOB>2)
       do i = 1, nx_global
-         work_g2(i,ny_global) = c2*work_g(i,ny_global-1) - &
-            work_g(i,ny_global-2) ! dyu
+         work_g2(i,ny_global) = c2*work_g(i,ny_global-1) &
+                                 - work_g(i,ny_global-2) ! dyu
       enddo
 #endif
       endif

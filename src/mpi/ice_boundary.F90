@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_boundary.F90 744 2013-09-27 22:53:24Z eclare $
+!  SVN:$Id: ice_boundary.F90 924 2015-03-03 18:02:36Z tcraig $
 !|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
  module ice_boundary
