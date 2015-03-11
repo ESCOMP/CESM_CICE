@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20150311
+Originator: dbailey
+Date: Mar 11, 2015
+Version: 5.0
+One-line Summary: l_mpond_fresh code
+
+Code that uses the new l_mpond_fresh flag.
+
+M       src/drivers/cesm/CICE_RunMod.F90
+
+===============================================================
 cice5_20150304
 Originator: dbailey
 Date: Mar 4, 2015
