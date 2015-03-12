@@ -1,12 +1,7 @@
 <?xml version="1.0"?>
 
-<!--
+<!-- File with optimized decomposition information for CICE -->
 
-       ConfigInfo.xml					    Nov./15/2007
-
-       File with optimized decomposition information for CICE and CAM
-
--->
 <configInfo>
 
   <decomp>
@@ -14,7 +9,6 @@
     <decompset>null</decompset>
   </decomp>
 
-<!-- -------------------------------------------------------------------------------- -->
   <!-- tx0.1v2 resolution -->
 
   <decomp nproc="18000" res="tx0.1v[1234]" >
@@ -24,7 +18,6 @@
     <decomptype>spacecurve</decomptype>
   </decomp>
 
-<!-- -------------------------------------------------------------------------------- -->
   <!-- ar9v4 resolution -->
 
   <decomp nproc="400" res="ar9v[1234]" >
@@ -91,7 +84,6 @@
   </decomp>
 
 
-<!-- -------------------------------------------------------------------------------- -->
   <!-- gx1v[3456] resolution -->
 
   <decomp nproc="64" res="gx1v[3456]" >

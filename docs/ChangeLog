@@ -1,4 +1,30 @@
 ===============================================================
+cice5_20150312
+Originator: mvertens
+Date: Mar 12, 2015
+Version: 5.0
+One-line Brought cice5 up to date with cime directory structure
+
+M       bld/build-namelist
+D       bld/cice.buildexe.csh
+A       bld/cice.buildlib
+A       bld/cice.buildnml
+D       bld/cice.buildnml.csh
+D       bld/cice.cpl7.template
+	
+M       bld/cice_decomp.xml
+M       bld/configure
+M       bld/generate_cice_decomp.pl
+	
+A       cesmtest
+A       cesmtest/testlist_cice.xml
+A       cesmtest/testmods_dirs
+A       cesmtest/testmods_dirs/cice
+A       cesmtest/testmods_dirs/cice/default
+A       cesmtest/testmods_dirs/cice/default/shell_commands
+A       cesmtest/testmods_dirs/cice/default/user_nl_cice
+	
+===============================================================
 cice5_20150311
 Originator: dbailey
 Date: Mar 11, 2015

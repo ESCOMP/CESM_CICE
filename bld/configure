@@ -34,7 +34,7 @@ use strict;
 #use warnings;
 #use diagnostics;
 
-use Cwd;
+use Cwd qw( getcwd abs_path chdir);
 use English;
 use Getopt::Long;
 use IO::File;
@@ -106,7 +106,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
 if ($ProgDir) { 
-    $cfgdir = absolute_path($ProgDir);
+    $cfgdir = abs_path($ProgDir);
 } else {
     $cfgdir = $cwd;
 }
@@ -175,6 +175,20 @@ my $eol = "\n";
 my %cfg = ();           # build configuration
 
 #-----------------------------------------------------------------------------------------------
+# CESM root directory and perl5lib root directories  
+my $cesmroot = abs_path("$cfgdir/../../../");
+my $perl5lib = "$cesmroot/cime/utils/perl5lib";
+
+if (! -e $cesmroot) {
+    die "** Invalid CESM root directory: $cesmroot ** ";
+}
+if (! -e "$perl5lib") {
+    die "** Invalid perl5lib root directory: $perl5lib ** ";
+}
+
+if ($print>=2) { print "Setting CESM root directory to $cesmroot$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # Make sure we can find required perl modules and configuration files.
 # Look for them in the directory that contains the configure script.
 
@@ -184,23 +198,16 @@ my $config_def_file = "config_files/definition.xml";
 ** Cannot find configuration definition file \"$config_def_file\" in directory \"$cfgdir\" **
 EOF
 
-# The XML::Lite module is required to parse the XML configuration files.
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm") or  die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
-EOF
-
 # The Build::Config module provides utilities to store and manipulate the configuration.
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/Config.pm") or  die <<"EOF";
-** Cannot find perl module \"Build/Config.pm\" in directory \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+(-f "$perl5lib/Build/Config.pm") or  die <<"EOF";
+** Cannot find perl module \"Build/Config.pm\" in directory \"$perl5lib\" **
 EOF
 
 if ($print>=2) { print "Setting CICE configuration script directory to $cfgdir$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-unshift @INC, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib";
-unshift @INC, "$cfgdir";
-require XML::Lite;
+unshift @INC, "$perl5lib";
 require Build::Config;
 
 # Initialize the configuration.  The $config_def_file provides the definition of a CICE
@@ -208,32 +215,13 @@ require Build::Config;
 my $cfg_ref = Build::Config->new("$cfgdir/$config_def_file");
 
 #-----------------------------------------------------------------------------------------------
-# CICE root directory.  
-my $cice_root = absolute_path("$cfgdir/../../../..");
-
-if (-d "$cice_root/models/ice/cice/src") {
-    $cfg_ref->set('cice_root', $cice_root);
-} else {
-    die <<"EOF";
-** Invalid CICE root directory: $cice_root
-** 
-** The CICE root directory must contain the subdirectory models/ice/cice/src/.
-** It is derived from "config_dir/../../../.." where config_dir is the
-** directory in the CICE distribution that contains the configuration
-** scripts.
-EOF
-}
-
-if ($print>=2) { print "Setting CICE root directory to $cice_root$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # CICE build directory.
 my $cice_bld;
 if (defined $opts{'cice_bld'}) {
-    $cice_bld = absolute_path($opts{'cice_bld'});
+    $cice_bld = abs_path($opts{'cice_bld'});
 }
 else { # use default value
-    $cice_bld = absolute_path($cfg_ref->get('cice_bld'));
+    $cice_bld = abs_path($cfg_ref->get('cice_bld'));
 }
 
 if (-d $cice_bld or mkdirp($cice_bld)) {
@@ -253,7 +241,7 @@ if ($print>=2) { print "Setting CICE build directory to $cice_bld$eol"; }
 my $config_cache_dir;
 my $config_cache_file;
 if (defined $opts{'cachedir'}) {
-    $config_cache_dir = absolute_path($opts{'cachedir'});
+    $config_cache_dir = abs_path($opts{'cachedir'});
 }
 else {
     $config_cache_dir = $cfg_ref->get('cice_bld');
@@ -545,10 +533,12 @@ EOF
 	} else {
 	    
 	    # If not serial, use the script provided by CICE to generate the default decomposition
-	    my $cice_decomp_gen = "$cice_root/models/ice/cice/bld/generate_cice_decomp.pl -res $hgrid -nproc $cice_ntasks -thrds $cice_nthreads -output all";
+	    my $cice_decomp_gen = "$cesmroot/components/cice/bld/generate_cice_decomp.pl";
+	    $cice_decomp_gen .=  "-ccsmroot $cesmroot -res $hgrid ";
+	    $cice_decomp_gen .=  "-nproc $cice_ntasks -thrds $cice_nthreads -output all";
 	    $cice_decomp_gen .= " -nx $nlon -ny $nlat" if (defined ($nlon) && defined ($nlat));
 	    my $cice_decomp = `$cice_decomp_gen `;
-	    
+
 	    # check for error
 	    if ($cice_decomp =~ /No Decomp Created/) {
 		die <<"EOF";
@@ -602,7 +592,7 @@ my $fp_filename      = 'Filepath';             # name of output filepath file
 my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
 
 # Write the filepath file for ccsm.
-write_filepath("$cice_bld/$fp_filename", $cfg_ref);
+write_filepath("$cice_bld/$fp_filename", $cesmroot);
 if ($print>=2) { print "creating $cice_bld/$fp_filename\n"; }
 
 # Write the file for cice's cppdefs needed in ccsm.
@@ -631,20 +621,19 @@ exit;
 
 sub write_filepath
 {
-    my ($file, $cfg_ref) = @_;
+    my ($file, $cesmroot) = @_;
     my  $fh = new IO::File;
 
     my $CASEROOT = "$ENV{'CASEROOT'}";
-    my $CODEROOT = "$ENV{'CODEROOT'}";
 
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
     print $fh "$CASEROOT/SourceMods/src.cice\n";
-    print $fh "$CODEROOT/ice/cice/src/drivers/cesm\n";
-    print $fh "$CODEROOT/ice/cice/src/io_pio\n";
-#    print $fh "$CODEROOT/ice/cice/src/io_netcdf\n";
-    print $fh "$CODEROOT/ice/cice/src/mpi\n";
-    print $fh "$CODEROOT/ice/cice/src/source\n";
+    print $fh "$cesmroot/components/cice/src/drivers/cesm\n";
+    print $fh "$cesmroot/components/cice/src/io_pio\n";
+   #print $fh "$cesmroot/components/cice/src/io_netcdf\n";
+    print $fh "$cesmroot/components/cice/src/mpi\n";
+    print $fh "$cesmroot/components/cice/src/source\n";
 
     $fh->close;
 }
@@ -665,96 +654,6 @@ sub write_cppdefs
 
 #-------------------------------------------------------------------------------
 
-sub absolute_path {
-#
-# Convert a pathname into an absolute pathname, expanding any . or .. characters.
-# Assumes pathnames refer to a local filesystem.
-# Assumes the directory separator is "/".
-#
-  my $path = shift;
-  my $cwd = getcwd();  # current working directory
-  my $abspath;         # resulting absolute pathname
-
-# Strip off any leading or trailing whitespace.  (This pattern won't match if
-# there's embedded whitespace.
-  $path =~ s!^\s*(\S*)\s*$!$1!;
-
-# Convert relative to absolute path.
-
-  if ($path =~ m!^\.$!) {          # path is "."
-      return $cwd;
-  } elsif ($path =~ m!^\./!) {     # path starts with "./"
-      $path =~ s!^\.!$cwd!;
-  } elsif ($path =~ m!^\.\.$!) {   # path is ".."
-      $path = "$cwd/..";
-  } elsif ($path =~ m!^\.\./!) {   # path starts with "../"
-      $path = "$cwd/$path";
-  } elsif ($path =~ m!^[^/]!) {    # path starts with non-slash character
-      $path = "$cwd/$path";
-  }
-
-  my ($dir, @dirs2);
-  my @dirs = split "/", $path, -1;   # The -1 prevents split from stripping trailing nulls
-                                     # This enables correct processing of the input "/".
-
-  # Remove any "" that are not leading.
-  for (my $i=0; $i<=$#dirs; ++$i) {
-      if ($i == 0 or $dirs[$i] ne "") {
-	  push @dirs2, $dirs[$i];
-      }
-  }
-  @dirs = ();
-
-  # Remove any "."
-  foreach $dir (@dirs2) {
-      unless ($dir eq ".") {
-	  push @dirs, $dir;
-      }
-  }
-  @dirs2 = ();
-
-  # Remove the "subdir/.." parts.
-  foreach $dir (@dirs) {
-    if ( $dir !~ /^\.\.$/ ) {
-        push @dirs2, $dir;
-    } else {
-        pop @dirs2;   # remove previous dir when current dir is ..
-    }
-  }
-  if ($#dirs2 == 0 and $dirs2[0] eq "") { return "/"; }
-  $abspath = join '/', @dirs2;
-  return( $abspath );
-}
-
-#-------------------------------------------------------------------------------
-
-sub subst_env_path {
-#
-# Substitute for any environment variables contained in a pathname.
-# Assumes the directory separator is "/".
-#
-  my $path = shift;
-  my $newpath;         # resulting pathname
-
-# Strip off any leading or trailing whitespace.  (This pattern won't match if
-# there's embedded whitespace.
-  $path =~ s!^\s*(\S*)\s*$!$1!;
-
-  my ($dir, @dirs2);
-  my @dirs = split "/", $path, -1;   # The -1 prevents split from stripping trailing nulls
-                                     # This enables correct processing of the input "/".
-
-  foreach $dir (@dirs) {
-    if ( $dir =~ /^\$(.+)$/ ) {
-        push @dirs2, $ENV{$1};
-    } else {
-        push @dirs2, $dir;
-    }
-  }
-  $newpath = join '/', @dirs2;
-  return( $newpath );
-}
-
 #-------------------------------------------------------------------------------
 
 sub mkdirp {
@@ -771,50 +670,6 @@ sub mkdirp {
 	unless (-d $path or mkdir($path, 0777)) { return 0; }
     }
     return 1;
-}
-
-#-------------------------------------------------------------------------------
-
-sub get_option {
-
-    my ($mes, @expect) = @_;
-    my ($ans, $expect, $max_tries);
-
-    $max_tries = 5;
-    print $mes;
-    while ($max_tries) {
-	$ans = <>; chomp $ans;
-	--$max_tries;
-	$ans =~ s/^\s+//;
-	$ans =~ s/\s+$//;
-	# Check for null response which indicates that default is accepted.
-	unless ($ans) { return ""; }
-	foreach $expect (@expect) {
-	    if ($ans =~ /^$expect$/i) { return $expect; }
-	}
-	if ($max_tries > 1) {
-	    print "$ans does not match any of the expected values: @expect\n";
-	    print "Please try again: ";
-	} elsif ($max_tries == 1) {
-	    print "$ans does not match any of the expected values: @expect\n";
-	    print "Last chance! ";
-	}
-    }
-    die "Failed to get answer to question: $mes\n";
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_tests_filepath
-{
-    my ($test_dir) = @_;
-    my  $fh = new IO::File;
-
-    $fh->open(">Filepath") or die "** can't open file: $test_dir/Filepath\n";
-
-    print $fh "$test_dir\n";
-
-    $fh->close;
 }
 
 #-------------------------------------------------------------------------------
@@ -839,20 +694,3 @@ sub version {
 
 }
 
-
-#-------------------------------------------------------------------------------
-sub print_hash {
-    my %h = @_;
-    my ($k, $v);
-    while ( ($k,$v) = each %h ) { print "$k => $v\n"; }
-}
-
-
-#-------------------------------------------------------------------------------
-sub clean
-{
-    my ($name) = @_;
-    $name =~ s/^\s+//; # strip any leading whitespace 
-    $name =~ s/\s+$//; # strip any trailing whitespace
-    return ($name);
-}
