@@ -197,7 +197,7 @@
       ! dynamics, transport, ridging
       !-----------------------------------------------------------------
 
-         if (.not.prescribed_ice) then
+         if (.not.prescribed_ice .and. kdyn>0) then
          do k = 1, ndtd
             call step_dynamics (dt_dyn, ndtd)
          enddo

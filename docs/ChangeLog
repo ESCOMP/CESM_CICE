@@ -1,4 +1,19 @@
 ===============================================================
+cice5_20150320
+Originator: mvertens
+Date: Mar 20, 2015
+Version: 5.0
+One-line Summary: Fix some namelist choices.
+
+During one of the commits, ntr_aero and kalg were not set
+properly. These are fixes for that. Also, the behavior when
+kdyn = 0 was fixed.
+
+M       bld/configure
+M       bld/build-namelist
+M       src/drivers/cesm/CICE_RunMod.F90
+
+===============================================================
 cice5_20150312
 Originator: mvertens
 Date: Mar 12, 2015

@@ -300,7 +300,11 @@ if (defined $opts{'nsnwlyr'}) {
 if (defined $opts{'ntr_aero'}) {
     $cfg_ref->set('ntr_aero', $opts{'ntr_aero'});
 } else {
-    $cfg_ref->set('ntr_aero', 0);
+    if ($cice_mode eq 'prescribed') {
+        $cfg_ref->set('ntr_aero', 0);
+    } else {
+        $cfg_ref->set('ntr_aero', 3);
+    }
 }
 
 if (defined $opts{'trage'}) {

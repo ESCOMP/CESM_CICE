@@ -479,6 +479,7 @@ add_default($nl, 'albicei');
 add_default($nl, 'albsnowv');
 add_default($nl, 'albsnowi');
 add_default($nl, 'ahmax');
+add_default($nl, 'kalg');
 if ($cam4) {
     add_default($nl, 'R_ice'       , 'cam4'=>'.true.');
     add_default($nl, 'R_pnd'       , 'cam4'=>'.true.');
@@ -491,7 +492,6 @@ if ($cam4) {
     add_default($nl, 'R_snw'       );
     add_default($nl, 'dT_mlt'   );
     add_default($nl, 'rsnw_mlt');
-    add_default($nl, 'kalg');
 }    
 
 
