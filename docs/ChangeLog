@@ -1,6 +1,21 @@
 ===============================================================
+cice5_20150323
+Originator: dbailey
+Date: Mar 23, 2015
+Version: 5.0
+One-line Summary: Fix the testlist area.
+
+D       cesmtest
+A  +    cimetest
+A       cimetest/testmods_dirs/cice/pop
+A       cimetest/testmods_dirs/cice/pop/user_nl_pop2
+A       cimetest/testmods_dirs/cice/pop/shell_commands
+A       cimetest/testmods_dirs/cice/pop/user_nl_cice
+M  +    cimetest/testlist_cice.xml
+
+===============================================================
 cice5_20150320
-Originator: mvertens
+Originator: dbailey
 Date: Mar 20, 2015
 Version: 5.0
 One-line Summary: Fix some namelist choices.
