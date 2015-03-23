@@ -3,7 +3,7 @@
   <compset name="B1850C5">
     <grid name="f19_g16">
       <test name="ERS_Ld7">
-        <machine compiler="intel" testtype="aux_cice" testmods="cice-pop/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_cice" testmods="cice/pop">yellowstone</machine>
       </test>
     </grid>
   </compset>
@@ -77,7 +77,7 @@
   <compset name="G">
     <grid name="T62_g37">
       <test name="ERS_Ld7">
-        <machine compiler="intel" testtype="aux_cice" testmods="cice-pop/default">yellowstone</machine>
+        <machine compiler="intel" testtype="aux_cice" testmods="cice/pop">yellowstone</machine>
       </test>
     </grid>
   </compset>
