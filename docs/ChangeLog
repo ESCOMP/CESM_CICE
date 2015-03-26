@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150326
+Originator: dbailey
+Date: Mar 26, 2015
+Version: 5.0
+One-line Summary: Fix filename length for restarts.
+
+M       src/source/ice_restart_shared.F90
+
+===============================================================
 cice5_20150323
 Originator: dbailey
 Date: Mar 23, 2015
