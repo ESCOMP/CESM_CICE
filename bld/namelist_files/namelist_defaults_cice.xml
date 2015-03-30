@@ -11,7 +11,7 @@
 <restart_format>'pio'</restart_format>
 <restart_ext> .false. </restart_ext>
 <restart_file>'unknown'</restart_file>
-<ice_ic>'none'</ice_ic>
+<ice_ic>ice/cice/b40_20th_1d_b08c5cn_139jp.cice5.r.2006-01-01-00000.nc</ice_ic>
 <ice_ic hgrid='ar9v3'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
 <ice_ic hgrid='ar9v4'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
 

@@ -63,7 +63,6 @@ OPTIONS
      -scriptsroot          SCRIPTSROOT directory variable
      -inst_string          INST_STRING variable
 
-
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       1. namelist values set by specific command-line options, i.e., -dir 
       2. values set on the command-line using the -namelist option,
@@ -154,12 +153,18 @@ EOF
 if ($print>=2) { print "Using CICE configuration cache file $opts{'config'}$eol"; }
 
 my $CASEROOT;
-my $SCRIPTSROOT;      
-my $INST_STRING;
 my $RUNDIR;
 if ( defined $opts{'caseroot'} ) {
     $CASEROOT    = $opts{'caseroot'}; 
+}
+
+my $SCRIPTSROOT;      
+if ( defined $opts{'scriptsroot'} ) {
     $SCRIPTSROOT = $opts{'scriptsroot'};       
+}
+
+my $INST_STRING;
+if ( defined $opts{'inst_string'} ) {
     $INST_STRING = $opts{'inst_string'}; 
     $RUNDIR      = $opts{'rundir'};
 }
@@ -224,7 +229,7 @@ if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-unshift @INC, "$perl5lib", "$CASEROOT/Tools";
+unshift @INC, "$perl5lib", "$CASEROOT/Tools", "$cesmroot/cime/scripts/Tools";
 require Build::Config;
 require Build::NamelistDefinition;
 require Build::NamelistDefaults;

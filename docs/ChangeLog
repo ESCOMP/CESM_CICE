@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20150330
+Originator: dbailey
+Date: Mar 30, 2015
+Version: 5.0
+One-line Summary: Standalone CAM fixes and change default
+   initial file.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20150326
 Originator: dbailey
 Date: Mar 26, 2015
