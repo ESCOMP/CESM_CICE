@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20150331
+Originator: dbailey
+Date: Mar 30, 2015
+Version: 5.0
+One-line Summary: Add default initial files for all resolutions.
+
+Also, change the physics defaults for tx0.1v2 so they are the
+same as gx1v6.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20150330
 Originator: dbailey
 Date: Mar 30, 2015
