@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150401
+Originator: dbailey
+Date: Apr 01, 2015
+Version: 5.0
+One-line Summary: New default decomps.
+
+M       bld/cice_decomp.xml
+
+===============================================================
 cice5_20150331
 Originator: dbailey
 Date: Mar 30, 2015
