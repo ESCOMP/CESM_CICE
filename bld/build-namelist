@@ -431,6 +431,7 @@ if ( defined $opts{'caseroot'} ) {
 add_default($nl, 'ndtd');
 add_default($nl, 'year_init');
 add_default($nl, 'histfreq');
+add_default($nl, 'dumpfreq');
 add_default($nl, 'histfreq_n');
 add_default($nl, 'hist_avg');
 add_default($nl, 'diagfreq');

@@ -190,6 +190,15 @@ Default: 'mxxxx'
 </entry>
 
 <entry 
+id="dumpfreq" 
+type="char*1"  
+category="setup" 
+group="setup_nml" >
+frequency of history output (once per 1,h,d,m,y) 
+Default: 'x'
+</entry>
+
+<entry 
 id="histfreq_n" 
 type="integer(5)"  
 category="setup" 

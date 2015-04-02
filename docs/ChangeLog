@@ -1,6 +1,20 @@
 ===============================================================
 cice5_20150401
 Originator: dbailey
+Date: Apr 02, 2015
+Version: 5.0
+One-line Summary: Let driver handle the restarts.
+
+Add dumpfreq = 'x' to the namelist to let the driver handle
+the restarts.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
+cice5_20150401
+Originator: dbailey
 Date: Apr 01, 2015
 Version: 5.0
 One-line Summary: New default decomps.

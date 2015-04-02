@@ -190,6 +190,8 @@
 <histfreq_n  >1,0,0,0,0           </histfreq_n>
 <hist_avg    >.true.  </hist_avg> 
 
+<dumpfreq               >'x' </dumpfreq> 
+
 <!--- diagnostic information --->
 
 <diagfreq> 24   </diagfreq>
