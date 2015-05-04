@@ -386,7 +386,11 @@ if ( defined $opts{'caseroot'} ) {
         if ($ice_ic =~ 'none') {
            add_default($nl, 'ice_ic', 'noprepend'=>'1');
         } else {
-           add_default($nl, 'ice_ic');
+           if ($ice_ic =~ 'default') {
+              add_default($nl, 'ice_ic', 'noprepend'=>'1');
+           } else {
+              add_default($nl, 'ice_ic');
+           }
         }
     }
     if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {	
@@ -595,24 +599,27 @@ add_default($nl, 'restart_aero');
 # namelist group: domain_nml     #
 ##################################
 
+my $cice_decompsetting = 'null';
 if (defined $xmlvars{'CICE_DECOMPSETTING'}) {
-  add_default($nl, 'processor_shape', 'val'=>"$xmlvars{'CICE_DECOMPSETTING'}");
-} else {
-  add_default($nl, 'processor_shape');
+  $cice_decompsetting = $xmlvars{'CICE_DECOMPSETTING'};
 }
-
+if ($cice_decompsetting eq 'null') {
+   add_default($nl, 'processor_shape');
+} else {
+   add_default($nl, 'processor shape', 'val'=>"$cice_decompsetting");
+}
 if (defined $xmlvars{'CICE_DECOMPTYPE'}) {
     add_default($nl, 'distribution_type', 'val'=>"$xmlvars{'CICE_DECOMPTYPE'}");
 } else {
     add_default($nl, 'distribution_type');
-    my $distribution_type = $nl->get_value('distribution_type');
-    if ($distribution_type =~ 'spacecurve') {
-	add_default($nl, 'distribution_wght'); 
-    }
 }
-my $distribution_wght = $nl->get_value('distribution_wght');
-if ($distribution_wght =~ 'file') {
-  add_default($nl, 'distribution_wght_file');
+my $distribution_type = $nl->get_value('distribution_type');
+if ($distribution_type =~ 'spacecurve') {
+    add_default($nl, 'distribution_wght', 'distribution_type'=>'spacecurve'); 
+    my $distribution_wght = $nl->get_value('distribution_wght');
+    if ($distribution_wght =~ 'file') {
+      add_default($nl, 'distribution_wght_file', 'distribution_wght'=>'file');
+    }
 }
 add_default($nl, 'ew_boundary_type');
 add_default($nl, 'ns_boundary_type');

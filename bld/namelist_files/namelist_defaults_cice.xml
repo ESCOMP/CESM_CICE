@@ -19,7 +19,10 @@
 <ice_ic hgrid='ar9v4'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
 
 <dt> 3600.0 </dt> 
-<year_init              > 1 </year_init>
+
+<year_init              > 0 </year_init>
+<year_init hgrid='ar9v3'> 1 </year_init>
+<year_init hgrid='ar9v4'> 1 </year_init>
 
 <ndtd                   > 1 </ndtd>
 <ndtd hgrid="tx0.1v2"   > 3 </ndtd>
@@ -299,15 +302,17 @@
 <!---- Domain namelist  ----->
 <!--------------------------->
 
-<distribution_type                       >'cartesian' </distribution_type>
-<distribution_type hgrid='tx0.1v2'       >'spacecurve'</distribution_type>
-<distribution_type cice_mode='prescribed'>'roundrobin'</distribution_type>
-<distribution_wght                    >'block'     </distribution_wght>
-<distribution_wght_file               >'unknown_file'</distribution_wght_file>
 <processor_shape                      >'square-pop' </processor_shape>
 
+<distribution_type                       >'cartesian' </distribution_type>
+<distribution_type hgrid="tx0.1v2"       >'spacecurve'</distribution_type>
+<distribution_type cice_mode="prescribed">'roundrobin'</distribution_type>
+
+<distribution_wght                    >'block'     </distribution_wght>
 <distribution_wght distribution_type='spacecurve'>'erfc'</distribution_wght>
-<distribution_wght hgrid='tx0.1v2' distribution_type='spacecurve'>'file'</distribution_wght>
+<distribution_wght hgrid="tx0.1v2" distribution_type='spacecurve'>'file'</distribution_wght>
+
+<distribution_wght_file               >'unknown_file'</distribution_wght_file>
 <distribution_wght_file hgrid='tx0.1v2' distribution_wght='file'>'ice/cice/ice_present.0002.tx0.1v2.081119.nc'</distribution_wght_file>
 
 <ew_boundary_type>'cyclic'</ew_boundary_type>

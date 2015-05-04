@@ -1,4 +1,17 @@
 ===============================================================
+cice5_20150504
+Originator: dbailey
+Date: May 04, 2015
+Version: 5.0
+One-line Summary: Branch fixes for time and distribution.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_domain.F90
+M       src/drivers/cesm/ice_comp_esmf.F90
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20150403
 Originator: dbailey
 Date: Apr 03, 2015
