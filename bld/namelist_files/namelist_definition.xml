@@ -1563,6 +1563,13 @@ group="icefields_nml" >
 </entry>
 
 <entry
+id="f_fs"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
 id="f_Tsfc"
 type="char*5"
 category="history"
@@ -1606,6 +1613,13 @@ group="icefields_nml" >
 
 <entry
 id="f_fswdn"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_fswup"
 type="char*5"
 category="history"
 group="icefields_nml" >

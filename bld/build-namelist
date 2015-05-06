@@ -606,7 +606,7 @@ if (defined $xmlvars{'CICE_DECOMPSETTING'}) {
 if ($cice_decompsetting eq 'null') {
    add_default($nl, 'processor_shape');
 } else {
-   add_default($nl, 'processor shape', 'val'=>"$cice_decompsetting");
+   add_default($nl, 'processor_shape', 'val'=>"$cice_decompsetting");
 }
 if (defined $xmlvars{'CICE_DECOMPTYPE'}) {
     add_default($nl, 'distribution_type', 'val'=>"$xmlvars{'CICE_DECOMPTYPE'}");

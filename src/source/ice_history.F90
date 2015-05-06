@@ -203,6 +203,7 @@
 !     call broadcast_scalar (f_example, master_task)
       call broadcast_scalar (f_hi, master_task)
       call broadcast_scalar (f_hs, master_task)
+      call broadcast_scalar (f_fs, master_task)
       call broadcast_scalar (f_Tsfc, master_task)
       call broadcast_scalar (f_aice, master_task)
       call broadcast_scalar (f_uvel, master_task)
@@ -211,6 +212,7 @@
       call broadcast_scalar (f_vatm, master_task)
       call broadcast_scalar (f_sice, master_task)
       call broadcast_scalar (f_fswdn, master_task)
+      call broadcast_scalar (f_fswup, master_task)
       call broadcast_scalar (f_flwdn, master_task)
       call broadcast_scalar (f_snow, master_task)
       call broadcast_scalar (f_snow_ai, master_task)
@@ -342,6 +344,11 @@
              "snow volume per unit grid cell area", c1, c0,       &
              ns1, f_hs)
 
+         call define_hist_field(n_fs,"fs","m",tstr2D, tcstr,        &
+             "grid cell mean snow fraction",                     &
+             "snow fraction per unit grid cell area", c1, c0,       &
+             ns1, f_fs)
+
          call define_hist_field(n_Tsfc,"Tsfc","C",tstr2D, tcstr,    &
              "snow/ice surface temperature",                      &
              "averaged with Tf if no ice is present", c1, c0,     &
@@ -381,6 +388,11 @@
              "down solar flux",                                      &
              "positive downward", c1, c0,                            &
              ns1, f_fswdn)
+      
+         call define_hist_field(n_fswup,"fswup","W/m^2",tstr2D, tcstr, &
+             "upward solar flux",                                      &
+             "positive upward", c1, c0,                            &
+             ns1, f_fswup)
       
          call define_hist_field(n_flwdn,"flwdn","W/m^2",tstr2D, tcstr, &
              "down longwave flux",                                   &
@@ -1117,7 +1129,7 @@
 
       use ice_blocks, only: block, get_block, nx_block, ny_block
       use ice_constants, only: c0, c1, p25, puny, secday, depressT, &
-          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhos, cp_ice, spval
+          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhos, cp_ice, spval, hs_min
       use ice_domain, only: blocks_ice, nblocks
       use ice_grid, only: tmask, lmask_n, lmask_s
       use ice_calendar, only: new_year, write_history, &
@@ -1141,6 +1153,7 @@
           stressp_4, stressm_4, stress12_4, sig1, sig2, &
           mlt_onset, frz_onset, dagedtt, dagedtd, fswint_ai, keffn_top
       use ice_atmo, only: formdrag
+      use ice_meltpond_cesm, only: hs0
       use ice_history_shared ! almost everything
       use ice_history_write, only: ice_write_hist
       use ice_history_bgc, only: accum_hist_bgc
@@ -1170,6 +1183,7 @@
 
       real (kind=dbl_kind) :: & 
            qn                , & ! temporary variable for enthalpy
+           hs                , & ! temporary variable for snow depth
            Tmlts                 !  temporary variable for melting temperature
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -1242,7 +1256,7 @@
       !---------------------------------------------------------------
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block, &
-      !$OMP                     k,n,qn,ns,worka,workb)
+      !$OMP                     k,n,qn,ns,hs,worka,workb)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1250,14 +1264,28 @@
          jlo = this_block%jlo
          jhi = this_block%jhi
 
-         workb(:,:) = aice_init(:,:,iblk)
-
 !        if (f_example(1:1) /= 'x') &
 !            call accum_hist_field(n_example,iblk, vice(:,:,iblk), a2D)
          if (f_hi     (1:1) /= 'x') &
              call accum_hist_field(n_hi,     iblk, vice(:,:,iblk), a2D)
          if (f_hs     (1:1) /= 'x') &
              call accum_hist_field(n_hs,     iblk, vsno(:,:,iblk), a2D)
+         if (f_fs(1:1) /= 'x') then
+            worka(:,:) = c0
+            do n=1,ncat_hist
+               workb(:,:) = aicen_init(:,:,n,iblk)
+               do j = jlo, jhi
+               do i = ilo, ihi
+                  hs = c0
+                  if (workb(i,j) > puny) &
+                     hs = vsnon(i,j,n,iblk)/workb(i,j)
+                  if (hs >= hs_min) &
+                     worka(i,j) = worka(i,j) + workb(i,j)*min( hs/hs0, c1)
+               enddo
+               enddo
+            enddo
+            call accum_hist_field(n_fs, iblk, worka(:,:), a2D)
+         endif
          if (f_Tsfc   (1:1) /= 'x') &
              call accum_hist_field(n_Tsfc,   iblk, trcr(:,:,nt_Tsfc,iblk), a2D)
          if (f_aice   (1:1) /= 'x') &
@@ -1286,6 +1314,12 @@
 
          if (f_fswdn  (1:1) /= 'x') &
              call accum_hist_field(n_fswdn,  iblk, fsw(:,:,iblk), a2D)
+
+         workb(:,:) = aice_init(:,:,iblk)
+
+         if (f_fswup(1:1) /= 'x') &
+            call accum_hist_field(n_fswup, iblk, &
+                 (fsw(:,:,iblk)-fswabs(:,:,iblk)*workb(:,:)), a2D)
          if (f_flwdn  (1:1) /= 'x') &
              call accum_hist_field(n_flwdn,  iblk, flw(:,:,iblk), a2D)
          if (f_snow   (1:1) /= 'x') &

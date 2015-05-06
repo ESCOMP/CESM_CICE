@@ -432,6 +432,8 @@
 <f_hs hgrid="ar9v4"         >'mdhxx'</f_hs>
 <f_hs cice_mode='prescribed'>'xxxxx'</f_hs>
 
+<f_fs                       >'mxxxx'</f_fs>
+
 <f_Tsfc                       >'mxxxx'</f_Tsfc>
 <f_Tsfc hgrid="ar9v4"         >'mdhxx'</f_Tsfc>
 <f_Tsfc cice_mode='prescribed'>'xxxxx'</f_Tsfc>
@@ -463,6 +465,8 @@
 <f_fswdn                       >'xxxxx'</f_fswdn>
 <f_fswdn hgrid="ar9v4"         >'mdhxx'</f_fswdn>
 <f_fswdn cice_mode='prescribed'>'xxxxx'</f_fswdn>
+
+<f_fswup                       >'xxxxx'</f_fswup>
 
 <f_flwdn                       >'xxxxx'</f_flwdn>
 <f_flwdn hgrid="ar9v4"         >'mdhxx'</f_flwdn>

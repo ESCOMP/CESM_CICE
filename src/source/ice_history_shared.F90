@@ -184,10 +184,12 @@
       character (len=max_nstrm), public :: &
 !          f_example   = 'md', &
            f_hi        = 'm', f_hs         = 'm', &
+           f_fs        = 'm', &
            f_Tsfc      = 'm', f_aice       = 'm', &
            f_uvel      = 'm', f_vvel       = 'm', &
            f_uatm      = 'm', f_vatm       = 'm', &
            f_fswdn     = 'm', f_flwdn      = 'm', &
+           f_fswup     = 'm', &
            f_snow      = 'm', f_snow_ai    = 'm', &
            f_rain      = 'm', f_rain_ai    = 'm', &
            f_sst       = 'm', f_sss        = 'm', &
@@ -265,10 +267,12 @@
            f_VGRDb    , &
 !          f_example  , &
            f_hi,        f_hs       , &
+           f_fs, &
            f_Tsfc,      f_aice     , &
            f_uvel,      f_vvel     , &
            f_uatm,      f_vatm     , &
            f_fswdn,     f_flwdn    , &
+           f_fswup, &
            f_snow,      f_snow_ai  , &     
            f_rain,      f_rain_ai  , &
            f_sst,       f_sss      , &
@@ -361,11 +365,13 @@
       integer (kind=int_kind), dimension(max_nstrm), public :: &
 !          n_example    , &
            n_hi         , n_hs         , &
+           n_fs, &
            n_Tsfc       , n_aice       , &
            n_uvel       , n_vvel       , &
            n_uatm       , n_vatm       , &
            n_sice       , &
            n_fswdn      , n_flwdn      , &
+           n_fswup, &
            n_snow       , n_snow_ai    , &
            n_rain       , n_rain_ai    , &
            n_sst        , n_sss        , &
