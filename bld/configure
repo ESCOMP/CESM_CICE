@@ -81,7 +81,8 @@ OPTIONS
      -ntasks <n>         Number of MPI tasks.  
      -nthreads <n>       Number of OMP threads per process.  Setting nthreads > 0 implies smp.
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
-     -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5,6, default is 3)
+     -ntr_aero <n>       Turns on aerosol tracers (valid values are 0,1,2,3,4,5,6, default is 3)
+     -ntr_iso <n>       Turns on isotope tracers (valid values are 0,1,2,3 default is 3)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CICE distribution.
@@ -134,6 +135,7 @@ GetOptions(
     "nx=i"                      => \$opts{'nx'},
     "ny=i"                      => \$opts{'ny'},
     "ntr_aero=s"                => \$opts{'ntr_aero'},
+    "ntr_iso=s"                => \$opts{'ntr_iso'},
     "nicelyr=s"                 => \$opts{'nicelyr'},
     "nsnwlyr=s"                 => \$opts{'nsnwlyr'},
     "trlvl=s"                   => \$opts{'trlvl'},
@@ -307,6 +309,16 @@ if (defined $opts{'ntr_aero'}) {
     }
 }
 
+if (defined $opts{'ntr_iso'}) {
+    $cfg_ref->set('ntr_iso', $opts{'ntr_iso'});
+} else {
+    if ($cice_mode eq 'prescribed') {
+        $cfg_ref->set('ntr_iso', 0);
+    } else {
+        $cfg_ref->set('ntr_iso', 3);
+    }
+}
+
 if (defined $opts{'trage'}) {
     $cfg_ref->set('trage', $opts{'trage'});
 } else {
@@ -412,6 +424,13 @@ if ($ntr_aero gt "6"){
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
 EOF
 }
+my $ntr_iso = $cfg_ref->get('ntr_iso');
+if (defined $opts{'ntr_iso'}) {$ntr_iso = $opts{'ntr_iso'}};
+if ($ntr_iso gt "3"){ 
+    die <<"EOF";
+**  ERROR: ntr_iso value of $ntr_iso is invalid, only values less than 3 are supported
+EOF
+}
 
 my $nicelyr = $cfg_ref->get('nicelyr');
 my $nsnwlyr = $cfg_ref->get('nsnwlyr');
@@ -423,7 +442,7 @@ my $trpnd   = $cfg_ref->get('trpnd');
 my $trbri   = $cfg_ref->get('trbri');
 my $trbgcs  = $cfg_ref->get('trbgcs');
 
-my $cice_cppdefs = " -DCCSMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNBGCLYR=$nbgclyr -DNICELYR=$nicelyr -DNSNWLYR=$nsnwlyr -DTRAGE=$trage -DTRFY=$trfy -DTRLVL=$trlvl -DTRPND=$trpnd -DTRBRI=$trbri -DTRBGCS=$trbgcs";
+my $cice_cppdefs = " -DCCSMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 -DNICECAT=$ncat -DNXGLOB=$nlon -DNYGLOB=$nlat -DNTRAERO=$ntr_aero -DNTRISO=$ntr_iso -DNBGCLYR=$nbgclyr -DNICELYR=$nicelyr -DNSNWLYR=$nsnwlyr -DTRAGE=$trage -DTRFY=$trfy -DTRLVL=$trlvl -DTRPND=$trpnd -DTRBRI=$trbri -DTRBGCS=$trbgcs";
 
 # Trigger RASM options with ar9v grid, otherwise set CESM options
 if ($hgrid =~ m/ar9v.*/ ) {

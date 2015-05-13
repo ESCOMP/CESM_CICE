@@ -587,6 +587,13 @@ if ($ntr_aero gt "0") {
    add_default($nl, 'tr_aero', 'val'=>'.false.');
 }
 
+my $ntr_iso = $cfg->get('ntr_iso');
+if ($ntr_iso gt "0") {
+   add_default($nl, 'tr_iso');
+} else {
+   add_default($nl, 'tr_iso', 'val'=>'.false.');
+}
+
 add_default($nl, 'restart_lvl');
 add_default($nl, 'restart_age');
 add_default($nl, 'restart_FY');
@@ -594,6 +601,7 @@ add_default($nl, 'restart_pond_cesm');
 add_default($nl, 'restart_pond_lvl');
 add_default($nl, 'restart_pond_topo');
 add_default($nl, 'restart_aero');
+add_default($nl, 'restart_iso');
 
 ##################################
 # namelist group: domain_nml     #
@@ -879,6 +887,10 @@ add_default($nl, 'f_faero_atm');
 add_default($nl, 'f_faero_ocn');
 add_default($nl, 'f_aero');
 add_default($nl, 'f_aeron');
+add_default($nl, 'f_fiso_atm');
+add_default($nl, 'f_fiso_ocn');
+add_default($nl, 'f_iso');
+add_default($nl, 'f_ison');
 add_default($nl, 'f_fNO');
 add_default($nl, 'f_fNO_ai');
 add_default($nl, 'f_fNH');

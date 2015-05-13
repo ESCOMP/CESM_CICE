@@ -52,6 +52,7 @@
       subroutine cice_init(mpicom_ice)
 
       use ice_aerosol, only: faero_default
+      use ice_istope
       use ice_algae, only: get_forcing_bgc
       use ice_calendar, only: dt, dt_dyn, write_ic, &
           init_calendar, calendar, time
@@ -73,7 +74,7 @@
       use ice_kinds_mod
       use ice_restoring, only: ice_HaloRestore_init
       use ice_shortwave, only: init_shortwave
-      use ice_state, only: tr_aero
+      use ice_state, only: tr_aero, tr_iso
       use ice_therm_vertical, only: init_thermo_vertical
       use ice_timers, only: timer_total, init_ice_timers, ice_timer_start
       use ice_transport_driver, only: init_transport
@@ -284,6 +285,7 @@
          endif ! .not restart_pond
       endif
       if (tr_aero)  call init_aerosol ! ice aerosol
+      if (tr_iso)   call init_isotope ! ice isotopes
       if (tr_brine) call init_hbrine  ! brine height tracer
       if (skl_bgc)  call init_bgc     ! biogeochemistry
 

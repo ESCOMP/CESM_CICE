@@ -78,6 +78,10 @@
          totaeron         , & ! total aerosol mass
          totaeros             ! total aerosol mass
 
+      real (kind=dbl_kind), dimension(max_iso) :: &
+         totison         , & ! total isotope mass
+         totisos             ! total isotope mass
+
       ! printing info for routine print_state
       ! iblkp, ip, jp, mtask identify the grid cell to print
       character (char_len) :: plabel
@@ -108,13 +112,13 @@
           rhofresh, Tffresh, Lfresh, Lvap, ice_ref_salinity, field_loc_center, &
           m2_to_km2, awtvdr, awtidr, awtvdf, awtidf
       use ice_domain, only: distrb_info, nblocks
-      use ice_domain_size, only: ncat, n_aero, max_blocks
+      use ice_domain_size, only: ncat, n_aero, n_iso, max_blocks
       use ice_fileunits, only: flush_fileunit
       use ice_flux, only: alvdr, alidr, alvdf, alidf, evap, fsnow, frazil, &
           fswabs, fswthru, flw, flwout, fsens, fsurf, flat, frzmlt_init, frain, fpond, &
           coszen, faero_atm, faero_ocn, fhocn_ai, fsalt_ai, fresh_ai, &
           update_ocn_f, Tair, Qa, fsw, fcondtop, meltt, meltb, meltl, snoice, &
-          dsnow, congel, sst, sss, Tf, fhocn
+          dsnow, congel, sst, sss, Tf, fhocn, fiso_atm, fiso_ocn
       use ice_global_reductions, only: global_sum, global_sum_prod, global_maxval
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
       use ice_state ! everything
@@ -156,6 +160,13 @@
          faeras, faeros, aerrs, &
          aeromx1n, aeromx1s, &
          aerototn, aerotots
+
+      ! for isotope diagnostics
+      real (kind=dbl_kind), dimension(max_iso) :: &
+        fisoan, fisoon, ierrn, &
+        fisoas, fisoos, ierrs, &
+        isomx1n, isomx1s, &
+        isototn, isotots
 
       ! fields at diagnostic points
       real (kind=dbl_kind), dimension(npnt) :: &
@@ -654,6 +665,47 @@
 
       endif                     ! print_global
 
+      ! isotopes
+      if (tr_iso) then
+         do n = 1, n_iso
+            faeran(n) = global_sum_prod(fiso_atm(:,:,n,:), aice_init, &
+                                        distrb_info, field_loc_center, tarean)
+            faeras(n) = global_sum_prod(fiso_atm(:,:,n,:), aice_init, &
+                                        distrb_info, field_loc_center, tareas)
+            fisoan(n) = fisoan(n)*dt
+            fisoas(n) = fisoas(n)*dt
+            fisoon(n) = global_sum_prod(fiso_ocn(:,:,n,:), aice, &
+                                        distrb_info, field_loc_center, tarean)
+            fisoos(n) = global_sum_prod(fiso_ocn(:,:,n,:), aice, &
+                                        distrb_info, field_loc_center, tareas)
+            fisoon(n) = fison(n)*dt
+            fisoos(n) = fisos(n)*dt
+
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+            do iblk = 1, nblocks
+               do j = 1, ny_block
+               do i = 1, nx_block
+                  work1(i,j,iblk) = &
+                   trcr(i,j,nt_iso  +4*(n-1),iblk)*vsno(i,j,iblk) &
+                 + trcr(i,j,nt_iso+1+4*(n-1),iblk)*vsno(i,j,iblk) &
+                 + trcr(i,j,nt_iso+2+4*(n-1),iblk)*vice(i,j,iblk) &
+                 + trcr(i,j,nt_iso+3+4*(n-1),iblk)*vice(i,j,iblk)
+               enddo
+               enddo
+            enddo
+            !$OMP END PARALLEL DO
+            isototn(n) = global_sum(work1, distrb_info, field_loc_center, tarean)
+            isotots(n) = global_sum(work1, distrb_info, field_loc_center, tareas)
+            isomx1n(n) = global_maxval(work1, distrb_info, lmask_n)
+            isomx1s(n) = global_maxval(work1, distrb_info, lmask_s)
+
+            ierrn(n) = (totison(n)-isototn(n)+faeran(n)-fisoon(n)) &
+                                 / (isototn(n) + c1)
+            ierrs(n) = (totisos(n)-isotots(n)+faeras(n)-fisoos(n)) &
+                                 / (isotots(n) + c1)
+         enddo ! n_iso
+      endif ! tr_iso
+
       if (print_points) then
 
       !-----------------------------------------------------------------
@@ -833,6 +885,17 @@
          enddo
          write(nu_diag,*) '----------------------------'
          endif ! tr_aero
+         if (tr_iso) then
+         do n = 1, n_iso
+         write(nu_diag,*)   '  isotope ',n
+         write(nu_diag,901) 'fiso_atm (kg/m2)      = ', fisoan(n), fisoas(n)
+         write(nu_diag,901) 'fiso_ocn (kg/m2)      = ', fisoon(n), fisoos(n)
+         write(nu_diag,901) 'total iso (kg/m2)     = ', isototn(n), isotots(n)
+         write(nu_diag,901) 'iso error             = ', ierrn(n), ierrs(n)
+         write(nu_diag,901) 'maximum iso (kg/m2)   = ', isomx1n(n),isomx1s(n)
+         enddo
+         write(nu_diag,*) '----------------------------'
+         endif ! tr_aero
 
         endif                    ! print_global
 
@@ -933,11 +996,11 @@
       use ice_blocks, only: nx_block, ny_block
       use ice_constants, only: field_loc_center, rhofresh, rhoi, rhos
       use ice_domain, only: distrb_info, nblocks
-      use ice_domain_size, only: n_aero, ncat, max_blocks
+      use ice_domain_size, only: n_aero, n_iso, ncat, max_blocks
       use ice_global_reductions, only: global_sum
       use ice_grid, only: tareas, tarean
       use ice_state, only: aicen, vice, vsno, trcrn, trcr, &
-          tr_aero, nt_aero, tr_pond_topo, nt_apnd, nt_hpnd
+          tr_aero, nt_aero, tr_iso, nt_iso, tr_pond_topo, nt_apnd, nt_hpnd
 
       integer (kind=int_kind) :: n, i, j, iblk
 
@@ -998,6 +1061,25 @@
             !$OMP END PARALLEL DO
             totaeron(n)= global_sum(work1, distrb_info, field_loc_center, tarean)
             totaeros(n)= global_sum(work1, distrb_info, field_loc_center, tareas)
+         enddo
+      endif
+
+      if (tr_iso) then
+         do n=1,n_iso
+            !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+            do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+               work1(i,j,iblk) = trcr(i,j,nt_iso  +4*(n-1),iblk)*vsno(i,j,iblk) &
+                               + trcr(i,j,nt_iso+1+4*(n-1),iblk)*vsno(i,j,iblk) &
+                               + trcr(i,j,nt_iso+2+4*(n-1),iblk)*vice(i,j,iblk) &
+                               + trcr(i,j,nt_iso+3+4*(n-1),iblk)*vice(i,j,iblk)
+            enddo
+            enddo
+            enddo
+            !$OMP END PARALLEL DO
+            totison(n)= global_sum(work1, distrb_info, field_loc_center, tarean)
+            totisos(n)= global_sum(work1, distrb_info, field_loc_center, tareas)
          enddo
       endif
 

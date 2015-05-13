@@ -1045,12 +1045,14 @@
                                dt,         fpond,      &
                                fresh,      fsalt,      &
                                fhocn,      faero_ocn,  &
+                               fiso_ocn,               &
                                rside,      meltl,      &
                                aicen,      vicen,      &
                                vsnon,      trcrn)
 
       use ice_state, only: nt_qice, nt_qsno, &
-                           nt_aero, tr_aero, tr_pond_topo, nt_apnd, nt_hpnd
+                           nt_aero, tr_aero, tr_pond_topo, nt_apnd, nt_hpnd, &
+                           nt_iso, tr_iso
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -1083,6 +1085,10 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_aero), &
          intent(inout) :: &
          faero_ocn     ! aerosol flux to ocean (kg/m^2/s)
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_iso), &
+         intent(inout) :: &
+         fiso_ocn     ! isotope flux to ocean (kg/m^2/s)
 
       ! local variables
 
@@ -1212,6 +1218,25 @@
             enddo
          endif
 
+         if (tr_iso) then
+            do k = 1, n_iso
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+                  fiso_ocn(i,j,k) = fiso_ocn(i,j,k) + (vsnon(i,j,n) &
+                                   *(trcrn(i,j,nt_iso  +4*(k-1),n)   &
+                                   + trcrn(i,j,nt_iso+1+4*(k-1),n))  &
+                                                      +  vicen(i,j,n) &
+                                   *(trcrn(i,j,nt_iso+2+4*(k-1),n)   &
+                                   + trcrn(i,j,nt_iso+3+4*(k-1),n))) &
+                                   * rside(i,j) / dt
+               enddo
+            enddo
+         endif
+
       enddo  ! n
 
       end subroutine lateral_melt
@@ -1250,6 +1275,10 @@
                               Tf,        sss,        &
                               salinz,    phi_init,   &
                               dSin0_frazil,          &
+                              fiso_ocn,              &
+                              HDO_ocn,             &
+                              H2_16O_ocn,          &
+                              H2_18O_ocn,          &
                               nbtrcr,    flux_bio,   &
                               ocean_bio, &
                               l_stop,                &
@@ -1258,13 +1287,15 @@
       use ice_itd, only: hin_max, column_sum, &
                          column_conservation_check 
       use ice_state, only: nt_Tsfc, nt_iage, nt_FY, nt_alvl, nt_vlvl, nt_aero, &
-                           nt_sice, nt_qice, &
+                           nt_iso, nt_sice, nt_qice, &
                            nt_apnd, tr_pond_cesm, tr_pond_lvl, tr_pond_topo, &
-                           tr_iage, tr_FY, tr_lvl, tr_aero, tr_brine
+                           tr_iage, tr_FY, tr_lvl, tr_aero, tr_brine, tr_iso
       use ice_therm_mushy, only: liquidus_temperature_mush, enthalpy_mush
       use ice_therm_shared, only: ktherm, hfrazilmin
       use ice_zbgc, only: add_new_ice_bgc
       use ice_zbgc_shared, only: skl_bgc
+      use ice_isotope, only: isoice_alpha, frac
+      use ice_constants, only: rhoi
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -1324,7 +1355,17 @@
       integer (kind=int_kind), intent(out) :: &
          istop, jstop    ! indices of grid cell where model aborts
 
-      ! BGC
+      real (kind=dbl_kind), dimension (nx_block,ny_block,nt_iso), &
+         intent(inout), optional :: &
+         fiso_ocn  ! kg/m^2/s
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block), &
+         intent(inout), optional :: &
+         HDO_ocn , & !
+         H2_16O_ocn, & !
+         H2_18O_ocn
+
+     ! BGC
       integer (kind=int_kind), intent(in) :: &
          nbtrcr          ! number of biology tracers
 
@@ -1630,6 +1671,38 @@
                enddo
             endif
 
+            if (tr_iso) then
+             do it=1,n_iso
+               if (it==1)   &
+                  frazil_conc = isoice_alpha(c0,'HDO',frac)      &
+                                *HDO_ocn(i,j)
+               if (it==2)   &
+                  frazil_conc = isoice_alpha(c0,'H2_16O',frac)   &
+                                *H2_16O_ocn(i,j)
+               if (it==3)   &
+                  frazil_conc = isoice_alpha(c0,'H2_18O',frac)   &
+                                *H2_18O_ocn(i,j)
+
+               !!trcrn(i,j,nt_iso+2+4*(it-1),n)  &
+               !!    = (trcrn(i,j,nt_iso+2+4*(it-1),n)*vicen(i,j,n) &
+               !!    + frazil_conc*rhoi*vsurp) &
+               !!    / vtmp
+
+               ! dilution in the ssl 
+               trcrn(i,j,nt_iso+2+4*(it-1),n)  &
+                   = (trcrn(i,j,nt_iso+2+4*(it-1),n)*vicen(i,j,n)) &
+                   / vtmp
+               ! dilution and uptake in the int
+               trcrn(i,j,nt_iso+3+4*(it-1),n)  &
+                   = (trcrn(i,j,nt_iso+3+4*(it-1),n)*vicen(i,j,n) &
+                   + frazil_conc*rhoi*vsurp) &
+                   / vtmp
+
+               fiso_ocn(i,j,it) = fiso_ocn(i,j,it) &
+                   - frazil_conc*rhoi*vsurp/dt
+             enddo
+            endif
+
             ! update category volumes
             vicen(i,j,n) = vtmp
 
@@ -1728,6 +1801,33 @@
                   trcrn(i,j,nt_aero+3+4*(it-1),1)*vice1(ij)/vicen(i,j,1)
                enddo
             endif
+
+           if (tr_iso) then
+              do it=1,n_iso
+                 if (it==1)   &
+                    frazil_conc = isoice_alpha(c0,'HDO',frac)      &
+                                  *HDO_ocn(i,j)
+                 if (it==2)   &
+                    frazil_conc = isoice_alpha(c0,'H2_16O',frac)   &
+                                  *H2_16O_ocn(i,j)
+                 if (it==3)       &
+                    frazil_conc = isoice_alpha(c0,'H2_18O',frac)   &
+                                *H2_18O_ocn(i,j)
+
+                !!trcrn(i,j,nt_iso+2+4*(it-1),1) = &
+                !!  (trcrn(i,j,nt_iso+2+4*(it-1),1)*vice1 &
+                !!  +frazil_conc*rhoi*vi0new(m))/vicen(i,j,1)
+
+                trcrn(i,j,nt_iso+2+4*(it-1),1) = &
+                  (trcrn(i,j,nt_iso+2+4*(it-1),1)*vice1)/vicen(i,j,1)
+                trcrn(i,j,nt_iso+3+4*(it-1),1) = &
+                  (trcrn(i,j,nt_iso+3+4*(it-1),1)*vice1 &
+                  +frazil_conc*rhoi*vi0new(m))/vicen(i,j,1)
+
+                fiso_ocn(i,j,it) = fiso_ocn(i,j,it) &
+                  - frazil_conc*rhoi*vi0new(m)/dt
+              enddo
+           endif
 
             if (tr_lvl) then
                 alvl = trcrn(i,j,nt_alvl,1)

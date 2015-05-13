@@ -344,7 +344,7 @@
              "snow volume per unit grid cell area", c1, c0,       &
              ns1, f_hs)
 
-         call define_hist_field(n_fs,"fs","m",tstr2D, tcstr,        &
+         call define_hist_field(n_fs,"fs","1",tstr2D, tcstr,        &
              "grid cell mean snow fraction",                     &
              "snow fraction per unit grid cell area", c1, c0,       &
              ns1, f_fs)
