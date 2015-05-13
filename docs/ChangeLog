@@ -1,10 +1,12 @@
 ===============================================================
-cice5_20150506
+cice5_20150513
 Originator: dbailey
-Date: May 06, 2015
+Date: May 13, 2015
 Version: 5.0
-One-line Summary: Add back in some history variables.
+One-line Summary: Branch fixes for mpi and history variables.
 
+M       src/mpi/ice_boundary.F90
+M       src/mpi/ice_global_reductions.F90
 M       bld/build-namelist
 M       bld/namelist_files/namelist_definition.xml
 M       bld/namelist_files/namelist_defaults_cice.xml
