@@ -548,22 +548,6 @@ group="tracer_nml" >
 Aerosol restart from file.
 </entry>
 
-<entry 
-id="tr_iso" 
-type="logical"  
-category="tracers" 
-group="tracer_nml" >
-Isotope tracers.
-</entry>
-
-<entry 
-id="restart_iso" 
-type="logical"  
-category="tracers" 
-group="tracer_nml" >
-Isotope restart from file.
-</entry>
-
 <!------------------------------------->
 <!--- thermo_nml Parameterizations ---->
 <!------------------------------------->
@@ -2642,34 +2626,6 @@ group="icefields_bgc_nml" >
 
 <entry
 id="f_aeron"
-type="char*5"
-category="history"
-group="icefields_bgc_nml" >
-</entry>
-
-<entry
-id="f_fiso_atm"
-type="char*5"
-category="history"
-group="icefields_bgc_nml" >
-</entry>
-
-<entry
-id="f_fiso_ocn"
-type="char*5"
-category="history"
-group="icefields_bgc_nml" >
-</entry>
-
-<entry
-id="f_iso"
-type="char*5"
-category="history"
-group="icefields_bgc_nml" >
-</entry>
-
-<entry
-id="f_ison"
 type="char*5"
 category="history"
 group="icefields_bgc_nml" >

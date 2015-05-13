@@ -24,6 +24,7 @@
 
    implicit none
    private
+   save
 
    include 'mpif.h'
 

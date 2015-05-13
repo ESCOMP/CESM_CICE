@@ -36,7 +36,7 @@
 
       use ice_kinds_mod
       use ice_constants
-      use ice_domain_size, only: ncat, max_aero, n_aero, max_iso, n_iso, nilyr, nslyr, nblyr
+      use ice_domain_size, only: ncat, max_aero, n_aero, nilyr, nslyr, nblyr
       use ice_fileunits, only: nu_diag
       use ice_itd, only: hin_max, column_sum, &
                          column_conservation_check, compute_tracers
@@ -113,7 +113,6 @@
                             fpond,                   &
                             fresh,       fhocn,      &
                             faero_ocn,               &
-                            fiso_ocn,               &
                             aparticn,    krdgn,      &
                             aredistn,    vredistn,   &
                             dardg1ndt,   dardg2ndt,  &
@@ -189,10 +188,6 @@
          intent(inout), optional :: &
          faero_ocn     ! aerosol flux to ocean (kg/m^2/s)
 
-      real (kind=dbl_kind), dimension(nx_block,ny_block,max_iso), &
-         intent(inout), optional :: &
-         fiso_ocn     ! isotope flux to ocean (kg/m^2/s)
-
       ! local variables
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
@@ -222,9 +217,6 @@
 
       real (kind=dbl_kind), dimension (icells,max_aero) :: &
          maero          ! aerosol mass added to ocean (kg m-2)
-
-      real (kind=dbl_kind), dimension (icells,max_iso) :: &
-         miso          ! isotope mass added to ocean (kg m-2)
 
       real (kind=dbl_kind), dimension (icells,0:ncat) :: &
          apartic          ! participation function; fraction of ridging
@@ -279,7 +271,6 @@
          msnow_mlt(ij) = c0
          esnow_mlt(ij) = c0
          maero    (ij,:) = c0
-         miso    (ij,:) = c0
          mpond    (ij) = c0
          ardg1    (ij) = c0
          ardg2    (ij) = c0
@@ -424,7 +415,7 @@
                            ardg1n,    ardg2n,          &
                            virdgn,                     &
                            msnow_mlt, esnow_mlt,       &
-                           maero,     miso, mpond,     &
+                           maero,     mpond,           &
                            l_stop,                     &
                            istop,     jstop,           &
                            aredistn,  vredistn)
@@ -718,13 +709,6 @@
             i = indxi(ij)
             j = indxj(ij)
             faero_ocn(i,j,:) = faero_ocn(i,j,:) + maero(ij,:)*dti
-         enddo
-      endif
-      if (present(fiso_ocn)) then
-         do ij = 1, icells
-            i = indxi(ij)
-            j = indxj(ij)
-            fiso_ocn(i,j,:) = fiso_ocn(i,j,:) + miso(ij,:)*dti
          enddo
       endif
       if (present(fpond)) then
@@ -1331,13 +1315,13 @@
                               ardg1nn,     ardg2nn,         &
                               virdgnn,                      &
                               msnow_mlt,   esnow_mlt,       &
-                              maero,       msio, mpond,     &
+                              maero,       mpond,           &
                               l_stop,                       &
                               istop,       jstop,           &
                               aredistn,    vredistn)
 
       use ice_state, only: nt_qsno, &
-                           nt_alvl, nt_vlvl, nt_aero, tr_lvl, tr_aero, nt_iso, tr_iso, &
+                           nt_alvl, nt_vlvl, nt_aero, tr_lvl, tr_aero, &
                            nt_apnd, nt_hpnd, nt_ipnd, tr_pond, &
                            tr_pond_cesm, tr_pond_lvl, tr_pond_topo, &
                            nt_fbri
@@ -1404,9 +1388,6 @@
 
       real (kind=dbl_kind), dimension(icells,max_aero), intent(inout) :: &
          maero        ! aerosol mass added to ocean (kg m-2)
-
-      real (kind=dbl_kind), dimension(icells,max_iso), intent(inout) :: &
-         miso        ! isotope mass added to ocean (kg m-2)
 
       logical (kind=log_kind), intent(inout) :: &
          l_stop   ! if true, abort on return
@@ -1726,15 +1707,6 @@
                         + vsrdgn(ij)*(c1-fsnowrdg) &
                         *(trcrn(i,j,nt_aero  +4*(it-1),n)   &
                         + trcrn(i,j,nt_aero+1+4*(it-1),n))
-               enddo
-            endif
-
-            if (tr_iso) then
-               do it = 1, n_iso
-                  miso(m,it) = miso(m,it) &
-                        + vsrdgn(ij)*(c1-fsnowrdg) &
-                        *(trcrn(i,j,nt_iso  +4*(it-1),n)   &
-                        + trcrn(i,j,nt_iso+1+4*(it-1),n))
                enddo
             endif
 

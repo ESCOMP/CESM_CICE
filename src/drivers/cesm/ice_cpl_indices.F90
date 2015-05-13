@@ -35,16 +35,6 @@ module ice_cpl_indices
   integer :: index_i2x_Fioi_taux       ! ice/ocn stress, zonal
   integer :: index_i2x_Fioi_tauy       ! ice/ocn stress, zonal
 
-  integer :: index_i2x_Si_qref_HDO     ! 2m reference specific humidity  
-  integer :: index_i2x_Si_qref_16O     ! 2m reference specific humidity  
-  integer :: index_i2x_Si_qref_18O     ! 2m reference specific humidity  
-  integer :: index_i2x_Fioi_meltw_HDO  ! isotope melt water flux
-  integer :: index_i2x_Fioi_meltw_16O  ! isotope melt water flux
-  integer :: index_i2x_Fioi_meltw_18O  ! isotope melt water flux
-  integer :: index_i2x_Faii_evap_HDO   ! isotope evaporation water flux      
-  integer :: index_i2x_Faii_evap_16O   ! isotope evaporation water flux      
-  integer :: index_i2x_Faii_evap_18O   ! isotope evaporation water flux      
-
   ! drv -> ice
 
   integer :: index_x2i_So_t            ! ocn layer temperature
@@ -61,9 +51,6 @@ module ice_cpl_indices
   integer :: index_x2i_Sa_dens         ! bottom atm level air den
   integer :: index_x2i_So_dhdx         ! ocn surface slope, zonal
   integer :: index_x2i_So_dhdy         ! ocn surface slope, meridional
-  integer :: index_x2i_So_roce_HDO     ! ocn: HDO
-  integer :: index_x2i_So_roce_16O     ! ocn: H2_16O
-  integer :: index_x2i_So_roce_18O     ! ocn: H2_18O
   integer :: index_x2i_Faxa_lwdn       ! downward lw heat flux
   integer :: index_x2i_Faxa_rain       ! prec: liquid 
   integer :: index_x2i_Faxa_snow       ! prec: frozen 
@@ -87,16 +74,6 @@ module ice_cpl_indices
   integer :: index_x2i_Faxa_dstdry2    ! flux: Size 2 dust -- dry deposition
   integer :: index_x2i_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer :: index_x2i_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
-
-  integer :: index_x2i_Sa_shum_16O     ! bottom atm level spec hum
-  integer :: index_x2i_Sa_shum_18O     ! bottom atm level spec hum
-  integer :: index_x2i_Sa_shum_HDO     ! bottom atm level spec hum
-  integer :: index_x2i_Faxa_rain_16O   ! flux: H2_16O
-  integer :: index_x2i_Faxa_rain_18O   ! flux: H2_18O
-  integer :: index_x2i_Faxa_rain_HDO   ! flux: HDO
-  integer :: index_x2i_Faxa_snow_16O   ! flux: H2_16O
-  integer :: index_x2i_Faxa_snow_18O   ! flux: H2_18O
-  integer :: index_x2i_Faxa_snow_HDO   ! flux: HD
 
 contains
 
@@ -136,16 +113,6 @@ contains
     index_i2x_Fioi_taux     = mct_avect_indexra(i2x,'Fioi_taux')
     index_i2x_Fioi_tauy     = mct_avect_indexra(i2x,'Fioi_tauy')
 
-    index_i2x_Fioi_meltw_HDO = mct_avect_indexra(i2x,'Fioi_meltw_HDO')
-    index_i2x_Fioi_meltw_16O = mct_avect_indexra(i2x,'Fioi_meltw_16O')
-    index_i2x_Fioi_meltw_18O = mct_avect_indexra(i2x,'Fioi_meltw_18O')
-    index_i2x_Faii_evap_HDO  = mct_avect_indexra(i2x,'Faii_evap_HDO')
-    index_i2x_Faii_evap_16O  = mct_avect_indexra(i2x,'Faii_evap_16O')
-    index_i2x_Faii_evap_18O  = mct_avect_indexra(i2x,'Faii_evap_18O')
-    index_i2x_Si_qref_HDO    = mct_avect_indexra(i2x,'Si_qref_HDO')
-    index_i2x_Si_qref_16O    = mct_avect_indexra(i2x,'Si_qref_16O')
-    index_i2x_Si_qref_18O    = mct_avect_indexra(i2x,'Si_qref_18O')
-
     index_x2i_So_t          = mct_avect_indexra(x2i,'So_t')
     index_x2i_So_s          = mct_avect_indexra(x2i,'So_s')
     index_x2i_So_u          = mct_avect_indexra(x2i,'So_u')
@@ -182,19 +149,6 @@ contains
     index_x2i_Faxa_dstwet2  = mct_avect_indexra(x2i,'Faxa_dstwet2')
     index_x2i_Faxa_dstwet3  = mct_avect_indexra(x2i,'Faxa_dstwet3')
     index_x2i_Faxa_dstwet4  = mct_avect_indexra(x2i,'Faxa_dstwet4')
-
-    index_x2i_Sa_shum_16O   = mct_avect_indexra(x2i,'Sa_shum_16O')
-    index_x2i_Sa_shum_18O   = mct_avect_indexra(x2i,'Sa_shum_18O')
-    index_x2i_Sa_shum_HDO   = mct_avect_indexra(x2i,'Sa_shum_HDO')
-    index_x2i_Faxa_rain_16O = mct_avect_indexra(x2i,'Faxa_rain_16O')
-    index_x2i_Faxa_rain_18O = mct_avect_indexra(x2i,'Faxa_rain_18O')
-    index_x2i_Faxa_rain_HDO = mct_avect_indexra(x2i,'Faxa_rain_HDO')
-    index_x2i_Faxa_snow_16O = mct_avect_indexra(x2i,'Faxa_snow_16O')
-    index_x2i_Faxa_snow_18O = mct_avect_indexra(x2i,'Faxa_snow_18O')
-    index_x2i_Faxa_snow_HDO = mct_avect_indexra(x2i,'Faxa_snow_HDO')
-    index_x2i_So_roce_16O   = mct_avect_indexra(x2i,'So_roce_16O')
-    index_x2i_So_roce_18O   = mct_avect_indexra(x2i,'So_roce_18O')
-    index_x2i_So_roce_HDO   = mct_avect_indexra(x2i,'So_roce_HDO')
 
     call mct_aVect_clean(x2i)
     call mct_aVect_clean(i2x)

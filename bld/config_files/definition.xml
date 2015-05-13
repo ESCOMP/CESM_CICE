@@ -48,10 +48,6 @@ Number of snow layers
 Number of aerosol tracers
 </entry>
 
-<entry id="ntr_iso" valid_values="0,1,2,3" value="3">
-Number of isotope tracers
-</entry>
-
 <entry id="trage" valid_values="0,1" value="1">
 Age tracer
 </entry>

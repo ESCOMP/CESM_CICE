@@ -272,10 +272,8 @@
 <restart_pond_topo> .false. </restart_pond_topo>
 
 <tr_aero                 > .true. </tr_aero>
-<restart_aero> .false. </restart_aero>
 
-<tr_iso                 > .true. </tr_iso>
-<restart_iso> .false. </restart_iso>
+<restart_aero> .false. </restart_aero>
 
 <!--------------------------->
 <!----- Ponds namelist ------>
@@ -1057,11 +1055,6 @@
 
 <f_aeron                       >'xxxxx'</f_aeron>
 <f_aeron cice_mode='prescribed'>'xxxxx'</f_aeron>
-
-<f_fiso_atm                       >'mxxxx'</f_fiso_atm>
-<f_fiso_ocn                       >'mxxxx'</f_fiso_ocn>
-<f_iso                       >'mxxxx'</f_iso>
-<f_ison                       >'xxxxx'</f_ison>
 
 <f_fNO                       >'xxxxx'</f_fNO>
 <f_fNO cice_mode='prescribed'>'xxxxx'</f_fNO>

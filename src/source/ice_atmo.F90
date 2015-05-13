@@ -16,7 +16,7 @@
       use ice_kinds_mod
       use ice_blocks, only: nx_block, ny_block
       use ice_constants
-      use ice_domain_size, only: max_blocks, n_iso, max_iso
+      use ice_domain_size, only: max_blocks
 
       implicit none
       save
@@ -86,7 +86,7 @@
                                       lhcoef,   shcoef,   &
                                       Cdn_atm,  Cdn_atm_ocn_n, &
                                       uice,     vice,     &
-                                      Uref, Qa_iso, Qref_iso )     
+                                      Uref                )     
 
 
       use ice_fileunits, only: nu_diag
@@ -140,14 +140,6 @@
          uice     , & ! x-direction ice speed (m/s)
          vice         ! y-direction ice speed (m/s)
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
-         optional, intent(in) :: &
-         Qa_iso      ! specific humidity (kg/kg)
-
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
-         optional, intent(out) :: &
-         Qref_iso    ! specific humidity (kg/kg)
-
       ! local variables
 
       logical (kind=log_kind), save :: &
@@ -155,7 +147,7 @@
 
       integer (kind=int_kind) :: &
          k     , & ! iteration index
-         i, j, n, & ! horizontal indices
+         i, j  , & ! horizontal indices
          ij        ! combined ij index
 
       real (kind=dbl_kind) :: &
@@ -199,7 +191,6 @@
       ! local functions
       real (kind=dbl_kind) :: &
          xd    , & ! dummy argument
-         ratio , & ! dummy argument
          psimhu, & ! unstable part of psimh
          psixhu    ! unstable part of psimx
 
@@ -241,6 +232,9 @@
 
       do j = 1, ny_block
       do i = 1, nx_block
+         if (present(Uref)) then
+           Uref(i,j) = c0
+         endif
          Tref(i,j) = c0
          Qref(i,j) = c0
          delt(i,j) = c0
@@ -249,13 +243,6 @@
          lhcoef(i,j) = c0
       enddo
       enddo
-
-      if (present(Uref)) then
-         Uref(:,:) = c0
-      endif
-      if (present(Qref_iso)) then
-         Qref_iso(:,:,:) = c0
-      endif
 
       !------------------------------------------------------------
       ! Compute turbulent flux coefficients, wind stress, and
@@ -475,7 +462,6 @@
          fac      = (re(ij)/vonkar) &
                   * (alz(ij) + al2 - psixh(ij) + psix2)
          Qref(i,j)= Qa(i,j) - delq(i,j)*fac
-
          if (present(Uref)) then
             if (highfreq .and. sfctype(1:3)=='ice') then
                Uref(i,j) = sqrt((uatm(i,j)-uice(i,j))**2 + &
@@ -485,16 +471,6 @@
                Uref(i,j) = vmag(ij) * rd(ij) / rdn(ij)
             endif
          endif ! (present(Uref)) 
-
-         if (present(Qref_iso)) then
-            do n = 1, n_iso
-               ratio = c1
-               if (Qa_iso(i,j,2) > puny)  &
-                  ratio = Qa_iso(i,j,n)/Qa_iso(i,j,2)
-               Qref_iso(i,j,n) = Qa_iso(i,j,n) - ratio*delq(i,j)*fac
-            enddo
-         endif
-
       enddo                     ! ij
 
       end subroutine atmo_boundary_layer

@@ -104,7 +104,6 @@
 
       use ice_age, only: write_restart_age
       use ice_aerosol, only: write_restart_aero
-      use ice_isotope, only: write_restart_iso
       use ice_boundary, only: ice_HaloUpdate
       use ice_brine, only: hbrine_diags, write_restart_hbrine
       use ice_calendar, only: dt, dt_dyn, ndtd, diagfreq, write_restart, istep, idate, sec
@@ -125,7 +124,7 @@
       use ice_meltpond_topo, only: write_restart_pond_topo
       use ice_restoring, only: restore_ice, ice_HaloRestore
       use ice_state, only: nt_qsno, trcrn, tr_iage, tr_FY, tr_lvl, &
-          tr_pond_cesm, tr_pond_lvl, tr_pond_topo, tr_brine, tr_aero, tr_iso
+          tr_pond_cesm, tr_pond_lvl, tr_pond_topo, tr_brine, tr_aero
       use ice_step_mod, only: prep_radiation, step_therm1, step_therm2, &
           post_thermo, step_dynamics, step_radiation
       use ice_therm_shared, only: calc_Tsfc
@@ -259,7 +258,6 @@
             if (tr_pond_lvl)  call write_restart_pond_lvl
             if (tr_pond_topo) call write_restart_pond_topo
             if (tr_aero)      call write_restart_aero
-            if (tr_iso)       call write_restart_iso
             if (skl_bgc)      call write_restart_bgc  
             if (tr_brine)     call write_restart_hbrine
             if (kdyn == 2)    call write_restart_eap
@@ -442,10 +440,7 @@
                             alvdr    (:,:,iblk), alidr   (:,:,iblk), &
                             alvdf    (:,:,iblk), alidf   (:,:,iblk), &
                             flux_bio(:,:,1:nbtrcr,iblk),             &
-                            Uref=Uref(:,:,iblk), wind=wind(:,:,iblk),&
-                            Qref_iso=Qref_iso(:,:,:,iblk),           &
-                            fiso_evap=fiso_evap(:,:,:,iblk),           &
-                            fiso_ocn=fiso_ocn(:,:,:,iblk))
+                            Uref=Uref(:,:,iblk), wind=wind(:,:,iblk) )
  
 !echmod - comment this out for efficiency, if .not. calc_Tsfc
          if (.not. calc_Tsfc) then

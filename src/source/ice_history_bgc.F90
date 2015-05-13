@@ -10,7 +10,7 @@
 
       use ice_kinds_mod
       use ice_constants
-      use ice_domain_size, only: max_nstrm, max_aero, n_aero, max_iso, n_iso, nblyr
+      use ice_domain_size, only: max_nstrm, max_aero, n_aero, nblyr
       use ice_zbgc_shared
 
       implicit none
@@ -26,8 +26,6 @@
       character (len=max_nstrm), public :: &
            f_faero_atm    = 'x', f_faero_ocn    = 'x', &
            f_aero         = 'x', f_aeron        = 'x', &
-           f_fiso_atm    = 'x', f_fiso_ocn    = 'x', &
-           f_iso         = 'x', f_ison        = 'x', &
            f_fNO          = 'x', f_fNO_ai       = 'x', &
            f_fNH          = 'x', f_fNH_ai       = 'x', &
            f_fN           = 'x', f_fN_ai        = 'x', &
@@ -56,8 +54,6 @@
       namelist / icefields_bgc_nml /     &
            f_faero_atm   , f_faero_ocn   , &
            f_aero        , f_aeron       , &
-           f_fiso_atm   , f_fiso_ocn   , &
-           f_iso        , f_ison       , &
            f_fNO         , f_fNO_ai      , &
            f_fNH         , f_fNH_ai      , &
            f_fN          , f_fN_ai       , &
@@ -90,14 +86,6 @@
            n_aerosn2      , &
            n_aeroic1      , &
            n_aeroic2
-
-      integer(kind=int_kind), dimension(max_iso,max_nstrm) :: &
-           n_fiso_atm    , &
-           n_fiso_ocn    , &
-           n_isosn1      , &
-           n_isosn2      , &
-           n_isoic1      , &
-           n_isoic2
 
       integer(kind=int_kind), dimension(max_nstrm) :: &
            n_fNO         , n_fNO_ai      , &
@@ -137,7 +125,7 @@
       use ice_fileunits, only: nu_nml, nml_filename, &
           get_fileunit, release_fileunit
       use ice_history_shared, only: tstr2D, tcstr, define_hist_field
-      use ice_state, only: tr_aero, tr_iso, tr_brine
+      use ice_state, only: tr_aero, tr_brine
 
       integer (kind=int_kind) :: n, ns
       integer (kind=int_kind) :: nml_error ! namelist i/o error flag
@@ -175,14 +163,6 @@
          f_aero      = 'x' 
          f_aeron     = 'x' ! NOTE not implemented
       endif
-
-      if (.not. tr_iso) then
-         f_fiso_atm = 'x'
-         f_fiso_ocn = 'x'
-         f_iso      = 'x' 
-         f_ison     = 'x' ! NOTE not implemented
-      endif
-      
       
       if (.not. tr_brine)  then
               f_fbri  = 'x'
@@ -240,10 +220,6 @@
       call broadcast_scalar (f_faero_ocn,    master_task)
       call broadcast_scalar (f_aero,         master_task)
       call broadcast_scalar (f_aeron,        master_task)
-      call broadcast_scalar (f_fiso_atm,    master_task)
-      call broadcast_scalar (f_fiso_ocn,    master_task)
-      call broadcast_scalar (f_iso,         master_task)
-      call broadcast_scalar (f_ison,        master_task)
 
       call broadcast_scalar (f_fbri,         master_task)
       call broadcast_scalar (f_hbri,         master_task)
@@ -318,49 +294,6 @@
             call define_hist_field(n_faero_ocn(n,:),vname_in,"kg/m^2 s", &
                 tstr2D, tcstr,"aerosol flux to ocean","none", c1, c0,    &
                 ns, f_faero_ocn)
-         enddo
-      endif
-
-      ! Isotopes
-      if (f_iso(1:1) /= 'x') then
-         do n=1,n_iso
-            write(nchar,'(i3.3)') n
-            write(vname_in,'(a,a)') 'isosnossl', trim(nchar)
-            call define_hist_field(n_isosn1(n,:),vname_in,"kg/kg",   &
-                tstr2D, tcstr,"snow ssl isotope mass","none", c1, c0, &
-                ns, f_iso)
-            write(vname_in,'(a,a)') 'isosnoint', trim(nchar)
-            call define_hist_field(n_isosn2(n,:),vname_in,"kg/kg",   &
-                tstr2D, tcstr,"snow int isotope mass","none", c1, c0, &
-                ns, f_iso)
-            write(vname_in,'(a,a)') 'isoicessl', trim(nchar)
-            call define_hist_field(n_isoic1(n,:),vname_in,"kg/kg",  &
-                tstr2D, tcstr,"ice ssl istope mass","none", c1, c0, &
-                ns, f_iso)
-            write(vname_in,'(a,a)') 'isoiceint', trim(nchar)
-            call define_hist_field(n_isoic2(n,:),vname_in,"kg/kg",  &
-                tstr2D, tcstr,"ice int isotope mass","none", c1, c0, &
-                ns, f_iso)
-         enddo
-      endif
-
-      if (f_fiso_atm(1:1) /= 'x') then
-         do n=1,n_iso
-            write(nchar,'(i3.3)') n
-            write(vname_in,'(a,a)') 'fiso_atm', trim(nchar)
-            call define_hist_field(n_fiso_atm(n,:),vname_in,"kg/m^2 s", &
-                tstr2D, tcstr,"isotope deposition rate","none", c1, c0,  &
-                ns, f_fiso_atm)
-         enddo
-      endif
-
-      if (f_fiso_ocn(1:1) /= 'x') then
-         do n=1,n_iso
-            write(nchar,'(i3.3)') n
-            write(vname_in,'(a,a)') 'fiso_ocn', trim(nchar)
-            call define_hist_field(n_fiso_ocn(n,:),vname_in,"kg/m^2 s", &
-                tstr2D, tcstr,"isotope flux to ocean","none", c1, c0,    &
-                ns, f_fiso_ocn)
          enddo
       endif
 
@@ -570,11 +503,11 @@
       use ice_constants, only: c0, puny
       use ice_domain, only: blocks_ice
       use ice_domain_size, only: ncat, nblyr
-      use ice_flux, only: faero_atm, faero_ocn, fiso_atm, fiso_ocn, sss
+      use ice_flux, only: faero_atm, faero_ocn, sss
       use ice_history_shared, only: n2D, a2D, a3Dc, n3Dccum, a3Db, &
           n4Dscum, a4Db, &
           ncat_hist, accum_hist_field, nzblyr
-      use ice_state, only: trcrn, trcr, aicen, vice, vicen, nt_aero, nt_iso, nt_fbri, &
+      use ice_state, only: trcrn, trcr, aicen, vice, vicen, nt_aero, nt_fbri, &
           nt_bgc_N_sk, nt_bgc_C_sk, nt_bgc_chl_sk, nt_bgc_Nit_sk, &
           nt_bgc_Am_sk, nt_bgc_Sil_sk, nt_bgc_DMSPp_sk, nt_bgc_DMSPd_sk, &
           nt_bgc_DMS_sk, nt_bgc_Nit_ml, nt_bgc_Am_ml, nt_bgc_Sil_ml, &
@@ -628,32 +561,6 @@
                                trcr(:,:,nt_aero+2+4*(n-1),iblk)/rhoi, a2D)
             call accum_hist_field(n_aeroic2(n,:), iblk, &
                                trcr(:,:,nt_aero+3+4*(n-1),iblk)/rhoi, a2D)
-         enddo
-      endif
-
-      ! Isotopes
-      if (f_fiso_atm(1:1) /= 'x') then
-         do n=1,n_iso
-            call accum_hist_field(n_fiso_atm(n,:),iblk, &
-                                    fiso_atm(:,:,n,iblk), a2D)
-         enddo
-      endif
-      if (f_fiso_ocn(1:1) /= 'x') then
-         do n=1,n_iso
-            call accum_hist_field(n_fiso_ocn(n,:),iblk, &
-                                    fiso_ocn(:,:,n,iblk), a2D)
-         enddo
-      endif
-      if (f_iso(1:1) /= 'x') then
-         do n=1,n_iso
-            call accum_hist_field(n_isosn1(n,:), iblk, &
-                               trcr(:,:,nt_iso  +4*(n-1),iblk)/rhos, a2D)
-            call accum_hist_field(n_isosn2(n,:), iblk, &
-                               trcr(:,:,nt_iso+1+4*(n-1),iblk)/rhos, a2D)
-            call accum_hist_field(n_isoic1(n,:), iblk, &
-                               trcr(:,:,nt_iso+2+4*(n-1),iblk)/rhoi, a2D)
-            call accum_hist_field(n_isoic2(n,:), iblk, &
-                               trcr(:,:,nt_iso+3+4*(n-1),iblk)/rhoi, a2D)
          enddo
       endif
 

@@ -55,8 +55,6 @@
          nu_restart_pond,&  ! restart input file for melt pond tracer
          nu_dump_aero  , &  ! dump file for restarting aerosol tracer
          nu_restart_aero,&  ! restart input file for aerosol tracer
-         nu_dump_iso   , &  ! dump file for restarting isotope tracer
-         nu_restart_iso,&  ! restart input file for isotope tracer
          nu_dump_bgc   , &  ! dump file for restarting bgc
          nu_restart_bgc, &  ! restart input file for bgc
          nu_dump_hbrine, &  ! dump file for restarting hbrine
@@ -122,8 +120,6 @@
          call get_fileunit(nu_restart_pond)
          call get_fileunit(nu_dump_aero)
          call get_fileunit(nu_restart_aero)
-         call get_fileunit(nu_dump_iso)
-         call get_fileunit(nu_restart_iso)
          call get_fileunit(nu_dump_bgc)
          call get_fileunit(nu_restart_bgc)
          call get_fileunit(nu_dump_hbrine)
@@ -205,8 +201,6 @@
          call release_fileunit(nu_restart_pond)
          call release_fileunit(nu_dump_aero)
          call release_fileunit(nu_restart_aero)
-         call release_fileunit(nu_dump_iso)
-         call release_fileunit(nu_restart_iso)
          call release_fileunit(nu_dump_bgc)
          call release_fileunit(nu_restart_bgc)
          call release_fileunit(nu_dump_hbrine)
