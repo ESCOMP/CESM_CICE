@@ -1,4 +1,24 @@
 ===============================================================
+cice5_20150601
+Originator: dbailey
+Date: June 1, 2015
+Version: 5.0
+One-line Summary: Update to latest LANL changes.
+
+M       src/source/ice_therm_mushy.F90
+M       src/source/ice_calendar.F90
+M       src/source/ice_itd.F90
+M       src/source/ice_ocean.F90
+M       src/source/ice_history_drag.F90
+M       src/source/ice_mechred.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_bl99.F90
+M       src/source/ice_read_write.F90
+M       src/source/ice_forcing.F90
+M       src/source/ice_atmo.F90
+
+===============================================================
 cice5_20150513
 Originator: dbailey
 Date: May 13, 2015
