@@ -3127,9 +3127,7 @@ contains
                                hpond,  apond, &
                                dt,     w)
    
-    ! calculate the vertical flushing Darcy velocity
-    ! negative - downward flushing
-    ! positive - upward flushing
+    ! calculate the vertical flushing Darcy velocity (positive downward)
 
     use ice_constants, only: viscosity_dyn
 
@@ -3206,13 +3204,13 @@ contains
     dhhead = max(hbrine - hocn,c0)
 
     ! darcy flow through ice
-    w = -(perm_harm * rhow * gravit * (dhhead / hin)) / viscosity_dyn
+    w = (perm_harm * rhow * gravit * (dhhead / hin)) / viscosity_dyn
 
     ! maximum down flow to drain pond
-    w_down_max = -(hpond * apond) / dt
+    w_down_max = (hpond * apond) / dt
 
     ! limit flow
-    w = max(w,w_down_max)
+    w = min(w,w_down_max)
 
     ! limit amount of brine that can be advected out of any particular layer
     wlimit = (advection_limit * phi_min * hilyr) / dt
@@ -3223,7 +3221,7 @@ contains
        w = c0
     endif
 
-    w = -min(w,c0)
+    w = max(w, c0)
 
   end subroutine flushing_velocity
 
@@ -3249,7 +3247,7 @@ contains
     if (apond > c0 .and. hpond > c0) then
 
        ! flush pond through mush
-       hpond = hpond + (min(w,c0) * dt) / apond
+       hpond = hpond - w * dt / apond
        
        hpond = max(hpond, c0)
 
@@ -3294,8 +3292,8 @@ contains
          Sbr                   ! ice layer brine salinity (ppt)
 
     real(kind=dbl_kind), intent(inout) :: &
-         hslyr             , & ! ice layer thickness (m)
-         hilyr                 ! snow layer thickness (m)
+         hslyr             , & ! snow layer thickness (m)
+         hilyr                 ! ice layer thickness (m)
 
     real(kind=dbl_kind), intent(out) :: &
          snoice                ! snow ice formation
@@ -3350,7 +3348,7 @@ contains
           ! sea ice fraction of newly formed snow ice
           phi_snowice = (c1 - rhos / rhoi)
 
-          ! desnity of newly formed snowice
+          ! density of newly formed snowice
           rho_snowice = phi_snowice * rho_ocn + (c1 - phi_snowice) * rhoi
 
           ! calculate thickness of new ice added
@@ -3429,23 +3427,17 @@ contains
     ! snow depth and snow layers affected by snowice formation
     if (hsn > puny) then
        rnlyr = (dh / hsn) * nslyr
-       nlyr = min(floor(rnlyr),nslyr-1)
-       
-       zqsn_snowice = c0
-       
+       nlyr = min(floor(rnlyr),nslyr-1) ! nlyr=0 if nslyr=1
+
        ! loop over full snow layers affected
+       ! not executed if nlyr=0
        do k = nslyr, nslyr-nlyr+1, -1
-          
           zqsn_snowice = zqsn_snowice + zqsn(k) / rnlyr
-          
        enddo ! k
-       
+
        ! partially converted snow layer
        zqsn_snowice = zqsn_snowice + &
-                      ((rnlyr - real(nlyr,dbl_kind)) / rnlyr) * zqsn(nslyr)
-       
-       zqsn_snowice = zqsn_snowice
-
+            ((rnlyr - real(nlyr,dbl_kind)) / rnlyr) * zqsn(nslyr-nlyr)
     endif
 
   end subroutine enthalpy_snow_snowice

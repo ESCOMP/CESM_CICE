@@ -321,7 +321,7 @@
             endif
             if (Iswabs_tmp < puny) Iswabs_tmp = c0
 
-            dswabs = min(Iswabs(i,j,k) - Iswabs_tmp, Iswabs(i,j,k))
+            dswabs = min(Iswabs(i,j,k) - Iswabs_tmp, fswint(i,j))
 
             fswsfc(i,j)   = fswsfc(i,j) + dswabs
             fswint(i,j)   = fswint(i,j) - dswabs
