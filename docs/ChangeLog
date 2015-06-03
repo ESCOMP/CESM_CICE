@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20150603
+Originator: dbailey
+Date: June 3, 2015
+Version: 5.0
+One-line Summary: Wrap things in CCSMCOUPLED.
+
+M       src/source/ice_itd.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_bl99.F90
+
+===============================================================
 cice5_20150601
 Originator: dbailey
 Date: June 1, 2015

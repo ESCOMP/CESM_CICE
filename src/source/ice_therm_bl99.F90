@@ -299,8 +299,13 @@
       !-----------------------------------------------------------------
 !mclaren: Should there be an if calc_Tsfc statement here then?? 
 
+#ifdef CCSMCOUPLED
       frac = c1
       dTemp = p01
+#else
+      frac = 0.9_dbl_kind
+      dTemp = 0.02_dbl_kind
+#endif
       do k = 1, nilyr
          do ij = 1, icells
             i = indxi(ij)
@@ -330,7 +335,9 @@
          enddo
       enddo
 
+#ifdef CCSMCOUPLED
       frac = 0.9_dbl_kind
+#endif
       do k = 1, nslyr
          do ij = 1, icells
             if (l_snow(ij)) then

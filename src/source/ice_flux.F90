@@ -339,10 +339,15 @@
 
       integer (kind=int_kind) :: n
 
+#ifdef CCSMCOUPLED
       logical (kind=log_kind), parameter ::     & 
-!        l_winter = .true.  , &  ! winter/summer default switch
          l_winter = .false.  , &  ! winter/summer default switch
          l_spring = .false.      ! spring example
+#else
+      logical (kind=log_kind), parameter ::     & 
+         l_winter = .true.  , &  ! winter/summer default switch
+         l_spring = .false.      ! spring example
+#endif
 
       real (kind=dbl_kind) :: fcondtopn_d(6), fsurfn_d(6)
 
