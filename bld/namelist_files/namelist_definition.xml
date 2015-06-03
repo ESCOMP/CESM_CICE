@@ -194,7 +194,7 @@ id="dumpfreq"
 type="char*1"  
 category="setup" 
 group="setup_nml" >
-frequency of history output (once per 1,h,d,m,y) 
+frequency of restart output (once per 1,h,d,m,y) 
 Default: 'x'
 </entry>
 

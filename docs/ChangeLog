@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20150605
+Originator: dbailey
+Date: June 3, 2015
+Version: 5.0
+One-line Summary: Namelist additions
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+
+===============================================================
 cice5_20150604
 Originator: dbailey
 Date: June 3, 2015
