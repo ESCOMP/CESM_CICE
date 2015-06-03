@@ -211,7 +211,7 @@ contains
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
        runtype = "continue"
     else if (trim(starttype) == trim(seq_infodata_start_type_brnch)) then
-       runtype = "branch"
+       runtype = "continue"
     else
        write(nu_diag,*) trim(subname),' ERROR: unknown starttype'
        call shr_sys_abort()

@@ -1,4 +1,4 @@
-!  SVN:$Id: CICE_RunMod.F90 915 2015-02-08 02:50:33Z tcraig $
+!  SVN:$Id: CICE_RunMod.F90 978 2015-05-07 00:00:44Z tcraig $
 !=======================================================================
 !
 !  Main driver for time stepping of CICE.

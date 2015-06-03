@@ -258,9 +258,11 @@
       var(n_blkmask)%req = coord_attributes('blkmask', &
                   'ice grid block mask', ' ')
       var(n_blkmask)%coordinates = 'TLON TLAT'
+
       var(n_tarea)%req = coord_attributes('tarea', &
                   'area of T grid cells', 'm^2')
       var(n_tarea)%coordinates = 'TLON TLAT'
+
       var(n_uarea)%req = coord_attributes('uarea', &
                   'area of U grid cells', 'm^2')
       var(n_uarea)%coordinates = 'ULON ULAT'

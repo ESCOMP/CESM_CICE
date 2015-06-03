@@ -1,4 +1,29 @@
 ===============================================================
+cice5_20150604
+Originator: dbailey
+Date: June 3, 2015
+Version: 5.0
+One-line Summary: Resync with LANL trunk.
+
+M       src/ice.log.Linux.LANL.conejo
+A       src/ice.log.Linux.NCAR.yellowstone
+D       src/ice.log.Linux.ORNL.lens
+M       src/doc/cicedoc.pdf
+D       src/README_v5.0
+D       src/ice.log.Linux.ORNL.titan
+A       src/README_v5.1
+D       src/ice.log.Linux.SIO.uhu
+M       src/input_templates/run_ice.Linux.LANL.conejo
+M       src/comp_ice
+M       src/io_pio/ice_history_write.F90
+M       src/drivers/cice/CICE_InitMod.F90
+M       src/drivers/cice/CICE_RunMod.F90
+M       src/drivers/cice/CICE_FinalMod.F90
+M       src/drivers/cice/ice_constants.F90
+M       src/drivers/cice/CICE_RunMod.F90_debug
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20150603
 Originator: dbailey
 Date: June 3, 2015
