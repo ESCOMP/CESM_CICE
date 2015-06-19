@@ -78,6 +78,7 @@
       integer (kind=int_kind), dimension(4) :: dimidex
       real (kind=real_kind) :: ltime
       character (char_len) :: title
+      character (char_len) :: time_period_freq
       character (char_len_long) :: ncfile(max_nstrm)
 
       integer (kind=int_kind) :: iyear, imonth, iday
@@ -683,6 +684,21 @@
 
         title  = 'Los Alamos Sea Ice Model (CICE) Version 5'
         status = pio_put_att(File,pio_global,'source',trim(title))
+
+        select case (histfreq(ns))
+         case ("y", "Y")
+            write(time_period_freq,'(a,i0)') 'year_',histfreq_n(ns)
+         case ("m", "M")
+            write(time_period_freq,'(a,i0)') 'month_',histfreq_n(ns)
+         case ("d", "D")
+            write(time_period_freq,'(a,i0)') 'day_',histfreq_n(ns)
+         case ("h", "H")
+            write(time_period_freq,'(a,i0)') 'hour_',histfreq_n(ns)
+         case ("1")
+            write(time_period_freq,'(a,i0)') 'step_',histfreq_n(ns)
+        end select
+
+        status = pio_put_att(File,pio_global,'time_period_freq',trim(time_period_freq))
 
         if (use_leap_years) then
           write(title,'(a,i3,a)') 'This year has ',int(dayyr),' days'
