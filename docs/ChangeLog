@@ -1,4 +1,18 @@
 ===============================================================
+cice5_20150629
+Originator: dbailey
+Date: June 29, 2015
+Version: 5.0
+One-line Summary: Fix snow history, current_time, and quiet
+   build-namelist.
+
+
+M       bld/cice.buildnml
+M       src/source/ice_init.F90
+M       src/source/ice_history.F90
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20150619
 Originator: dbailey
 Date: June 19, 2015

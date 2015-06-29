@@ -1001,10 +1001,6 @@
             if (allocated(Tsnz4d)) deallocate(Tsnz4d)
             allocate(Tsnz4d(nx_block,ny_block,nzslyr,ncat_hist))
        endif
-       if (f_Sinz   (1:1) /= 'x') then
-            if (allocated(Sinz4d)) deallocate(Sinz4d)
-            allocate(Sinz4d(nx_block,ny_block,nzilyr,ncat_hist))
-       endif
 
       ! other 4D history variables
 
@@ -1256,7 +1252,7 @@
       !---------------------------------------------------------------
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block, &
-      !$OMP                     k,n,qn,ns,hs,worka,workb)
+      !$OMP             k,n,qn,ns,hs,worka,workb,Tinz4d,Sinz4d,Tsnz4d)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -1597,7 +1593,7 @@
                   do i = ilo, ihi
                      do k = 1, nzslyr
                         qn = trcrn(i,j,nt_qsno+k-1,n,iblk)
-                        Tsnz4d(i,j,k,n) = temperature_snow(trcrn(i,j,nt_qsno+k-1,n,iblk))
+                        Tsnz4d(i,j,k,n) = temperature_snow(qn)
                      enddo
                   enddo
                   enddo
