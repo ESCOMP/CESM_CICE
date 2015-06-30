@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150630
+Originator: dbailey
+Date: June 30, 2015
+Version: 5.0
+One-line Summary: Fix aerosol bug.
+
+M       src/source/ice_aerosol.F90
+
+===============================================================
 cice5_20150629
 Originator: dbailey
 Date: June 29, 2015
