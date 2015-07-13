@@ -33,12 +33,12 @@
     </grid>
     <grid name="T62_s11">
       <test name="ERS_Ld5">
-        <machine compiler="intel" testtype="prebeta" testmods="cice/default">goldbach</machine>
+        <machine compiler="intel" testtype="prebeta" testmods="cice/default">hobart</machine>
       </test>
     </grid>
     <grid name="f45_g37_rx1">
       <test name="ERI">
-        <machine compiler="nag" testtype="prealpha" testmods="cice/default">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="cice/default">hobart</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="cice/default">yellowstone</machine>
       </test>
       <test name="ERS_IOP_Ld5">
@@ -64,7 +64,7 @@
     <grid name="f19_g16">
       <test name="ERS_Ld5">
         <machine compiler="intel" testtype="prebeta" testmods="cice/default">edison</machine>
-        <machine compiler="nag" testtype="prealpha" testmods="cice/default">goldbach</machine>
+        <machine compiler="nag" testtype="prealpha" testmods="cice/default">hobart</machine>
         <machine compiler="intel" testtype="aux_cice" testmods="cice/default">yellowstone</machine>
       </test>
       <test name="PET_PT">

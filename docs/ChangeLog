@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150713
+Originator: dbailey
+Date: July 13, 2015
+Version: 5.0
+One-line Summary: Change goldbach to hobart.
+
+M       cimetest/testlist_cice.xml
+
+===============================================================
 cice5_20150630
 Originator: dbailey
 Date: June 30, 2015
