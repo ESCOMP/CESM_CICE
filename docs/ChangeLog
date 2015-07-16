@@ -1,4 +1,25 @@
 ===============================================================
+cice5_20150716
+Originator: dbailey
+Date: July 16, 2015
+Version: 5.0
+One-line Summary: Add snowfrac history variable.
+
+Also, fix a bug with albcnt and add a few new default history
+variables.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_history_pond.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_history.F90
+M       src/drivers/cesm/CICE_RunMod.F90
+
+===============================================================
 cice5_20150713
 Originator: dbailey
 Date: July 13, 2015

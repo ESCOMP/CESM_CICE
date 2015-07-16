@@ -103,6 +103,10 @@
          public, save :: &
          fswpenln        ! visible SW entering ice layers (W m-2)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ncat,max_blocks), &
+         public, save :: &
+         snowfracn       ! Category snow fraction used in radiation
+
       ! dEdd tuning parameters, set in namelist
       real (kind=dbl_kind), public :: &
          R_ice ,   & ! sea ice tuning parameter; +1 > 1sig increase in albedo
@@ -139,7 +143,8 @@
       use ice_flux, only: alvdf, alidf, alvdr, alidr, &
                           alvdr_ai, alidr_ai, alvdf_ai, alidf_ai, &
                           swvdr, swvdf, swidr, swidf, &
-                          albice, albsno, albpnd, apeff_ai, albcnt, coszen, fsnow
+                          albice, albsno, albpnd, albcnt, coszen, fsnow, &
+                          apeff_ai, snowfrac
       use ice_orbital, only: init_orbit
       use ice_state, only: aicen, vicen, vsnon, trcrn, nt_Tsfc
       use ice_blocks, only: block, get_block
@@ -231,6 +236,7 @@
                           Sswabsn(:,:,:,:,iblk), Iswabsn(:,:,:,:,iblk),   &
                           albicen(:,:,:,iblk),   albsnon(:,:,:,iblk),     &
                           albpndn(:,:,:,iblk),   apeffn(:,:,:,iblk),      &
+                          snowfracn(:,:,:,iblk), &
                           dhsn(:,:,:,iblk),      ffracn(:,:,:,iblk),      &
                           initonly = .true.       )
 
@@ -320,6 +326,8 @@
 
                apeff_ai(i,j,iblk) = apeff_ai(i,j,iblk) &
                   + apeffn(i,j,n,iblk)*aicen(i,j,n,iblk)
+               snowfrac(i,j,iblk) = snowfrac(i,j,iblk) &
+                  + snowfracn(i,j,n,iblk)*aicen(i,j,n,iblk)
             enddo
 
          enddo  ! ncat
@@ -334,14 +342,6 @@
             alidf_ai  (i,j,iblk) = alidf  (i,j,iblk)
             alvdr_ai  (i,j,iblk) = alvdr  (i,j,iblk)
             alidr_ai  (i,j,iblk) = alidr  (i,j,iblk)
-
-            ! for history averaging
-            cszn = c0
-            netsw = swvdr(i,j,iblk)+swidr(i,j,iblk)+swvdf(i,j,iblk)+swidf(i,j,iblk)
-            if (netsw > puny) cszn = c1
-            do n = 1, nstreams
-               albcnt(i,j,iblk,n) = albcnt(i,j,iblk,n) + cszn
-            enddo
          enddo
          enddo
 
@@ -1090,6 +1090,7 @@
                           Sswabsn,  Iswabsn,   &
                           albicen,  albsnon,   &
                           albpndn,  apeffn,    &
+                          snowfracn, &
                           dhsn,     ffracn,    &
                           initonly     )
 
@@ -1143,7 +1144,8 @@
            albicen,  & ! albedo bare ice 
            albsnon,  & ! albedo snow 
            albpndn,  & ! albedo pond 
-           apeffn      ! effective pond area used for radiation calculation
+           apeffn,   & ! effective pond area used for radiation calculation
+           snowfracn   ! Snow fraction used in radiation
 
       real(kind=dbl_kind), dimension(nx_block,ny_block,nslyr,ncat), intent(inout) :: &
            Sswabsn     ! SW radiation absorbed in snow layers (W m-2)
@@ -1250,9 +1252,11 @@
                                       trcrn(:,:,nt_Tsfc,n), fsn, hsn,          &
                                       rhosnwn,             rsnwn)
 
+         apeffn(:,:,n) = c0 ! for history
+         snowfracn(:,:,n) = c0 ! for history
+
          ! set pond properties
          if (tr_pond_cesm) then
-            apeffn(:,:,n) = c0 ! for history
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
@@ -1271,7 +1275,6 @@
             enddo
 
          elseif (tr_pond_lvl) then
-            apeffn(:,:,n) = c0 ! for history
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
@@ -1335,7 +1338,6 @@
             enddo ! ij
 
          elseif (tr_pond_topo) then
-            apeffn(:,:,n) = c0 ! for history
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
@@ -1371,6 +1373,8 @@
             hpn = c0
          endif
          
+         snowfracn(:,:,n) = fsn(:,:) ! for history
+
          call shortwave_dEdd(nx_block,          ny_block,       &
                              ntrcr,             icells,         &
                              indxi,             indxj,          &

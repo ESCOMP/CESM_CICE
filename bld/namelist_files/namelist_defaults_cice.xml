@@ -432,7 +432,7 @@
 <f_hs hgrid="ar9v4"         >'mdhxx'</f_hs>
 <f_hs cice_mode='prescribed'>'xxxxx'</f_hs>
 
-<f_fs                       >'mxxxx'</f_fs>
+<f_snowfrac                 >'mxxxx'</f_snowfrac>
 
 <f_Tsfc                       >'mxxxx'</f_Tsfc>
 <f_Tsfc hgrid="ar9v4"         >'mdhxx'</f_Tsfc>
@@ -462,17 +462,17 @@
 <f_vatm hgrid="ar9v3"         >'mdhxx'</f_vatm>
 <f_vatm hgrid="ar9v4"         >'mdhxx'</f_vatm>
 
-<f_fswdn                       >'xxxxx'</f_fswdn>
+<f_fswdn                       >'mxxxx'</f_fswdn>
 <f_fswdn hgrid="ar9v4"         >'mdhxx'</f_fswdn>
 <f_fswdn cice_mode='prescribed'>'xxxxx'</f_fswdn>
 
-<f_fswup                       >'xxxxx'</f_fswup>
+<f_fswup                       >'mxxxx'</f_fswup>
 
-<f_flwdn                       >'xxxxx'</f_flwdn>
+<f_flwdn                       >'mxxxx'</f_flwdn>
 <f_flwdn hgrid="ar9v4"         >'mdhxx'</f_flwdn>
 <f_flwdn cice_mode='prescribed'>'xxxxx'</f_flwdn>
 
-<f_snow                       >'xxxxx'</f_snow>
+<f_snow                       >'mxxxx'</f_snow>
 <f_snow hgrid="ar9v4"         >'mdhxx'</f_snow>
 <f_snow cice_mode='prescribed'>'xxxxx'</f_snow>
 
@@ -480,7 +480,7 @@
 <f_snow_ai hgrid="ar9v4"         >'mdhxx'</f_snow_ai>
 <f_snow_ai cice_mode='prescribed'>'xxxxx'</f_snow_ai>
 
-<f_rain                       >'xxxxx'</f_rain>
+<f_rain                       >'mxxxx'</f_rain>
 <f_rain hgrid="ar9v4"         >'mdhxx'</f_rain>
 <f_rain cice_mode='prescribed'>'xxxxx'</f_rain>
 
@@ -521,7 +521,7 @@
 <f_fswfac hgrid="ar9v4"         >'mdhxx'</f_fswfac>
 <f_fswfac cice_mode='prescribed'>'xxxxx'</f_fswfac>
 
-<f_fswabs                       >'xxxxx'</f_fswabs>
+<f_fswabs                       >'mxxxx'</f_fswabs>
 <f_fswabs hgrid="ar9v4"         >'mdhxx'</f_fswabs>
 <f_fswabs cice_mode='prescribed'>'xxxxx'</f_fswabs>
 
@@ -533,35 +533,35 @@
 <f_fswabs_ai hgrid="ar9v4"         >'mdhxx'</f_fswabs_ai>
 <f_fswabs_ai cice_mode='prescribed'>'xxxxx'</f_fswabs_ai>
 
-<f_albsni                       >'xxxxx'</f_albsni>
+<f_albsni                       >'mxxxx'</f_albsni>
 <f_albsni hgrid="ar9v4"         >'mdhxx'</f_albsni>
 <f_albsni cice_mode='prescribed'>'xxxxx'</f_albsni>
 
-<f_alvdr                       >'xxxxx'</f_alvdr>
+<f_alvdr                       >'mxxxx'</f_alvdr>
 <f_alvdr hgrid="ar9v4"         >'mdhxx'</f_alvdr>
 <f_alvdr cice_mode='prescribed'>'xxxxx'</f_alvdr>
 
-<f_alidr                       >'xxxxx'</f_alidr>
+<f_alidr                       >'mxxxx'</f_alidr>
 <f_alidr hgrid="ar9v4"         >'mdhxx'</f_alidr>
 <f_alidr cice_mode='prescribed'>'xxxxx'</f_alidr>
 
-<f_alvdf                       >'xxxxx'</f_alvdf>
+<f_alvdf                       >'mxxxx'</f_alvdf>
 <f_alvdf hgrid="ar9v4"         >'mdhxx'</f_alvdf>
 <f_alvdf cice_mode='prescribed'>'xxxxx'</f_alvdf>
 
-<f_alidf                       >'xxxxx'</f_alidf>
+<f_alidf                       >'mxxxx'</f_alidf>
 <f_alidf hgrid="ar9v4"         >'mdhxx'</f_alidf>
 <f_alidf cice_mode='prescribed'>'xxxxx'</f_alidf>
 
-<f_albice                       >'xxxxx'</f_albice>
+<f_albice                       >'mxxxx'</f_albice>
 <f_albice hgrid="ar9v4"         >'mdhxx'</f_albice>
 <f_albice cice_mode='prescribed'>'xxxxx'</f_albice>
 
-<f_albsno                       >'xxxxx'</f_albsno>
+<f_albsno                       >'mxxxx'</f_albsno>
 <f_albsno hgrid="ar9v4"         >'mdhxx'</f_albsno>
 <f_albsno cice_mode='prescribed'>'xxxxx'</f_albsno>
 
-<f_albpnd                       >'xxxxx'</f_albpnd>
+<f_albpnd                       >'mxxxx'</f_albpnd>
 <f_albpnd hgrid="ar9v4"         >'mdhxx'</f_albpnd>
 <f_albpnd cice_mode='prescribed'>'xxxxx'</f_albpnd>
 
@@ -569,7 +569,7 @@
 <f_coszen hgrid="ar9v4"         >'mdhxx'</f_coszen>
 <f_coszen cice_mode='prescribed'>'xxxxx'</f_coszen>
 
-<f_flat                       >'xxxxx'</f_flat>
+<f_flat                       >'mxxxx'</f_flat>
 <f_flat hgrid="ar9v4"         >'mdhxx'</f_flat>
 <f_flat cice_mode='prescribed'>'xxxxx'</f_flat>
 
@@ -577,7 +577,7 @@
 <f_flat_ai hgrid="ar9v4"         >'mdhxx'</f_flat_ai>
 <f_flat_ai cice_mode='prescribed'>'xxxxx'</f_flat_ai>
 
-<f_fsens                       >'xxxxx'</f_fsens>
+<f_fsens                       >'mxxxx'</f_fsens>
 <f_fsens hgrid="ar9v4"         >'mdhxx'</f_fsens>
 <f_fsens cice_mode='prescribed'>'xxxxx'</f_fsens>
 
@@ -585,7 +585,7 @@
 <f_fsens_ai hgrid="ar9v4"         >'mdhxx'</f_fsens_ai>
 <f_fsens_ai cice_mode='prescribed'>'xxxxx'</f_fsens_ai>
 
-<f_flwup                       >'xxxxx'</f_flwup>
+<f_flwup                       >'mxxxx'</f_flwup>
 <f_flwup hgrid="ar9v4"         >'mdhxx'</f_flwup>
 <f_flwup cice_mode='prescribed'>'xxxxx'</f_flwup>
 
@@ -593,7 +593,7 @@
 <f_flwup_ai hgrid="ar9v4"         >'mdhxx'</f_flwup_ai>
 <f_flwup_ai cice_mode='prescribed'>'xxxxx'</f_flwup_ai>
 
-<f_evap                       >'xxxxx'</f_evap>
+<f_evap                       >'mxxxx'</f_evap>
 <f_evap hgrid="ar9v4"         >'mdhxx'</f_evap>
 <f_evap cice_mode='prescribed'>'xxxxx'</f_evap>
 
@@ -605,11 +605,11 @@
 <f_Tair hgrid="ar9v4"         >'mdhxx'</f_Tair>
 <f_Tair cice_mode='prescribed'>'xxxxx'</f_Tair>
 
-<f_Tref                       >'xxxxx'</f_Tref>
+<f_Tref                       >'mxxxx'</f_Tref>
 <f_Tref hgrid="ar9v4"         >'mdhxx'</f_Tref>
 <f_Tref cice_mode='prescribed'>'xxxxx'</f_Tref>
 
-<f_Qref                       >'xxxxx'</f_Qref>
+<f_Qref                       >'mxxxx'</f_Qref>
 <f_Qref hgrid="ar9v4"         >'mdhxx'</f_Qref>
 <f_Qref cice_mode='prescribed'>'xxxxx'</f_Qref>
 
@@ -680,7 +680,7 @@
 <f_fhocn_ai hgrid="ar9v3"         >'mxxxx'</f_fhocn_ai>
 <f_fhocn_ai hgrid="ar9v4"         >'mdhxx'</f_fhocn_ai>
 
-<f_fswthru                       >'xxxxx'</f_fswthru>
+<f_fswthru                       >'mxxxx'</f_fswthru>
 <f_fswthru hgrid="ar9v4"         >'mdhxx'</f_fswthru>
 <f_fswthru cice_mode='prescribed'>'xxxxx'</f_fswthru>
 
@@ -824,6 +824,11 @@
 <f_vsnon hgrid="ar9v3"         >'mxxxx'</f_vsnon>
 <f_vsnon hgrid="ar9v4"         >'mdhxx'</f_vsnon>
 
+<f_snowfracn                       >'mxxxx'</f_snowfracn>
+<f_snowfracn cice_mode='prescribed'>'xxxxx'</f_snowfracn>
+<f_snowfracn hgrid="ar9v3"         >'mxxxx'</f_snowfracn>
+<f_snowfracn hgrid="ar9v4"         >'mdhxx'</f_snowfracn>
+
 <f_trsig                       >'xxxxx'</f_trsig>
 <f_trsig hgrid="ar9v4"         >'mdhxx'</f_trsig>
 <f_trsig cice_mode='prescribed'>'xxxxx'</f_trsig>
@@ -929,7 +934,7 @@
 <f_hpondn hgrid="ar9v4"         >'mdhxx'</f_hpondn>
 <f_hpondn cice_mode='prescribed'>'xxxxx'</f_hpondn>
 
-<f_apond                       >'xxxxx'</f_apond>
+<f_apond                       >'mxxxx'</f_apond>
 <f_apond hgrid="ar9v4"         >'mdhxx'</f_apond>
 <f_apond cice_mode='prescribed'>'xxxxx'</f_apond>
 

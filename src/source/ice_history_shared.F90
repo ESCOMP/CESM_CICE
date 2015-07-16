@@ -184,7 +184,7 @@
       character (len=max_nstrm), public :: &
 !          f_example   = 'md', &
            f_hi        = 'm', f_hs         = 'm', &
-           f_fs        = 'm', &
+           f_snowfrac  = 'm', f_snowfracn  = 'm', &
            f_Tsfc      = 'm', f_aice       = 'm', &
            f_uvel      = 'm', f_vvel       = 'm', &
            f_uatm      = 'm', f_vatm       = 'm', &
@@ -267,7 +267,7 @@
            f_VGRDb    , &
 !          f_example  , &
            f_hi,        f_hs       , &
-           f_fs, &
+           f_snowfrac,  f_snowfracn, &
            f_Tsfc,      f_aice     , &
            f_uvel,      f_vvel     , &
            f_uatm,      f_vatm     , &
@@ -365,7 +365,7 @@
       integer (kind=int_kind), dimension(max_nstrm), public :: &
 !          n_example    , &
            n_hi         , n_hs         , &
-           n_fs, &
+           n_snowfrac,    n_snowfracn,   &
            n_Tsfc       , n_aice       , &
            n_uvel       , n_vvel       , &
            n_uatm       , n_vatm       , &

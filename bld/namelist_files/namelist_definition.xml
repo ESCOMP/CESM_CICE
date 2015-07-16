@@ -1563,7 +1563,7 @@ group="icefields_nml" >
 </entry>
 
 <entry
-id="f_fs"
+id="f_snowfrac"
 type="char*5"
 category="history"
 group="icefields_nml" >
@@ -2173,6 +2173,13 @@ group="icefields_nml" >
 
 <entry
 id="f_vsnon"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_snowfracn"
 type="char*5"
 category="history"
 group="icefields_nml" >

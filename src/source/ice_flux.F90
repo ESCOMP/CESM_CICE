@@ -191,7 +191,8 @@
          albice   , & ! bare ice albedo
          albsno   , & ! snow albedo
          albpnd   , & ! melt pond albedo
-         apeff_ai     ! effective pond area used for radiation calculation
+         apeff_ai , & ! effective pond area used for radiation calculation
+         snowfrac     ! snow fraction used in radiation
 
       real (kind=dbl_kind), &
          dimension(nx_block,ny_block,max_blocks,max_nstrm), public :: &
@@ -597,6 +598,8 @@
       albice (:,:,:) = c0
       albsno (:,:,:) = c0
       albpnd (:,:,:) = c0
+      apeff_ai (:,:,:) = c0
+      snowfrac (:,:,:) = c0
 
       ! drag coefficients are computed prior to the atmo_boundary call, 
       ! during the thermodynamics section 
