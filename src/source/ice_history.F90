@@ -465,11 +465,6 @@
              "weighted by ice area", c1, c0,                                 &
              ns1, f_fswabs_ai)
       
-!         call define_hist_field(n_albsni,"albsni","%",tstr2D, tcstr, &
-!             "snow/ice broad band albedo",                         &
-!             "scaled (divided) by aice", c100, c0,                 &
-!             ns1, f_albsni)
-      
          call define_hist_field(n_albsni,"albsni","%",tstr2D, tcstr, &
              "snow/ice broad band albedo",                         &
              "averaged for coszen>0, weighted by aice", c100, c0,  &
@@ -1346,10 +1341,10 @@
 
          if (f_albsni (1:1) /= 'x') &
              call accum_hist_field(n_albsni, iblk, &
-                                   awtvdr*alvdr(:,:,iblk) &
+                                  (awtvdr*alvdr(:,:,iblk) &
                                  + awtidr*alidr(:,:,iblk) &
                                  + awtvdf*alvdf(:,:,iblk) &
-                                 + awtidf*alidf(:,:,iblk), a2D)
+                                 + awtidf*alidf(:,:,iblk))*workb(:,:), a2D)
          if (f_alvdr  (1:1) /= 'x') &
              call accum_hist_field(n_alvdr,  iblk, alvdr(:,:,iblk), a2D)
          if (f_alidr  (1:1) /= 'x') &

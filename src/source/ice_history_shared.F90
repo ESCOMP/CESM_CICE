@@ -197,7 +197,7 @@
            f_sice      = 'm', f_frzmlt     = 'm', &
            f_fswfac    = 'm', f_fswint_ai  = 'x', &
            f_fswabs    = 'm', f_fswabs_ai  = 'm', &
-           f_albsni    = 'm', &
+           f_albsni  = 'm', &
            f_alvdr     = 'm', f_alidr      = 'm', &
            f_alvdf     = 'm', f_alidf      = 'm', &
            f_albice    = 'm', f_albsno     = 'm', &
@@ -280,7 +280,7 @@
            f_sice,      f_frzmlt   , &
            f_fswfac,    f_fswint_ai, &
            f_fswabs,    f_fswabs_ai, &
-           f_albsni                , &
+           f_albsni, &
            f_alvdr,     f_alidr    , &
            f_alvdf,     f_alidf    , &
            f_albice,    f_albsno   , &
@@ -379,7 +379,7 @@
            n_frzmlt     , n_fswfac     , &
            n_fswint_ai,                  &
            n_fswabs     , n_fswabs_ai  , &
-           n_albsni     , &
+           n_albsni  , &
            n_alvdr      , n_alidr      , &
            n_alvdf      , n_alidf      , &
            n_albice     , n_albsno     , &
