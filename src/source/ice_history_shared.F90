@@ -198,8 +198,10 @@
            f_fswfac    = 'm', f_fswint_ai  = 'x', &
            f_fswabs    = 'm', f_fswabs_ai  = 'm', &
            f_albsni  = 'm', &
-           f_alvdr     = 'm', f_alidr      = 'm', &
-           f_alvdf     = 'm', f_alidf      = 'm', &
+           f_alvdr     = 'x', f_alidr      = 'x', &
+           f_alvdf     = 'x', f_alidf      = 'x', &
+           f_alvdr_ai  = 'm', f_alidr_ai   = 'm', &
+           f_alvdf_ai  = 'm', f_alidf_ai   = 'm', &
            f_albice    = 'm', f_albsno     = 'm', &
            f_albpnd    = 'm', f_coszen     = 'm', &
            f_flat      = 'm', f_flat_ai    = 'm', &
@@ -283,6 +285,8 @@
            f_albsni, &
            f_alvdr,     f_alidr    , &
            f_alvdf,     f_alidf    , &
+           f_alvdr_ai,  f_alidr_ai , &
+           f_alvdf_ai,  f_alidf_ai , &
            f_albice,    f_albsno   , &
            f_albpnd,    f_coszen   , &
            f_flat,      f_flat_ai  , &
@@ -382,6 +386,8 @@
            n_albsni  , &
            n_alvdr      , n_alidr      , &
            n_alvdf      , n_alidf      , &
+           n_alvdr_ai   , n_alidr_ai   , &
+           n_alvdf_ai   , n_alidf_ai   , &
            n_albice     , n_albsno     , &
            n_albpnd     , n_coszen     , &
            n_flat       , n_flat_ai    , &

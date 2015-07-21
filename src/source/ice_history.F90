@@ -233,6 +233,10 @@
       call broadcast_scalar (f_alidr, master_task)
       call broadcast_scalar (f_alvdf, master_task)
       call broadcast_scalar (f_alidf, master_task)
+      call broadcast_scalar (f_alvdr_ai, master_task)
+      call broadcast_scalar (f_alidr_ai, master_task)
+      call broadcast_scalar (f_alvdf_ai, master_task)
+      call broadcast_scalar (f_alidf_ai, master_task)
       call broadcast_scalar (f_albice, master_task)
       call broadcast_scalar (f_albsno, master_task)
       call broadcast_scalar (f_albpnd, master_task)
@@ -489,6 +493,26 @@
              "near IR diffuse albedo",                            &
              "scaled (divided) by aice", c100, c0,               &
              ns1, f_alidf)
+
+         call define_hist_field(n_alvdr_ai,"alvdr_ai","%",tstr2D, tcstr, &
+             "visible direct albedo",                            &
+             " ", c100, c0,               &
+             ns1, f_alvdr_ai)
+      
+         call define_hist_field(n_alidr_ai,"alidr_ai","%",tstr2D, tcstr, &
+             "near IR direct albedo",                            &
+             " ", c100, c0,               &
+             ns1, f_alidr_ai)
+
+         call define_hist_field(n_alvdf_ai,"alvdf_ai","%",tstr2D, tcstr, &
+             "visible diffuse albedo",                            &
+             " ", c100, c0,               &
+             ns1, f_alvdf_ai)
+      
+         call define_hist_field(n_alidf_ai,"alidf_ai","%",tstr2D, tcstr, &
+             "near IR diffuse albedo",                            &
+             " ", c100, c0,               &
+             ns1, f_alidf_ai)
 
          call define_hist_field(n_albice,"albice","%",tstr2D, tcstr, &
              "bare ice albedo",                                    &
@@ -1150,7 +1174,7 @@
           stressp_3, stressm_3, stress12_3, &
           stressp_4, stressm_4, stress12_4, sig1, sig2, &
           mlt_onset, frz_onset, dagedtt, dagedtd, fswint_ai, keffn_top, &
-          snowfrac
+          snowfrac, alvdr_ai, alvdf_ai, alidr_ai, alidf_ai
       use ice_atmo, only: formdrag
       use ice_meltpond_cesm, only: hs0
       use ice_history_shared ! almost everything
@@ -1353,6 +1377,14 @@
              call accum_hist_field(n_alvdf,  iblk, alvdf(:,:,iblk), a2D)
          if (f_alidf  (1:1) /= 'x') &
              call accum_hist_field(n_alidf,  iblk, alidf(:,:,iblk), a2D)
+         if (f_alvdr_ai  (1:1) /= 'x') &
+             call accum_hist_field(n_alvdr_ai,  iblk, alvdr_ai(:,:,iblk), a2D)
+         if (f_alidr_ai  (1:1) /= 'x') &
+             call accum_hist_field(n_alidr_ai,  iblk, alidr_ai(:,:,iblk), a2D)
+         if (f_alvdf_ai  (1:1) /= 'x') &
+             call accum_hist_field(n_alvdf_ai,  iblk, alvdf_ai(:,:,iblk), a2D)
+         if (f_alidf_ai  (1:1) /= 'x') &
+             call accum_hist_field(n_alidf_ai,  iblk, alidf_ai(:,:,iblk), a2D)
 
          if (f_albice (1:1) /= 'x') &
              call accum_hist_field(n_albice, iblk, albice(:,:,iblk), a2D)
@@ -1711,6 +1743,29 @@
                     if (f_albsni (1:1) /= 'x' .and. n_albsni(ns) /= 0) &
                        a2D(i,j,n_albsni(ns),iblk) = &
                        a2D(i,j,n_albsni(ns),iblk)*avgct(ns)*ravgctz
+                 endif
+              enddo             ! i
+              enddo             ! j
+              endif
+              if (avail_hist_fields(n)%vname(1:8) == 'alvdr_ai') then
+              do j = jlo, jhi
+              do i = ilo, ihi
+                 if (tmask(i,j,iblk)) then 
+                    ravgctz = c0
+                    if (albcnt(i,j,iblk,ns) > puny) &
+                        ravgctz = c1/albcnt(i,j,iblk,ns)
+                    if (f_alvdr_ai (1:1) /= 'x' .and. n_alvdr_ai(ns) /= 0) &
+                       a2D(i,j,n_alvdr_ai(ns),iblk) = &
+                       a2D(i,j,n_alvdr_ai(ns),iblk)*avgct(ns)*ravgctz
+                    if (f_alvdf_ai (1:1) /= 'x' .and. n_alvdf_ai(ns) /= 0) &
+                       a2D(i,j,n_alvdf_ai(ns),iblk) = &
+                       a2D(i,j,n_alvdf_ai(ns),iblk)*avgct(ns)*ravgctz
+                    if (f_alidr_ai (1:1) /= 'x' .and. n_alidr_ai(ns) /= 0) &
+                       a2D(i,j,n_alidr_ai(ns),iblk) = &
+                       a2D(i,j,n_alidr_ai(ns),iblk)*avgct(ns)*ravgctz
+                    if (f_alidf_ai (1:1) /= 'x' .and. n_alidf_ai(ns) /= 0) &
+                       a2D(i,j,n_alidf_ai(ns),iblk) = &
+                       a2D(i,j,n_alidf_ai(ns),iblk)*avgct(ns)*ravgctz
                  endif
               enddo             ! i
               enddo             ! j

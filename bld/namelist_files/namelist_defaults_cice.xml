@@ -537,21 +537,37 @@
 <f_albsni hgrid="ar9v4"         >'mdhxx'</f_albsni>
 <f_albsni cice_mode='prescribed'>'xxxxx'</f_albsni>
 
-<f_alvdr                       >'mxxxx'</f_alvdr>
+<f_alvdr                       >'xxxxx'</f_alvdr>
 <f_alvdr hgrid="ar9v4"         >'mdhxx'</f_alvdr>
 <f_alvdr cice_mode='prescribed'>'xxxxx'</f_alvdr>
 
-<f_alidr                       >'mxxxx'</f_alidr>
+<f_alidr                       >'xxxxx'</f_alidr>
 <f_alidr hgrid="ar9v4"         >'mdhxx'</f_alidr>
 <f_alidr cice_mode='prescribed'>'xxxxx'</f_alidr>
 
-<f_alvdf                       >'mxxxx'</f_alvdf>
+<f_alvdf                       >'xxxxx'</f_alvdf>
 <f_alvdf hgrid="ar9v4"         >'mdhxx'</f_alvdf>
 <f_alvdf cice_mode='prescribed'>'xxxxx'</f_alvdf>
 
-<f_alidf                       >'mxxxx'</f_alidf>
+<f_alidf                       >'xxxxx'</f_alidf>
 <f_alidf hgrid="ar9v4"         >'mdhxx'</f_alidf>
 <f_alidf cice_mode='prescribed'>'xxxxx'</f_alidf>
+
+<f_alvdr_ai                       >'mxxxx'</f_alvdr_ai>
+<f_alvdr_ai hgrid="ar9v4"         >'mdhxx'</f_alvdr_ai>
+<f_alvdr_ai cice_mode='prescribed'>'xxxxx'</f_alvdr_ai>
+
+<f_alidr_ai                       >'mxxxx'</f_alidr_ai>
+<f_alidr_ai hgrid="ar9v4"         >'mdhxx'</f_alidr_ai>
+<f_alidr_ai cice_mode='prescribed'>'xxxxx'</f_alidr_ai>
+
+<f_alvdf_ai                       >'mxxxx'</f_alvdf_ai>
+<f_alvdf_ai hgrid="ar9v4"         >'mdhxx'</f_alvdf_ai>
+<f_alvdf_ai cice_mode='prescribed'>'xxxxx'</f_alvdf_ai>
+
+<f_alidf_ai                       >'mxxxx'</f_alidf_ai>
+<f_alidf_ai hgrid="ar9v4"         >'mdhxx'</f_alidf_ai>
+<f_alidf_ai cice_mode='prescribed'>'xxxxx'</f_alidf_ai>
 
 <f_albice                       >'mxxxx'</f_albice>
 <f_albice hgrid="ar9v4"         >'mdhxx'</f_albice>
