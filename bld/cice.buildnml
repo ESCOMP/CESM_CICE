@@ -63,15 +63,15 @@ if ($CICE_AUTO_DECOMP eq 'true') {
     my @config = split(/\s/, $config_args);
     chdir "$CASEROOT";
     if ( $config[0] >= 0) {
-	$sysmod = "./xmlchange -s CICE_BLCKX=$config[2]";
+	$sysmod = "./xmlchange -noecho CICE_BLCKX=$config[2]";
 	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -s CICE_BLCKY=$config[3]";
+	$sysmod = "./xmlchange -noecho CICE_BLCKY=$config[3]";
 	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -s CICE_MXBLCKS=$config[4]";
+	$sysmod = "./xmlchange -noecho CICE_MXBLCKS=$config[4]";
 	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -s CICE_DECOMPTYPE=$config[5]";
+	$sysmod = "./xmlchange -noecho CICE_DECOMPTYPE=$config[5]";
 	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -s CICE_DECOMPSETTING=$config[6]";
+	$sysmod = "./xmlchange -noecho CICE_DECOMPSETTING=$config[6]";
 	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
     } else {
 	die "ERROR cice.buildnml: cice decomp not set for $ICE_GRID on $ntasks x $NTHRDS_ICE procs";
@@ -92,7 +92,7 @@ my $cppdefs = "$cppdefs -DBLCKX=$CICE_BLCKX -DBLCKY=$CICE_BLCKY -DMXBLCKS=$CICE_
 # this will determine if need to rebuild at runtime - force user to call $CASE.buildexe
 
 chdir "$CASEROOT";
-my $sysmod  = "./xmlchange -s -id CICE_CPPDEFS -file env_build.xml -val=\'$cppdefs\'";
+my $sysmod  = "./xmlchange -noecho -id CICE_CPPDEFS -file env_build.xml -val=\'$cppdefs\'";
 system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
 chdir "$CASEBUILD/ciceconf";
 

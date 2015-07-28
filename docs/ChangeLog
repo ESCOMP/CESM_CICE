@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150728
+Originator: dbailey
+Date: July 28, 2015
+Version: 5.0
+One-line Summary: Change -s to -noecho for xmlchange.
+
+M       bld/cice.buildnml
+
+===============================================================
 cice5_20150721
 Originator: dbailey
 Date: July 21, 2015
