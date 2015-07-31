@@ -1,4 +1,17 @@
 ===============================================================
+cice5_20150731
+Originator: dbailey
+Date: July 31, 2015
+Version: 5.0
+One-line Summary: Inialize blocks_ice to null.
+
+Also some fixes for snowfrac.
+
+M        src/drivers/cice/CICE_RunMod.F90
+M        src/source/ice_domain.F90
+M        src/source/ice_history_shared.F90
+
+===============================================================
 cice5_20150728
 Originator: dbailey
 Date: July 28, 2015
