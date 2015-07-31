@@ -33,7 +33,7 @@
       nblocks            ! actual number of blocks on this processor
 
    integer (int_kind), dimension(:), pointer, public :: &
-      blocks_ice         ! block ids for local blocks
+      blocks_ice => null()        ! block ids for local blocks
 
    type (distrb), public :: &
       distrb_info        ! block distribution info

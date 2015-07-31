@@ -184,7 +184,7 @@
       character (len=max_nstrm), public :: &
 !          f_example   = 'md', &
            f_hi        = 'm', f_hs         = 'm', &
-           f_snowfrac  = 'm', f_snowfracn  = 'm', &
+           f_snowfrac  = 'x', f_snowfracn  = 'x', &
            f_Tsfc      = 'm', f_aice       = 'm', &
            f_uvel      = 'm', f_vvel       = 'm', &
            f_uatm      = 'm', f_vatm       = 'm', &
