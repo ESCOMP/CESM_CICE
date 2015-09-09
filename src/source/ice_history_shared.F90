@@ -29,7 +29,6 @@
       use ice_domain_size, only: ncat, nilyr, nslyr, nblyr, max_nstrm
 
       implicit none
-      save
 
       private
       public :: define_hist_field, accum_hist_field, icefields_nml, construct_filename

@@ -20,7 +20,6 @@
       implicit none
       private
       public :: init_transport, transport_remap, transport_upwind
-      save
 
       character (len=char_len), public ::     &
          advection   ! type of advection scheme used

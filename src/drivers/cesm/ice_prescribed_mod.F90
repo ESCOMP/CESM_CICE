@@ -49,7 +49,6 @@ module ice_prescribed_mod
    use ice_read_write
 
    implicit none
-   save
 
    private ! except
 

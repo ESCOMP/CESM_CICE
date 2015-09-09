@@ -1,4 +1,49 @@
 ===============================================================
+cice5_20150908
+Originator: dbailey
+Date: Sep 8, 2015
+Version: 5.0
+One-line Summary: Remove module save statements and fix one
+ OMP PRIVATE variable netsw.
+
+D       src/input_templates/gx1/iced_gx1_v5.nc
+D       src/input_templates/gx3/iced_gx3_v5.nc
+M       src/source/ice_init.F90
+M       src/source/ice_dyn_evp.F90
+M       src/source/ice_transport_driver.F90
+M       src/source/ice_restoring.F90
+M       src/source/ice_history_bgc.F90
+M       src/source/ice_dyn_eap.F90
+M       src/source/ice_itd.F90
+M       src/source/ice_transport_remap.F90
+M       src/source/ice_dyn_shared.F90
+M       src/source/ice_history_pond.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_ocean.F90
+M       src/source/ice_history_mechred.F90
+M       src/source/ice_history_drag.F90
+M       src/source/ice_fileunits.F90
+M       src/source/ice_therm_shared.F90
+M       src/source/ice_mechred.F90
+M       src/source/ice_kinds_mod.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_itd.F90
+M       src/source/ice_state.F90
+M       src/source/ice_grid.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_forcing.F90
+M       src/source/ice_orbital.F90
+M       src/source/ice_spacecurve.F90
+M       src/source/ice_history.F90
+M       src/source/ice_domain_size.F90
+M       src/drivers/cesm/ice_scam.F90
+M       src/drivers/cesm/CICE_InitMod.F90
+M       src/drivers/cesm/CICE_RunMod.F90
+M       src/drivers/cesm/CICE_FinalMod.F90
+M       src/drivers/cesm/ice_prescribed_mod.F90
+
+===============================================================
 cice5_20150801
 Originator: dbailey
 Date: July 31, 2015

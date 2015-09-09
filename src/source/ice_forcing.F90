@@ -36,7 +36,6 @@
                 get_forcing_atmo, get_forcing_ocn, &
                 read_clim_data, read_clim_data_nc, &
                 interpolate_data, interp_coeff_monthly
-      save
 
       integer (kind=int_kind), public :: &
          ycycle          , & ! number of years in forcing cycle

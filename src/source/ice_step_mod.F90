@@ -15,7 +15,6 @@
       use ice_kinds_mod
       implicit none
       private
-      save
 
       public :: step_therm1, step_therm2, step_dynamics, &
                 prep_radiation, step_radiation, post_thermo

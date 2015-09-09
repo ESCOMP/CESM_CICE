@@ -19,7 +19,6 @@
       private
       public :: init_evp, set_evp_parameters, stepu, principal_stress, &
                 evp_prep1, evp_prep2, evp_finish
-      save
 
       ! namelist parameters
 

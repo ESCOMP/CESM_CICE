@@ -42,7 +42,6 @@
                          column_conservation_check, compute_tracers
 
       implicit none
-      save
 
       private
       public :: ice_strength, ridge_ice

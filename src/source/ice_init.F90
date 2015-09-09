@@ -17,7 +17,6 @@
       use ice_communicate, only: my_task, master_task
 
       implicit none
-      save
 
       character(len=char_len_long) :: &
          ice_ic      ! method of ice cover initialization

@@ -17,7 +17,6 @@
       private
       public :: init_hist_bgc_2D, init_hist_bgc_3Dc, &
                 init_hist_bgc_4Db, accum_hist_bgc
-      save
       
       !---------------------------------------------------------------
       ! flags: write to output file if true or histfreq value

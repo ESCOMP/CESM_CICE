@@ -36,7 +36,6 @@
       use ice_fileunits, only: nu_diag
 
       implicit none
-      save
       private
       public :: init_remap, horizontal_remap, make_masks
 

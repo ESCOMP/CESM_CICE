@@ -27,7 +27,6 @@
       use ice_fileunits, only: nu_diag
 
       implicit none
-      save
       
       private
       public :: update_vertical_tracers, lateral_melt, linear_itd, &

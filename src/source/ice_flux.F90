@@ -25,7 +25,6 @@
       public :: init_coupler_flux, init_history_therm, init_history_dyn, &
                 init_flux_ocn, init_flux_atm, scale_fluxes, merge_fluxes, &
                 set_sfcflux
-      save
 
       !-----------------------------------------------------------------
       ! Dynamics component

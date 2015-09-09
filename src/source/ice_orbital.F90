@@ -13,7 +13,6 @@
       implicit none
       private
       public :: init_orbit, compute_coszen
-      save
 
       integer (kind=int_kind) :: iyear_AD  ! Year to calculate orbit for
  

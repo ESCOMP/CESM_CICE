@@ -11,7 +11,6 @@
       use ice_domain_size, only: ncat, nilyr, nslyr, max_ntrcr
 
       implicit none
-      save
 
       private
       public :: calculate_Tin_from_qin, &

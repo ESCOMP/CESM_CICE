@@ -20,7 +20,6 @@
       use ice_constants
 
       implicit none
-      save
 
       private
       public :: ocean_mixed_layer

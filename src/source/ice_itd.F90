@@ -32,7 +32,6 @@
       use ice_fileunits, only: nu_diag
 
       implicit none
-      save
 
       private
       public :: aggregate_area, shift_ice, column_sum, column_conservation_check, &

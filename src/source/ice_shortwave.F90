@@ -70,7 +70,7 @@
 
       ! category albedos
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ncat,max_blocks), public, save :: &
+         dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          alvdrn      , & ! visible direct albedo           (fraction)
          alidrn      , & ! near-ir direct albedo           (fraction)
          alvdfn      , & ! visible diffuse albedo          (fraction)
@@ -78,7 +78,7 @@
 
       ! albedo components for history
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,ncat,max_blocks), public, save :: &
+         dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          albicen, &   ! bare ice 
          albsnon, &   ! snow 
          albpndn, &   ! pond 
@@ -86,25 +86,25 @@
 
       ! shortwave components
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,nilyr,ncat,max_blocks), public, save :: &
+         dimension (nx_block,ny_block,nilyr,ncat,max_blocks), public :: &
          Iswabsn         ! SW radiation absorbed in ice layers (W m-2)
 
       real (kind=dbl_kind), &
-         dimension (nx_block,ny_block,nslyr,ncat,max_blocks), public, save :: &
+         dimension (nx_block,ny_block,nslyr,ncat,max_blocks), public :: &
          Sswabsn         ! SW radiation absorbed in snow layers (W m-2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat,max_blocks), &
-         public, save :: &
+         public :: &
          fswsfcn     , & ! SW absorbed at ice/snow surface (W m-2)
          fswthrun    , & ! SW through ice to ocean            (W/m^2)
          fswintn         ! SW absorbed in ice interior, below surface (W m-2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr+1,ncat,max_blocks), &
-         public, save :: &
+         public :: &
          fswpenln        ! visible SW entering ice layers (W m-2)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat,max_blocks), &
-         public, save :: &
+         public :: &
          snowfracn       ! Category snow fraction used in radiation
 
       ! dEdd tuning parameters, set in namelist
@@ -280,7 +280,7 @@
       !-----------------------------------------------------------------
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,n,ilo,ihi,jlo,jhi,this_block, &
-      !$OMP                     ij,icells,cszn,indxi,indxj)
+      !$OMP                     ij,icells,cszn,netsw,indxi,indxj)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
