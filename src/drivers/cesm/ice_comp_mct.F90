@@ -48,7 +48,7 @@ module ice_comp_mct
                               idate, idate0, mday, time, month, daycal,  &
 		              sec, dt, dt_dyn, calendar,                 &
                               calendar_type, nextsw_cday, days_per_year, &
-                              nyr, new_year, time2sec, year_init
+                              nyr, new_year, time2sec, year_init, use_leap_years
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
 
@@ -272,6 +272,8 @@ contains
          curr_ymd=curr_ymd,   curr_tod=curr_tod,         &
          ref_ymd=ref_ymd,     ref_tod=ref_tod)
 
+    idate0 = ref_ymd
+
     if (runtype == 'initial') then
        if (ref_ymd /= start_ymd .or. ref_tod /= start_tod) then
           if (my_task == master_task) then
@@ -291,7 +293,6 @@ contains
                trim(subname),' resetting idate to match sync clock'
        end if
 
-       idate0 = curr_ymd
        idate = curr_ymd
 
        if (idate < 0) then
