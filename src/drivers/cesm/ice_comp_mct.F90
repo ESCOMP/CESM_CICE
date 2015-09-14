@@ -272,8 +272,6 @@ contains
          curr_ymd=curr_ymd,   curr_tod=curr_tod,         &
          ref_ymd=ref_ymd,     ref_tod=ref_tod)
 
-    idate0 = ref_ymd
-
     if (runtype == 'initial') then
        if (ref_ymd /= start_ymd .or. ref_tod /= start_tod) then
           if (my_task == master_task) then

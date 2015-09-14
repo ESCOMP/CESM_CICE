@@ -125,8 +125,7 @@
          hp0    = 0.200_dbl_kind    ! pond depth below which transition to bare ice
 
       real (kind=dbl_kind) :: &
-         exp_min, &                 ! minimum exponential value
-         netsw
+         exp_min         ! minimum exponential value
 
 !=======================================================================
 
@@ -163,7 +162,7 @@
          ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
          n               ! thickness category index
 
-      real (kind=dbl_kind) :: cszn ! counter for history averaging
+      real (kind=dbl_kind) :: cszn,netsw ! counter for history averaging
 
       type (block) :: &
          this_block      ! block information for current block
@@ -1562,6 +1561,8 @@
          avdfl   , & ! visible, diffuse, albedo (fraction) 
          aidrl   , & ! near-ir, direct, albedo (fraction) 
          aidfl       ! near-ir, diffuse, albedo (fraction) 
+
+      real (kind=dbl_kind) :: netsw
 
 !-----------------------------------------------------------------------
 
