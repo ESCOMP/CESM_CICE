@@ -20,7 +20,7 @@
 
 <dt> 3600.0 </dt> 
 
-<year_init              > 0 </year_init>
+<year_init              > 1 </year_init>
 <year_init hgrid='ar9v3'> 1 </year_init>
 <year_init hgrid='ar9v4'> 1 </year_init>
 

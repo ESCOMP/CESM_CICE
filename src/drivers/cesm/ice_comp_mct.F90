@@ -48,7 +48,8 @@ module ice_comp_mct
                               idate, idate0, mday, time, month, daycal,  &
 		              sec, dt, dt_dyn, calendar,                 &
                               calendar_type, nextsw_cday, days_per_year, &
-                              nyr, new_year, time2sec, year_init, use_leap_years
+                              nyr, new_year, time2sec, year_init, &
+                              use_leap_years, basis_seconds
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
   use ice_timers
 
@@ -309,7 +310,12 @@ contains
           write(nu_diag,*) trim(subname),' cice start ymds = ',iyear,month,mday,start_tod
        endif
 
-       call time2sec(iyear,month,mday,time)
+       if (calendar_type /= "GREGORIAN") then
+          call time2sec(iyear-year_init,month,mday,time)
+       else
+          call time2sec(iyear-(year_init-1),month,mday,time)
+       endif
+
        time = time+start_tod
 
        call shr_sys_flush(nu_diag)
@@ -511,16 +517,6 @@ contains
          curr_ymd=curr_ymd, curr_tod=curr_tod)
 
     force_restart_now = seq_timemgr_RestartAlarmIsOn(EClock)
-
-    if (calendar_type .eq. "GREGORIAN") then 	
-       nyrp = nyr
-       nyr = (curr_ymd/10000)+1           ! integer year of basedate
-       if (nyr /= nyrp) then
-          new_year = .true.
-       else
-          new_year = .false.
-       end if
-    end if
 
     !-------------------------------------------------------------------
     ! get import state

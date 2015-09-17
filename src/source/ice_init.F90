@@ -175,7 +175,6 @@
 
       days_per_year = 365    ! number of days in a year
       use_leap_years= .false.! if true, use leap years (Feb 29)
-      if (calendar_type == "GREGORIAN") use_leap_years = .true.
       year_init = 0          ! initial year
       istep0 = 0             ! no. of steps taken in previous integrations,
                              ! real (dumped) or imagined (to set calendar)
@@ -444,6 +443,16 @@
             endif
             ice_ic = 'none'
          endif
+      endif
+
+      if (calendar_type == "GREGORIAN") use_leap_years = .true.
+
+      if (year_init == 0 .and. use_leap_years) then
+         if (my_task == master_task) then
+            write(nu_diag,*) 'WARNING: Gregorian calendar, but year_init is 0'
+            write(nu_diag,*) 'WARNING: Resetting year_init to 1'
+         endif
+         year_init = 1
       endif
 
 #ifndef ncdf

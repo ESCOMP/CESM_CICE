@@ -373,7 +373,12 @@ end subroutine
           write(nu_diag,*) trim(subname),' cice start ymds = ',iyear,month,mday,start_tod
        endif
 
-       call time2sec(iyear,month,mday,time)
+       if (calendar_type /= "GREGORIAN") then
+          call time2sec(iyear-year_init,month,mday,time)
+       else
+          call time2sec(iyear-(year_init-1),month,mday,time)
+       endif
+
        time = time+start_tod
 
        call shr_sys_flush(nu_diag)
@@ -689,16 +694,6 @@ end subroutine
          curr_ymd=curr_ymd, curr_tod=curr_tod)
 
     force_restart_now = seq_timemgr_RestartAlarmIsOn(EClock)
-
-    if (calendar_type .eq. "GREGORIAN") then 	
-       nyrp = nyr
-       nyr = (curr_ymd/10000)+1           ! integer year of basedate
-       if (nyr /= nyrp) then
-          new_year = .true.
-       else
-          new_year = .false.
-       end if
-    end if
 
     !-------------------------------------------------------------------
     ! get import state

@@ -1,4 +1,28 @@
 ===============================================================
+cice5_20150917
+Originator: dbailey
+Date: Sep 17, 2015
+Version: 5.0
+One-line Summary: New leap year changes.
+
+These changes should now work with arbitrary year_init. The only
+constraint is that year_init must be greater than 0 for Gregorian
+calendars while 0 is fine for noleap calendars.
+
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_init.F90
+M       src/drivers/cesm/ice_comp_esmf.F90
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
+cice5_20150914
+Originator: dbailey
+Date: Sep 14, 2015
+Version: 5.0
+One-line Summary: Back out leap year changes for this tag.
+
+===============================================================
 cice5_20150911
 Originator: dbailey
 Date: Sep 11, 2015
