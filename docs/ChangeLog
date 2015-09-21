@@ -1,4 +1,45 @@
 ===============================================================
+cice5_20150921
+Originator: dbailey
+Date: Sep 21, 2015
+Version: 5.0
+One-line Summary: CIME Refactor
+
+D       bld/cice.buildlib
+D       bld/cice.buildnml
+M       bld/build-namelist
+D       bld/user_nl_cice
+A  +    cime_config
+A  +    cime_config/config_compsets.xml
+A  +    cime_config/testdefs
+A  +    cime_config/testdefs/testmods_dirs
+A  +    cime_config/testdefs/testmods_dirs/cice
+A  +    cime_config/testdefs/testmods_dirs/cice/default
+A  +    cime_config/testdefs/testmods_dirs/cice/default/shell_commands
+A  +    cime_config/testdefs/testmods_dirs/cice/default/user_nl_cice
+A  +    cime_config/testdefs/testmods_dirs/cice/pop
+A  +    cime_config/testdefs/testmods_dirs/cice/pop/user_nl_pop2
+A  +    cime_config/testdefs/testmods_dirs/cice/pop/shell_commands
+A  +    cime_config/testdefs/testmods_dirs/cice/pop/user_nl_cice
+A  +    cime_config/testdefs/testlist_cice.xml
+A  +    cime_config/buildlib
+A  +    cime_config/buildnml
+A  +    cime_config/config_component.xml
+A  +    cime_config/user_nl_cice
+A  +    cime_config/config_pes.xml
+D       cimetest
+D       cimetest/testmods_dirs
+D       cimetest/testmods_dirs/cice
+D       cimetest/testmods_dirs/cice/default
+D       cimetest/testmods_dirs/cice/default/shell_commands
+D       cimetest/testmods_dirs/cice/default/user_nl_cice
+D       cimetest/testmods_dirs/cice/pop
+D       cimetest/testmods_dirs/cice/pop/user_nl_pop2
+D       cimetest/testmods_dirs/cice/pop/shell_commands
+D       cimetest/testmods_dirs/cice/pop/user_nl_cice
+D       cimetest/testlist_cice.xml
+
+===============================================================
 cice5_20150917
 Originator: dbailey
 Date: Sep 17, 2015
