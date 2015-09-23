@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20150924
+Originator: dbailey
+Date: Sep 23, 2015
+Version: 5.0
+One-line Summary: Add year_init default for prescribed mode.
+
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20150923
 Originator: dbailey
 Date: Sep 23, 2015
