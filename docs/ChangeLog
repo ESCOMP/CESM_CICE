@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20150925
+Originator: dbailey
+Date: Sep 24, 2015
+Version: 5.0
+One-line Summary: Deal with year 0000.
+
+M       bld/build-namelist
+
+===============================================================
 cice5_20150924
 Originator: dbailey
 Date: Sep 23, 2015

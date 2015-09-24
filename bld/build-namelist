@@ -351,6 +351,7 @@ if ( defined $opts{'caseroot'} ) {
     $RUN_REFCASE     = $xmlvars{'RUN_REFCASE'};
     $RUN_REFDATE     = $xmlvars{'RUN_REFDATE'};
     $RUN_REFTOD      = $xmlvars{'RUN_REFTOD'};
+    $RUN_STARTDATE   = $xmlvars{'RUN_STARTDATE'};
     if ($cice_mode eq 'prescribed') {
 	$SSTICE_GRID_FILENAME = $xmlvars{'SSTICE_GRID_FILENAME'};
 	$SSTICE_DATA_FILENAME = $xmlvars{'SSTICE_DATA_FILENAME'};
@@ -433,7 +434,12 @@ if ( defined $opts{'caseroot'} ) {
 #add_default($nl, 'dt', 'val'=>"$dt");
 #add_default($nl, 'runid', 'val'=>"$CASE");
 add_default($nl, 'ndtd');
-add_default($nl, 'year_init');
+my $year = substr($RUN_STARTDATE, 0, 4);
+if ($year eq '0000') {
+    add_default($nl, 'year_init', 'val'=>"0");
+} else {
+    add_default($nl, 'year_init');
+}
 add_default($nl, 'histfreq');
 add_default($nl, 'dumpfreq');
 add_default($nl, 'histfreq_n');
