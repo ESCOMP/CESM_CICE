@@ -332,6 +332,7 @@ my $SSTICE_YEAR_ALIGN;
 my $SSTICE_YEAR_START;   
 my $SSTICE_YEAR_END;     
 my $SSTICE_STREAM;       
+my $RUN_STARTDATE;
 
 my %xmlvars = ();
 if ( defined $opts{'caseroot'} ) {
@@ -435,7 +436,8 @@ if ( defined $opts{'caseroot'} ) {
 #add_default($nl, 'runid', 'val'=>"$CASE");
 add_default($nl, 'ndtd');
 my $year = substr($RUN_STARTDATE, 0, 4);
-if ($year eq '0000') {
+if ($year eq "0000") {
+    print "DEBUG: start year $year \n";
     add_default($nl, 'year_init', 'val'=>"0");
 } else {
     add_default($nl, 'year_init');
