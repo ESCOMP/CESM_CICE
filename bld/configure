@@ -293,7 +293,7 @@ if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 if (defined $opts{'nsnwlyr'}) {
     $cfg_ref->set('nsnwlyr', $opts{'nsnwlyr'});
 } else {
-    $cfg_ref->set('nsnwlyr', 1);
+    $cfg_ref->set('nsnwlyr', 3);
 }
 
 # Tracers
@@ -328,7 +328,7 @@ if (defined $opts{'trpnd'}) {
 if (defined $opts{'trlvl'}) {
     $cfg_ref->set('trlvl', $opts{'trlvl'});
 } else {
-    $cfg_ref->set('trlvl', 0);
+    $cfg_ref->set('trlvl', 1);
 }
 
 if (defined $opts{'trbri'}) {
@@ -382,8 +382,13 @@ if (defined $opts{'nicelyr'}) {
     if ($hgrid =~ m/ar9v.*/ ) {
        $cfg_ref->set('nicelyr', 7);
     } else {
-       $cfg_ref->set('nicelyr', 4);
+       $cfg_ref->set('nicelyr', 8);
     }
+}
+
+if ($cice_mode eq 'prescribed') {
+    $cfg_ref->set('nicelyr', 4);
+    $cfg_ref->set('nsnwlyr', 1);
 }
 
 # Override resolution settings to configure for SCAM mode.  The override is needed

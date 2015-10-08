@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20151008
+Originator: dbailey
+Date: Oct 08, 2015
+Version: 5.0
+One-line Summary: Change to CICE5 physics by default.
+
+M       bld/configure
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20150926
 Originator: dbailey
 Date: Sep 24, 2015
