@@ -302,7 +302,7 @@ if (defined $opts{'infile'}) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# Get cice mode - not that cice_mode must be a configure time option since it sets
+# Get cice mode - note that cice_mode must be a configure time option since it sets
 # NCAT which is a CPP variable
 
 my $cice_mode = $cfg->get('cice_mode');
@@ -311,6 +311,8 @@ if ($cice_mode ne 'prognostic' && $cice_mode ne 'thermo_only') {
 } else {
     add_default($nl, 'prescribed_ice', 'val'=>'.false.');
 }
+
+my $phys = $cfg->get('phys');
 
 #-----------------------------------------------------------------------------------------------
 # Determine xml variables

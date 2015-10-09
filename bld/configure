@@ -67,6 +67,7 @@ OPTIONS
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CICE build directory).
      -cice_mode <mode>   Mode [prognostic | thermo_only | prescribed ]. (default: prognostic)
+     -phys <mode>        Mode [cice5 | cice4]. (default cice5)
      -comp_intf <name>   Component interface to use (ESMF, MCT) (default MCT)
      -bsizex <n>         Size of cice block in first horizontal dimension.
      -bsizey <n>         Size of cice block in second horizontal dimension.
@@ -124,6 +125,7 @@ GetOptions(
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
     "cice_mode=s"               => \$opts{'cice_mode'},
+    "phys=s"                    => \$opts{'phys'},
     "comp_intf=s"               => \$opts{'comp_intf'},
     "bsizex=s"                  => \$opts{'bsizex'},
     "bsizey=s"                  => \$opts{'bsizey'},
@@ -277,6 +279,22 @@ if ($opts{'cice_mode'}) {
 if ($print>=2) { print "cice : mode         is $cice_mode $eol";}
 
 #-----------------------------------------------------------------------------------------------
+# Set the cice physics
+my $phys;
+if ($opts{'phys'}) {
+    $phys = $opts{'phys'}; 
+    $cfg_ref->set('phys', $phys);
+} else {
+    $phys = $cfg_ref->get('phys');
+}    
+if ($cice_mode eq 'prescribed') {
+   $phys = 'cice4';
+   $cfg_ref->set('phys', $phys);
+}
+if ($print>=2) { print "cice : physics         is $phys $eol";}
+print "cice : physics         is $phys $eol";
+
+#-----------------------------------------------------------------------------------------------
 # Set the number of ice categories
 my $ncat;
 if (($cice_mode eq 'prognostic') || ($cice_mode eq 'thermo_only')) {
@@ -386,7 +404,7 @@ if (defined $opts{'nicelyr'}) {
     }
 }
 
-if ($cice_mode eq 'prescribed') {
+if ($phys eq 'cice4') {
     $cfg_ref->set('nicelyr', 4);
     $cfg_ref->set('nsnwlyr', 1);
 }

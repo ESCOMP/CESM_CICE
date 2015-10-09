@@ -1,4 +1,21 @@
 ===============================================================
+cice5_20151009
+Originator: dbailey
+Date: Oct 09, 2015
+Version: 5.0
+One-line Summary: Add -phys option to configure.
+
+-phys cice5 is the default
+-phys cice4 turns on the CICE4 physics options
+Also fix a threading bug in ice_zbgc.F90 (not used).
+
+M       bld/configure
+M       bld/config_files/definition.xml
+M       bld/build-namelist
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/source/ice_zbgc.F90
+
+===============================================================
 cice5_20151008
 Originator: dbailey
 Date: Oct 08, 2015

@@ -135,7 +135,7 @@
 <kitd                          > 1 </kitd> 
 
 <ktherm                        > 2 </ktherm> 
-<ktherm cice_mode='prescribed' > 1 </ktherm> 
+<ktherm phys="cice4"           > 1 </ktherm> 
 <ktherm hgrid="ar9v3"          > 1 </ktherm> 
 <ktherm hgrid="ar9v4"          > 1 </ktherm> 
 
@@ -250,20 +250,21 @@
 <restart_FY> .false. </restart_FY>
 
 <tr_lvl               > .true. </tr_lvl>
+<tr_lvl phys="cice4"  > .false. </tr_lvl>
 <tr_lvl hgrid="ar9v4" > .true. </tr_lvl>
 <tr_lvl hgrid="ar9v3" > .true. </tr_lvl>
 
 <restart_lvl> .false. </restart_lvl>
 
 <tr_pond_cesm                 > .false.  </tr_pond_cesm>
-<tr_pond_cesm cice_mode='prescribed'> .true.  </tr_pond_cesm>
+<tr_pond_cesm phys="cice4"    > .true.  </tr_pond_cesm>
 <tr_pond_cesm hgrid="ar9v3"   > .false. </tr_pond_cesm>
 <tr_pond_cesm hgrid="ar9v4"   > .false. </tr_pond_cesm>
 
 <restart_pond_cesm> .false. </restart_pond_cesm>
 
 <tr_pond_lvl               > .true. </tr_pond_lvl>
-<tr_pond_lvl cice_mode='prescribed'> .false. </tr_pond_lvl>
+<tr_pond_lvl phys="cice4"  > .false. </tr_pond_lvl>
 <tr_pond_lvl hgrid="ar9v3" > .true.  </tr_pond_lvl>
 <tr_pond_lvl hgrid="ar9v4" > .true.  </tr_pond_lvl>
 

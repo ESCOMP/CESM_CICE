@@ -597,7 +597,7 @@
 
       if (tr_brine .or. skl_bgc) then
 
-         call ice_timer_start(timer_bgc) ! biogeochemistry
+         call ice_timer_start(timer_bgc,iblk) ! biogeochemistry
 
       !-----------------------------------------------------------------
       ! initialize
@@ -752,7 +752,7 @@
             endif               ! icells      
          enddo                  ! ncat
 
-         call ice_timer_stop(timer_bgc) ! biogeochemistry
+         call ice_timer_stop(timer_bgc,iblk) ! biogeochemistry
 
       endif  ! tr_brine .or. skl_bgc
 
@@ -959,7 +959,7 @@
       character (len=char_len) :: &
          fieldid         ! field identifier
 
-      call ice_timer_start(timer_bgc) ! biogeochemistry
+!     call ice_timer_start(timer_bgc) ! biogeochemistry
 
       !-----------------------------------------------------------------     
       ! brine
@@ -1067,7 +1067,7 @@
          if (l_stop) return
       endif
 
-      call ice_timer_stop(timer_bgc) ! biogeochemistry
+!     call ice_timer_stop(timer_bgc) ! biogeochemistry
 
       end subroutine add_new_ice_bgc
 
