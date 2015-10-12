@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20151012
+Originator: dbailey
+Date: Oct 12, 2015
+Version: 5.0
+One-line Summary: Temporary hack to ignore refcases.
+
+M       bld/build-namelist
+
+===============================================================
 cice5_20151009
 Originator: dbailey
 Date: Oct 09, 2015
