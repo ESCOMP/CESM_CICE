@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20151013
+Originator: dbailey
+Date: Oct 13, 2015
+Version: 5.0
+One-line Summary: One-line PIO change.
+
+
+M       src/io_pio/ice_history_write.F90
+===============================================================
 cice5_20151012
 Originator: dbailey
 Date: Oct 12, 2015
