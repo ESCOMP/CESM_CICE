@@ -1,4 +1,17 @@
 ===============================================================
+cice5_20151023
+Originator: dbailey
+Date: Oct 23, 2015
+Version: 5.0
+One-line Summary: Reset POP salinity to zero when negative.
+
+Also, change the Tref and Qref history output to be multiplied
+by aice.
+
+M       src/source/ice_history.F90
+M       src/drivers/cesm/ice_import_export.F90
+
+===============================================================
 cice5_20151013
 Originator: dbailey
 Date: Oct 13, 2015

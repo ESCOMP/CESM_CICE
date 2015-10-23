@@ -1359,6 +1359,8 @@
          if (f_fswint_ai (1:1) /= 'x') &
              call accum_hist_field(n_fswint_ai, iblk, fswint_ai(:,:,iblk), a2D)
 
+         workb(:,:) = aice(:,:,iblk)
+
          if (f_fswabs_ai(1:1)/= 'x') &
              call accum_hist_field(n_fswabs_ai, iblk, fswabs(:,:,iblk)*workb(:,:), a2D)
 
@@ -1414,9 +1416,9 @@
          if (f_Tair   (1:1) /= 'x') &
              call accum_hist_field(n_Tair,   iblk, Tair(:,:,iblk), a2D)
          if (f_Tref   (1:1) /= 'x') &
-             call accum_hist_field(n_Tref,   iblk, Tref(:,:,iblk), a2D)
+             call accum_hist_field(n_Tref,   iblk, Tref(:,:,iblk)*workb(:,:), a2D)
          if (f_Qref   (1:1) /= 'x') &
-             call accum_hist_field(n_Qref,   iblk, Qref(:,:,iblk), a2D)
+             call accum_hist_field(n_Qref,   iblk, Qref(:,:,iblk)*workb(:,:), a2D)
          if (f_congel (1:1) /= 'x') &
              call accum_hist_field(n_congel, iblk, congel(:,:,iblk), a2D)
          if (f_frazil (1:1) /= 'x') &

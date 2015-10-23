@@ -286,9 +286,7 @@ contains
 
              sst(i,j,iblk) = sst(i,j,iblk) - Tffresh       ! sea sfc temp (C)
 
-#ifdef RASM_MODS
              sss(i,j,iblk)=max(sss(i,j,iblk),c0)
-#endif
 
              if (tfrz_option == 'minus1p8') then
                 Tf (i,j,iblk) = -1.8_dbl_kind 
