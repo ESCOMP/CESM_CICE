@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20151026
+Originator: jedwards
+Date: Oct 26, 2015
+Version: 5.0
+One-line Summary: Add compset definitions for CICE4 and CICE4%PRES
+
+M cime_config/config_component.xml
+
+
+===============================================================
 cice5_20151023
 Originator: dbailey
 Date: Oct 23, 2015

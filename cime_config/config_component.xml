@@ -18,8 +18,8 @@
     <valid_values>prognostic,prescribed,thermo_only</valid_values>
     <default_value>prognostic</default_value>
     <values>
-      <value compset="CICE_">prognostic</value>
-      <value compset="CICE%PRES_">prescribed</value>
+      <value compset="CICE4?_">prognostic</value>
+      <value compset="CICE4?%PRES_">prescribed</value>
     </values>
     <group>build_component_cice</group>
     <file>env_build.xml</file>
@@ -29,6 +29,10 @@
   <entry id="CICE_CONFIG_OPTS"> 
     <type>char</type>
     <default_value></default_value>
+    <values>
+      <value compset="_CICE4"> -phys cice4 </value>
+      <value compset="_CICE[_%]"> -phys cice5 </value>
+    </values>      
     <group>build_component_cice</group>
     <file>env_build.xml</file>
     <desc>CICE configure options, see CICE configure utility for details.
@@ -131,8 +135,8 @@
   </entry>
 
   <description>
-    <desc compset="_CICE%PRES_">prescribed cice:</desc>
-    <desc compset="_CICE_">prognostic cice:</desc>
+    <desc compset="_CICE4?%PRES_">prescribed cice:</desc>
+    <desc compset="_CICE4?_">prognostic cice:</desc>
   </description>
 
   <help>
