@@ -597,7 +597,7 @@
 
       if (tr_brine .or. skl_bgc) then
 
-         call ice_timer_start(timer_bgc,iblk) ! biogeochemistry
+!        call ice_timer_start(timer_bgc,iblk) ! biogeochemistry
 
       !-----------------------------------------------------------------
       ! initialize
@@ -752,7 +752,7 @@
             endif               ! icells      
          enddo                  ! ncat
 
-         call ice_timer_stop(timer_bgc,iblk) ! biogeochemistry
+!        call ice_timer_stop(timer_bgc,iblk) ! biogeochemistry
 
       endif  ! tr_brine .or. skl_bgc
 
