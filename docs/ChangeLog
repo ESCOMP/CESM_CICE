@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20151105
+Originator: dbailey
+Date: 5 Nov, 2015
+Version: 5.0
+One-line Summary: Use perf_mod t_stampf for wall clock time.
+
+M       src/mpi/ice_timers.F90
+M       src/source/ice_zbgc.F90
+M       src/source/ice_step_mod.F90
+M       src/drivers/cesm/CICE_RunMod.F90
+
+===============================================================
 cice5_20151026
 Originator: jedwards
 Date: Oct 26, 2015

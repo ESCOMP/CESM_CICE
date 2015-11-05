@@ -18,6 +18,9 @@
    use ice_exit, only: abort_ice
    use ice_fileunits, only: nu_diag
    use ice_communicate, only: my_task, master_task
+#ifdef CCSMCOUPLED
+   use perf_mod
+#endif
 
    implicit none
    private
@@ -315,8 +318,13 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
+#ifdef CCSMCOUPLED
+   real (dbl_kind) :: wall, usr, sys
+#else
    double precision MPI_WTIME
    external MPI_WTIME
+#endif
+
 
 !-----------------------------------------------------------------------
 !
@@ -340,7 +348,12 @@
          !*** start block timer
 
          all_timers(timer_id)%block_started(block_id) = .true.
+#ifdef CCSMCOUPLED
+         call t_stampf(wall, usr, sys)
+         all_timers(timer_id)%block_cycles1(block_id) = wall
+#else
          all_timers(timer_id)%block_cycles1(block_id) = MPI_WTIME()
+#endif
 
          !*** start node timer if not already started by
          !*** another thread.  if already started, keep track
@@ -353,7 +366,12 @@
             all_timers(timer_id)%node_started = .true.
             all_timers(timer_id)%num_starts   = 1
             all_timers(timer_id)%num_stops    = 0
+#ifdef CCSMCOUPLED
+            call t_stampf(wall, usr, sys)
+            all_timers(timer_id)%node_cycles1 = wall
+#else
             all_timers(timer_id)%node_cycles1 = MPI_WTIME()
+#endif
          else
             all_timers(timer_id)%num_starts = &
             all_timers(timer_id)%num_starts + 1
@@ -374,7 +392,12 @@
          !*** start node timer
 
          all_timers(timer_id)%node_started = .true.
+#ifdef CCSMCOUPLED
+         call t_stampf(wall, usr, sys)
+         all_timers(timer_id)%node_cycles1 = wall
+#else
          all_timers(timer_id)%node_cycles1 = MPI_WTIME()
+#endif
 
       endif
    else
@@ -405,8 +428,12 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
+#ifdef CCSMCOUPLED
+   real (dbl_kind) :: wall, usr, sys
+#else
    double precision MPI_WTIME
    external MPI_WTIME
+#endif
 
 !-----------------------------------------------------------------------
 !
@@ -423,7 +450,12 @@
 !
 !-----------------------------------------------------------------------
 
+#ifdef CCSMCOUPLED
+   call t_stampf(wall, usr, sys)
+   cycles2 = wall
+#else
    cycles2 = MPI_WTIME()
+#endif
 
 !-----------------------------------------------------------------------
 !
