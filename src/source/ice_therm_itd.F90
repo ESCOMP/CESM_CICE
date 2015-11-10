@@ -1243,6 +1243,7 @@
                               vicen,                 &
                               aice0,     aice,       &
                               frzmlt,    frazil,     &
+                              frazil_diag,           &
                               frz_onset, yday,       &
                               update_ocn_f,          &
                               fresh,     fsalt,      &
@@ -1297,6 +1298,7 @@
          intent(inout) :: &
          aice0     , & ! concentration of open water
          frazil    , & ! frazil ice growth        (m/step-->cm/day)
+         frazil_diag, & ! frazil ice growth diagnostic (m/step-->cm/day)
          fresh     , & ! fresh water flux to ocean (kg/m^2/s)
          fsalt         ! salt flux to ocean (kg/m^2/s)
 
@@ -1364,6 +1366,7 @@
          rnilyr       , & ! real(nilyr)
          dfresh       , & ! change in fresh
          dfsalt       , & ! change in fsalt
+         vi0tmp       , & ! frzmlt part of frazil
          Ti               ! frazil temperature
       
       real (kind=dbl_kind), dimension (icells) :: &
@@ -1524,6 +1527,16 @@
 
          if (update_ocn_f) then
             dfresh = -rhoi*vi0new(ij)/dt 
+            dfsalt = ice_ref_salinity*p001*dfresh
+
+            fresh(i,j)      = fresh(i,j)      + dfresh
+            fsalt(i,j)      = fsalt(i,j)      + dfsalt
+         endif
+         ! Need to return mushy-layer frazil to POP
+         if (ktherm == 2 .and. .not.update_ocn_f) then
+            vi0tmp = fnew*dt / (rhoi*Lfresh)
+            frazil_diag(i,j) = frazil(i,j) - vi0tmp
+            dfresh = -rhoi*(vi0new(ij)-vi0tmp)/dt 
             dfsalt = ice_ref_salinity*p001*dfresh
 
             fresh(i,j)      = fresh(i,j)      + dfresh

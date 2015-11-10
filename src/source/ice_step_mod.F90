@@ -734,7 +734,7 @@
       use ice_exit, only: abort_ice
       use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
           update_ocn_f, fsalt, Tf, sss, salinz, fhocn, faero_ocn, rside, &
-          meltl
+          meltl, frazil_diag
       use ice_fileunits, only: nu_diag
       use ice_grid, only: tmask
       use ice_itd, only: cleanup_itd, kitd, aggregate_area, reduce_area
@@ -885,6 +885,7 @@
                            aice      (:,:,  iblk),          &
                            frzmlt    (:,:,  iblk),          &
                            frazil    (:,:,  iblk),          &
+                           frazil_diag(:,:,  iblk),         &
                            frz_onset (:,:,  iblk), yday,    &
                            update_ocn_f,                    &
                            fresh     (:,:,  iblk),          &

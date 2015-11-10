@@ -114,11 +114,11 @@
           fswabs, fswthru, flw, flwout, fsens, fsurf, flat, frzmlt_init, frain, fpond, &
           coszen, faero_atm, faero_ocn, fhocn_ai, fsalt_ai, fresh_ai, &
           update_ocn_f, Tair, Qa, fsw, fcondtop, meltt, meltb, meltl, snoice, &
-          dsnow, congel, sst, sss, Tf, fhocn
+          dsnow, congel, sst, sss, Tf, fhocn, frazil_diag
       use ice_global_reductions, only: global_sum, global_sum_prod, global_maxval
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
       use ice_state ! everything
-      use ice_therm_shared, only: calc_Tsfc
+      use ice_therm_shared, only: calc_Tsfc, ktherm
       use ice_zbgc_shared, only: rhosi
 #ifdef CCSMCOUPLED
       use ice_prescribed_mod, only: prescribed_ice
@@ -533,6 +533,9 @@
          ! frazil ice growth !! should not be multiplied by aice
          ! m/step->kg/m^2/s
          work1(:,:,:) = frazil(:,:,:)*rhoi/dt
+         if (ktherm == 2 .and. .not.update_ocn_f) then
+            work1(:,:,:) = frazil_diag(:,:,:)*rhoi/dt
+         endif
          frzn = global_sum(work1, distrb_info, &
                            field_loc_center, tarean)
          frzs = global_sum(work1, distrb_info, &
