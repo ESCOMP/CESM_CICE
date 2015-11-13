@@ -2,6 +2,8 @@ module ice_cpl_indices
   
   use seq_flds_mod
   use mct_mod
+  use ice_domain_size, only: ncat
+  use ice_flux, only: send_i2x_per_cat
 
   implicit none
 
@@ -34,6 +36,9 @@ module ice_cpl_indices
   integer :: index_i2x_Fioi_salt       ! salt  flux from meting  ice
   integer :: index_i2x_Fioi_taux       ! ice/ocn stress, zonal
   integer :: index_i2x_Fioi_tauy       ! ice/ocn stress, zonal
+
+  integer :: index_i2x_Si_ifrac_n(ncat)          ! fractional ice coverage wrt ocean per thickness category
+  integer :: index_i2x_PFioi_swpen_ifrac_n(ncat) ! sw: net penetrating ice per thickness category
 
   ! drv -> ice
 
@@ -82,6 +87,9 @@ contains
     type(mct_aVect) :: i2x      ! temporary
     type(mct_aVect) :: x2i      ! temporary
 
+    integer           :: n  ! thickness category index
+    character(len=2)  :: cn ! character version of n
+
     ! Determine attribute vector indices
 
     ! create temporary attribute vectors
@@ -112,6 +120,18 @@ contains
     index_i2x_Fioi_salt     = mct_avect_indexra(i2x,'Fioi_salt')
     index_i2x_Fioi_taux     = mct_avect_indexra(i2x,'Fioi_taux')
     index_i2x_Fioi_tauy     = mct_avect_indexra(i2x,'Fioi_tauy')
+
+    ! optional per thickness category fields
+
+    send_i2x_per_cat = seq_flds_i2o_per_cat
+
+    if (send_i2x_per_cat) then
+      do n = 1, ncat
+        write(cn,'(i2.2)') n
+        index_i2x_Si_ifrac_n(n)          = mct_avect_indexra(i2x,'Si_ifrac_'//cn)
+        index_i2x_PFioi_swpen_ifrac_n(n) = mct_avect_indexra(i2x,'PFioi_swpen_ifrac_'//cn)
+      end do
+    end if
 
     index_x2i_So_t          = mct_avect_indexra(x2i,'So_t')
     index_x2i_So_s          = mct_avect_indexra(x2i,'So_s')

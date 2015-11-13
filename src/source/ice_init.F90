@@ -58,7 +58,7 @@
       use ice_itd, only: kitd, kcatbound
       use ice_ocean, only: oceanmixed_ice, tfrz_option
       use ice_firstyear, only: restart_FY
-      use ice_flux, only: update_ocn_f, l_mpond_fresh
+      use ice_flux, only: send_i2x_per_cat, update_ocn_f, l_mpond_fresh
       use ice_forcing, only: &
           ycycle,          fyear_init,    dbug, &
           atm_data_type,   atm_data_dir,  precip_units, &
@@ -788,6 +788,12 @@
       !-----------------------------------------------------------------
 
       if (my_task == master_task) then
+
+         if (send_i2x_per_cat) then
+            write(nu_diag,*) ' '
+            write(nu_diag,*) 'fields per thickness category requested by CESM coupler'
+            write(nu_diag,*) ' '
+         end if
 
          write(nu_diag,*) ' Document ice_in namelist parameters:'
          write(nu_diag,*) ' ==================================== '

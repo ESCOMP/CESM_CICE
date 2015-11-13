@@ -8,6 +8,8 @@ if ($#ARGV == -1) {
 my ($CASEROOT) = @ARGV;
 chdir "${CASEROOT}";
 
+$ENV{'CASEROOT'} = $CASEROOT;
+
 my $CIMEROOT		= `./xmlquery  CIMEROOT 	   -value`;
 my $SRCROOT		= `./xmlquery  SRCROOT			-value`;
 my $OBJROOT		= `./xmlquery  OBJROOT			-value`;

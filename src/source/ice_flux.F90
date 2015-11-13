@@ -207,6 +207,15 @@
          fhocn   , & ! net heat flux to ocean (W/m^2)
          fswthru     ! shortwave penetrating to ocean (W/m^2)
 
+      logical (kind=log_kind), public :: &
+         send_i2x_per_cat = .false. ! if true, pass select per ice thickness category fields to the coupler
+            ! do not move this initialization to a init subroutine, because non-default
+            ! values are set in ice_cpl_indices_set in drivers/cesm/ice_cpl_indices.F90
+            ! which is called before other init subroutines
+
+      real (kind=dbl_kind), dimension (:,:,:,:), allocatable, public :: &
+         fswthrun_ai ! per-category fswthru * ai (W/m^2)
+
       real (kind=dbl_kind), &
         dimension (nx_block,ny_block,max_aero,max_blocks), public :: &
          faero_ocn   ! aerosol flux to ocean  (kg/m^2/s)
@@ -481,6 +490,11 @@
       fsalt_da(:,:,:) = c0
       flux_bio (:,:,:,:) = c0 ! bgc
 
+      if (send_i2x_per_cat) then
+         allocate(fswthrun_ai(nx_block,ny_block,ncat,max_blocks))
+         fswthrun_ai(:,:,:,:) = c0
+      endif
+
       !-----------------------------------------------------------------
       ! derived or computed fields
       !-----------------------------------------------------------------
@@ -549,6 +563,10 @@
       faero_ocn(:,:,:,:) = c0
  
       flux_bio (:,:,:,:) = c0  ! bgc
+
+      if (send_i2x_per_cat) then
+         fswthrun_ai(:,:,:,:) = c0
+      endif
 
       end subroutine init_flux_ocn
 

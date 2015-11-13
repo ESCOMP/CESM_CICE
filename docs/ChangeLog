@@ -1,4 +1,29 @@
 ===============================================================
+cice5_20151113
+Originator: klindsay
+Date: 13 Nov, 2015
+Version: 5.0
+One-line Summary: Optionally pass aicen_init and fswthrun_ai, for each
+thickness category, to CESM coupler
+
+Variables passed to coupler, aicen_init and fswthrun_ai=fswthrun*aicen_init,
+are passed to be consistent with merged fswthru that is passed.
+
+Fields are passed if seq_flds_i2o_per_cat from seq_flds_mod is .true.
+
+Set env_build.xml variable ICE_NCAT to ncat so that other components know it.
+
+Requires CIME 4.1.8, for seq_flds_i2o_per_cat and ICE_NCAT to be defined.
+
+M       bld/configure
+M       cime_config/buildnml
+M       src/drivers/cesm/ice_import_export.F90
+M       src/drivers/cesm/ice_cpl_indices.F90
+M       src/source/ice_init.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+
+===============================================================
 cice5_20151110
 Originator: dbailey
 Date: 10 Nov, 2015

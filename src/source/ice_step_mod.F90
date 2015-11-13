@@ -174,7 +174,7 @@
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
           flat, fswabs, flwout, evap, Tref, Qref, Uref, fresh, fsalt, fhocn, &
           fswthru, meltt, melts, meltb, meltl, congel, snoice, &
-          set_sfcflux, merge_fluxes
+          set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai
       use ice_firstyear, only: update_FYarea
       use ice_grid, only: lmask_n, lmask_s, TLAT, TLON
       use ice_itd, only: hi_min
@@ -691,6 +691,19 @@
                             meltb   (:,:,iblk),                       &
                             congel  (:,:,iblk),  snoice  (:,:,iblk),  &
                             Uref=Uref(:,:,iblk), Urefn=Urefn          )
+
+      !-----------------------------------------------------------------
+      ! handle per-category i2x fields, no merging
+      !-----------------------------------------------------------------
+
+            if (send_i2x_per_cat) then
+               do ij = 1, icells
+                  i = indxi(ij)
+                  j = indxj(ij)
+
+                  fswthrun_ai(i,j,n,iblk) = fswthrun(i,j,n,iblk)*aicen_init(i,j,n,iblk)
+               enddo ! ij
+            endif
 
          enddo                  ! ncat
 

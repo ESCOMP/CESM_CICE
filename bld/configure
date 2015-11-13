@@ -306,6 +306,13 @@ if (($cice_mode eq 'prognostic') || ($cice_mode eq 'thermo_only')) {
 **  ERROR: following mode is not supported: $cice_mode
 EOF
 }
+
+
+my $CASEROOT = "$ENV{'CASEROOT'}";
+chdir ($CASEROOT);
+my $sysmod = "./xmlchange -noecho ICE_NCAT=$ncat";
+system($sysmod) == 0 or die "CICE configure: $sysmod failed: $?\n";
+
 if ($print>=2) { print "cice : ncat         is $ncat $eol";}
 
 if (defined $opts{'nsnwlyr'}) {

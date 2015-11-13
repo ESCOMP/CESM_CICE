@@ -16,12 +16,13 @@ module ice_import_export
   use ice_flux        , only: rhoa, swvdr, swvdf, swidr, swidf, flw, frain
   use ice_flux        , only: fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt
   use ice_flux        , only: sss, tf, wind, fsw, init_flux_atm, init_flux_ocn, faero_atm
+  use ice_flux        , only: send_i2x_per_cat, fswthrun_ai
   use ice_ocean       , only: tfrz_option
   use ice_atmo        , only: Cdn_atm
-  use ice_state       , only: vice, vsno, aice, trcr
+  use ice_state       , only: vice, vsno, aice, aicen_init, trcr
   use ice_state       , only: tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl 
   use ice_domain      , only: nblocks, blocks_ice, halo_info, distrb_info
-  use ice_domain_size , only: nx_global, ny_global, block_size_x, block_size_y, max_blocks
+  use ice_domain_size , only: nx_global, ny_global, block_size_x, block_size_y, max_blocks, ncat
   use ice_grid        , only: tlon, tlat, tarea, tmask, anglet, hm
   use ice_grid        , only: grid_type, t2ugrid_vector
   use ice_boundary    , only: ice_HaloUpdate 
@@ -362,6 +363,7 @@ contains
     !
     ! Local Variables
     integer :: i, j, iblk, n, ij 
+    integer :: n2 ! thickness category index
     integer :: ilo, ihi, jlo, jhi !beginning and end of physical domain
     integer (kind=int_kind)                                :: icells ! number of ocean/ice cells
     integer (kind=int_kind), dimension (nx_block*ny_block) :: indxi  ! compressed indices in i
@@ -511,6 +513,41 @@ contains
           enddo    !i
        enddo    !j
     enddo        !iblk
+
+    if (send_i2x_per_cat) then
+       n=0
+       do iblk = 1, nblocks
+          this_block = get_block(blocks_ice(iblk),iblk)         
+          ilo = this_block%ilo
+          ihi = this_block%ihi
+          jlo = this_block%jlo
+          jhi = this_block%jhi
+
+          do j = jlo, jhi
+             do i = ilo, ihi
+
+                n = n+1
+
+                ! ice fraction
+                do n2 = 1, ncat
+                   i2x(index_i2x_Si_ifrac_n(n2),n) = aicen_init(i,j,n2,iblk)
+                enddo
+
+                if ( tmask(i,j,iblk) .and. ailohi(i,j,iblk) > c0 ) then
+                   ! penetrative shortwave
+                   do n2 = 1, ncat
+                      i2x(index_i2x_PFioi_swpen_ifrac_n(n2),n) = fswthrun_ai(i,j,n2,iblk)
+                   enddo
+                else
+                   !--- zero out pass-through fields over land for benefit of x2oacc fields in cpl hist files
+                   do n2 = 1, ncat
+                      i2x(index_i2x_PFioi_swpen_ifrac_n(n2),n) = c0
+                   enddo
+                end if
+             enddo    !i
+          enddo    !j
+       enddo        !iblk
+    end if ! send_i2x_per_cat
 
   end subroutine ice_export
 
