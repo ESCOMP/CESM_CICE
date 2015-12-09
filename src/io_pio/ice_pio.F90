@@ -30,7 +30,7 @@
 
   public ice_pio_init
   public ice_pio_initdecomp
-
+  public ice_pio_freedecomps
   type(iosystem_desc_t), pointer, public :: ice_pio_subsystem
 
 !===============================================================================
@@ -348,6 +348,20 @@
       deallocate(dof4d)
 
    end subroutine ice_pio_initdecomp_4d
+
+   subroutine ice_pio_freedecomps(decomps)
+     type(io_desc_t), intent(in) :: decomps(:)
+
+     integer :: i
+
+     do i=1,size(decomps)
+        call pio_freedecomp(ice_pio_subsystem, decomps(i))
+     enddo
+
+
+   end subroutine ice_pio_freedecomps
+
+
    
 !================================================================================
 

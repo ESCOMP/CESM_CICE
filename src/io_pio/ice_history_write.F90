@@ -1010,17 +1010,6 @@
 
 
       !-----------------------------------------------------------------
-      ! clean-up PIO descriptors
-      !-----------------------------------------------------------------
-
-      call pio_freedecomp(File,iodesc2d)
-      call pio_freedecomp(File,iodesc3dv)
-      call pio_freedecomp(File,iodesc3dc)
-      call pio_freedecomp(File,iodesc3di)
-      call pio_freedecomp(File,iodesc3db)
-      call pio_freedecomp(File,iodesc4di)
-
-      !-----------------------------------------------------------------
       ! close output dataset
       !-----------------------------------------------------------------
 
@@ -1029,6 +1018,11 @@
          write(nu_diag,*) ' '
          write(nu_diag,*) 'Finished writing ',trim(ncfile(ns))
       endif
+      !-----------------------------------------------------------------
+      ! clean-up PIO descriptors
+      !-----------------------------------------------------------------
+      call ice_pio_freedecomps((/iodesc2d,iodesc3dv,iodesc3dc, &
+           iodesc3di, iodesc3db, iodesc4di, iodesc4ds/))
 
 #endif
 

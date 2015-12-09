@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20151209
+Originator: jedwards
+Date: 09 Dec 2015
+Version: 5.0
+One-line Summary: New PIO calls.
+
+M       src/io_pio/ice_restart.F90
+M       src/io_pio/ice_pio.F90
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20151113
 Originator: klindsay
 Date: 13 Nov, 2015

@@ -593,9 +593,8 @@
       use ice_fileunits, only: nu_diag
 
       if (restart_format == 'pio') then
-         call PIO_freeDecomp(File,iodesc2d)
-         call PIO_freeDecomp(File,iodesc3d_ncat)
          call pio_closefile(File)
+         call ice_pio_freedecomps((/iodesc2d,iodesc3d_ncat/))
       endif
 
       if (my_task == master_task) &
