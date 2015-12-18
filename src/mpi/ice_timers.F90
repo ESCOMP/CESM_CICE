@@ -349,6 +349,7 @@
 
          all_timers(timer_id)%block_started(block_id) = .true.
 #ifdef CCSMCOUPLED
+         call t_startf('ICE:'//all_timers(timer_id)%name)
          call t_stampf(wall, usr, sys)
          all_timers(timer_id)%block_cycles1(block_id) = wall
 #else
@@ -393,6 +394,7 @@
 
          all_timers(timer_id)%node_started = .true.
 #ifdef CCSMCOUPLED
+         call t_startf('ICE:'//all_timers(timer_id)%name)
          call t_stampf(wall, usr, sys)
          all_timers(timer_id)%node_cycles1 = wall
 #else
@@ -451,6 +453,7 @@
 !-----------------------------------------------------------------------
 
 #ifdef CCSMCOUPLED
+   call t_stopf('ICE:'//all_timers(timer_id)%name)
    call t_stampf(wall, usr, sys)
    cycles2 = wall
 #else

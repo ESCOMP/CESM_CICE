@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20151218
+Originator: jedwards
+Date: 18 Dec 2015
+Version: 5.0
+One-line Summary: Add cice timers to cesm timing output
+
+M src/mpi/ice_timers.F90
+
+
+===============================================================
 cice5_20151209
 Originator: jedwards
 Date: 09 Dec 2015
