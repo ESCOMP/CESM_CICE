@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160106
+Originator: dbailey
+Date: 06 Jan 2016
+Version: 5.0
+One-line Summary: Add back in REFCASE usage.
+
+M       bld/build-namelist
+
+===============================================================
 cice5_20151218
 Originator: jedwards
 Date: 18 Dec 2015

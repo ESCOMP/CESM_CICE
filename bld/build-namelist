@@ -401,14 +401,13 @@ if ( defined $opts{'caseroot'} ) {
     if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {	
 	add_default($nl, 'ice_ic', 'val'=>"default", 'noprepend'=>"1");
     }
-# TEMPORARILY IGNORE REFCASES IN CICE.
-#    if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
-#	my $ice_ic;
-#        #standard cice filename
-#	$ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
-#        #print "ice_ic = ${ice_ic} $eol";
-#	add_default($nl, 'ice_ic', 'val'=>"$ice_ic", 'noprepend'=>"1");
-#    }
+    if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
+	my $ice_ic;
+        #standard cice filename
+	$ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
+        #print "ice_ic = ${ice_ic} $eol";
+	add_default($nl, 'ice_ic', 'val'=>"$ice_ic", 'noprepend'=>"1");
+    }
 # set by infodata in cesm
 #    if ( $CONTINUE_RUN eq 'TRUE') {
 #	add_default($nl, 'runtype', 'val'=>'continue');
