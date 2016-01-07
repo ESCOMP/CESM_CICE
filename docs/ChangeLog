@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160107
+Originator: dbailey
+Date: 07 Jan 2016
+Version: 5.0
+One-line Summary: Hack for standalone CAM.
+
+M       bld/configure
+
+===============================================================
 cice5_20160106
 Originator: dbailey
 Date: 06 Jan 2016

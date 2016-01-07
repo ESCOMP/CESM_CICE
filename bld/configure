@@ -309,11 +309,14 @@ EOF
 
 
 my $CASEROOT = "$ENV{'CASEROOT'}";
-chdir ($CASEROOT);
-my $sysmod = "./xmlchange -noecho ICE_NCAT=$ncat";
-system($sysmod) == 0 or die "CICE configure: $sysmod failed: $?\n";
 
-if ($print>=2) { print "cice : ncat         is $ncat $eol";}
+if ($CASEROOT) {
+   chdir ($CASEROOT);
+   my $sysmod = "./xmlchange -noecho ICE_NCAT=$ncat";
+   system($sysmod) == 0 or die "CICE configure: $sysmod failed: $?\n";
+
+   if ($print>=2) { print "cice : ncat         is $ncat $eol";}
+}
 
 if (defined $opts{'nsnwlyr'}) {
     $cfg_ref->set('nsnwlyr', $opts{'nsnwlyr'});
