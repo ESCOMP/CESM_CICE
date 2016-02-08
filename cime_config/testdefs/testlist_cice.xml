@@ -38,7 +38,7 @@
     </grid>
     <grid name="f45_g37_rx1">
       <test name="ERI">
-        <machine compiler="nag" testtype="prealpha" testmods="cice/default">hobart</machine>
+        <machine compiler="intel" testtype="prealpha" testmods="cice/default">hobart</machine>
         <machine compiler="gnu" testtype="prebeta" testmods="cice/default">yellowstone</machine>
       </test>
       <test name="ERS_IOP_Ld5">
