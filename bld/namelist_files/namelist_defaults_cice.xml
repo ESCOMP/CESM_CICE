@@ -338,7 +338,7 @@
 <natmiter hgrid="ar9v3"  > 25 </natmiter>
 <natmiter hgrid="ar9v4"  > 25 </natmiter>
 
-<tfrz_option             >'minus1p8'</tfrz_option>
+<tfrz_option             >'linear_salt'</tfrz_option>
 <fbot_xfer_type          >'constant'</fbot_xfer_type>
 <l_mpond_fresh           >.false.</l_mpond_fresh>
 

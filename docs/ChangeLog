@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20160220
+Originator: dbailey
+Date: 19 Feb 2016
+Version: 5.0
+One-line Summary: Change default tfrz_option to linear_salt.
+
+This relies on POP also changing this.
+
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20160219
 Originator: dbailey
 Date: 19 Feb 2016

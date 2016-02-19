@@ -1096,7 +1096,7 @@ category="forcing"
 group="forcing_nml" >
 valid_values="minus1p8,linear_salt,mushy">
 freezing temperature formulation
-Default: 'minus1p8'
+Default: 'linear_salt'
 </entry>
 
 <entry
