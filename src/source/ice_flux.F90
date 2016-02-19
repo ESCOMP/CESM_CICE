@@ -186,6 +186,11 @@
          alidr_ai, & ! near-ir, direct   (fraction)
          alvdf_ai, & ! visible, diffuse  (fraction)
          alidf_ai, & ! near-ir, diffuse  (fraction)
+         ! grid-box-mean versions
+         alvdr_init, & ! visible, direct   (fraction)
+         alidr_init, & ! near-ir, direct   (fraction)
+         alvdf_init, & ! visible, diffuse  (fraction)
+         alidf_init, & ! near-ir, diffuse  (fraction)
          ! components for history
          albice   , & ! bare ice albedo
          albsno   , & ! snow albedo

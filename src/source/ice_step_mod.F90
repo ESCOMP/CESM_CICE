@@ -37,7 +37,8 @@
       use ice_domain_size, only: ncat, nilyr, nslyr
       use ice_fileunits, only: nu_diag
       use ice_flux, only: scale_factor, swvdr, swvdf, swidr, swidf, &
-          alvdr_ai, alvdf_ai, alidr_ai, alidf_ai, fswfac, coszen
+          alvdr_ai, alvdf_ai, alidr_ai, alidf_ai, fswfac, coszen, &
+          alvdr_init, alvdf_init, alidr_init, alidf_init
       use ice_shortwave, only: fswsfcn, fswintn, fswthrun, fswpenln, &
                                Sswabsn, Iswabsn
       use ice_state, only: aice, aicen
@@ -82,6 +83,10 @@
 
          do j = jlo, jhi
          do i = ilo, ihi
+            alvdr_init(i,j,iblk) = alvdr_ai(i,j,iblk)
+            alvdf_init(i,j,iblk) = alvdf_ai(i,j,iblk)
+            alidr_init(i,j,iblk) = alidr_ai(i,j,iblk)
+            alidf_init(i,j,iblk) = alidf_ai(i,j,iblk)
             if (aice(i,j,iblk) > c0 .and. scale_factor(i,j,iblk) > puny) then
                netsw = swvdr(i,j,iblk)*(c1 - alvdr_ai(i,j,iblk)) &
                      + swvdf(i,j,iblk)*(c1 - alvdf_ai(i,j,iblk)) &

@@ -1,4 +1,27 @@
 ===============================================================
+cice5_20160219
+Originator: dbailey
+Date: 19 Feb 2016
+Version: 5.0
+One-line Summary: Bug fix in shortwave budgets.
+
+Fix a shortwave bug and add an internal shortwave diagnostic.
+
+M       src/source/ice_shortwave.F90
+M       src/source/ice_diagnostics.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+
+===============================================================
+cice5_20160208
+Originator: dbailey
+Date: 08 Feb 2016
+Version: 5.0
+One-line Summary: Change NAG test to intel.
+
+M       cime_config/testdefs/testlist_cice.xml
+
+===============================================================
 cice5_20160107
 Originator: dbailey
 Date: 07 Jan 2016

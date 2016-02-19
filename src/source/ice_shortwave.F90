@@ -1270,6 +1270,10 @@
                   fpn(i,j) = (c1 - asnow) * fpn(i,j)
                   hpn(i,j) = pndaspect * fpn(i,j)
                endif
+
+               ! Zero out fraction of thin ponds for radiation only
+               if (hpn(i,j) < hpmin) fpn(i,j) = c0
+
                apeffn(i,j,n) = fpn(i,j) ! for history
             enddo
 
@@ -1328,9 +1332,12 @@
                      hpn(i,j) = hp * tmp
                      fpn(i,j) = fpn(i,j) * tmp
                   endif
-                  fsn(i,j) = min(fsn(i,j), c1-fpn(i,j))
-
                endif ! hp > puny
+
+               ! Zero out fraction of thin ponds for radiation only
+               if (hpn(i,j) < hpmin) fpn(i,j) = c0
+
+               fsn(i,j) = min(fsn(i,j), c1-fpn(i,j))
 
                ! endif    ! masking by lid ice
                apeffn(i,j,n) = fpn(i,j) ! for history
@@ -1353,6 +1360,9 @@
                   fpn(i,j) = c0
                   hpn(i,j) = c0
                endif
+
+               ! Zero out fraction of thin ponds for radiation only
+               if (hpn(i,j) < hpmin) fpn(i,j) = c0
 
                ! If ponds are present snow fraction reduced to
                ! non-ponded part dEdd scheme 
@@ -1747,7 +1757,7 @@
             coszen(i,j) = max(puny,coszen(i,j))
             hi(i,j)  = vice(i,j) / aice(i,j)
             ! if non-zero pond fraction and sufficient pond depth
-            if( fp(i,j) > puny .and. hp(i,j) > hpmin ) then
+            if( fp(i,j) > c0 ) then
                icells_DE = icells_DE + 1
                indxi_DE(icells_DE) = i
                indxj_DE(icells_DE) = j
@@ -1784,6 +1794,19 @@
          albpnd(i,j) = albpnd(i,j) &
                      + awtvdr*avdrl(i,j) + awtidr*aidrl(i,j) &
                      + awtvdf*avdfl(i,j) + awtidf*aidfl(i,j) 
+      enddo
+
+!     If no incoming shortwave, set albedos to 1.
+      do j = 1, ny_block
+      do i = 1, nx_block
+         netsw = swvdr(i,j)+swidr(i,j)+swvdf(i,j)+swidf(i,j)
+         if (netsw <= puny) then
+            alvdr(i,j) = c1
+            alvdf(i,j) = c1
+            alidr(i,j) = c1
+            alidf(i,j) = c1
+         endif
+      enddo
       enddo
 
       dbug = .false.

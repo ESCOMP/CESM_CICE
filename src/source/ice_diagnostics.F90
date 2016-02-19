@@ -114,7 +114,9 @@
           fswabs, fswthru, flw, flwout, fsens, fsurf, flat, frzmlt_init, frain, fpond, &
           coszen, faero_atm, faero_ocn, fhocn_ai, fsalt_ai, fresh_ai, &
           update_ocn_f, Tair, Qa, fsw, fcondtop, meltt, meltb, meltl, snoice, &
-          dsnow, congel, sst, sss, Tf, fhocn, frazil_diag
+          dsnow, congel, sst, sss, Tf, fhocn, frazil_diag, &
+          swvdr, swvdf, swidr, swidf, &
+          alvdr_init, alvdf_init, alidr_init, alidf_init
       use ice_global_reductions, only: global_sum, global_sum_prod, global_maxval
       use ice_grid, only: lmask_n, lmask_s, tarean, tareas, grid_type
       use ice_state ! everything
@@ -145,6 +147,7 @@
       real (kind=dbl_kind) :: &
          rnn, snn, frzn,  hnetn, fhocnn, fhatmn,  fhfrzn, &
          rns, sns, frzs,  hnets, fhocns, fhatms,  fhfrzs, &
+         fswnetn, fswnets, fswdnn, fswdns, swerrn, swerrs, &
          sfsaltn, sfreshn, evpn, fluxn , delmxn,  delmin, &
          sfsalts, sfreshs, evps, fluxs , delmxs,  delmis, &
          delein, werrn, herrn, msltn, delmsltn, serrn, &
@@ -499,6 +502,40 @@
          fhatms = global_sum(work1, distrb_info, &
                              field_loc_center, tareas)
   
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+         do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+               work1(i,j,iblk) = &
+                  fswabs(i,j,iblk) * aice(i,j,iblk)
+            enddo
+            enddo
+         enddo
+         !$OMP END PARALLEL DO
+
+         fswnetn = global_sum(work1, distrb_info, &
+                             field_loc_center, tarean)
+         fswnets = global_sum(work1, distrb_info, &
+                             field_loc_center, tareas)
+
+         !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+         do iblk = 1, nblocks
+            do j = 1, ny_block
+            do i = 1, nx_block
+               work1(i,j,iblk) = (aice_init(i,j,iblk)-alvdr_init(i,j,iblk))*swvdr(i,j,iblk) &
+                               + (aice_init(i,j,iblk)-alidr_init(i,j,iblk))*swidr(i,j,iblk) &
+                               + (aice_init(i,j,iblk)-alvdf_init(i,j,iblk))*swvdf(i,j,iblk) &
+                               + (aice_init(i,j,iblk)-alidf_init(i,j,iblk))*swidf(i,j,iblk)
+            enddo
+            enddo
+         enddo
+         !$OMP END PARALLEL DO
+
+         fswdnn = global_sum(work1, distrb_info, &
+                             field_loc_center, tarean)
+         fswdns = global_sum(work1, distrb_info, &
+                             field_loc_center, tareas)
+
          ! freezing potential
          !$OMP PARALLEL DO PRIVATE(iblk,i,j)
          do iblk = 1, nblocks
@@ -534,7 +571,7 @@
          ! m/step->kg/m^2/s
          work1(:,:,:) = frazil(:,:,:)*rhoi/dt
          if (ktherm == 2 .and. .not.update_ocn_f) then
-            work1(:,:,:) = frazil_diag(:,:,:)*rhoi/dt
+            work1(:,:,:) = (frazil(:,:,:)-frazil_diag(:,:,:))*rhoi/dt
          endif
          frzn = global_sum(work1, distrb_info, &
                            field_loc_center, tarean)
@@ -601,6 +638,9 @@
 
          herrn = (hnetn - delein) / (etotn - c1)
          herrs = (hnets - deleis) / (etots - c1)
+
+         swerrn = (fswnetn - fswdnn) / (fswnetn - c1)
+         swerrs = (fswnets - fswdns) / (fswnets - c1)
 
          ! salt mass
          msltn = micen*ice_ref_salinity*p001
@@ -814,6 +854,10 @@
          write(nu_diag,901) 'arwt net heat      (J) = ',hnetn,hnets
          write(nu_diag,901) 'arwt tot energy chng(J)= ',delein,deleis
          write(nu_diag,901) 'arwt heat error        = ',herrn,herrs
+         write(nu_diag,*) '----------------------------'
+         write(nu_diag,901) 'arwt incoming sw (W)   = ',fswdnn,fswdns
+         write(nu_diag,901) 'arwt absorbed sw (W)   = ',fswnetn,fswnets
+         write(nu_diag,901) 'arwt swdn error        = ',swerrn,swerrs
 
          write(nu_diag,*) '----------------------------'
          write(nu_diag,901) 'total brine tr (m^3)   = ',shmaxnt, shmaxst
