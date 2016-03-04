@@ -475,7 +475,6 @@ add_default($nl, 'kcatbound');
 add_default($nl, 'formdrag');
 add_default($nl, 'highfreq');
 add_default($nl, 'natmiter');
-add_default($nl, 'tfrz_option');
 add_default($nl, 'fbot_xfer_type');
 add_default($nl, 'l_mpond_fresh');
 

@@ -2,6 +2,7 @@ module ice_import_export
 
   use shr_kind_mod    , only: r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod     , only: shr_sys_abort, shr_sys_flush
+  use shr_frz_mod
   use ice_kinds_mod   , only: int_kind, dbl_kind, char_len_long, log_kind
   use ice_constants   , only: c0, c1, puny, tffresh, spval_dbl
   use ice_constants   , only: field_loc_center, field_type_scalar
@@ -289,24 +290,12 @@ contains
 
              sss(i,j,iblk)=max(sss(i,j,iblk),c0)
 
-             if (tfrz_option == 'minus1p8') then
-                Tf (i,j,iblk) = -1.8_dbl_kind 
-             elseif (tfrz_option == 'linear_salt') then
-                Tf (i,j,iblk) = -0.0544_r8*sss(i,j,iblk)   ! THIS IS THE ORIGINAL POP FORMULA
-             elseif (tfrz_option == 'mushy') then
-                if (sss(i,j,iblk) > c0) then
-                   Tf (i,j,iblk) = sss(i,j,iblk) / (-18.48_dbl_kind &
-                                   + ((18.48_dbl_kind*p001)*sss(i,j,iblk)))
-                else
-                   Tf (i,j,iblk) = c0
-                endif
-             else
-                write(nu_diag,*) subname,' ERROR: unknown tfrz_option = ',trim(tfrz_option)
-                call shr_sys_abort(subname//' ERROR: unknown tfrz_option = '//trim(tfrz_option))
-             endif
-
           enddo
        enddo
+
+!      Use shr_frz_mod for this
+       Tf(:,:,iblk) = shr_frz_freezetemp(sss(:,:,iblk))
+
     enddo
     !$OMP END PARALLEL DO
     call t_stopf ('cice_imp_ocn')

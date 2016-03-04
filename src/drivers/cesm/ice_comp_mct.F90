@@ -51,6 +51,7 @@ module ice_comp_mct
                               nyr, new_year, time2sec, year_init, &
                               use_leap_years, basis_seconds
   use ice_orbital,     only : eccen, obliqr, lambm0, mvelpp
+  use ice_ocean,       only : tfrz_option
   use ice_timers
 
   use ice_kinds_mod,   only : int_kind, dbl_kind, char_len_long, log_kind
@@ -58,6 +59,7 @@ module ice_comp_mct
   use ice_scam,        only : scmlat, scmlon, single_column
   use ice_fileunits,   only : nu_diag, inst_index, inst_name, inst_suffix, &
                               release_all_fileunits
+  use ice_therm_shared, only: ktherm
   use ice_prescribed_mod
   use ice_step_mod
   use ice_global_reductions
@@ -240,6 +242,16 @@ contains
     call t_startf ('cice_init')
     call cice_init( mpicom_loc )
     call t_stopf ('cice_init')
+
+    call seq_infodata_GetData(infodata, tfreeze_option=tfrz_option )
+
+    if (my_task == master_task) then
+       write(nu_diag,*) trim(subname),' tfrz_option = ',trim(tfrz_option)
+       if (ktherm == 2 .and. trim(tfrz_option) /= 'mushy') then
+          write(nu_diag,*) trim(subname),' Warning: Using ktherm = 2 and tfrz_option = ', &
+                           trim(tfrz_option)
+       endif
+    endif
 
     if (my_task == master_task) then
        write(nu_diag,*) trim(subname),' inst_name   = ',trim(inst_name)

@@ -577,6 +577,7 @@
          calc_Tsfc = .true.
       endif
 
+#ifndef CCSMCOUPLED
       if (ktherm == 1 .and. trim(tfrz_option) /= 'linear_salt') then
          if (my_task == master_task) then
          write (nu_diag,*) &
@@ -593,6 +594,7 @@
          'WARNING: For consistency, set tfrz_option = mushy'
          endif
       endif
+#endif
 
       if (trim(atm_data_type) == 'hadgem' .and. & 
              trim(precip_units) /= 'mks') then

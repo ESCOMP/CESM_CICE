@@ -1090,16 +1090,6 @@ Default: false
 </entry>
 
 <entry
-id="tfrz_option"
-type="char*80"
-category="forcing"
-group="forcing_nml" >
-valid_values="minus1p8,linear_salt,mushy">
-freezing temperature formulation
-Default: 'linear_salt'
-</entry>
-
-<entry
 id="fbot_xfer_type"
 type="char*80"
 category="forcing"

@@ -1,4 +1,23 @@
 ===============================================================
+cice5_20160304
+Originator: dbailey
+Date: 04 Mar 2016
+Version: 5.0
+One-line Summary: Move tfreeze_option to driver.
+
+In this tag, there is a new csm_share function for the
+freezing point calculation and the option is set by the
+driver. We are going back to a default of 'minus1p8' for now.
+
+M       bld/build-namelist
+M       bld/namelist_files/namelist_definition.xml
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       cime_config/config_component.xml
+M       src/source/ice_init.F90
+M       src/drivers/cesm/ice_import_export.F90
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20160220
 Originator: dbailey
 Date: 19 Feb 2016
