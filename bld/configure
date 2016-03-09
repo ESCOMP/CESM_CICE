@@ -51,13 +51,13 @@ OPTIONS
      or double leading dashes.  A consequence of this is that single letter options may
      NOT be bundled.
 
-     ***************************************************** 
+     *****************************************************
      To obtain the cice decompsition, can do any of the following
-     Set all of 
-          -bsizex, -bsizey, -maxblocks, -decomptype 
+     Set all of
+          -bsizex, -bsizey, -maxblocks, -decomptype
            explicitly sets the cice decomposition
      OR
-          -ntasks, -nthreads 
+          -ntasks, -nthreads
            used to determine defaults for the cice decomposition.
      OR
           -nodecomp
@@ -76,10 +76,10 @@ OPTIONS
      -help [or -h]       Print usage to STDOUT.
      -hgrid <name>       Specify horizontal grid.  Use nlatxnlon for spectral grids;
                          dlatxdlon for fv grids (dlat and dlon are the grid cell size
-			 in degrees for latitude and longitude respectively); 
+			 in degrees for latitude and longitude respectively);
      -nx <number>        Number of longitudes
      -ny <number>        Number of latitudes
-     -ntasks <n>         Number of MPI tasks.  
+     -ntasks <n>         Number of MPI tasks.
      -nthreads <n>       Number of OMP threads per process.  Setting nthreads > 0 implies smp.
      -nodecomp           Turns off the generation of cice decomposition (default: not defined - decomp is generated)
      -ntr_aero <n>       Turns on aerosal tracers (valid values are 0,1,2,3,4,5,6, default is 3)
@@ -93,7 +93,7 @@ EOF
 # Setting autoflush (an IO::Handle method) on STDOUT helps in debugging.  It forces the test
 # descriptions to be printed to STDOUT before the error messages start.
 
-*STDOUT->autoflush();                  
+*STDOUT->autoflush();
 
 #-----------------------------------------------------------------------------------------------
 # Set the directory that contains the CICE configuration scripts.  If the configure command was
@@ -106,7 +106,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
                                        # the user's PATH
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
-if ($ProgDir) { 
+if ($ProgDir) {
     $cfgdir = abs_path($ProgDir);
 } else {
     $cfgdir = $cwd;
@@ -157,7 +157,7 @@ GetOptions(
 usage() if $opts{'help'};
 
 # Echo version info.
-version($cfgdir) if $opts{'version'};    
+version($cfgdir) if $opts{'version'};
 
 # Check for unparsed argumentss
 if (@ARGV) {
@@ -169,7 +169,7 @@ if (@ARGV) {
 # 0 - only issue fatal error messages
 # 1 - only informs what files are created (default)
 # 2 - verbose
-my $print = 1;
+my $print = 2;
 if ($opts{'silent'})  { $print = 0; }
 if ($opts{'verbose'}) { $print = 2; }
 my $eol = "\n";
@@ -177,7 +177,7 @@ my $eol = "\n";
 my %cfg = ();           # build configuration
 
 #-----------------------------------------------------------------------------------------------
-# CESM root directory and perl5lib root directories  
+# CESM root directory and perl5lib root directories
 my $cesmroot = abs_path("$cfgdir/../../../");
 my $perl5lib = "$cesmroot/cime/utils/perl5lib";
 
@@ -268,25 +268,25 @@ my $comp_intf = $cfg_ref->get('comp_intf');
 if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# Set the cice mode 
+# Set the cice mode
 my $cice_mode;
 if ($opts{'cice_mode'}) {
-    $cice_mode = $opts{'cice_mode'}; 
+    $cice_mode = $opts{'cice_mode'};
     $cfg_ref->set('cice_mode', $cice_mode);
 } else {
     $cice_mode = $cfg_ref->get('cice_mode');
-}    
+}
 if ($print>=2) { print "cice : mode         is $cice_mode $eol";}
 
 #-----------------------------------------------------------------------------------------------
 # Set the cice physics
 my $phys;
 if ($opts{'phys'}) {
-    $phys = $opts{'phys'}; 
+    $phys = $opts{'phys'};
     $cfg_ref->set('phys', $phys);
 } else {
     $phys = $cfg_ref->get('phys');
-}    
+}
 if ($cice_mode eq 'prescribed') {
    $phys = 'cice4';
    $cfg_ref->set('phys', $phys);
@@ -298,7 +298,7 @@ print "cice : physics         is $phys $eol";
 # Set the number of ice categories
 my $ncat;
 if (($cice_mode eq 'prognostic') || ($cice_mode eq 'thermo_only')) {
-    $ncat = 5; 
+    $ncat = 5;
 } elsif ($cice_mode eq 'prescribed') {
     $ncat = 1;
 } else {
@@ -440,7 +440,7 @@ if ($print>=2) { print "cice : nlat         is $nlat      $eol";}
 
 my $ntr_aero = $cfg_ref->get('ntr_aero');
 if (defined $opts{'ntr_aero'}) {$ntr_aero = $opts{'ntr_aero'}};
-if ($ntr_aero gt "6"){ 
+if ($ntr_aero gt "6"){
     die <<"EOF";
 **  ERROR: ntr_aero value of $ntr_aero is invalid, only values less than 6 are supported
 EOF
@@ -507,7 +507,7 @@ EOF
 	unless (defined $opts{'decomptype'}) {
 	    die <<"EOF";
 **    ERROR: Whend the CICE decomposition parameters are specified, the
-**    cice decomptype must also be specified as ant input argument.  
+**    cice decomptype must also be specified as ant input argument.
 EOF
         }
 	$cfg_ref->set('cice_decomptype', $decomptype);
@@ -520,32 +520,32 @@ EOF
 	if (defined $opts{'ntasks'}) {
 	    $cfg_ref->set('ntasks', $opts{'ntasks'});
 	    $ntasks = $opts{'ntasks'};
-	    
+
 	    # Check for legal ntasks value
 	    if ($ntasks < 1) {
 		die "ERROR: ntasks value < 1: ntasks= $ntasks $eol";
 	    }
 	}
-	
+
 	# Check whether nthreads is specified.
 	my $nthreads;
 	if (defined $opts{'nthreads'}) {
 	    $cfg_ref->set('nthreads', $opts{'nthreads'});
 	    $nthreads = $opts{'nthreads'};
-	    
+
 	    # Check for legal nthreads value
 	    if ($nthreads < 1) {
 		die "ERROR: nthreads value < 1: nthreads= $nthreads $eol";
 	    }
 	}
-	
+
 	# User hasn't specified CICE decomp so get default values.
 
 	# The defaults depend on the total number of execution threads available.  These must
 	# be specified by the user.
 	my $cice_ntasks;
 	my $cice_nthreads;
-	
+
 	# User must define both ntasks and nthreads
 	if (defined $ntasks and defined $nthreads) {
 	    $cice_ntasks   = $ntasks;
@@ -559,16 +559,16 @@ EOF
         }
 
 	if ($cice_ntasks == 1 && $cice_nthreads ==1 ) {
-	    
+
 	    # serial case:
 	    $bsizex        = $nlon;
 	    $bsizey        = $nlat;
 	    $maxblocks     = 1;
 	    $decomptype    = 'cartesian';
 	    $cfg_ref->set('cice_decomptype', $decomptype);
-	    
+
 	} else {
-	    
+
 	    # If not serial, use the script provided by CICE to generate the default decomposition
 	    my $cice_decomp_gen = "$cesmroot/components/cice/bld/generate_cice_decomp.pl";
 	    $cice_decomp_gen .=  "-ccsmroot $cesmroot -res $hgrid ";
@@ -596,11 +596,17 @@ EOF
 	}
     }
 }
-    
+
 if ($print>=2) { print "cice : bsizex       is $bsizex      $eol";}
 if ($print>=2) { print "cice : bsizey       is $bsizey      $eol";}
 if ($print>=2) { print "cice : mxblcks      is $maxblocks   $eol";}
 if ($print>=2) { print "cice : decomp type  is $decomptype  $eol";}
+# the CPP definitions that were explicitly set in the defaults
+my $cfg_cppdefs = ' ';
+
+# CICE ice model
+$cfg_cppdefs .= $cice_cppdefs;
+`./xmlchange -noecho CICE_CPPDEFS=\"$cice_cppdefs\"`;
 
 if ($set_decomp) {
     $cice_cppdefs = "$cice_cppdefs -DBLCKX=$bsizex -DBLCKY=$bsizey -DMXBLCKS=$maxblocks";
@@ -609,12 +615,6 @@ if ($set_decomp) {
 #-----------------------------------------------------------------------------------------------
 # Makefile configuration #######################################################################
 #-----------------------------------------------------------------------------------------------
-
-# the CPP definitions that were explicitly set in the defaults 
-my $cfg_cppdefs = ' ';
-
-# CICE ice model
-$cfg_cppdefs .= $cice_cppdefs;
 
 # CPP defines to put on Makefile
 my $make_cppdefs = "$cfg_cppdefs";
@@ -626,15 +626,15 @@ if ($print>=2) { print "CPP definitions set by configure: \'$cfg_cppdefs\'$eol";
 #-----------------------------------------------------------------------------------------------
 
 my $fp_filename      = 'Filepath';             # name of output filepath file
-my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
+#my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
 
 # Write the filepath file for ccsm.
 write_filepath("$cice_bld/$fp_filename", $cesmroot);
 if ($print>=2) { print "creating $cice_bld/$fp_filename\n"; }
 
 # Write the file for cice's cppdefs needed in ccsm.
-write_cppdefs("$cice_bld/$cpp_filename", $make_cppdefs);
-if ($print>=2) { print "creating $cice_bld/$cpp_filename\n"; }
+#write_cppdefs("$cice_bld/$cpp_filename", $make_cppdefs);
+#if ($print>=2) { print "creating $cice_bld/$cpp_filename\n"; }
 
 # Write the configuration file.
 $cfg_ref->write_file("$config_cache_file", $commandline);
@@ -699,7 +699,7 @@ sub mkdirp {
     my (@subdirs, $path);
 
     # if $dir is absolute pathname then @dirs will start with ""
-    if ($dirs[0] eq "") { push @subdirs, shift @dirs; }  
+    if ($dirs[0] eq "") { push @subdirs, shift @dirs; }
 
     while ( @dirs ) { # check that each subdir exists and mkdir if it doesn't
 	push @subdirs, shift @dirs;

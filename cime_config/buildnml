@@ -35,7 +35,7 @@ my $TESTCASE            = `./xmlquery  TESTCASE			-value`;
 my @dirs = ("${CIMEROOT}/utils/perl5lib");
 unshift @INC, @dirs;
 require Config::SetupTools;
-my $sysmod; 
+my $sysmod;
 
 if (! -d "$CASEROOT/Buildconf/ciceconf" ) {
     $sysmod = "mkdir $CASEROOT/Buildconf/ciceconf";
@@ -82,34 +82,34 @@ if ($CICE_AUTO_DECOMP eq 'true') {
     }
 }
 
-#-------------------------------------------------------------- 
+#--------------------------------------------------------------
 # determine CPP definitions
-#-------------------------------------------------------------- 
+#--------------------------------------------------------------
 
 # determine the actual CPP definitions (these have been determined by the call to configure)
 
-my $cppdefs = `cat $CASEROOT/Buildconf/ciceconf/CICE_cppdefs`;
-chomp($cppdefs);
-my $cppdefs = "$cppdefs -DBLCKX=$CICE_BLCKX -DBLCKY=$CICE_BLCKY -DMXBLCKS=$CICE_MXBLCKS";        
+#my $cppdefs = `cat $CASEROOT/Buildconf/ciceconf/CICE_cppdefs`;
+#chomp($cppdefs);
+#my $cppdefs = "$cppdefs -DBLCKX=$CICE_BLCKX -DBLCKY=$CICE_BLCKY -DMXBLCKS=$CICE_MXBLCKS";
 
 # write out cppdefs to env_build.xml
 # this will determine if need to rebuild at runtime - force user to call $CASE.buildexe
 
-chdir "$CASEROOT";
-my $sysmod  = "./xmlchange -noecho -id CICE_CPPDEFS -file env_build.xml -val=\'$cppdefs\'";
-system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
+#chdir "$CASEROOT";
+#my $sysmod  = "./xmlchange -noecho -id CICE_CPPDEFS -file env_build.xml -val=\'$cppdefs\'";
+#system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
 chdir "$CASEROOT/Buildconf/ciceconf";
 
 # write out cppdefs to CICE_cppdefs.new
 # this will force gmake to rebuild when $CASE.buildexe is called
 
-if ($TESTCASE eq 'SBN') {
-    # do nothing
-} else {
-    open(file,">$OBJROOT/ice/obj/CICE_cppdefs.new") or warn "Could not open file $OBJROOT/ice/obj/CICE_cppdefs.new to write";
-    print file "$cppdefs \n";
-    close(file);
-}
+#if ($TESTCASE eq 'SBN') {
+#    # do nothing
+#} else {
+#    open(file,">$OBJROOT/ice/obj/CICE_cppdefs.new") or warn "Could not open fi#le $OBJROOT/ice/obj/CICE_cppdefs.new to write";
+#    print file "$cppdefs \n";
+#    close(file);
+#}
 
 #--------------------------------------------------------------------
 # Invoke cice build-namelist - output will go in $CASEROOT/Buidlconf/ciceconf
@@ -120,10 +120,10 @@ my $inst_counter = 1;
 while ($inst_counter <= $NINST_ICE) {
 
     # -----------------------------------------------------
-    # determine instance string 
+    # determine instance string
     # -----------------------------------------------------
 
-    $inst_string = "";       
+    $inst_string = "";
     if ($NINST_ICE > 1) {
 	$inst_string = `printf _%04d $inst_counter`;
 
@@ -139,9 +139,9 @@ while ($inst_counter <= $NINST_ICE) {
     # create ciceconf/namelist
     # -----------------------------------------------------
 
-    SetupTools::create_namelist_infile("$CASEROOT", 
-				       "$CASEROOT/user_nl_cice${inst_string}", 
-				       "$CASEROOT/Buildconf/ciceconf/namelist"); 
+    SetupTools::create_namelist_infile("$CASEROOT",
+				       "$CASEROOT/user_nl_cice${inst_string}",
+				       "$CASEROOT/Buildconf/ciceconf/namelist");
 
     # -----------------------------------------------------
     # call build-namelist- output will go in $CASEROOT/Buildconf/ciceconf/ice_in
@@ -150,7 +150,7 @@ while ($inst_counter <= $NINST_ICE) {
     $sysmod = "$SRCROOT/components/cice/bld/build-namelist";
     $sysmod = "$sysmod -infile $CASEROOT/Buildconf/ciceconf/namelist";
     $sysmod = "$sysmod -inputdata $CASEROOT/Buildconf/cice.input_data_list";
-    $sysmod = "$sysmod -rundir $RUNDIR"; 
+    $sysmod = "$sysmod -rundir $RUNDIR";
     $sysmod = "$sysmod -caseroot $CASEROOT";
     $sysmod = "$sysmod -cimeroot $CIMEROOT";
     $sysmod = "$sysmod -inst_string \"$inst_string\"";

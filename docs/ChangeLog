@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20160309
+Originator: dbailey
+Date: 09 Mar 2016
+Version: 5.0
+One-line Summary: New CIME bld changes.
+
+M       bld/configure
+M       cime_config/buildlib
+M       cime_config/buildnml
+M       cime_config/config_component.xml
+
+===============================================================
 cice5_20160304
 Originator: dbailey
 Date: 04 Mar 2016
