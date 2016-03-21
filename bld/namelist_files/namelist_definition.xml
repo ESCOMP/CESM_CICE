@@ -2378,6 +2378,55 @@ category="history"
 group="icefields_nml" >
 </entry>
 
+<entry
+id="f_sithick"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sisnthick"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sitemptop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sitempsnic"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sitempbot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sispeed"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sialb"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
 <!----------------------------->
 <!-- Group: icefields_pond_nml-->
 <!----------------------------->

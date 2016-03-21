@@ -74,6 +74,7 @@
                                   Qa,          rhoa,      &
                                   fsnow,       fpond,     &
                                   fbot,        Tbot,      &
+                                  Tsnic, &
                                   sss,                    &
                                   lhcoef,      shcoef,    &
                                   fswsfc,      fswint,    &
@@ -170,6 +171,7 @@
       ! diagnostic fields
       real (kind=dbl_kind), dimension(nx_block,ny_block), &
          intent(inout):: &
+         Tsnic    , & ! snow ice interface temperature (deg C)
          meltt    , & ! top ice melt             (m/step-->cm/day) 
          melts    , & ! snow melt                (m/step-->cm/day) 
          meltb    , & ! basal ice melt           (m/step-->cm/day) 
@@ -406,6 +408,16 @@
             enddo ! ij
 
       if (l_stop) return
+ 
+      ! Add snow-ice interface temperature diagnostic
+
+      do ij = 1, icells
+         i = indxi(ij)
+         j = indxj(ij)
+
+         Tsnic(i,j) = (hslyr(ij)*zTsn(ij,nslyr) + hilyr(ij)*zTin(ij,1)) &
+                    / (hslyr(ij)+hilyr(ij))
+      enddo
 
       !-----------------------------------------------------------------
       ! Compute growth and/or melting at the top and bottom surfaces.

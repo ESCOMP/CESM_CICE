@@ -287,6 +287,8 @@
          melts , & ! snow melt                (m/step-->cm/day)
          meltb , & ! basal ice melt           (m/step-->cm/day)
          meltl , & ! lateral ice melt         (m/step-->cm/day)
+         Tbot  , & ! ice bottom temperature   (C)
+         Tsnic , & ! snow ice interface temperature   (C)
          dsnow,  & ! change in snow thickness (m/step-->cm/day)
          daidtt, & ! ice area tendency thermo.   (s^-1)
          dvidtt, & ! ice volume tendency thermo. (m/s)
@@ -603,6 +605,8 @@
       melts  (:,:,:) = c0
       meltb  (:,:,:) = c0
       meltl  (:,:,:) = c0
+      Tbot   (:,:,:) = c0
+      Tsnic  (:,:,:) = c0
       daidtt (:,:,:) = aice(:,:,:) ! temporary initial area
       dvidtt (:,:,:) = vice(:,:,:) ! temporary initial volume
       if (tr_iage) then
@@ -713,6 +717,7 @@
                                fswabsn,  flwoutn,    &
                                evapn,                &
                                Trefn,    Qrefn,      &
+                               Tbotn,    Tsnicn,      &
                                freshn,   fsaltn,     &
                                fhocnn,   fswthrun,   &
                                strairxT, strairyT,   &  
@@ -722,6 +727,7 @@
                                fswabs,   flwout,     &
                                evap,                 & 
                                Tref,     Qref,       &
+                               Tbot,     Tsnic,       &
                                fresh,    fsalt,      & 
                                fhocn,    fswthru,    &
                                melttn, meltsn, meltbn, congeln, snoicen, &
@@ -754,6 +760,8 @@
           flwoutn , & ! upwd lw emitted heat flx        (W/m**2)
           evapn   , & ! evaporation                     (kg/m2/s)
           Trefn   , & ! air tmp reference level         (K)
+          Tbotn   , & ! ice bottom temperature          (C)
+          Tsnicn  , & ! snow ice interface temperature  (C)
           Qrefn   , & ! air sp hum reference level      (kg/kg)
           freshn  , & ! fresh water flux to ocean       (kg/m2/s)
           fsaltn  , & ! salt flux to ocean              (kg/m2/s)
@@ -782,6 +790,8 @@
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
           Tref    , & ! air tmp reference level         (K)
+          Tbot    , & ! sea ice bottom temperature      (C)
+          Tsnic   , & ! snow ice interface temperature  (C)
           Qref    , & ! air sp hum reference level      (kg/kg)
           fresh   , & ! fresh water flux to ocean       (kg/m2/s)
           fsalt   , & ! salt flux to ocean              (kg/m2/s)
@@ -829,6 +839,8 @@
              + (flwoutn(i,j) - (c1-emissivity)*flw(i,j))*aicen(i,j)
          evap     (i,j)  = evap    (i,j) + evapn   (i,j)*aicen(i,j)
          Tref     (i,j)  = Tref    (i,j) + Trefn   (i,j)*aicen(i,j)
+         Tbot     (i,j)  = Tbot    (i,j) + Tbotn   (i,j)*aicen(i,j)
+         Tsnic    (i,j)  = Tsnic   (i,j) + Tsnicn  (i,j)*aicen(i,j)
          Qref     (i,j)  = Qref    (i,j) + Qrefn   (i,j)*aicen(i,j)
          if (present(Urefn) .and. present(Uref)) then
             Uref  (i,j)  = Uref    (i,j) + Urefn   (i,j)*aicen(i,j)

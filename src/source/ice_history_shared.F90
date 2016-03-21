@@ -231,6 +231,10 @@
            f_mlt_onset = 'm', f_frz_onset  = 'm', &
            f_iage      = 'm', f_FY         = 'm', &
            f_hisnap    = 'm', f_aisnap     = 'm', &
+           f_sithick   = 'x', f_sisnthick  = 'x', &
+           f_sitemptop = 'x', f_sitempsnic = 'x', &
+           f_sitempbot = 'x', f_sispeed    = 'x', &
+           f_sialb     = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
@@ -316,6 +320,10 @@
            f_mlt_onset, f_frz_onset, &
            f_iage,      f_FY       , &
            f_hisnap,    f_aisnap   , &
+           f_sithick,   f_sisnthick, &
+           f_sitemptop, f_sitempsnic,&
+           f_sitempbot, f_sispeed,   &
+           f_sialb, &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
            f_trsig,     f_icepresent,&
@@ -401,6 +409,10 @@
            n_meltb      , n_meltl      , &
            n_fresh      , n_fresh_ai   , &
            n_fsalt      , n_fsalt_ai   , &
+           n_sithick    , n_sisnthick  , &
+           n_sitemptop  , n_sitempsnic , &
+           n_sitempbot  , n_sispeed,     &
+           n_sialb, &
            n_vsnon,                        &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &
@@ -687,7 +699,7 @@
 
        do j = jlo, jhi
        do i = ilo, ihi
-          if (tmask(i,j,iblk)) then
+          if (tmask(i,j,iblk) .and. abs(field_accum(i,j)) < 1.0e+10_dbl_kind) then
              field(i,j,idns, iblk) = field(i,j,idns, iblk) + field_accum(i,j)
           endif
        enddo
@@ -750,7 +762,7 @@
        do k = 1, ndim
        do j = jlo, jhi
        do i = ilo, ihi
-          if (tmask(i,j,iblk)) then
+          if (tmask(i,j,iblk) .and. abs(field_accum(i,j,k)) < 1.0e+10_dbl_kind) then
              field(i,j,k,idns,iblk) = field(i,j,k,idns,iblk) + field_accum(i,j,k)
           endif
        enddo
@@ -816,7 +828,7 @@
        do n = 1, ndim3
        do j = jlo, jhi
        do i = ilo, ihi
-          if (tmask(i,j,iblk)) then
+          if (tmask(i,j,iblk) .and. abs(field_accum(i,j,n,k)) < 1.0e+10_dbl_kind) then
              field(i,j,n,k,idns,iblk) = field(i,j,n,k,idns,iblk) + field_accum(i,j,n,k)
           endif
        enddo
