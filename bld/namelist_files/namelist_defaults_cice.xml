@@ -13,7 +13,7 @@
 <restart_file>'unknown'</restart_file>
 <ice_ic>'default'</ice_ic>
 <ice_ic hgrid='gx3v7'>ice/cice/b40.t31x3.20th.cice.r.2006-01-01-00000.nc</ice_ic>
-<ice_ic hgrid='gx1v6'>ice/cice/e.e11.E1850C5CN.f09_g16.cice5.003.cice.r.0050-01-01-00000.nc</ice_ic>
+<ice_ic hgrid='gx1v6'>ice/cice/b.e15.B1850G.f09_g16.pi_control.25.cice.r.0041-01-01-00000.nc</ice_ic>
 <ice_ic hgrid='tx0.1v2'>ice/cice/g.e11.G.T62_t12.002.cice.r.0016-01-01-00000.nc</ice_ic>
 <ice_ic hgrid='ar9v3'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>
 <ice_ic hgrid='ar9v4'>ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</ice_ic>

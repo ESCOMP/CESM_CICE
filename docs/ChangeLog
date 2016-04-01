@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160401
+Originator: dbailey
+Date: 01 Apr 2016
+Version: 5.0
+One-line Summary: Default initial file for gx1v6.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20160321
 Originator: dbailey
 Date: 21 Mar 2016
