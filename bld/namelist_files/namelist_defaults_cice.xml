@@ -1198,10 +1198,14 @@
 
 <f_sithick                     >'xxxxx'</f_sithick>
 <f_sisnthick                   >'xxxxx'</f_sisnthick>
+<f_sisnconc                   >'xxxxx'</f_sisnconc>
 <f_sitemptop                   >'xxxxx'</f_sitemptop>
 <f_sitempsnic                  >'xxxxx'</f_sitempsnic>
 <f_sitempbot                   >'xxxxx'</f_sitempbot>
 <f_sispeed                     >'xxxxx'</f_sispeed>
 <f_sialb                       >'xxxxx'</f_sialb>
+<f_siage                       >'xxxxx'</f_siage>
+<f_sihc                       >'xxxxx'</f_sihc>
+<f_sisnhc                       >'xxxxx'</f_sisnhc>
 
 </namelist_defaults>

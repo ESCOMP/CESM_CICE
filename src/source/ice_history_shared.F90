@@ -232,9 +232,11 @@
            f_iage      = 'm', f_FY         = 'm', &
            f_hisnap    = 'm', f_aisnap     = 'm', &
            f_sithick   = 'x', f_sisnthick  = 'x', &
+           f_sisnconc  = 'x', f_siage      = 'x', &
            f_sitemptop = 'x', f_sitempsnic = 'x', &
            f_sitempbot = 'x', f_sispeed    = 'x', &
            f_sialb     = 'x', &
+           f_sihc      = 'x', f_sisnhc     = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
@@ -321,9 +323,11 @@
            f_iage,      f_FY       , &
            f_hisnap,    f_aisnap   , &
            f_sithick,   f_sisnthick, &
+           f_sisnconc,  f_siage,     &
            f_sitemptop, f_sitempsnic,&
            f_sitempbot, f_sispeed,   &
            f_sialb, &
+           f_sihc,      f_sisnhc,    &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
            f_trsig,     f_icepresent,&
@@ -410,9 +414,11 @@
            n_fresh      , n_fresh_ai   , &
            n_fsalt      , n_fsalt_ai   , &
            n_sithick    , n_sisnthick  , &
+           n_sisnconc,    n_siage,       &
            n_sitemptop  , n_sitempsnic , &
            n_sitempbot  , n_sispeed,     &
            n_sialb, &
+           n_sihc       , n_sisnhc,      &
            n_vsnon,                        &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &

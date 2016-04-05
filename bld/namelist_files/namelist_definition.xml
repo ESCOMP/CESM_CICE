@@ -2393,6 +2393,13 @@ group="icefields_nml" >
 </entry>
 
 <entry
+id="f_sisnconc"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
 id="f_sitemptop"
 type="char*5"
 category="history"
@@ -2422,6 +2429,27 @@ group="icefields_nml" >
 
 <entry
 id="f_sialb"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siage"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sihc"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sisnhc"
 type="char*5"
 category="history"
 group="icefields_nml" >
