@@ -235,8 +235,25 @@
            f_sisnconc  = 'x', f_siage      = 'x', &
            f_sitemptop = 'x', f_sitempsnic = 'x', &
            f_sitempbot = 'x', f_sispeed    = 'x', &
+           f_siu       = 'x', f_siv        = 'x', &
            f_sialb     = 'x', &
            f_sihc      = 'x', f_sisnhc     = 'x', &
+           f_sidconcth = 'x', f_sidconcdyn = 'x', &
+           f_sidmassth = 'x', f_sidmassdyn = 'x', &
+           f_sidmassgrowthwat = 'x', &
+           f_sidmassgrowthbot = 'x', &
+           f_sidmasssi = 'x', &
+           f_sidmassevapsubl = 'x', &
+           f_sidmassmelttop = 'x', &
+           f_sidmassmeltbot = 'x', &
+           f_sidmasslat = 'x', &
+           f_sndmasssnf = 'x', &
+           f_sndmassmelt = 'x', &
+           f_siflswdtop = 'x', &
+           f_siflswutop = 'x', &
+           f_siflswdbot = 'x', &
+           f_sifllwdtop = 'x', &
+           f_sifllwutop = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
@@ -326,8 +343,25 @@
            f_sisnconc,  f_siage,     &
            f_sitemptop, f_sitempsnic,&
            f_sitempbot, f_sispeed,   &
+           f_siu,       f_siv,       &
            f_sialb, &
            f_sihc,      f_sisnhc,    &
+           f_sidconcth, f_sidconcdyn,&
+           f_sidmassth, f_sidmassdyn,&
+           f_sidmassgrowthwat, &
+           f_sidmassgrowthbot, &
+           f_sidmasssi, &
+           f_sidmassevapsubl, &
+           f_sidmassmelttop, &
+           f_sidmassmeltbot, &
+           f_sidmasslat, &
+           f_sndmasssnf, &
+           f_sndmassmelt, &
+           f_siflswdtop, &
+           f_siflswutop, &
+           f_siflswdbot, &
+           f_sifllwdtop, &
+           f_sifllwutop, &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
            f_trsig,     f_icepresent,&
@@ -417,8 +451,25 @@
            n_sisnconc,    n_siage,       &
            n_sitemptop  , n_sitempsnic , &
            n_sitempbot  , n_sispeed,     &
+           n_siu,         n_siv,         &
            n_sialb, &
            n_sihc       , n_sisnhc,      &
+           n_sidconcth  , n_sidconcdyn,  &
+           n_sidmassth  , n_sidmassdyn,  &
+           n_sidmassgrowthwat, &
+           n_sidmassgrowthbot,  &
+           n_sidmasssi,  &
+           n_sidmassevapsubl,  &
+           n_sidmassmelttop,  &
+           n_sidmassmeltbot,  &
+           n_sidmasslat,  &
+           n_sndmasssnf,  &
+           n_sndmassmelt,  &
+           n_siflswdtop,  &
+           n_siflswutop,  &
+           n_siflswdbot,  &
+           n_sifllwdtop,  &
+           n_sifllwutop,  &
            n_vsnon,                        &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &

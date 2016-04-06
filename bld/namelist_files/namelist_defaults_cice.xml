@@ -1202,10 +1202,30 @@
 <f_sitemptop                   >'xxxxx'</f_sitemptop>
 <f_sitempsnic                  >'xxxxx'</f_sitempsnic>
 <f_sitempbot                   >'xxxxx'</f_sitempbot>
+<f_siu                     >'xxxxx'</f_siu>
+<f_siv                     >'xxxxx'</f_siv>
 <f_sispeed                     >'xxxxx'</f_sispeed>
 <f_sialb                       >'xxxxx'</f_sialb>
 <f_siage                       >'xxxxx'</f_siage>
 <f_sihc                       >'xxxxx'</f_sihc>
 <f_sisnhc                       >'xxxxx'</f_sisnhc>
+<f_sidconcth                       >'xxxxx'</f_sidconcth>
+<f_sidconcdyn                       >'xxxxx'</f_sidconcdyn>
+<f_sidmassth                       >'xxxxx'</f_sidmassth>
+<f_sidmassdyn                       >'xxxxx'</f_sidmassdyn>
+<f_sidmassgrowthwat                       >'xxxxx'</f_sidmassgrowthwat>
+<f_sidmassgrowthbot                       >'xxxxx'</f_sidmassgrowthbot>
+<f_sidmasssi                       >'xxxxx'</f_sidmasssi>
+<f_sidmassevapsubl                       >'xxxxx'</f_sidmassevapsubl>
+<f_sidmassmelttop                       >'xxxxx'</f_sidmassmelttop>
+<f_sidmassmeltbot                       >'xxxxx'</f_sidmassmeltbot>
+<f_sidmasslat                       >'xxxxx'</f_sidmasslat>
+<f_sndmasssnf                       >'xxxxx'</f_sndmasssnf>
+<f_sndmassmelt                       >'xxxxx'</f_sndmassmelt>
+<f_siflswdtop                       >'xxxxx'</f_siflswdtop>
+<f_siflswutop                       >'xxxxx'</f_siflswutop>
+<f_siflswdbot                       >'xxxxx'</f_siflswdbot>
+<f_sifllwdtop                       >'xxxxx'</f_sifllwdtop>
+<f_sifllwutop                       >'xxxxx'</f_sifllwutop>
 
 </namelist_defaults>
