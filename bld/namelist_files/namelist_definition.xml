@@ -2595,6 +2595,55 @@ category="history"
 group="icefields_nml" >
 </entry>
 
+<entry
+id="f_siflsenstop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sifllatstop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siflcondtop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siflcondbot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sipr"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siflsaltbot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siflfwbot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
 <!----------------------------->
 <!-- Group: icefields_pond_nml-->
 <!----------------------------->

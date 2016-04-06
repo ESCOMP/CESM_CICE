@@ -323,6 +323,13 @@
       call broadcast_scalar (f_siflswdbot, master_task)
       call broadcast_scalar (f_sifllwdtop, master_task)
       call broadcast_scalar (f_sifllwutop, master_task)
+      call broadcast_scalar (f_siflsenstop, master_task)
+      call broadcast_scalar (f_sifllatstop, master_task)
+      call broadcast_scalar (f_siflcondtop, master_task)
+      call broadcast_scalar (f_siflcondbot, master_task)
+      call broadcast_scalar (f_sipr, master_task)
+      call broadcast_scalar (f_siflsaltbot, master_task)
+      call broadcast_scalar (f_siflfwbot, master_task)
       call broadcast_scalar (f_aicen, master_task)
       call broadcast_scalar (f_vicen, master_task)
       call broadcast_scalar (f_vsnon, master_task)
@@ -1077,6 +1084,40 @@
              "positive downward", c1, c0,                            &
              ns1, f_sifllwutop)
       
+         call define_hist_field(n_siflsenstop,"siflsenstop","W/m^2",tstr2D, tcstr, &
+             "sensible heat flux over sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflsenstop)
+      
+         call define_hist_field(n_sifllatstop,"sifllatstop","W/m^2",tstr2D, tcstr, &
+             "latent heat flux over sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_sifllatstop)
+      
+         call define_hist_field(n_siflcondtop,"siflcondtop","W/m^2",tstr2D, tcstr, &
+             "conductive heat flux at top of sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflcondtop)
+      
+         call define_hist_field(n_siflcondbot,"siflcondbot","W/m^2",tstr2D, tcstr, &
+             "conductive heat flux at bottom of sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflcondbot)
+      
+         call define_hist_field(n_sipr,"sipr","kg m^-2 s^-1",tstr2D, tcstr, &
+             "rainfall over sea ice",                                      &
+             "none", c1, c0,                            &
+             ns1, f_sipr)
+      
+         call define_hist_field(n_siflsaltbot,"siflsaltbot","kg m^-2 s^-1",tstr2D, tcstr, &
+             "salt flux from sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflsaltbot)
+      
+         call define_hist_field(n_siflfwbot,"siflfwbot","kg m^-2 s^-1",tstr2D, tcstr, &
+             "fresh water flux from sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflfwbot)
       
       endif ! if (histfreq(ns1) /= 'x') then
       enddo ! ns1
@@ -2084,6 +2125,90 @@
            call accum_hist_field(n_sifllwutop, iblk, worka(:,:), a2D)
          endif
 
+         if (f_siflsenstop(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = fsens(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflsenstop, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sifllatstop(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = flat(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_sifllatstop, iblk, worka(:,:), a2D)
+         endif
+
+!        if (f_siflcondtop(1:1) /= 'x') then
+!          worka(:,:) = c0
+!          do j = jlo, jhi
+!          do i = ilo, ihi
+!             if (aice(i,j,iblk) > puny) then
+!                worka(i,j) = aice(i,j,iblk)*fcondtop(i,j,iblk)
+!             endif
+!          enddo
+!          enddo
+!          call accum_hist_field(n_siflcondtop, iblk, worka(:,:), a2D)
+!        endif
+
+!        if (f_siflcondbot(1:1) /= 'x') then
+!          worka(:,:) = c0
+!          do j = jlo, jhi
+!          do i = ilo, ihi
+!             if (aice(i,j,iblk) > puny) then
+!                worka(i,j) = aice(i,j,iblk)*fcondbot(i,j,iblk)
+!             endif
+!          enddo
+!          enddo
+!          call accum_hist_field(n_siflcondbot, iblk, worka(:,:), a2D)
+!        endif
+
+         if (f_sipr(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*frain(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_sipr, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_siflsaltbot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = fsalt(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflsaltbot, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_siflfwbot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = fresh(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflfwbot, iblk, worka(:,:), a2D)
+         endif
+
          ! 3D category fields
          if (f_aicen   (1:1) /= 'x') &
              call accum_hist_field(n_aicen-n2D, iblk, ncat_hist, &
@@ -2685,6 +2810,71 @@
                              a2D(i,j,n_sifllwutop(ns),iblk) = &
                              a2D(i,j,n_sifllwutop(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sifllwutop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'siflsenstop') /= 0) then
+                 if (f_siflsenstop(1:1) /= 'x' .and. n_siflsenstop(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflsenstop(ns),iblk) = &
+                             a2D(i,j,n_siflsenstop(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflsenstop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sifllatstop') /= 0) then
+                 if (f_sifllatstop(1:1) /= 'x' .and. n_sifllatstop(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sifllatstop(ns),iblk) = &
+                             a2D(i,j,n_sifllatstop(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sifllatstop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sipr') /= 0) then
+                 if (f_sipr(1:1) /= 'x' .and. n_sipr(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sipr(ns),iblk) = &
+                             a2D(i,j,n_sipr(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sipr(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'siflsaltbot') /= 0) then
+                 if (f_siflsaltbot(1:1) /= 'x' .and. n_siflsaltbot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflsaltbot(ns),iblk) = &
+                             a2D(i,j,n_siflsaltbot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflsaltbot(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'siflfwbot') /= 0) then
+                 if (f_siflfwbot(1:1) /= 'x' .and. n_siflfwbot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflfwbot(ns),iblk) = &
+                             a2D(i,j,n_siflfwbot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflfwbot(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j

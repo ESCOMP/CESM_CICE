@@ -1227,5 +1227,12 @@
 <f_siflswdbot                       >'xxxxx'</f_siflswdbot>
 <f_sifllwdtop                       >'xxxxx'</f_sifllwdtop>
 <f_sifllwutop                       >'xxxxx'</f_sifllwutop>
+<f_siflsenstop                       >'xxxxx'</f_siflsenstop>
+<f_sifllatstop                       >'xxxxx'</f_sifllatstop>
+<f_siflcondtop                       >'xxxxx'</f_siflcondtop>
+<f_siflcondbot                       >'xxxxx'</f_siflcondbot>
+<f_sipr                       >'xxxxx'</f_sipr>
+<f_siflsaltbot                       >'xxxxx'</f_siflsaltbot>
+<f_siflfwbot                       >'xxxxx'</f_siflfwbot>
 
 </namelist_defaults>

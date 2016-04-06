@@ -254,6 +254,13 @@
            f_siflswdbot = 'x', &
            f_sifllwdtop = 'x', &
            f_sifllwutop = 'x', &
+           f_siflsenstop = 'x', &
+           f_sifllatstop = 'x', &
+           f_siflcondtop = 'x', &
+           f_siflcondbot = 'x', &
+           f_sipr = 'x', &
+           f_siflsaltbot = 'x', &
+           f_siflfwbot = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
@@ -362,6 +369,13 @@
            f_siflswdbot, &
            f_sifllwdtop, &
            f_sifllwutop, &
+           f_siflsenstop, &
+           f_sifllatstop, &
+           f_siflcondtop, &
+           f_siflcondbot, &
+           f_sipr, &
+           f_siflsaltbot, &
+           f_siflfwbot, &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
            f_trsig,     f_icepresent,&
@@ -470,6 +484,13 @@
            n_siflswdbot,  &
            n_sifllwdtop,  &
            n_sifllwutop,  &
+           n_siflsenstop,  &
+           n_sifllatstop,  &
+           n_siflcondtop,  &
+           n_siflcondbot,  &
+           n_sipr,  &
+           n_siflsaltbot,  &
+           n_siflfwbot,  &
            n_vsnon,                        &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &
