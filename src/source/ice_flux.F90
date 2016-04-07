@@ -279,6 +279,7 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
          fsurf , & ! net surface heat flux (excluding fcondtop)(W/m^2)
          fcondtop,&! top surface conductive flux        (W/m^2)
+         fcondbot,&! bottom surface conductive flux        (W/m^2)
          congel, & ! basal ice growth         (m/step-->cm/day)
          frazil, & ! frazil ice growth        (m/step-->cm/day)
          frazil_diag, & ! frazil ice growth diagnostic (m/step-->cm/day)
@@ -300,6 +301,7 @@
          dimension (nx_block,ny_block,ncat,max_blocks), public :: &
          fsurfn,   & ! category fsurf
          fcondtopn,& ! category fcondtop
+         fcondbotn,& ! category fcondbot
          fsensn,   & ! category sensible heat flux
          flatn       ! category latent heat flux
 
@@ -596,6 +598,7 @@
 
       fsurf  (:,:,:) = c0
       fcondtop(:,:,:)= c0
+      fcondbot(:,:,:)= c0
       congel (:,:,:) = c0
       frazil (:,:,:) = c0
       frazil_diag (:,:,:) = c0
@@ -616,6 +619,7 @@
       endif
       fsurfn    (:,:,:,:) = c0
       fcondtopn (:,:,:,:) = c0
+      fcondbotn (:,:,:,:) = c0
       flatn     (:,:,:,:) = c0
       fsensn    (:,:,:,:) = c0
       fpond     (:,:,:) = c0
@@ -713,6 +717,7 @@
                                strairxn, strairyn,   &
                                Cdn_atm_ratio_n,      &
                                fsurfn,   fcondtopn,  &  
+                               fcondbotn, &
                                fsensn,   flatn,      & 
                                fswabsn,  flwoutn,    &
                                evapn,                &
@@ -723,6 +728,7 @@
                                strairxT, strairyT,   &  
                                Cdn_atm_ratio,        &
                                fsurf,    fcondtop,   &
+                               fcondbot, &
                                fsens,    flat,       & 
                                fswabs,   flwout,     &
                                evap,                 & 
@@ -754,6 +760,7 @@
           Cdn_atm_ratio_n, & ! ratio of total drag over neutral drag (atm)
           fsurfn  , & ! net heat flux to top surface    (W/m**2)
           fcondtopn,& ! downward cond flux at top sfc   (W/m**2)
+          fcondbotn,& ! downward cond flux at bot sfc   (W/m**2)
           fsensn  , & ! sensible heat flx               (W/m**2)
           flatn   , & ! latent   heat flx               (W/m**2)
           fswabsn , & ! shortwave absorbed heat flx     (W/m**2)
@@ -784,6 +791,7 @@
           Cdn_atm_ratio, & ! ratio of total drag over neutral drag (atm)
           fsurf   , & ! net heat flux to top surface    (W/m**2)
           fcondtop, & ! downward cond flux at top sfc   (W/m**2)
+          fcondbot, & ! downward cond flux at top sfc   (W/m**2)
           fsens   , & ! sensible heat flx               (W/m**2)
           flat    , & ! latent   heat flx               (W/m**2)
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
@@ -832,6 +840,7 @@
                                    Cdn_atm_ratio_n (i,j)*aicen(i,j)
          fsurf    (i,j)  = fsurf   (i,j) + fsurfn  (i,j)*aicen(i,j)
          fcondtop (i,j)  = fcondtop(i,j) + fcondtopn(i,j)*aicen(i,j) 
+         fcondbot (i,j)  = fcondbot(i,j) + fcondbotn(i,j)*aicen(i,j) 
          fsens    (i,j)  = fsens   (i,j) + fsensn  (i,j)*aicen(i,j)
          flat     (i,j)  = flat    (i,j) + flatn   (i,j)*aicen(i,j)
          fswabs   (i,j)  = fswabs  (i,j) + fswabsn (i,j)*aicen(i,j)

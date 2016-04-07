@@ -2442,6 +2442,55 @@ group="icefields_nml" >
 </entry>
 
 <entry
+id="f_sidmasstranx"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sidmasstrany"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sistrxdtop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sistrydtop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sistrxubot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sistryubot"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_sicompstren"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
 id="f_sialb"
 type="char*5"
 category="history"
@@ -2597,6 +2646,13 @@ group="icefields_nml" >
 
 <entry
 id="f_siflsenstop"
+type="char*5"
+category="history"
+group="icefields_nml" >
+</entry>
+
+<entry
+id="f_siflsensupbot"
 type="char*5"
 category="history"
 group="icefields_nml" >

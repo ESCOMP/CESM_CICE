@@ -236,6 +236,10 @@
            f_sitemptop = 'x', f_sitempsnic = 'x', &
            f_sitempbot = 'x', f_sispeed    = 'x', &
            f_siu       = 'x', f_siv        = 'x', &
+           f_sidmasstranx = 'x', f_sidmasstrany = 'x', &
+           f_sistrxdtop = 'x', f_sistrydtop = 'x', &
+           f_sistrxubot = 'x', f_sistryubot = 'x', &
+           f_sicompstren = 'x', &
            f_sialb     = 'x', &
            f_sihc      = 'x', f_sisnhc     = 'x', &
            f_sidconcth = 'x', f_sidconcdyn = 'x', &
@@ -255,6 +259,7 @@
            f_sifllwdtop = 'x', &
            f_sifllwutop = 'x', &
            f_siflsenstop = 'x', &
+           f_siflsensupbot = 'x', &
            f_sifllatstop = 'x', &
            f_siflcondtop = 'x', &
            f_siflcondbot = 'x', &
@@ -351,6 +356,10 @@
            f_sitemptop, f_sitempsnic,&
            f_sitempbot, f_sispeed,   &
            f_siu,       f_siv,       &
+           f_sidmasstranx, f_sidmasstrany, &
+           f_sistrxdtop, f_sistrydtop, &
+           f_sistrxubot, f_sistryubot, &
+           f_sicompstren, &
            f_sialb, &
            f_sihc,      f_sisnhc,    &
            f_sidconcth, f_sidconcdyn,&
@@ -370,6 +379,7 @@
            f_sifllwdtop, &
            f_sifllwutop, &
            f_siflsenstop, &
+           f_siflsensupbot, &
            f_sifllatstop, &
            f_siflcondtop, &
            f_siflcondbot, &
@@ -466,6 +476,10 @@
            n_sitemptop  , n_sitempsnic , &
            n_sitempbot  , n_sispeed,     &
            n_siu,         n_siv,         &
+           n_sidmasstranx, n_sidmasstrany, &
+           n_sistrxdtop,  n_sistrydtop,  &
+           n_sistrxubot,  n_sistryubot,  &
+           n_sicompstren, &
            n_sialb, &
            n_sihc       , n_sisnhc,      &
            n_sidconcth  , n_sidconcdyn,  &
@@ -485,6 +499,7 @@
            n_sifllwdtop,  &
            n_sifllwutop,  &
            n_siflsenstop,  &
+           n_siflsensupbot,  &
            n_sifllatstop,  &
            n_siflcondtop,  &
            n_siflcondbot,  &

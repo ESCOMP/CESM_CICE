@@ -178,7 +178,7 @@
           flw, fsnow, fpond, sss, mlt_onset, frz_onset, faero_atm, faero_ocn, &
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
           flat, fswabs, flwout, evap, Tref, Qref, Uref, fresh, fsalt, fhocn, &
-          fswthru, meltt, melts, meltb, meltl, congel, snoice, &
+          fswthru, meltt, melts, meltb, meltl, congel, snoice, fcondbot, fcondbotn, &
           set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnic
       use ice_firstyear, only: update_FYarea
       use ice_grid, only: lmask_n, lmask_s, TLAT, TLON
@@ -520,6 +520,7 @@
                                 Iswabsn(:,:,:,n,iblk),                    &
                                 fsurfn(:,:,n,iblk),                       &
                                 fcondtopn(:,:,n,iblk),                    &
+                                fcondbotn(:,:,n,iblk),                    &
                                 fsensn(:,:,n,iblk),  flatn(:,:,n,iblk),   &
                                 flwoutn,                                  &
                                 evapn,               freshn,              &
@@ -676,6 +677,7 @@
                             strairxn,           strairyn,             &
                             Cdn_atm_ratio_n,                          &
                             fsurfn(:,:,n,iblk), fcondtopn(:,:,n,iblk),&
+                            fcondbotn(:,:,n,iblk),&
                             fsensn(:,:,n,iblk), flatn(:,:,n,iblk),    &
                             fswabsn,            flwoutn,              &
                             evapn,                                    &
@@ -686,6 +688,7 @@
                             strairxT(:,:,iblk), strairyT  (:,:,iblk), &
                             Cdn_atm_ratio(:,:,iblk),                  &
                             fsurf   (:,:,iblk), fcondtop  (:,:,iblk), &
+                            fcondbot  (:,:,iblk), &
                             fsens   (:,:,iblk), flat      (:,:,iblk), &
                             fswabs  (:,:,iblk), flwout    (:,:,iblk), &
                             evap    (:,:,iblk),                       &

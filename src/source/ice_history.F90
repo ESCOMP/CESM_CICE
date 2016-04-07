@@ -301,6 +301,13 @@
       call broadcast_scalar (f_sitempbot, master_task)
       call broadcast_scalar (f_siu, master_task)
       call broadcast_scalar (f_siv, master_task)
+      call broadcast_scalar (f_sidmasstranx, master_task)
+      call broadcast_scalar (f_sidmasstrany, master_task)
+      call broadcast_scalar (f_sistrxdtop, master_task)
+      call broadcast_scalar (f_sistrydtop, master_task)
+      call broadcast_scalar (f_sistrxubot, master_task)
+      call broadcast_scalar (f_sistryubot, master_task)
+      call broadcast_scalar (f_sicompstren, master_task)
       call broadcast_scalar (f_sispeed, master_task)
       call broadcast_scalar (f_sialb, master_task)
       call broadcast_scalar (f_sihc, master_task)
@@ -324,6 +331,7 @@
       call broadcast_scalar (f_sifllwdtop, master_task)
       call broadcast_scalar (f_sifllwutop, master_task)
       call broadcast_scalar (f_siflsenstop, master_task)
+      call broadcast_scalar (f_siflsensupbot, master_task)
       call broadcast_scalar (f_sifllatstop, master_task)
       call broadcast_scalar (f_siflcondtop, master_task)
       call broadcast_scalar (f_siflcondbot, master_task)
@@ -974,6 +982,41 @@
              "none", c1, c0,         &
              ns1, f_siv)
       
+         call define_hist_field(n_sidmasstranx,"sidmasstranx","kg/s",ustr2D, ucstr,  &
+             "x component of snow and sea ice mass transport",                      &
+             "none", c1, c0,         &
+             ns1, f_sidmasstranx)
+      
+         call define_hist_field(n_sidmasstrany,"sidmasstrany","kg/s",ustr2D, ucstr,  &
+             "y component of snow and sea ice mass transport",                      &
+             "none", c1, c0,         &
+             ns1, f_sidmasstrany)
+      
+         call define_hist_field(n_sistrxdtop,"sistrxdtop","N m^-2",ustr2D, ucstr,  &
+             "x component of atmospheric stress on sea ice",                      &
+             "none", c1, c0,         &
+             ns1, f_sistrxdtop)
+      
+         call define_hist_field(n_sistrydtop,"sistrydtop","N m^-2",ustr2D, ucstr,  &
+             "y component of atmospheric stress on sea ice",                      &
+             "none", c1, c0,         &
+             ns1, f_sistrydtop)
+      
+         call define_hist_field(n_sistrxubot,"sistrxubot","N m^-2",ustr2D, ucstr,  &
+             "x component of ocean stress on sea ice",                      &
+             "none", c1, c0,         &
+             ns1, f_sistrxubot)
+      
+         call define_hist_field(n_sistryubot,"sistryubot","N m^-2",ustr2D, ucstr,  &
+             "y component of ocean stress on sea ice",                      &
+             "none", c1, c0,         &
+             ns1, f_sistryubot)
+      
+         call define_hist_field(n_sicompstren,"sicompstren","N m^-2",ustr2D, ucstr,  &
+             "compressive sea ice strength",                      &
+             "none", c1, c0,         &
+             ns1, f_sicompstren)
+      
          call define_hist_field(n_sispeed,"sispeed","m/s",ustr2D, ucstr,  &
              "ice speed",                                  &
              "none", c1, c0,         &
@@ -1088,6 +1131,11 @@
              "sensible heat flux over sea ice",                                      &
              "positive downward", c1, c0,                            &
              ns1, f_siflsenstop)
+      
+         call define_hist_field(n_siflsensupbot,"siflsensupbot","W/m^2",tstr2D, tcstr, &
+             "sensible heat flux at bottom of sea ice",                                      &
+             "positive downward", c1, c0,                            &
+             ns1, f_siflsensupbot)
       
          call define_hist_field(n_sifllatstop,"sifllatstop","W/m^2",tstr2D, tcstr, &
              "latent heat flux over sea ice",                                      &
@@ -1383,7 +1431,7 @@
       use ice_constants, only: c0, c1, p25, puny, secday, depressT, &
           awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, cp_ice, spval_dbl, hs_min
       use ice_domain, only: blocks_ice, nblocks
-      use ice_grid, only: tmask, lmask_n, lmask_s
+      use ice_grid, only: tmask, lmask_n, lmask_s, tarea
       use ice_calendar, only: new_year, write_history, &
                               write_ic, time, histfreq, nstreams, month, &
                               new_month
@@ -1399,6 +1447,7 @@
           fswthru_ai, strairx, strairy, strtltx, strtlty, strintx, strinty, &
           strocnx, strocny, fm, daidtt, dvidtt, daidtd, dvidtd, fsurf, &
           fcondtop, fsurfn, fcondtopn, flatn, fsensn, albcnt, prs_sig, &
+          fcondbot, fcondbotn, &
           stressp_1, stressm_1, stress12_1, &
           stressp_2, stressm_2, stress12_2, &
           stressp_3, stressm_3, stress12_3, &
@@ -1871,6 +1920,83 @@
            call accum_hist_field(n_sispeed, iblk, worka(:,:), a2D)
          endif
 
+         if (f_sidmasstranx(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = (rhoi*vice(i,j,iblk)+rhos*vsno(i,j,iblk))*uvel(i,j,iblk)*tarea(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sidmasstranx, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sidmasstrany(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = (rhoi*vice(i,j,iblk)+rhos*vsno(i,j,iblk))*vvel(i,j,iblk)*tarea(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sidmasstrany, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sistrxdtop(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = aice(i,j,iblk)*strairx(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sistrxdtop, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sistrydtop(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = aice(i,j,iblk)*strairy(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sistrydtop, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sistrxubot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = aice(i,j,iblk)*strocnx(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sistrxubot, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sistryubot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = aice(i,j,iblk)*strocny(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sistryubot, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sicompstren(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) &
+                 worka(i,j) = aice(i,j,iblk)*strength(i,j,iblk)
+           enddo
+           enddo
+           call accum_hist_field(n_sicompstren, iblk, worka(:,:), a2D)
+         endif
+
          if (f_sialb(1:1) /= 'x') then
            worka(:,:) = c0
            do j = jlo, jhi
@@ -1901,7 +2027,7 @@
            do k = 1,nslyr
            do j = jlo, jhi
            do i = ilo, ihi
-              worka(i,j) = worka(i,j) + trcr(i,j,nt_qsno+k-1,iblk)*vice(i,j,iblk)/real(nslyr,kind=dbl_kind)
+              worka(i,j) = worka(i,j) + trcr(i,j,nt_qsno+k-1,iblk)*vsno(i,j,iblk)/real(nslyr,kind=dbl_kind)
            enddo
            enddo
            enddo
@@ -1913,7 +2039,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * daidtt(i,j,iblk) 
+                 worka(i,j) = daidtt(i,j,iblk) 
               endif
            enddo
            enddo
@@ -1925,7 +2051,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * daidtd(i,j,iblk) 
+                 worka(i,j) = daidtd(i,j,iblk) 
               endif
            enddo
            enddo
@@ -1937,7 +2063,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * dvidtt(i,j,iblk) * rhoi
+                 worka(i,j) = dvidtt(i,j,iblk) * rhoi
               endif
            enddo
            enddo
@@ -1949,7 +2075,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * dvidtd(i,j,iblk) * rhoi
+                 worka(i,j) = dvidtd(i,j,iblk) * rhoi
               endif
            enddo
            enddo
@@ -1960,8 +2086,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * frazil(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*frazil(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -1972,8 +2098,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * congel(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*congel(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -1984,8 +2110,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * snoice(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*snoice(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -1997,7 +2123,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = evap(i,j,iblk) * rhoi
+                 worka(i,j) = aice(i,j,iblk)*evap(i,j,iblk)
               endif
            enddo
            enddo
@@ -2008,8 +2134,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * meltt(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*meltt(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -2020,8 +2146,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * meltb(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*meltb(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -2032,8 +2158,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * meltl(i,j,iblk) * rhoi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*meltl(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -2045,7 +2171,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * dsnow(i,j,iblk) * rhos
+                 worka(i,j) = aice(i,j,iblk) * fsnow(i,j,iblk) * dt
               endif
            enddo
            enddo
@@ -2056,8 +2182,8 @@
            worka(:,:) = c0
            do j = jlo, jhi
            do i = ilo, ihi
-              if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk) * melts(i,j,iblk) * rhos
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*melts(i,j,iblk)*rhoi / aice_init(i,j,iblk)
               endif
            enddo
            enddo
@@ -2094,7 +2220,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = fswthru(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*fswthru(i,j,iblk)
               endif
            enddo
            enddo
@@ -2118,7 +2244,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = flwout(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*flwout(i,j,iblk)
               endif
            enddo
            enddo
@@ -2130,11 +2256,23 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = fsens(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*fsens(i,j,iblk)
               endif
            enddo
            enddo
            call accum_hist_field(n_siflsenstop, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_siflsensupbot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*fhocn(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflsensupbot, iblk, worka(:,:), a2D)
          endif
 
          if (f_sifllatstop(1:1) /= 'x') then
@@ -2142,36 +2280,36 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = flat(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*flat(i,j,iblk)
               endif
            enddo
            enddo
            call accum_hist_field(n_sifllatstop, iblk, worka(:,:), a2D)
          endif
 
-!        if (f_siflcondtop(1:1) /= 'x') then
-!          worka(:,:) = c0
-!          do j = jlo, jhi
-!          do i = ilo, ihi
-!             if (aice(i,j,iblk) > puny) then
-!                worka(i,j) = aice(i,j,iblk)*fcondtop(i,j,iblk)
-!             endif
-!          enddo
-!          enddo
-!          call accum_hist_field(n_siflcondtop, iblk, worka(:,:), a2D)
-!        endif
+         if (f_siflcondtop(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*fcondtop(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflcondtop, iblk, worka(:,:), a2D)
+         endif
 
-!        if (f_siflcondbot(1:1) /= 'x') then
-!          worka(:,:) = c0
-!          do j = jlo, jhi
-!          do i = ilo, ihi
-!             if (aice(i,j,iblk) > puny) then
-!                worka(i,j) = aice(i,j,iblk)*fcondbot(i,j,iblk)
-!             endif
-!          enddo
-!          enddo
-!          call accum_hist_field(n_siflcondbot, iblk, worka(:,:), a2D)
-!        endif
+         if (f_siflcondbot(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice_init(i,j,iblk) > puny) then
+                 worka(i,j) = aice(i,j,iblk)*fcondbot(i,j,iblk)/aice_init(i,j,iblk)
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_siflcondbot, iblk, worka(:,:), a2D)
+         endif
 
          if (f_sipr(1:1) /= 'x') then
            worka(:,:) = c0
@@ -2190,7 +2328,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = fsalt(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*fsalt(i,j,iblk)
               endif
            enddo
            enddo
@@ -2202,7 +2340,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = fresh(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*fresh(i,j,iblk)
               endif
            enddo
            enddo
@@ -2528,6 +2666,71 @@
                     enddo             ! j
                  endif
               endif
+              if (index(avail_hist_fields(n)%vname,'sistrxdtop') /= 0) then
+                 if (f_sistrxdtop(1:1) /= 'x' .and. n_sistrxdtop(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sistrxdtop(ns),iblk) = &
+                             a2D(i,j,n_sistrxdtop(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sistrxdtop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sistrydtop') /= 0) then
+                 if (f_sistrydtop(1:1) /= 'x' .and. n_sistrydtop(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sistrydtop(ns),iblk) = &
+                             a2D(i,j,n_sistrydtop(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sistrydtop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sistrxubot') /= 0) then
+                 if (f_sistrxubot(1:1) /= 'x' .and. n_sistrxubot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sistrxubot(ns),iblk) = &
+                             a2D(i,j,n_sistrxubot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sistrxubot(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sistryubot') /= 0) then
+                 if (f_sistryubot(1:1) /= 'x' .and. n_sistryubot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sistryubot(ns),iblk) = &
+                             a2D(i,j,n_sistryubot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sistryubot(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sicompstren') /= 0) then
+                 if (f_sicompstren(1:1) /= 'x' .and. n_sicompstren(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sicompstren(ns),iblk) = &
+                             a2D(i,j,n_sicompstren(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sicompstren(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
               if (index(avail_hist_fields(n)%vname,'sispeed') /= 0) then
                  if (f_sispeed(1:1) /= 'x' .and. n_sispeed(ns) /= 0) then
                     do j = jlo, jhi
@@ -2581,58 +2784,6 @@
                     enddo             ! j
                  endif
               endif
-              if (index(avail_hist_fields(n)%vname,'sidconcth') /= 0) then
-                 if (f_sidconcth(1:1) /= 'x' .and. n_sidconcth(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidconcth(ns),iblk) = &
-                             a2D(i,j,n_sidconcth(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidconcth(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidconcdyn') /= 0) then
-                 if (f_sidconcdyn(1:1) /= 'x' .and. n_sidconcdyn(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidconcdyn(ns),iblk) = &
-                             a2D(i,j,n_sidconcdyn(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidconcdyn(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmassth') /= 0) then
-                 if (f_sidmassth(1:1) /= 'x' .and. n_sidmassth(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassth(ns),iblk) = &
-                             a2D(i,j,n_sidmassth(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassth(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmassdyn') /= 0) then
-                 if (f_sidmassdyn(1:1) /= 'x' .and. n_sidmassdyn(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassdyn(ns),iblk) = &
-                             a2D(i,j,n_sidmassdyn(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassdyn(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
               if (index(avail_hist_fields(n)%vname,'sidmassgrowthwat') /= 0) then
                  if (f_sidmassgrowthwat(1:1) /= 'x' .and. n_sidmassgrowthwat(ns) /= 0) then
                     do j = jlo, jhi
@@ -2672,6 +2823,19 @@
                     enddo             ! j
                  endif
               endif
+              if (index(avail_hist_fields(n)%vname,'sidmassevapsubl') /= 0) then
+                 if (f_sidmassevapsubl(1:1) /= 'x' .and. n_sidmassevapsubl(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sidmassevapsubl(ns),iblk) = &
+                             a2D(i,j,n_sidmassevapsubl(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassevapsubl(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
               if (index(avail_hist_fields(n)%vname,'sidmassmelttop') /= 0) then
                  if (f_sidmassmelttop(1:1) /= 'x' .and. n_sidmassmelttop(ns) /= 0) then
                     do j = jlo, jhi
@@ -2706,19 +2870,6 @@
                              a2D(i,j,n_sidmasslat(ns),iblk) = &
                              a2D(i,j,n_sidmasslat(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sidmasslat(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmassevapsubl') /= 0) then
-                 if (f_sidmassevapsubl(1:1) /= 'x' .and. n_sidmassevapsubl(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassevapsubl(ns),iblk) = &
-                             a2D(i,j,n_sidmassevapsubl(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassevapsubl(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j
@@ -2828,6 +2979,19 @@
                     enddo             ! j
                  endif
               endif
+              if (index(avail_hist_fields(n)%vname,'siflsensupbot') /= 0) then
+                 if (f_siflsensupbot(1:1) /= 'x' .and. n_siflsensupbot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflsensupbot(ns),iblk) = &
+                             a2D(i,j,n_siflsensupbot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflsensupbot(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
               if (index(avail_hist_fields(n)%vname,'sifllatstop') /= 0) then
                  if (f_sifllatstop(1:1) /= 'x' .and. n_sifllatstop(ns) /= 0) then
                     do j = jlo, jhi
@@ -2849,6 +3013,32 @@
                              a2D(i,j,n_sipr(ns),iblk) = &
                              a2D(i,j,n_sipr(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sipr(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'siflcondtop') /= 0) then
+                 if (f_siflcondtop(1:1) /= 'x' .and. n_siflcondtop(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflcondtop(ns),iblk) = &
+                             a2D(i,j,n_siflcondtop(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflcondtop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'siflcondbot') /= 0) then
+                 if (f_siflcondbot(1:1) /= 'x' .and. n_siflcondbot(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_siflcondbot(ns),iblk) = &
+                             a2D(i,j,n_siflcondbot(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_siflcondbot(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j

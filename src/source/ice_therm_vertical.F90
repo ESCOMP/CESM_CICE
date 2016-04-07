@@ -80,6 +80,7 @@
                                   fswsfc,      fswint,    &
                                   Sswabs,      Iswabs,    &
                                   fsurfn,      fcondtopn, &
+                                  fcondbotn, &
                                   fsensn,      flatn,     &
                                   flwoutn,     evapn,     &
                                   freshn,      fsaltn,    &
@@ -160,7 +161,8 @@
          fsensn   , & ! sensible heat flux (W/m^2) 
          flatn    , & ! latent heat flux   (W/m^2) 
          fsurfn   , & ! net flux to top surface, excluding fcondtopn
-         fcondtopn    ! downward cond flux at top surface (W m-2)
+         fcondtopn, & ! downward cond flux at top surface (W m-2)
+         fcondbotn    ! downward cond flux at bottom surface (W m-2)
 
       ! coupler fluxes to ocean
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out):: &
@@ -225,7 +227,6 @@
 ! other 2D flux and energy variables
 
       real (kind=dbl_kind), dimension (icells) :: &
-         fcondbot    , & ! downward cond flux at bottom surface (W m-2)
          einit       , & ! initial energy of melting (J m-2)
          efinal      , & ! final energy of melting (J m-2)
          einter          ! intermediate energy
@@ -272,6 +273,7 @@
             flatn    (i,j) = c0
             fsurfn   (i,j) = c0
             fcondtopn(i,j) = c0
+            fcondbotn(i,j) = c0
          enddo
          enddo
       endif
@@ -330,7 +332,7 @@
                                               sss,                     &
                                               fsensn,        flatn,    &
                                               flwoutn,       fsurfn,   &
-                                              fcondtopn,     fcondbot, &
+                                              fcondtopn,     fcondbotn, &
                                               fadvocn,       snoice,   &
                                               einit,         l_stop,   &
                                               istop,         jstop)
@@ -353,7 +355,7 @@
                                      Tsf,           Tbot,     &
                                      fsensn,        flatn,    &
                                      flwoutn,       fsurfn,   &
-                                     fcondtopn,     fcondbot, &
+                                     fcondtopn,     fcondbotn, &
                                      einit,         l_stop,   &
                                      istop,         jstop)
 
@@ -375,7 +377,7 @@
                                        Tsf,           Tbot,     &
                                        fsensn,        flatn,    &
                                        flwoutn,       fsurfn,   &
-                                       fcondtopn,     fcondbot, &
+                                       fcondtopn,     fcondbotn, &
                                        l_stop,                  &
                                        istop,         jstop)
 
@@ -389,7 +391,7 @@
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
-               fcondbot(ij)  = fcondtopn(i,j)   ! zero layer         
+               fcondbotn(i,j)  = fcondtopn(i,j)   ! zero layer         
             enddo
       
          endif      ! calc_Tsfc
@@ -435,7 +437,7 @@
                                 zqin,         zqsn,     &
                                 fbot,         Tbot,     &
                                 flatn,        fsurfn,   &
-                                fcondtopn,    fcondbot, &
+                                fcondtopn,    fcondbotn, &
                                 fsnow,        hsn_new,  &
                                 fhocnn,       evapn,    &
                                 meltt,        melts,    &
@@ -458,7 +460,7 @@
                                         fhocnn,   fswint,   &
                                         fsnow,    einit,    &
                                         einter,   efinal,   &
-                                        fcondtopn,fcondbot, &
+                                        fcondtopn,fcondbotn, &
                                         fadvocn,            &
                                         fbot,     l_stop,   &
                                         istop,    jstop)
@@ -779,7 +781,7 @@
          ! melting energy/unit area in each column, etot < 0
 
          do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, imelt
@@ -791,7 +793,7 @@
          enddo
 
          do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, imelt
@@ -802,7 +804,7 @@
             enddo               ! ij
          enddo                  ! nilyr
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, imelt
@@ -818,7 +820,7 @@
       ! Limit bottom and lateral heat fluxes if necessary.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, imelt
@@ -951,7 +953,7 @@
       ! Load arrays for vertical thermo calculation.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -978,7 +980,7 @@
       !-----------------------------------------------------------------
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1083,7 +1085,7 @@
       endif                     ! tsno_low
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1102,7 +1104,7 @@
       enddo                     ! nslyr
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1236,7 +1238,7 @@
       !-----------------------------------------------------------------
 
          if (ktherm /= 2) then
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1249,7 +1251,7 @@
 
 ! echmod: is this necessary?
 !         if (ktherm == 1) then
-!!DIR$ CONCURRENT !Cray
+!!DIR$ CONCURRENT !Cray 
 !!cdir nodep      !NEC
 !!ocl novrec      !Fujitsu
 !            do ij = 1, icells
@@ -1264,7 +1266,7 @@
       ! initial energy per unit area of ice/snow, relative to 0 C
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1293,7 +1295,7 @@
                                     zqin,      zqsn,     &
                                     fbot,      Tbot,     &
                                     flatn,     fsurfn,   &
-                                    fcondtopn, fcondbot, &
+                                    fcondtopn, fcondbotn, &
                                     fsnow,     hsn_new,  &
                                     fhocnn,    evapn,    &
                                     meltt,     melts,    &
@@ -1325,10 +1327,8 @@
          fsnow       , & ! snowfall rate (kg m-2 s-1)
          flatn       , & ! surface downward latent heat (W m-2)
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
-         fcondtopn       ! downward cond flux at top surface (W m-2)
-
-      real (kind=dbl_kind), dimension (icells), intent(inout) :: &
-         fcondbot        ! downward cond flux at bottom surface (W m-2)
+         fcondtopn   , & ! downward cond flux at top surface (W m-2)
+         fcondbotn       ! downward cond flux at bottom surface (W m-2)
 
       real (kind=dbl_kind), dimension (icells,nilyr), &
          intent(inout) :: &
@@ -1475,7 +1475,7 @@
       if (.not. l_brine) then 
 
          do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1489,7 +1489,7 @@
          enddo
 
          do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1520,7 +1520,7 @@
          wk1 = (fsurfn(i,j) - fcondtopn(i,j)) * dt
          etop_mlt(ij) = max(wk1, c0)           ! etop_mlt > 0
          
-         wk1 = (fcondbot(ij) - fbot(i,j)) * dt
+         wk1 = (fcondbotn(i,j) - fbot(i,j)) * dt
          ebot_mlt(ij) = max(wk1, c0)           ! ebot_mlt > 0
          ebot_gro(ij) = min(wk1, c0)           ! ebot_gro < 0
 
@@ -1610,7 +1610,7 @@
       enddo                     ! ij
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1661,7 +1661,7 @@
       enddo                     ! nslyr
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1704,7 +1704,7 @@
       enddo                     ! nilyr
 
       do k = nilyr, 1, -1
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1733,7 +1733,7 @@
       enddo                     ! nilyr
 
       do k = nslyr, 1, -1
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1767,7 +1767,7 @@
 !---! Add new snowfall at top surface.
 !---!-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -1805,7 +1805,7 @@
       enddo
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1814,7 +1814,7 @@
       enddo                     ! k
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1881,7 +1881,7 @@
       if (heat_capacity) then
 
          do k = 1, nilyr-1
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1934,7 +1934,7 @@
          enddo
 
          do k = 1, nslyr-1
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1988,7 +1988,7 @@
       enddo
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1997,7 +1997,7 @@
       enddo
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2123,7 +2123,7 @@
       !-----------------------------------------------------------------
 
       do k = nslyr, 1, -1
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2145,7 +2145,7 @@
       ! Transfer volume and energy from snow to top ice layer.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -2243,7 +2243,7 @@
          enddo
       enddo                     ! k
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -2292,7 +2292,7 @@
                                             fsnow,              &
                                             einit,    einter,   &
                                             efinal,             &
-                                            fcondtopn,fcondbot, &
+                                            fcondtopn,fcondbotn, &
                                             fadvocn,            &
                                             fbot,     l_stop,   &
                                             istop,    jstop)
@@ -2317,14 +2317,14 @@
          fswint      , & ! SW absorbed in ice interior, below surface (W m-2)
          fsnow       , & ! snowfall rate (kg m-2 s-1)
          fcondtopn   , &
+         fcondbotn   , &
          fadvocn     , &
          fbot           
 
       real (kind=dbl_kind), dimension (icells), intent(in) :: &
          einit       , & ! initial energy of melting (J m-2)
          einter      , & ! intermediate energy of melting (J m-2)
-         efinal      , & ! final energy of melting (J m-2)
-         fcondbot
+         efinal          ! final energy of melting (J m-2)
 
       logical (kind=log_kind), intent(inout) :: &
          l_stop          ! if true, print diagnostics and abort model
@@ -2345,7 +2345,7 @@
       !----------------------------------------------------------------
       ! If energy is not conserved, print diagnostics and exit.
       !----------------------------------------------------------------
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
     do ij = 1, icells
@@ -2380,8 +2380,8 @@
          write(nu_diag,*) 'fsurfn,flatn,fswint,fhocn, fsnow*Lfresh:'
          write(nu_diag,*) fsurfn(i,j),flatn(i,j),fswint(i,j),fhocnn(i,j), fsnow(i,j)*Lfresh
          write(nu_diag,*) 'Input energy =', einp
-         write(nu_diag,*) 'fbot(i,j),fcondbot(ij):'
-         write(nu_diag,*) fbot(i,j),fcondbot(ij)
+         write(nu_diag,*) 'fbot(i,j),fcondbotn(i,j):'
+         write(nu_diag,*) fbot(i,j),fcondbotn(i,j)
 
 !         if (ktherm == 2) then
             write(nu_diag,*) 'Intermediate energy =', einter(ij)
@@ -2390,9 +2390,9 @@
             write(nu_diag,*) 'einter - einit  =', &
                               einter(ij)-einit(ij)
             write(nu_diag,*) 'Conduction Error =', (einter(ij)-einit(ij)) &
-                  - (fcondtopn(i,j)*dt - fcondbot(ij)*dt + fswint(i,j)*dt)
+                  - (fcondtopn(i,j)*dt - fcondbotn(i,j)*dt + fswint(i,j)*dt)
             write(nu_diag,*) 'Melt/Growth Error =', (einter(ij)-einit(ij)) &
-                  + ferr*dt - (fcondtopn(i,j)*dt - fcondbot(ij)*dt + fswint(i,j)*dt)
+                  + ferr*dt - (fcondtopn(i,j)*dt - fcondbotn(i,j)*dt + fswint(i,j)*dt)
             write(nu_diag,*) 'Advection Error =', fadvocn(i,j)*dt
 !         endif
 
@@ -2471,7 +2471,7 @@
          ij          , & ! horizontal index, combines i and j loops
          k               ! ice layer index
 
-!DIR$ CONCURRENT !Cray
+!DIR$ CONCURRENT !Cray 
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells

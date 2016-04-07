@@ -64,7 +64,7 @@
                                       Tsf,      Tbot,     &
                                       fsensn,   flatn,    &
                                       flwoutn,  fsurfn,   &
-                                      fcondtopn,fcondbot, &
+                                      fcondtopn,fcondbotn, &
                                       einit,    l_stop,   &
                                       istop,    jstop)
 
@@ -114,12 +114,11 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(inout):: &
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
          fcondtopn   , & ! downward cond flux at top surface (W m-2)
+         fcondbotn   , & ! downward cond flux at bottom surface (W m-2)
          fsensn      , & ! surface downward sensible heat (W m-2)
          flatn       , & ! surface downward latent heat (W m-2)
          flwoutn         ! upward LW at surface (W m-2)
 
-      real (kind=dbl_kind), dimension (icells), intent(out):: &
-         fcondbot        ! downward cond flux at bottom surface (W m-2)
 
       real (kind=dbl_kind), dimension (icells), &
          intent(inout):: &
@@ -241,7 +240,6 @@
          converged (ij) = .false.
          l_snow    (ij) = .false.
          l_cold    (ij) = .true.
-         fcondbot  (ij) = c0
          dTsf_prev (ij) = c0
          dTi1_prev (ij) = c0
          dfsens_dT (ij) = c0
@@ -809,14 +807,14 @@
             j = indxjj(ij)
             m = indxij(ij)
 
-            fcondbot(m) = kh(m,1+nslyr+nilyr) * &
+            fcondbotn(i,j) = kh(m,1+nslyr+nilyr) * &
                           (zTin(m,nilyr) - Tbot(i,j))
 
             ! Flux extra energy out of the ice
-            fcondbot(m) = fcondbot(m) + einex(m)/dt 
+            fcondbotn(i,j) = fcondbotn(i,j) + einex(m)/dt 
 
             ferr(m) = abs( (enew(ij)-einit(m))/dt &
-                    - (fcondtopn(i,j) - fcondbot(m) + fswint(i,j)) )
+                    - (fcondtopn(i,j) - fcondbotn(i,j) + fswint(i,j)) )
 
             ! factor of 0.9 allows for roundoff errors later
             if (ferr(m) > 0.9_dbl_kind*ferrmax) then         ! condition (5)
@@ -827,7 +825,7 @@
                ! reduce conductivity for next iteration
                do k = 1, nilyr
                   if (reduce_kh(m,k) .and. dqmat(m,k) > c0) then
-                     frac = max(0.5*(c1-ferr(m)/abs(fcondtopn(i,j)-fcondbot(m))),p1)
+                     frac = max(0.5*(c1-ferr(m)/abs(fcondtopn(i,j)-fcondbotn(i,j))),p1)
 !                     frac = p1
                      kh(m,k+nslyr+1) = kh(m,k+nslyr+1) * frac
                      kh(m,k+nslyr)   = kh(m,k+nslyr+1)
@@ -871,8 +869,8 @@
                                  Tsf_errmax
                write(nu_diag,*) 'Tsf:', Tsf(ij)
                write(nu_diag,*) 'fsurf:', fsurfn(i,j)
-               write(nu_diag,*) 'fcondtop, fcondbot, fswint', &
-                                 fcondtopn(i,j), fcondbot(ij), fswint(i,j)
+               write(nu_diag,*) 'fcondtop, fcondbotn, fswint', &
+                                 fcondtopn(i,j), fcondbotn(i,j), fswint(i,j)
                write(nu_diag,*) 'fswsfc', fswsfc(i,j)
                write(nu_diag,*) 'Iswabs',(Iswabs(i,j,k),k=1,nilyr)
                write(nu_diag,*) 'Flux conservation error =', ferr(ij)

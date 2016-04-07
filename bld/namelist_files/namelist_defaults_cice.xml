@@ -1204,6 +1204,13 @@
 <f_sitempbot                   >'xxxxx'</f_sitempbot>
 <f_siu                     >'xxxxx'</f_siu>
 <f_siv                     >'xxxxx'</f_siv>
+<f_sidmasstranx                     >'xxxxx'</f_sidmasstranx>
+<f_sidmasstrany                     >'xxxxx'</f_sidmasstrany>
+<f_sistrxdtop                     >'xxxxx'</f_sistrxdtop>
+<f_sistrydtop                     >'xxxxx'</f_sistrydtop>
+<f_sistrxubot                     >'xxxxx'</f_sistrxubot>
+<f_sistryubot                     >'xxxxx'</f_sistryubot>
+<f_sicompstren                     >'xxxxx'</f_sicompstren>
 <f_sispeed                     >'xxxxx'</f_sispeed>
 <f_sialb                       >'xxxxx'</f_sialb>
 <f_siage                       >'xxxxx'</f_siage>
@@ -1228,6 +1235,7 @@
 <f_sifllwdtop                       >'xxxxx'</f_sifllwdtop>
 <f_sifllwutop                       >'xxxxx'</f_sifllwutop>
 <f_siflsenstop                       >'xxxxx'</f_siflsenstop>
+<f_siflsensupbot                       >'xxxxx'</f_siflsensupbot>
 <f_sifllatstop                       >'xxxxx'</f_sifllatstop>
 <f_siflcondtop                       >'xxxxx'</f_siflcondtop>
 <f_siflcondbot                       >'xxxxx'</f_siflcondbot>

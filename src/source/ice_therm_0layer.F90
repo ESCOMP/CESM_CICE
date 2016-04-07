@@ -50,7 +50,7 @@
                                        Tsf,      Tbot,     &
                                        fsensn,   flatn,    &
                                        flwoutn,  fsurfn,   &
-                                       fcondtopn,fcondbot, &
+                                       fcondtopn,fcondbotn, &
                                        l_stop,             &
                                        istop,    jstop)
 
@@ -86,10 +86,8 @@
          flatn       , & ! surface downward latent heat (W m-2)
          flwoutn     , & ! upward LW at surface (W m-2)
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
-         fcondtopn       ! downward cond flux at top surface (W m-2)
-
-      real (kind=dbl_kind), dimension (icells), intent(out):: &
-         fcondbot        ! downward cond flux at bottom surface (W m-2)
+         fcondtopn   , & ! downward cond flux at top surface (W m-2)
+         fcondbotn       ! downward cond flux at bottom surface (W m-2)
 
       real (kind=dbl_kind), dimension (icells), &
          intent(inout):: &
@@ -162,7 +160,6 @@
       all_converged   = .false.
 
       do ij = 1, icells
-         fcondbot(ij) = c0
 
          converged (ij) = .false.
 
@@ -376,7 +373,7 @@
                all_converged = .false.
             endif
 
-            fcondbot(m) = fcondtopn(i,j)
+            fcondbotn(i,j) = fcondtopn(i,j)
 
             dTsf_prev(m) = dTsf(ij)
 
@@ -410,8 +407,8 @@
                                  Tsf_errmax
                write(nu_diag,*) 'Tsf:', Tsf(ij)
                write(nu_diag,*) 'fsurfn:', fsurfn(i,j)
-               write(nu_diag,*) 'fcondtopn, fcondbot', &
-                                 fcondtopn(i,j), fcondbot(ij)
+               write(nu_diag,*) 'fcondtopn, fcondbotn', &
+                                 fcondtopn(i,j), fcondbotn(i,j)
                l_stop = .true.
                istop = i
                jstop = j

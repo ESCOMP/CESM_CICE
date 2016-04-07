@@ -166,7 +166,7 @@ contains
                                           sss,                &
                                           fsensn,   flatn,    &
                                           flwoutn,  fsurfn,   &
-                                          fcondtopn,fcondbot, &
+                                          fcondtopn,fcondbotn, &
                                           fadvocn,  snoice,   &
                                           einit,    l_stop,   &
                                           istop,    jstop)
@@ -225,13 +225,11 @@ contains
     real (kind=dbl_kind), dimension (nx_block,ny_block), intent(inout) :: &
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
          fcondtopn   , & ! downward cond flux at top surface (W m-2)
+         fcondbotn   , & ! downward cond flux at bottom surface (W m-2)
          fsensn      , & ! surface downward sensible heat (W m-2)
          flatn       , & ! surface downward latent heat (W m-2)
          flwoutn     , & ! upward LW at surface (W m-2)
          fadvocn         ! advection heat flux to ocean
-    
-    real (kind=dbl_kind), dimension (icells), intent(out):: &
-         fcondbot        ! downward cond flux at bottom surface (W m-2)
     
     real (kind=dbl_kind), dimension (icells), &
          intent(inout):: &
@@ -301,7 +299,7 @@ contains
                                        sss(i,j),                     &
                                        fsensn(i,j),   flatn(i,j),    &
                                        flwoutn(i,j),  fsurfn(i,j),   &
-                                       fcondtopn(i,j),fcondbot(ij),  &
+                                       fcondtopn(i,j),fcondbotn(i,j),  &
                                        fadvocn(i,j),  snoice(i,j),   &
                                        einit(ij),     l_stop)
 
@@ -384,12 +382,12 @@ contains
     real (kind=dbl_kind), intent(inout):: &
          fsurfn      , & ! net flux to top surface, excluding fcondtopn
          fcondtop    , & ! downward cond flux at top surface (W m-2)
+         fcondbot    , & ! downward cond flux at bottom surface (W m-2)
          fsensn      , & ! surface downward sensible heat (W m-2)
          flatn       , & ! surface downward latent heat (W m-2)
          flwoutn         ! upward LW at surface (W m-2)
     
     real (kind=dbl_kind), intent(out):: &
-         fcondbot    , & ! downward cond flux at bottom surface (W m-2)
          fadvheat    , & ! flow of heat to ocean due to advection (W m-2)
          snoice          ! snow ice formation
 
