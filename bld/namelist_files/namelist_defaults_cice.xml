@@ -1220,15 +1220,8 @@
 <f_sidconcdyn                       >'xxxxx'</f_sidconcdyn>
 <f_sidmassth                       >'xxxxx'</f_sidmassth>
 <f_sidmassdyn                       >'xxxxx'</f_sidmassdyn>
-<f_sidmassgrowthwat                       >'xxxxx'</f_sidmassgrowthwat>
-<f_sidmassgrowthbot                       >'xxxxx'</f_sidmassgrowthbot>
-<f_sidmasssi                       >'xxxxx'</f_sidmasssi>
 <f_sidmassevapsubl                       >'xxxxx'</f_sidmassevapsubl>
-<f_sidmassmelttop                       >'xxxxx'</f_sidmassmelttop>
-<f_sidmassmeltbot                       >'xxxxx'</f_sidmassmeltbot>
-<f_sidmasslat                       >'xxxxx'</f_sidmasslat>
 <f_sndmasssnf                       >'xxxxx'</f_sndmasssnf>
-<f_sndmassmelt                       >'xxxxx'</f_sndmassmelt>
 <f_siflswdtop                       >'xxxxx'</f_siflswdtop>
 <f_siflswutop                       >'xxxxx'</f_siflswutop>
 <f_siflswdbot                       >'xxxxx'</f_siflswdbot>

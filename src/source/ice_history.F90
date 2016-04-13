@@ -316,15 +316,8 @@
       call broadcast_scalar (f_sidconcdyn, master_task)
       call broadcast_scalar (f_sidmassth, master_task)
       call broadcast_scalar (f_sidmassdyn, master_task)
-      call broadcast_scalar (f_sidmassgrowthwat, master_task)
-      call broadcast_scalar (f_sidmassgrowthbot, master_task)
-      call broadcast_scalar (f_sidmasssi, master_task)
       call broadcast_scalar (f_sidmassevapsubl, master_task)
-      call broadcast_scalar (f_sidmassmelttop, master_task)
-      call broadcast_scalar (f_sidmassmeltbot, master_task)
-      call broadcast_scalar (f_sidmasslat, master_task)
       call broadcast_scalar (f_sndmasssnf, master_task)
-      call broadcast_scalar (f_sndmassmelt, master_task)
       call broadcast_scalar (f_siflswdtop, master_task)
       call broadcast_scalar (f_siflswutop, master_task)
       call broadcast_scalar (f_siflswdbot, master_task)
@@ -1057,51 +1050,16 @@
              "none", c1, c0,         &
              ns1, f_sidmassdyn)
       
-         call define_hist_field(n_sidmassgrowthwat,"sidmassgrowthwat","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from frazil growth",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmassgrowthwat)
-      
-         call define_hist_field(n_sidmassgrowthbot,"sidmassgrowthbot","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from bottom growth",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmassgrowthbot)
-      
-         call define_hist_field(n_sidmasssi,"sidmasssi","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from snow ice conversion",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmasssi)
-      
          call define_hist_field(n_sidmassevapsubl,"sidmassevapsubl","kg m^-2 s^-1",tstr2D, tcstr,  &
              "sea ice mass change from evaporation and sublimation",                      &
              "none", c1, c0,         &
              ns1, f_sidmassevapsubl)
-      
-         call define_hist_field(n_sidmassmelttop,"sidmassmelttop","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from top ice melt",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmassmelttop)
-      
-         call define_hist_field(n_sidmassmeltbot,"sidmassmeltbot","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from bottom ice melt",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmassmeltbot)
-      
-         call define_hist_field(n_sidmasslat,"sidmasslat","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "sea ice mass change from lateral ice melt",                      &
-             "none", c1, c0,         &
-             ns1, f_sidmasslat)
       
          call define_hist_field(n_sndmasssnf,"sndmasssnf","kg m^-2 s^-1",tstr2D, tcstr,  &
              "snow mass change from snow fall",                      &
              "none", c1, c0,         &
              ns1, f_sndmasssnf)
       
-         call define_hist_field(n_sndmassmelt,"sndmassmelt","kg m^-2 s^-1",tstr2D, tcstr,  &
-             "snow mass change from melt",                      &
-             "none", c1, c0,         &
-             ns1, f_sndmassmelt)
-
          call define_hist_field(n_siflswdtop,"siflswdtop","W/m^2",tstr2D, tcstr, &
              "down shortwave flux over sea ice",                                      &
              "positive downward", c1, c0,                            &
@@ -2082,42 +2040,6 @@
            call accum_hist_field(n_sidmassdyn, iblk, worka(:,:), a2D)
          endif
 
-         if (f_sidmassgrowthwat(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*frazil(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmassgrowthwat, iblk, worka(:,:), a2D)
-         endif
-
-         if (f_sidmassgrowthbot(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*congel(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmassgrowthbot, iblk, worka(:,:), a2D)
-         endif
-
-         if (f_sidmasssi(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*snoice(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmasssi, iblk, worka(:,:), a2D)
-         endif
-
          if (f_sidmassevapsubl(1:1) /= 'x') then
            worka(:,:) = c0
            do j = jlo, jhi
@@ -2130,42 +2052,6 @@
            call accum_hist_field(n_sidmassevapsubl, iblk, worka(:,:), a2D)
          endif
 
-         if (f_sidmassmelttop(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*meltt(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmassmelttop, iblk, worka(:,:), a2D)
-         endif
-
-         if (f_sidmassmeltbot(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*meltb(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmassmeltbot, iblk, worka(:,:), a2D)
-         endif
-
-         if (f_sidmasslat(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*meltl(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sidmasslat, iblk, worka(:,:), a2D)
-         endif
-
          if (f_sndmasssnf(1:1) /= 'x') then
            worka(:,:) = c0
            do j = jlo, jhi
@@ -2176,18 +2062,6 @@
            enddo
            enddo
            call accum_hist_field(n_sndmasssnf, iblk, worka(:,:), a2D)
-         endif
-
-         if (f_sndmassmelt(1:1) /= 'x') then
-           worka(:,:) = c0
-           do j = jlo, jhi
-           do i = ilo, ihi
-              if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*melts(i,j,iblk)*rhoi / aice_init(i,j,iblk)
-              endif
-           enddo
-           enddo
-           call accum_hist_field(n_sndmassmelt, iblk, worka(:,:), a2D)
          endif
 
          if (f_siflswdtop(1:1) /= 'x') then
@@ -2784,45 +2658,6 @@
                     enddo             ! j
                  endif
               endif
-              if (index(avail_hist_fields(n)%vname,'sidmassgrowthwat') /= 0) then
-                 if (f_sidmassgrowthwat(1:1) /= 'x' .and. n_sidmassgrowthwat(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassgrowthwat(ns),iblk) = &
-                             a2D(i,j,n_sidmassgrowthwat(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassgrowthwat(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmassgrowthbot') /= 0) then
-                 if (f_sidmassgrowthbot(1:1) /= 'x' .and. n_sidmassgrowthbot(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassgrowthbot(ns),iblk) = &
-                             a2D(i,j,n_sidmassgrowthbot(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassgrowthbot(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmasssi') /= 0) then
-                 if (f_sidmasssi(1:1) /= 'x' .and. n_sidmasssi(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmasssi(ns),iblk) = &
-                             a2D(i,j,n_sidmasssi(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmasssi(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
               if (index(avail_hist_fields(n)%vname,'sidmassevapsubl') /= 0) then
                  if (f_sidmassevapsubl(1:1) /= 'x' .and. n_sidmassevapsubl(ns) /= 0) then
                     do j = jlo, jhi
@@ -2836,45 +2671,6 @@
                     enddo             ! j
                  endif
               endif
-              if (index(avail_hist_fields(n)%vname,'sidmassmelttop') /= 0) then
-                 if (f_sidmassmelttop(1:1) /= 'x' .and. n_sidmassmelttop(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassmelttop(ns),iblk) = &
-                             a2D(i,j,n_sidmassmelttop(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassmelttop(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmassmeltbot') /= 0) then
-                 if (f_sidmassmeltbot(1:1) /= 'x' .and. n_sidmassmeltbot(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmassmeltbot(ns),iblk) = &
-                             a2D(i,j,n_sidmassmeltbot(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmassmeltbot(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sidmasslat') /= 0) then
-                 if (f_sidmasslat(1:1) /= 'x' .and. n_sidmasslat(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sidmasslat(ns),iblk) = &
-                             a2D(i,j,n_sidmasslat(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sidmasslat(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
               if (index(avail_hist_fields(n)%vname,'sndmasssnf') /= 0) then
                  if (f_sndmasssnf(1:1) /= 'x' .and. n_sndmasssnf(ns) /= 0) then
                     do j = jlo, jhi
@@ -2883,19 +2679,6 @@
                              a2D(i,j,n_sndmasssnf(ns),iblk) = &
                              a2D(i,j,n_sndmasssnf(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sndmasssnf(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sndmassmelt') /= 0) then
-                 if (f_sndmassmelt(1:1) /= 'x' .and. n_sndmassmelt(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sndmassmelt(ns),iblk) = &
-                             a2D(i,j,n_sndmassmelt(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sndmassmelt(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j

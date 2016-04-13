@@ -244,15 +244,8 @@
            f_sihc      = 'x', f_sisnhc     = 'x', &
            f_sidconcth = 'x', f_sidconcdyn = 'x', &
            f_sidmassth = 'x', f_sidmassdyn = 'x', &
-           f_sidmassgrowthwat = 'x', &
-           f_sidmassgrowthbot = 'x', &
-           f_sidmasssi = 'x', &
            f_sidmassevapsubl = 'x', &
-           f_sidmassmelttop = 'x', &
-           f_sidmassmeltbot = 'x', &
-           f_sidmasslat = 'x', &
            f_sndmasssnf = 'x', &
-           f_sndmassmelt = 'x', &
            f_siflswdtop = 'x', &
            f_siflswutop = 'x', &
            f_siflswdbot = 'x', &
@@ -364,15 +357,8 @@
            f_sihc,      f_sisnhc,    &
            f_sidconcth, f_sidconcdyn,&
            f_sidmassth, f_sidmassdyn,&
-           f_sidmassgrowthwat, &
-           f_sidmassgrowthbot, &
-           f_sidmasssi, &
            f_sidmassevapsubl, &
-           f_sidmassmelttop, &
-           f_sidmassmeltbot, &
-           f_sidmasslat, &
            f_sndmasssnf, &
-           f_sndmassmelt, &
            f_siflswdtop, &
            f_siflswutop, &
            f_siflswdbot, &
@@ -484,15 +470,8 @@
            n_sihc       , n_sisnhc,      &
            n_sidconcth  , n_sidconcdyn,  &
            n_sidmassth  , n_sidmassdyn,  &
-           n_sidmassgrowthwat, &
-           n_sidmassgrowthbot,  &
-           n_sidmasssi,  &
            n_sidmassevapsubl,  &
-           n_sidmassmelttop,  &
-           n_sidmassmeltbot,  &
-           n_sidmasslat,  &
            n_sndmasssnf,  &
-           n_sndmassmelt,  &
            n_siflswdtop,  &
            n_siflswutop,  &
            n_siflswdbot,  &

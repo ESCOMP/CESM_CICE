@@ -2547,27 +2547,6 @@ group="icefields_nml" >
 </entry>
 
 <entry
-id="f_sidmassgrowthwat"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
-id="f_sidmassgrowthbot"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
-id="f_sidmasssi"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
 id="f_sidmassevapsubl"
 type="char*5"
 category="history"
@@ -2575,35 +2554,7 @@ group="icefields_nml" >
 </entry>
 
 <entry
-id="f_sidmassmelttop"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
-id="f_sidmassmeltbot"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
-id="f_sidmasslat"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
 id="f_sndmasssnf"
-type="char*5"
-category="history"
-group="icefields_nml" >
-</entry>
-
-<entry
-id="f_sndmassmelt"
 type="char*5"
 category="history"
 group="icefields_nml" >
