@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160502
+Originator: dbailey
+Date: 02 May 2016
+Version: 5.0
+One-line Summary: Remove OpenMP directives in diagnostics.
+
+M       src/source/ice_diagnostics.F90
+
+===============================================================
 cice5_20160413
 Originator: dbailey
 Date: 13 Apr 2016
