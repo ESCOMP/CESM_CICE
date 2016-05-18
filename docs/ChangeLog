@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160519
+Originator: dbailey
+Date: 18 May 2016
+Version: 5.0
+One-line Summary: Modifications for standalone CAM.
+
+M       bld/configure
+
+===============================================================
 cice5_20160518
 Originator: dbailey
 Date: 18 May 2016
