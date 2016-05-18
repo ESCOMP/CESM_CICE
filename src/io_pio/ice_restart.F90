@@ -594,7 +594,8 @@
 
       if (restart_format == 'pio') then
          call pio_closefile(File)
-         call ice_pio_freedecomps((/iodesc2d,iodesc3d_ncat/))
+         call pio_freedecomp(ice_pio_subsystem, iodesc2d)
+         call pio_freedecomp(ice_pio_subsystem, iodesc3d_ncat)
       endif
 
       if (my_task == master_task) &

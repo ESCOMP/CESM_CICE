@@ -2398,6 +2398,11 @@
            jlo = this_block%jlo
            jhi = this_block%jhi
 
+           ! Ice fraction really needs to be on one of the history
+           ! streams, but in case it is not.
+
+           if (n_aice(ns) > 0) then
+
            do j = jlo, jhi
            do i = ilo, ihi
               if (a2D(i,j,n_aice(ns),iblk) > puny) then
@@ -2407,6 +2412,8 @@
               endif
            enddo             ! i
            enddo             ! j
+
+           endif
 
            do n = 1, num_avail_hist_fields_2D
               if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then 

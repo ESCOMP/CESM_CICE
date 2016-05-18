@@ -1021,8 +1021,13 @@
       !-----------------------------------------------------------------
       ! clean-up PIO descriptors
       !-----------------------------------------------------------------
-      call ice_pio_freedecomps((/iodesc2d,iodesc3dv,iodesc3dc, &
-           iodesc3di, iodesc3db, iodesc4di, iodesc4ds/))
+      call pio_freedecomp(ice_pio_subsystem, iodesc2d)
+      call pio_freedecomp(ice_pio_subsystem, iodesc3dv)
+      call pio_freedecomp(ice_pio_subsystem, iodesc3dc)
+      call pio_freedecomp(ice_pio_subsystem, iodesc3di)
+      call pio_freedecomp(ice_pio_subsystem, iodesc3db)
+      call pio_freedecomp(ice_pio_subsystem, iodesc4di)
+      call pio_freedecomp(ice_pio_subsystem, iodesc4ds)
 
 #endif
 

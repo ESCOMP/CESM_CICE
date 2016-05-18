@@ -626,15 +626,17 @@ if ($print>=2) { print "CPP definitions set by configure: \'$cfg_cppdefs\'$eol";
 #-----------------------------------------------------------------------------------------------
 
 my $fp_filename      = 'Filepath';             # name of output filepath file
-#my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
+my $cpp_filename     = 'CICE_cppdefs';         # name of output file for cice's cppdefs in ccsm
 
 # Write the filepath file for ccsm.
 write_filepath("$cice_bld/$fp_filename", $cesmroot);
 if ($print>=2) { print "creating $cice_bld/$fp_filename\n"; }
 
-# Write the file for cice's cppdefs needed in ccsm.
-#write_cppdefs("$cice_bld/$cpp_filename", $make_cppdefs);
-#if ($print>=2) { print "creating $cice_bld/$cpp_filename\n"; }
+# Write the file for cice's cppdefs needed in ccsm/standalone CAM.
+if (!defined $CASEROOT) {
+   write_cppdefs("$cice_bld/$cpp_filename", $make_cppdefs);
+   if ($print>=2) { print "creating $cice_bld/$cpp_filename\n"; }
+}
 
 # Write the configuration file.
 $cfg_ref->write_file("$config_cache_file", $commandline);
