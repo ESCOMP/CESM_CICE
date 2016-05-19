@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160520
+Originator: dbailey
+Date: 19 May 2016
+Version: 5.0
+One-line Summary: Update aux_cice test list.
+
+M       cime_config/testdefs/testlist_cice.xml
+
+===============================================================
 cice5_20160519
 Originator: dbailey
 Date: 18 May 2016
