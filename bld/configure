@@ -287,10 +287,6 @@ if ($opts{'phys'}) {
 } else {
     $phys = $cfg_ref->get('phys');
 }
-if ($cice_mode eq 'prescribed') {
-   $phys = 'cice4';
-   $cfg_ref->set('phys', $phys);
-}
 if ($print>=2) { print "cice : physics         is $phys $eol";}
 print "cice : physics         is $phys $eol";
 

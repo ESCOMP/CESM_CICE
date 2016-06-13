@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20160613
+Originator: dbailey
+Date: 13 Jun 2016
+Version: 5.0
+One-line Summary: Make cice5 physics the default in prescribed
+ mode.
+
+M       bld/configure
+
+===============================================================
 cice5_20160520
 Originator: dbailey
 Date: 19 May 2016
