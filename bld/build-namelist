@@ -386,6 +386,13 @@ my $cam4 = $nl->get_value('cam4') =~ /$TRUE/io;
 
 if ( defined $opts{'caseroot'} ) {
 #   if ( $RUN_TYPE eq 'startup' && $cice_mode ne 'prescribed') {
+    if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
+	my $ice_ic;
+        #standard cice filename
+	$ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
+	add_default($nl, 'ice_ic', 'val'=>"$ice_ic", 'noprepend'=>"1");
+        print "ice_ic = ${ice_ic} $eol";
+    }
     if ( $cice_mode ne 'prescribed') {
  	my $ice_ic = get_default_value('ice_ic');
         if ($ice_ic =~ 'none') {
@@ -400,13 +407,6 @@ if ( defined $opts{'caseroot'} ) {
     }
     if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {	
 	add_default($nl, 'ice_ic', 'val'=>"default", 'noprepend'=>"1");
-    }
-    if ($RUN_TYPE eq 'branch' || $RUN_TYPE eq 'hybrid') {
-	my $ice_ic;
-        #standard cice filename
-	$ice_ic = "${RUN_REFCASE}.cice.r.${RUN_REFDATE}-${RUN_REFTOD}.nc";
-        #print "ice_ic = ${ice_ic} $eol";
-	add_default($nl, 'ice_ic', 'val'=>"$ice_ic", 'noprepend'=>"1");
     }
 # set by infodata in cesm
 #    if ( $CONTINUE_RUN eq 'TRUE') {

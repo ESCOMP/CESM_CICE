@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20160614
+Originator: dbailey
+Date: 14 Jun 2016
+Version: 5.0
+One-line Summary: Fix RUN_REFCASE logic.
+
+M       bld/build-namelist
+
+===============================================================
 cice5_20160613
 Originator: dbailey
 Date: 13 Jun 2016
