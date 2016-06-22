@@ -197,7 +197,7 @@
            if (status /= nf90_noerr) call abort_ice( &
                          'ice Error: time calendar')
         elseif (days_per_year == 365 .and. .not.use_leap_years ) then
-           status = nf90_put_att(ncid,varid,'calendar','NoLeap')
+           status = nf90_put_att(ncid,varid,'calendar','noleap')
            if (status /= nf90_noerr) call abort_ice( &
                          'ice Error: time calendar')
         elseif (use_leap_years) then

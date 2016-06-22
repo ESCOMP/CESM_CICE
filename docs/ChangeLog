@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20160622
+Originator: dbailey
+Date: 22 Jun 2016
+Version: 5.0
+One-line Summary: Change NoLeap to noleap.
+
+M       src/io_netcdf/ice_history_write.F90
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20160614
 Originator: dbailey
 Date: 14 Jun 2016

@@ -198,7 +198,7 @@
         if (days_per_year == 360) then
            status = pio_put_att(File,varid,'calendar','360_day')
         elseif (days_per_year == 365 .and. .not.use_leap_years ) then
-           status = pio_put_att(File,varid,'calendar','NoLeap')
+           status = pio_put_att(File,varid,'calendar','noleap')
         elseif (use_leap_years) then
            status = pio_put_att(File,varid,'calendar','Gregorian')
         else
