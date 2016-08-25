@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_dyn_eap.F90 744 2013-09-27 22:53:24Z eclare $
+!  SVN:$Id: ice_dyn_eap.F90 1134 2016-07-29 20:47:56Z eclare $
 !=======================================================================
 !
 ! Elastic-anisotropic sea ice dynamics model
@@ -140,7 +140,8 @@
          strtmp       ! stress combinations for momentum equation
 
       integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
-         icetmask   ! ice extent mask (T-cell)
+         icetmask, &  ! ice extent mask (T-cell)
+         halomask     ! ice mask for halo update
 
       type (ice_halo) :: &
          halo_info_mask !  ghost cell update info for masked halo
@@ -319,6 +320,7 @@
       ! velocities may have changed in evp_prep2
       call ice_HaloUpdate (fld2,               halo_info, &
                            field_loc_NEcorner, field_type_vector)
+      call ice_timer_stop(timer_bound)
 
       ! unload
       !$OMP PARALLEL DO PRIVATE(iblk)
@@ -328,9 +330,15 @@
       enddo
       !$OMP END PARALLEL DO
 
-      if (maskhalo_dyn) &
-         call ice_HaloMask(halo_info_mask, halo_info, icetmask)
-      call ice_timer_stop(timer_bound)
+      if (maskhalo_dyn) then
+         call ice_timer_start(timer_bound)
+         halomask = 0
+         where (iceumask) halomask = 1
+         call ice_HaloUpdate (halomask,          halo_info, &
+                              field_loc_center,  field_type_scalar)
+         call ice_timer_stop(timer_bound)
+         call ice_HaloMask(halo_info_mask, halo_info, halomask)
+      endif
 
       do ksub = 1,ndte        ! subcycling
 
@@ -432,6 +440,7 @@
             call ice_HaloUpdate (fld2,               halo_info, &
                                  field_loc_NEcorner, field_type_vector)
          endif
+         call ice_timer_stop(timer_bound)
 
          ! unload
          !$OMP PARALLEL DO PRIVATE(iblk)
@@ -440,7 +449,6 @@
             vvel(:,:,iblk) = fld2(:,:,2,iblk)
          enddo
          !$OMP END PARALLEL DO
-         call ice_timer_stop(timer_bound)
 
       enddo                     ! subcycling
 

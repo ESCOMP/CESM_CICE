@@ -3,6 +3,27 @@ cice5_20160825
 Originator: dbailey
 Date: 25 Aug 2016
 Version: 5.0
+One-line Summary: Default initialization and bug fixes.
+
+The gx3v7 and tx0.1v2 grids are now initialization with
+'default' ice. Also, fixed this so it looks for cold air
+temperature rather than cold sst.
+
+Added some bug fixes for cell-padding and masked halo updates
+in the dynamics.
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+M       src/mpi/ice_boundary.F90
+M       src/mpi/ice_gather_scatter.F90
+M       src/source/ice_init.F90
+M       src/source/ice_dyn_evp.F90
+M       src/source/ice_dyn_eap.F90
+
+===============================================================
+cice5_20160825
+Originator: dbailey
+Date: 25 Aug 2016
+Version: 5.0
 One-line Summary: Move ESMCI branch to head of trunk.
 
 
