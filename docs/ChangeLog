@@ -1,4 +1,19 @@
 ===============================================================
+cice5_20160825
+Originator: dbailey
+Date: 25 Aug 2016
+Version: 5.0
+One-line Summary: Move ESMCI branch to head of trunk.
+
+
+M       bld/build-namelist
+D       cime_config/testdefs/testmods_dirs/cice/default/shell_commands
+D       cime_config/testdefs/testmods_dirs/cice/pop/shell_commands
+M       cime_config/testdefs/testlist_cice.xml
+M       cime_config/buildlib
+M       cime_config/buildnml
+
+===============================================================
 cice5_20160622
 Originator: dbailey
 Date: 22 Jun 2016

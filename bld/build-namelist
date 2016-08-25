@@ -14,7 +14,7 @@
 #
 # The simplest use of build-namelist is to execute it from the build directory where configure
 # was run.  By default it will use the config_cache.xml file that was written by configure to
-# determine the build time properties of the executable, and will write the files that contain 
+# determine the build time properties of the executable, and will write the files that contain
 # the output namelists in that same directory.  But if multiple runs are to made using the
 # same executable, successive invocations of build-namelist will overwrite previously generated
 # namelist files.  So generally the best strategy is to invoke build-namelist from the run
@@ -41,7 +41,7 @@ sub usage {
 SYNOPSIS
      build-namelist [options]
 OPTIONS
-     -config "filepath"    Read the given CICE configuration cache file. 
+     -config "filepath"    Read the given CICE configuration cache file.
                            Default: "config_cache.xml".
      -csmdata "dir"        Root directory of CCSM input data.
                            Can also be set by using the CSMDATA environment variable.
@@ -52,7 +52,7 @@ OPTIONS
      -infile "filepath"    Specify a file containing namelists to read values from.
      -inputdata "filepath" Writes out a list containing pathnames for required input datasets in
                            specified file.
-     -namelist "namelist"  Specify namelist settings directly on the commandline by supplying 
+     -namelist "namelist"  Specify namelist settings directly on the commandline by supplying
                            a string containing FORTRAN namelist syntax, e.g.,
                               -namelist "&forcing_nml dt=1800 /"
      -silent [-s]          Turns on silent mode - only fatal messages issued.
@@ -64,7 +64,7 @@ OPTIONS
      -inst_string          INST_STRING variable
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
-      1. namelist values set by specific command-line options, i.e., -dir 
+      1. namelist values set by specific command-line options, i.e., -dir
       2. values set on the command-line using the -namelist option,
       3. values read from the file specified by -infile,
       4. values from the namelist defaults file.
@@ -82,7 +82,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
                                        # the user's PATH
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
-if ($ProgDir) { 
+if ($ProgDir) {
     $cfgdir = abs_path($ProgDir);
 } else {
     $cfgdir = $cwd;
@@ -119,14 +119,14 @@ GetOptions(
     "caseroot=s"    => \$opts{'caseroot'},
     "rundir=s"      => \$opts{'rundir'},
     "cimeroot=s"    => \$opts{'cimeroot'},
-    "inst_string=s" => \$opts{'inst_string'},	   
+    "inst_string=s" => \$opts{'inst_string'},
 )  or usage();
 
 # Give usage message.
 usage() if $opts{'help'};
 
 # Echo version info.
-version($cfgdir) if $opts{'version'};    
+version($cfgdir) if $opts{'version'};
 
 # Check for unparsed arguments
 if (@ARGV) {
@@ -155,17 +155,17 @@ if ($print>=2) { print "Using CICE configuration cache file $opts{'config'}$eol"
 my $CASEROOT;
 my $RUNDIR;
 if ( defined $opts{'caseroot'} ) {
-    $CASEROOT    = $opts{'caseroot'}; 
+    $CASEROOT    = $opts{'caseroot'};
 }
 
-my $CIMEROOT;      
+my $CIMEROOT;
 if ( defined $opts{'cimeroot'} ) {
-    $CIMEROOT = $opts{'cimeroot'};       
+    $CIMEROOT = $opts{'cimeroot'};
 }
 
 my $INST_STRING;
 if ( defined $opts{'inst_string'} ) {
-    $INST_STRING = $opts{'inst_string'}; 
+    $INST_STRING = $opts{'inst_string'};
     $RUNDIR      = $opts{'rundir'};
 }
 
@@ -237,7 +237,7 @@ require Build::Namelist;
 require Config::SetupTools;
 
 #-----------------------------------------------------------------------------------------------
-# Create a configuration object from the CICE config_cache.xml file. 
+# Create a configuration object from the CICE config_cache.xml file.
 my $cfg = Build::Config->new($opts{'config'});
 
 # Create a namelist definition object.  This object provides a method for verifying that the
@@ -320,7 +320,7 @@ my $phys = $cfg->get('phys');
 my $inputdata_rootdir = undef;
 my $CASE;
 my $ICE_GRID;
-my $ICE_DOMAIN_PATH; 
+my $ICE_DOMAIN_PATH;
 my $ICE_DOMAIN_FILE;
 my $RUN_TYPE;
 my $CONTINUE_RUN;
@@ -330,16 +330,17 @@ my $RUN_REFDATE;
 my $RUN_REFTOD;
 my $SSTICE_GRID_FILENAME;
 my $SSTICE_DATA_FILENAME;
-my $SSTICE_YEAR_ALIGN;   
-my $SSTICE_YEAR_START;   
-my $SSTICE_YEAR_END;     
-my $SSTICE_STREAM;       
+my $SSTICE_YEAR_ALIGN;
+my $SSTICE_YEAR_START;
+my $SSTICE_YEAR_END;
+my $SSTICE_STREAM;
 my $RUN_STARTDATE;
 
 my %xmlvars = ();
 if ( defined $opts{'caseroot'} ) {
 
     SetupTools::getxmlvars($CASEROOT, \%xmlvars);
+    $xmlvars{DIN_LOC_ROOT} = SetupTools::expand_xml_var($xmlvars{DIN_LOC_ROOT}, \%xmlvars);
     foreach my $attr (keys %xmlvars) {
 	$xmlvars{$attr} = SetupTools::expand_xml_var($xmlvars{$attr}, \%xmlvars);
     }
@@ -405,7 +406,7 @@ if ( defined $opts{'caseroot'} ) {
            }
         }
     }
-    if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {	
+    if ( $RUN_TYPE eq 'startup' && $cice_mode eq 'prescribed') {
 	add_default($nl, 'ice_ic', 'val'=>"default", 'noprepend'=>"1");
     }
 # set by infodata in cesm
@@ -502,7 +503,7 @@ if ($cam4) {
     add_default($nl, 'R_snw'       );
     add_default($nl, 'dT_mlt'   );
     add_default($nl, 'rsnw_mlt');
-}    
+}
 
 
 ##################################
@@ -615,7 +616,7 @@ if (defined $xmlvars{'CICE_DECOMPTYPE'}) {
 }
 my $distribution_type = $nl->get_value('distribution_type');
 if ($distribution_type =~ 'spacecurve') {
-    add_default($nl, 'distribution_wght', 'distribution_type'=>'spacecurve'); 
+    add_default($nl, 'distribution_wght', 'distribution_type'=>'spacecurve');
     my $distribution_wght = $nl->get_value('distribution_wght');
     if ($distribution_wght =~ 'file') {
       add_default($nl, 'distribution_wght_file', 'distribution_wght'=>'file');
@@ -637,27 +638,27 @@ if ($cice_mode eq 'prescribed') {
 	    die "SSTICE_GRID_FILENAME must be set for cice prescribed mode \n";
 	}
 	if ($SSTICE_DATA_FILENAME eq 'UNSET') {
-	    die "SSTICE_DATA_FILENAME must be set for cice prescribed mode \n"; 
+	    die "SSTICE_DATA_FILENAME must be set for cice prescribed mode \n";
 	}
 	if ($SSTICE_YEAR_ALIGN eq '-999') {
-	    die "SSTICE_YEAR_ALIGN must be set for cice prescribed mode \n"; 
+	    die "SSTICE_YEAR_ALIGN must be set for cice prescribed mode \n";
 	}
 	if ($SSTICE_YEAR_START eq '-999') {
-	    die "SSTICE_YEAR_START must be set for cice prescribed mode \n"; 
-	} 
+	    die "SSTICE_YEAR_START must be set for cice prescribed mode \n";
+	}
 	if ($SSTICE_YEAR_END eq '-999') {
-	    die "SSTICE_YEAR_END must be set for cice prescribed mode \n"; 
+	    die "SSTICE_YEAR_END must be set for cice prescribed mode \n";
 	}
 	my $stream_domxvarname;
 	my $stream_domyvarname;
 	if ($SSTICE_STREAM eq 'CAMDATA') {
-	    $stream_domxvarname = "xc";  
+	    $stream_domxvarname = "xc";
 	    $stream_domyvarname = "yc";
 	} elsif ($SSTICE_STREAM eq 'WRFDATA') {
-	    $stream_domxvarname = "xc";  
+	    $stream_domxvarname = "xc";
 	    $stream_domyvarname = "yc";
-	} else {       
-	    $stream_domxvarname = "lon";  
+	} else {
+	    $stream_domxvarname = "lon";
 	    $stream_domyvarname = "lat";
 	}
 	add_default($nl, 'model_year_align',  'val'=>"$SSTICE_YEAR_ALIGN");
@@ -676,7 +677,7 @@ if ($cice_mode eq 'prescribed') {
 	add_default($nl, 'stream_domtvarname');
 	add_default($nl, 'stream_domxvarname');
 	add_default($nl, 'stream_domyvarname');
-	add_default($nl, 'stream_domareaname'); 
+	add_default($nl, 'stream_domareaname');
 	add_default($nl, 'stream_dommaskname');
 	add_default($nl, 'stream_domfilename');
 	add_default($nl, 'stream_fldvarname' );
@@ -965,9 +966,9 @@ add_default($nl, 'f_grownet');
 add_default($nl, 'f_PPnet');
 
 #-----------------------------------------------------------------------------------------------
-# Write cice namelist file 
+# Write cice namelist file
 
-# Sea ice component 
+# Sea ice component
 my @groups = qw(setup_nml grid_nml tracer_nml thermo_nml dynamics_nml shortwave_nml ponds_nml forcing_nml domain_nml zbgc_nml icefields_bgc_nml icefields_drag_nml icefields_mechred_nml icefields_pond_nml icefields_nml ice_prescribed_nml);
 my $outfile = "$opts{'dir'}/ice_in";
 $nl->write($outfile, 'groups'=>\@groups);
@@ -1073,7 +1074,7 @@ sub add_default {
     # The default values for input pathnames are relative.  If the namelist
     # variable is defined to be an absolute pathname, then prepend
     # the CCSM inputdata root directory.
-    # TODO: unless ignore_abs is passed as argument - and filename is not equal to 'default'  
+    # TODO: unless ignore_abs is passed as argument - and filename is not equal to 'default'
     if ($is_input_pathname eq 'abs') {
 	unless ($opts{'noprepend'}){
 	    if ($val ne 'default') {
@@ -1128,26 +1129,26 @@ sub check_input_files {
     my $inputdata_rootdir = shift;  # inputdata root directory
     my $outfile = shift;            # output file
     open(OUTFILE, ">$outfile") if defined $inputdata_rootdir;
-    
+
     # Look through all namelist groups
     my @groups = $nl->get_group_names();
     foreach my $group (@groups) {
-	
+
 	# Look through all variables in each group
 	my @vars = $nl->get_variable_names($group);
 	foreach my $var (@vars) {
-	    
+
 	    # Is the variable an input dataset?
 	    my $input_pathname_type = $definition->is_input_pathname($var);
-	    
+
 	    # If it is, check whether it exists locally and print status
 	    if ($input_pathname_type) {
-		
+
 		# Get pathname of input dataset
 		my $pathname = $nl->get_variable_value($group, $var);
 		# Need to strip the quotes
 		$pathname =~ s/[\'\"]//g;
-		
+
                 if ($pathname =~ m/unknown.+/) {
 		    # skip file
                 }
@@ -1165,9 +1166,9 @@ sub check_input_files {
 			}
 		    } else {
 			print OUTFILE "$var = $pathname\n";
-		    }			    
-		    
-		} 
+		    }
+
+		}
 		elsif ($input_pathname_type eq 'abs') {
 		    if ($pathname ne 'default') {
 			print OUTFILE "$var = $pathname\n";

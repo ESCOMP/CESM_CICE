@@ -38,30 +38,11 @@ if (-f "Filepath") {
     system($sysmod) == 0 or die "ERROR cice buildlib: $sysmod failed: $?\n";
 }
 
-#--------------------------------------------------------------
-#  force gmake to recompile if any of the cppdefs are different
-#--------------------------------------------------------------
-# this is now handled in case.setup
-# my $recompile = 'FALSE';
-# if (-e "$OBJROOT/ice/obj/CICE_cppdefs") {
-#     if (compare("$OBJROOT/ice/obj/CICE_cppdefs.new", "$OBJROOT/ice/obj/CICE_cppdefs") != 0) {
-# 	$recompile = 'TRUE';
-#     }
-#     # NOTE - the following remove statements are what force cice to recompile if
-#     # the cppdefs are different
-#     print "recompile is $recompile \n";
-#     if ($recompile eq 'TRUE') {
-# 	my $sysmod = "rm -f $OBJROOT/ice/obj/*.o";
-# 	system($sysmod) == 0 or die "ERROR cice buildlib: $sysmod failed: $?\n";
-#     }
-# }
-#my $sysmod = "cp -f $OBJROOT/ice/obj/CICE_cppdefs.new $OBJROOT/ice/obj/CICE_cppdefs";
-#system($sysmod) == 0 or die "ERROR: cice.buidexe $sysmod failed: $?\n";
-
 chdir $CASEROOT;
 my $cppdefs = `./xmlquery CICE_CPPDEFS -value`;
 chomp($cppdefs);
 $cppdefs = "$cppdefs -DBLCKX=$CICE_BLCKX -DBLCKY=$CICE_BLCKY -DMXBLCKS=$CICE_MXBLCKS";
+
 #-------------------------------------------------------
 # Build the library
 #-------------------------------------------------------

@@ -15,11 +15,11 @@
       <test name="ERS_D_Ld5">
         <machine compiler="intel" testtype="aux_cice" testmods="cice/default">yellowstone</machine>
       </test>
-      <test name="ERS_PT_Ld5">
+      <test name="ERS_Ld5">
         <machine compiler="intel" testtype="prebeta" testmods="cice/default">edison</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="cice/default">hopper</machine>
       </test>
-      <test name="PET_PT_E_Ld2">
+      <test name="PET_Ld2">
         <machine compiler="intel" testtype="aux_cice" testmods="cice/default">yellowstone</machine>
       </test>
     </grid>
@@ -59,7 +59,7 @@
         <machine compiler="nag" testtype="prealpha" testmods="cice/default">hobart</machine>
         <machine compiler="intel" testtype="aux_cice" testmods="cice/default">yellowstone</machine>
       </test>
-      <test name="PET_PT">
+      <test name="PET">
         <machine compiler="pgi" testtype="prebeta" testmods="cice/default">bluewaters</machine>
         <machine compiler="intel" testtype="prebeta" testmods="cice/default">eos</machine>
         <machine compiler="pgi" testtype="prebeta" testmods="cice/default">hopper</machine>
