@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20160914
+Originator: dbailey
+Date: 14 Sep 2016
+Version: 5.0
+One-line Summary: Revert gx3v7 initialization.
+
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20160825
 Originator: dbailey
 Date: 25 Aug 2016
