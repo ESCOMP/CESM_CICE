@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20160915
+Originator: dbailey
+Date: 14 Sep 2016
+Version: 5.0
+One-line Summary: Passing BC and dust to coupler.
+
+M       src/drivers/cesm/ice_import_export.F90
+M       src/drivers/cesm/ice_cpl_indices.F90
+
+===============================================================
 cice5_20160914
 Originator: dbailey
 Date: 14 Sep 2016

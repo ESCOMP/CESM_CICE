@@ -17,6 +17,7 @@ module ice_import_export
   use ice_flux        , only: rhoa, swvdr, swvdf, swidr, swidf, flw, frain
   use ice_flux        , only: fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt
   use ice_flux        , only: sss, tf, wind, fsw, init_flux_atm, init_flux_ocn, faero_atm
+  use ice_flux        , only: faero_ocn
   use ice_flux        , only: send_i2x_per_cat, fswthrun_ai
   use ice_ocean       , only: tfrz_option
   use ice_atmo        , only: Cdn_atm
@@ -498,6 +499,12 @@ contains
                 i2x(index_i2x_Fioi_salt ,n)   = fsalt(i,j,iblk)   ! salt flux from melting   ???
                 i2x(index_i2x_Fioi_taux ,n)   = tauxo(i,j,iblk)   ! stress : i/o zonal       ???
                 i2x(index_i2x_Fioi_tauy ,n)   = tauyo(i,j,iblk)   ! stress : i/o meridional  ???
+                if ( index_i2x_Fioi_bcpho > 0) &
+                 i2x(index_i2x_Fioi_bcpho ,n)  = faero_ocn(i,j,1,iblk)  ! hydrophobic bc
+                if ( index_i2x_Fioi_bcphi > 0) &
+                 i2x(index_i2x_Fioi_bcphi ,n)  = faero_ocn(i,j,2,iblk)  ! hydrophilic bc
+                if ( index_i2x_Fioi_flxdst > 0) &
+                 i2x(index_i2x_Fioi_flxdst,n)  = faero_ocn(i,j,3,iblk)  ! dust
              end if
           enddo    !i
        enddo    !j

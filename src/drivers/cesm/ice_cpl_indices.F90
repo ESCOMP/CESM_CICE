@@ -36,6 +36,9 @@ module ice_cpl_indices
   integer :: index_i2x_Fioi_salt       ! salt  flux from meting  ice
   integer :: index_i2x_Fioi_taux       ! ice/ocn stress, zonal
   integer :: index_i2x_Fioi_tauy       ! ice/ocn stress, zonal
+  integer :: index_i2x_Fioi_bcphi      ! flux: Black Carbon hydrophilic deposition
+  integer :: index_i2x_Fioi_bcpho      ! flux: Black Carbon hydrophobic deposition
+  integer :: index_i2x_Fioi_flxdst     ! flux: Dust
 
   integer :: index_i2x_Si_ifrac_n(ncat)          ! fractional ice coverage wrt ocean per thickness category
   integer :: index_i2x_PFioi_swpen_ifrac_n(ncat) ! sw: net penetrating ice per thickness category
@@ -120,6 +123,9 @@ contains
     index_i2x_Fioi_salt     = mct_avect_indexra(i2x,'Fioi_salt')
     index_i2x_Fioi_taux     = mct_avect_indexra(i2x,'Fioi_taux')
     index_i2x_Fioi_tauy     = mct_avect_indexra(i2x,'Fioi_tauy')
+    index_i2x_Fioi_bcphi    = mct_avect_indexra(i2x,'Fioi_bcphi',perrWith='quiet')
+    index_i2x_Fioi_bcpho    = mct_avect_indexra(i2x,'Fioi_bcpho',perrWith='quiet')
+    index_i2x_Fioi_flxdst   = mct_avect_indexra(i2x,'Fioi_flxdst',perrWith='quiet')
 
     ! optional per thickness category fields
 
