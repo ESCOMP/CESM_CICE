@@ -1,4 +1,4 @@
-!  SVN:$Id: ice_atmo.F90 922 2015-03-02 18:55:01Z tcraig $
+!  SVN:$Id: ice_atmo.F90 936 2015-03-17 15:46:44Z eclare $
 !=======================================================================
 
 ! Atmospheric boundary interface (stability based flux calculations)
@@ -54,7 +54,7 @@
          Cdn_ocn_skin, & ! skin drag coefficient
          Cdn_ocn_floe, & ! floe edge drag coefficient
          Cdn_ocn_keel, & ! keel drag coefficient
-         Cdn_atm_ratio   ! ratio drag atm / neutral drag atm
+         Cd_atm          ! atm drag ratio at measurement height
 
 !=======================================================================
 
@@ -66,7 +66,8 @@
 ! temperature and humidity. NOTE: \\
 ! (1) All fluxes are positive downward,  \\
 ! (2) Here, tstar = (WT)/U*, and qstar = (WQ)/U*,  \\
-! (3a) wind speeds should all be above a minimum speed (eg. 1.0 m/s). \\
+! (3) wind speeds should all be above a minimum speed (eg. 1.0 m/s). \\
+! (4) highfreq is from Roberts et al. (2015), Annals, doi:10.3189/2015AoG69A760 
 !
 ! ASSUME:
 !  The saturation humidity of air at T(K): qsat(T)  (kg/m**3)
@@ -84,8 +85,8 @@
                                       Tref,     Qref,     &
                                       delt,     delq,     &
                                       lhcoef,   shcoef,   &
-                                      Cdn_atm,            &
-                                      Cdn_atm_ratio_n,    &
+                                      Cdn_atm,          &
+                                      Cd_atm_n,    &
                                       uice,     vice,     &
                                       Uref                )     
 
@@ -119,7 +120,7 @@
          Cdn_atm      ! neutral drag coefficient
  
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out) :: &
-         Cdn_atm_ratio_n ! ratio drag coeff / neutral drag coeff (atm)
+         Cd_atm_n ! atm drag coefficient
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout) :: &
@@ -213,7 +214,7 @@
 
       if (highfreq) then       
 
-       ! high frequency coupling follows Roberts et al. (2014)
+       ! high frequency coupling follows Roberts et al. (2015)
        if (my_task==master_task.and.firstpass.and.sfctype(1:3)=='ice') then
          if (present(uice) .and. present(vice)) then
           write(nu_diag,*)'Using high frequency RASM atmospheric coupling'
@@ -401,7 +402,7 @@
 
             tau = rhoa(i,j) * rd(ij) * rd(ij) ! not the stress at zlvl(i,j)
 
-            ! high frequency momentum coupling following Roberts et al. (2014)
+            ! high frequency momentum coupling following Roberts et al. (2015)
             strx(i,j) = tau * sqrt((uatm(i,j)-uice(i,j))**2 + &
                                    (vatm(i,j)-vice(i,j))**2) * &
                               (uatm(i,j)-uice(i,j))
@@ -425,7 +426,7 @@
 
          endif
 
-         Cdn_atm_ratio_n(i,j) = rd(ij) * rd(ij) / rdn(ij) / rdn(ij)
+         Cd_atm_n(i,j) = rd(ij) * rd(ij)
 
       enddo                     ! ij
 
@@ -682,7 +683,7 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(out) :: &
          hfreebd      , & ! freeboard (m)
-         hdraft       , & ! draught of ice + snow column (Stoessel1993)
+         hdraft       , & ! draft of ice + snow column (Stössel & Clausse 199)3
          hridge       , & ! ridge height
          distrdg      , & ! distance between ridges
          hkeel        , & ! keel depth

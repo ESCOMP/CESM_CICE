@@ -591,7 +591,7 @@
       use ice_atmo, only: hfreebd, hdraft, hridge, distrdg, hkeel, &
                           dkeel, lfloe, dfloe, Cdn_atm, Cdn_atm_rdg, &
                           Cdn_atm_floe, Cdn_atm_pond, Cdn_atm_skin, &
-                          Cdn_atm_ratio, Cdn_ocn, Cdn_ocn_keel, &
+                          Cd_atm, Cdn_ocn, Cdn_ocn_keel, &
                           Cdn_ocn_floe, Cdn_ocn_skin, formdrag
       use ice_state, only: aice, vice, trcr, tr_iage, nt_iage
       use ice_constants, only: vonkar,zref,iceruf
@@ -641,7 +641,7 @@
 
       if (formdrag) then
         Cdn_atm_rdg (:,:,:) = c0
-        Cdn_atm_ratio(:,:,:)= c0
+        Cd_atm(:,:,:)= c0
         Cdn_atm_floe(:,:,:) = c0
         Cdn_atm_pond(:,:,:) = c0
         Cdn_atm_skin(:,:,:) = c0
@@ -715,7 +715,7 @@
                                aicen,                &    
                                flw,      coszn,      &
                                strairxn, strairyn,   &
-                               Cdn_atm_ratio_n,      &
+                               Cd_atm_n,      &
                                fsurfn,   fcondtopn,  &  
                                fcondbotn, &
                                fsensn,   flatn,      & 
@@ -726,7 +726,7 @@
                                freshn,   fsaltn,     &
                                fhocnn,   fswthrun,   &
                                strairxT, strairyT,   &  
-                               Cdn_atm_ratio,        &
+                               Cd_atm,        &
                                fsurf,    fcondtop,   &
                                fcondbot, &
                                fsens,    flat,       & 
@@ -757,7 +757,7 @@
           coszn   , & ! cosine of solar zenith angle 
           strairxn, & ! air/ice zonal  strss,           (N/m**2)
           strairyn, & ! air/ice merdnl strss,           (N/m**2)
-          Cdn_atm_ratio_n, & ! ratio of total drag over neutral drag (atm)
+          Cd_atm_n, & ! ratio of total drag over neutral drag (atm)
           fsurfn  , & ! net heat flux to top surface    (W/m**2)
           fcondtopn,& ! downward cond flux at top sfc   (W/m**2)
           fcondbotn,& ! downward cond flux at bot sfc   (W/m**2)
@@ -788,7 +788,7 @@
           intent(inout):: &
           strairxT, & ! air/ice zonal  strss,           (N/m**2)
           strairyT, & ! air/ice merdnl strss,           (N/m**2)
-          Cdn_atm_ratio, & ! ratio of total drag over neutral drag (atm)
+          Cd_atm, & ! ratio of total drag over neutral drag (atm)
           fsurf   , & ! net heat flux to top surface    (W/m**2)
           fcondtop, & ! downward cond flux at top sfc   (W/m**2)
           fcondbot, & ! downward cond flux at top sfc   (W/m**2)
@@ -836,8 +836,8 @@
 
          strairxT (i,j)  = strairxT(i,j) + strairxn(i,j)*aicen(i,j)
          strairyT (i,j)  = strairyT(i,j) + strairyn(i,j)*aicen(i,j)
-         Cdn_atm_ratio (i,j) = Cdn_atm_ratio (i,j) + &
-                                   Cdn_atm_ratio_n (i,j)*aicen(i,j)
+         Cd_atm (i,j) = Cd_atm (i,j) + &
+                                   Cd_atm_n (i,j)*aicen(i,j)
          fsurf    (i,j)  = fsurf   (i,j) + fsurfn  (i,j)*aicen(i,j)
          fcondtop (i,j)  = fcondtop(i,j) + fcondtopn(i,j)*aicen(i,j) 
          fcondbot (i,j)  = fcondbot(i,j) + fcondbotn(i,j)*aicen(i,j) 

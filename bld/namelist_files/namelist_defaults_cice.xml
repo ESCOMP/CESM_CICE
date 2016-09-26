@@ -329,9 +329,7 @@
 <formdrag hgrid="ar9v3"  >.false.</formdrag>
 <formdrag hgrid="ar9v4"  >.false.</formdrag>
 
-<highfreq                >.false.</highfreq>
-<highfreq hgrid="ar9v3"  >.true.</highfreq>
-<highfreq hgrid="ar9v4"  >.true.</highfreq>
+<highfreq                >.true.</highfreq>
 
 <natmiter                >  5 </natmiter>
 <natmiter hgrid="ar9v3"  > 25 </natmiter>
@@ -592,7 +590,7 @@
 <f_flat hgrid="ar9v4"         >'mdhxx'</f_flat>
 <f_flat cice_mode='prescribed'>'xxxxx'</f_flat>
 
-<f_flat_ai                       >'xxxxx'</f_flat_ai>
+<f_flat_ai                       >'mxxxx'</f_flat_ai>
 <f_flat_ai hgrid="ar9v4"         >'mdhxx'</f_flat_ai>
 <f_flat_ai cice_mode='prescribed'>'xxxxx'</f_flat_ai>
 
@@ -600,7 +598,7 @@
 <f_fsens hgrid="ar9v4"         >'mdhxx'</f_fsens>
 <f_fsens cice_mode='prescribed'>'xxxxx'</f_fsens>
 
-<f_fsens_ai                       >'xxxxx'</f_fsens_ai>
+<f_fsens_ai                       >'mxxxx'</f_fsens_ai>
 <f_fsens_ai hgrid="ar9v4"         >'mdhxx'</f_fsens_ai>
 <f_fsens_ai cice_mode='prescribed'>'xxxxx'</f_fsens_ai>
 
@@ -1195,44 +1193,6 @@
 <f_PPnet cice_mode='prescribed'>'xxxxx'</f_PPnet>
 
 
-<f_sithick                     >'xxxxx'</f_sithick>
-<f_sisnthick                   >'xxxxx'</f_sisnthick>
-<f_sisnconc                   >'xxxxx'</f_sisnconc>
-<f_sitemptop                   >'xxxxx'</f_sitemptop>
-<f_sitempsnic                  >'xxxxx'</f_sitempsnic>
-<f_sitempbot                   >'xxxxx'</f_sitempbot>
-<f_siu                     >'xxxxx'</f_siu>
-<f_siv                     >'xxxxx'</f_siv>
-<f_sidmasstranx                     >'xxxxx'</f_sidmasstranx>
-<f_sidmasstrany                     >'xxxxx'</f_sidmasstrany>
-<f_sistrxdtop                     >'xxxxx'</f_sistrxdtop>
-<f_sistrydtop                     >'xxxxx'</f_sistrydtop>
-<f_sistrxubot                     >'xxxxx'</f_sistrxubot>
-<f_sistryubot                     >'xxxxx'</f_sistryubot>
-<f_sicompstren                     >'xxxxx'</f_sicompstren>
-<f_sispeed                     >'xxxxx'</f_sispeed>
-<f_sialb                       >'xxxxx'</f_sialb>
-<f_siage                       >'xxxxx'</f_siage>
-<f_sihc                       >'xxxxx'</f_sihc>
-<f_sisnhc                       >'xxxxx'</f_sisnhc>
-<f_sidconcth                       >'xxxxx'</f_sidconcth>
-<f_sidconcdyn                       >'xxxxx'</f_sidconcdyn>
-<f_sidmassth                       >'xxxxx'</f_sidmassth>
-<f_sidmassdyn                       >'xxxxx'</f_sidmassdyn>
-<f_sidmassevapsubl                       >'xxxxx'</f_sidmassevapsubl>
-<f_sndmasssnf                       >'xxxxx'</f_sndmasssnf>
-<f_siflswdtop                       >'xxxxx'</f_siflswdtop>
-<f_siflswutop                       >'xxxxx'</f_siflswutop>
-<f_siflswdbot                       >'xxxxx'</f_siflswdbot>
-<f_sifllwdtop                       >'xxxxx'</f_sifllwdtop>
-<f_sifllwutop                       >'xxxxx'</f_sifllwutop>
-<f_siflsenstop                       >'xxxxx'</f_siflsenstop>
-<f_siflsensupbot                       >'xxxxx'</f_siflsensupbot>
-<f_sifllatstop                       >'xxxxx'</f_sifllatstop>
-<f_siflcondtop                       >'xxxxx'</f_siflcondtop>
-<f_siflcondbot                       >'xxxxx'</f_siflcondbot>
-<f_sipr                       >'xxxxx'</f_sipr>
-<f_siflsaltbot                       >'xxxxx'</f_siflsaltbot>
-<f_siflfwbot                       >'xxxxx'</f_siflfwbot>
+<f_CMIP                     >'mdxxx'</f_CMIP>
 
 </namelist_defaults>

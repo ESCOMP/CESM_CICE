@@ -231,8 +231,9 @@
            f_mlt_onset = 'm', f_frz_onset  = 'm', &
            f_iage      = 'm', f_FY         = 'm', &
            f_hisnap    = 'm', f_aisnap     = 'm', &
+           f_CMIP = 'x', &
            f_sithick   = 'x', f_sisnthick  = 'x', &
-           f_sisnconc  = 'x', f_siage      = 'x', &
+           f_siage      = 'x', &
            f_sitemptop = 'x', f_sitempsnic = 'x', &
            f_sitempbot = 'x', f_sispeed    = 'x', &
            f_siu       = 'x', f_siv        = 'x', &
@@ -259,6 +260,19 @@
            f_sipr = 'x', &
            f_siflsaltbot = 'x', &
            f_siflfwbot = 'x', &
+           f_siflfwdrain = 'x', &
+           f_siforcetiltx = 'x', &
+           f_siforcetilty = 'x', &
+           f_siforcecoriolx = 'x', &
+           f_siforcecorioly = 'x', &
+           f_siforceintstrx = 'x', &
+           f_siforceintstry = 'x', &
+           f_siitdconc = 'x', &
+           f_siitdthick = 'x', &
+           f_siitdsnthick = 'x', &
+           f_sidragtop = 'x', &
+           f_sistreave = 'x', &
+           f_sistremax = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
@@ -344,8 +358,9 @@
            f_mlt_onset, f_frz_onset, &
            f_iage,      f_FY       , &
            f_hisnap,    f_aisnap   , &
+           f_CMIP, &
            f_sithick,   f_sisnthick, &
-           f_sisnconc,  f_siage,     &
+           f_siage,     &
            f_sitemptop, f_sitempsnic,&
            f_sitempbot, f_sispeed,   &
            f_siu,       f_siv,       &
@@ -372,6 +387,19 @@
            f_sipr, &
            f_siflsaltbot, &
            f_siflfwbot, &
+           f_siflfwdrain, &
+           f_siforcetiltx, &
+           f_siforcetilty, &
+           f_siforcecoriolx, &
+           f_siforcecorioly, &
+           f_siforceintstrx, &
+           f_siforceintstry, &
+           f_siitdconc, &
+           f_siitdthick, &
+           f_siitdsnthick, &
+           f_sidragtop, &
+           f_sistreave, &
+           f_sistremax, &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
            f_trsig,     f_icepresent,&
@@ -458,7 +486,7 @@
            n_fresh      , n_fresh_ai   , &
            n_fsalt      , n_fsalt_ai   , &
            n_sithick    , n_sisnthick  , &
-           n_sisnconc,    n_siage,       &
+           n_siage,       &
            n_sitemptop  , n_sitempsnic , &
            n_sitempbot  , n_sispeed,     &
            n_siu,         n_siv,         &
@@ -485,6 +513,19 @@
            n_sipr,  &
            n_siflsaltbot,  &
            n_siflfwbot,  &
+           n_siflfwdrain,  &
+           n_siforcetiltx,  &
+           n_siforcetilty,  &
+           n_siforcecoriolx,  &
+           n_siforcecorioly,  &
+           n_siforceintstrx,  &
+           n_siforceintstry,  &
+           n_siitdconc, &
+           n_siitdthick, &
+           n_siitdsnthick, &
+           n_sidragtop, &
+           n_sistreave, &
+           n_sistremax, &
            n_vsnon,                        &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &

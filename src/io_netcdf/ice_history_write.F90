@@ -486,7 +486,9 @@
       !-----------------------------------------------------------------
             if (hist_avg) then
               if (TRIM(avail_hist_fields(n)%vname)/='sig1' &
-              .or.TRIM(avail_hist_fields(n)%vname)/='sig2') then
+              .or.TRIM(avail_hist_fields(n)%vname)/='sig2' &
+              .or.TRIM(avail_hist_fields(n)%vname)/='sistreave' &
+              .or.TRIM(avail_hist_fields(n)%vname)/='sistremax') then
                 status = nf90_put_att(ncid,varid,'cell_methods','time: mean')
                 if (status /= nf90_noerr) call abort_ice( &
                  'Error defining cell methods for '//avail_hist_fields(n)%vname)
@@ -496,6 +498,7 @@
             if (histfreq(ns) == '1' .or. .not. hist_avg         &
                 .or. n==n_divu(ns)      .or. n==n_shear(ns)     &  ! snapshots
                 .or. n==n_sig1(ns)      .or. n==n_sig2(ns)      &
+                .or. n==n_sistreave(ns) .or. n==n_sistremax(ns) &
                 .or. n==n_trsig(ns)                             &
                 .or. n==n_mlt_onset(ns) .or. n==n_frz_onset(ns) &
                 .or. n==n_hisnap(ns)    .or. n==n_aisnap(ns)) then
