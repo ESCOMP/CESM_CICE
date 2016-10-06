@@ -118,7 +118,7 @@
 
         write (nu_hdr, *  ) 'Grid variables: (left column = nrec)'
         nrec = 1
-        write (nu_hdr, 996) nrec,'tarea','area of T grid cells','m^2'
+        write (nu_hdr, 996) nrec,'tarea','area of T grid cells','m2'
         write (nu_hdr, *  ) 'History variables: (left column = nrec)'
       endif  ! my_task = master_task
       call ice_write(nu_history, nrec, tarea, 'rda4', diag)

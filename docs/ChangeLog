@@ -1,4 +1,18 @@
 ===============================================================
+cice5_20161006
+Originator: dbailey
+Date: 6 Oct 2016
+Version: 5.0
+One-line Summary: New testlist format.
+
+Also change some more m^2 to m2.
+
+M       cime_config/testdefs/testlist_cice.xml
+M       src/io_netcdf/ice_history_write.F90
+M       src/io_binary/ice_history_write.F90
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20160926
 Originator: dbailey
 Date: 26 Sep 2016

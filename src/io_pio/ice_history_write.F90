@@ -262,11 +262,11 @@
       var(n_blkmask)%coordinates = 'TLON TLAT'
 
       var(n_tarea)%req = coord_attributes('tarea', &
-                  'area of T grid cells', 'm^2')
+                  'area of T grid cells', 'm2')
       var(n_tarea)%coordinates = 'TLON TLAT'
 
       var(n_uarea)%req = coord_attributes('uarea', &
-                  'area of U grid cells', 'm^2')
+                  'area of U grid cells', 'm2')
       var(n_uarea)%coordinates = 'ULON ULAT'
       var(n_dxt)%req = coord_attributes('dxt', &
                   'T cell width through middle', 'm')
