@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20161021
+Originator: dbailey
+Date: 21 Oct 2016
+Version: 5.0
+One-line Summary: Turn off CMIP fields by default.
+
+
+M       bld/namelist_files/namelist_defaults_cice.xml
+
+===============================================================
 cice5_20161006
 Originator: dbailey
 Date: 6 Oct 2016

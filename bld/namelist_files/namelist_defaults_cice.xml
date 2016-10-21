@@ -1193,6 +1193,6 @@
 <f_PPnet cice_mode='prescribed'>'xxxxx'</f_PPnet>
 
 
-<f_CMIP                     >'mdxxx'</f_CMIP>
+<f_CMIP                     >'xxxxx'</f_CMIP>
 
 </namelist_defaults>
