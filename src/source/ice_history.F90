@@ -224,6 +224,25 @@
          f_sidragtop = 'mxxxx'
          f_sistreave = 'mxxxx'
          f_sistremax = 'mxxxx'
+         f_sirdgthick = 'mxxxx'
+         f_aice = 'mxxxx'
+         f_vice = 'mxxxx'
+         f_vsno = 'mxxxx'
+         f_divu = 'mxxxx'
+         f_icepresent = 'mxxxx'
+         f_shear = 'mxxxx'
+         f_dvidtd = 'mxxxx'
+         f_dvidtt = 'mxxxx'
+         f_congel = 'mxxxx'
+         f_frazil = 'mxxxx'
+         f_meltl = 'mxxxx'
+         f_meltb = 'mxxxx'
+         f_meltt = 'mxxxx'
+         f_melts = 'mxxxx'
+         f_snoice = 'mxxxx'
+         f_aicen = 'mxxxx'
+         f_vicen = 'mxxxx'
+         f_vsnon = 'mxxxx'
       endif
 
       if (f_CMIP(2:2) == 'd') then
@@ -410,6 +429,7 @@
       call broadcast_scalar (f_siitdthick, master_task)
       call broadcast_scalar (f_siitdsnthick, master_task)
       call broadcast_scalar (f_sidragtop, master_task)
+      call broadcast_scalar (f_sirdgthick, master_task)
       call broadcast_scalar (f_aicen, master_task)
       call broadcast_scalar (f_vicen, master_task)
       call broadcast_scalar (f_vsnon, master_task)
@@ -1208,6 +1228,11 @@
              "atmospheric drag over sea ice",                                      &
              "none", c1, c0,                            &
              ns1, f_sidragtop)
+      
+         call define_hist_field(n_sirdgthick,"sirdgthick","m",tstr2D, tcstr, &
+             "sea ice ridge thickness",                                      &
+             "vrdg divided by ardg", c1, c0,                            &
+             ns1, f_sirdgthick)
       
          call define_hist_field(n_siforcetiltx,"siforcetiltx","N m-2",tstr2D, tcstr, &
              "sea surface tilt term",                                      &
@@ -2376,6 +2401,19 @@
            call accum_hist_field(n_sidragtop, iblk, worka(:,:), a2D)
          endif
 
+         if (f_sirdgthick(1:1) /= 'x') then
+           worka(:,:) = c0
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk)*(c1 - trcr(i,j,nt_alvl,iblk)) > puny) then
+                 worka(i,j) = vice(i,j,iblk) * (c1 - trcr(i,j,nt_vlvl,iblk)) &
+                           / (aice(i,j,iblk) * (c1 - trcr(i,j,nt_alvl,iblk)))
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_sirdgthick, iblk, worka(:,:), a2D)
+         endif
+
          if (f_siforcetiltx(1:1) /= 'x') then
            worka(:,:) = c0
            do j = jlo, jhi
@@ -2449,8 +2487,8 @@
          endif
 
          ! 3D category fields
-         ! Need to always accumulate ice fraction.
-         call accum_hist_field(n_aicen-n2D, iblk, ncat_hist, &
+         if (f_aicen   (1:1) /= 'x') &
+             call accum_hist_field(n_aicen-n2D, iblk, ncat_hist, &
                                 aicen(:,:,1:ncat_hist,iblk), a3Dc)
          if (f_vicen   (1:1) /= 'x') &
              call accum_hist_field(n_vicen-n2D, iblk, ncat_hist, &
@@ -2680,6 +2718,7 @@
               endif
            enddo             ! i
            enddo             ! j
+           if (n_aicen(ns) > n2D) then
            do k=1,ncat_hist
            do j = jlo, jhi
            do i = ilo, ihi
@@ -2691,6 +2730,7 @@
            enddo             ! i
            enddo             ! j
            enddo             ! k
+           endif
 
            do n = 1, num_avail_hist_fields_2D
               if (avail_hist_fields(n)%vhistfreq == histfreq(ns)) then 
@@ -3145,6 +3185,19 @@
                              a2D(i,j,n_sidragtop(ns),iblk) = &
                              a2D(i,j,n_sidragtop(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sidragtop(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sirdgthick') /= 0) then
+                 if (f_sirdgthick(1:1) /= 'x' .and. n_sirdgthick(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sirdgthick(ns),iblk) = &
+                             a2D(i,j,n_sirdgthick(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sirdgthick(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j
