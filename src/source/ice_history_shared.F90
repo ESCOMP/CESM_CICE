@@ -246,6 +246,7 @@
            f_sidconcth = 'x', f_sidconcdyn = 'x', &
            f_sidmassth = 'x', f_sidmassdyn = 'x', &
            f_sidmassevapsubl = 'x', &
+           f_sndmasssubl = 'x', &
            f_sndmasssnf = 'x', &
            f_siflswdtop = 'x', &
            f_siflswutop = 'x', &
@@ -271,6 +272,7 @@
            f_siitdthick = 'x', &
            f_siitdsnthick = 'x', &
            f_sidragtop = 'x', &
+           f_sirdgthick = 'x', &
            f_sistreave = 'x', &
            f_sistremax = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
@@ -373,6 +375,7 @@
            f_sidconcth, f_sidconcdyn,&
            f_sidmassth, f_sidmassdyn,&
            f_sidmassevapsubl, &
+           f_sndmasssubl, &
            f_sndmasssnf, &
            f_siflswdtop, &
            f_siflswutop, &
@@ -398,6 +401,7 @@
            f_siitdthick, &
            f_siitdsnthick, &
            f_sidragtop, &
+           f_sirdgthick, &
            f_sistreave, &
            f_sistremax, &
            f_aicen,     f_vicen    , &
@@ -499,6 +503,7 @@
            n_sidconcth  , n_sidconcdyn,  &
            n_sidmassth  , n_sidmassdyn,  &
            n_sidmassevapsubl,  &
+           n_sndmasssubl,  &
            n_sndmasssnf,  &
            n_siflswdtop,  &
            n_siflswutop,  &
@@ -524,6 +529,7 @@
            n_siitdthick, &
            n_siitdsnthick, &
            n_sidragtop, &
+           n_sirdgthick, &
            n_sistreave, &
            n_sistremax, &
            n_vsnon,                        &
