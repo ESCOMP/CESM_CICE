@@ -2709,6 +2709,7 @@
            ! Ice fraction really needs to be on one of the history
            ! streams, but in case it is not.
 
+           if (n_aice(ns) > 0) then
            do j = jlo, jhi
            do i = ilo, ihi
               if (a2D(i,j,n_aice(ns),iblk) > puny) then
@@ -2718,6 +2719,7 @@
               endif
            enddo             ! i
            enddo             ! j
+           endif
            if (n_aicen(ns) > n2D) then
            do k=1,ncat_hist
            do j = jlo, jhi
