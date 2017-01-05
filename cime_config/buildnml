@@ -1,153 +1,256 @@
-#! /usr/bin/env perl
-use strict;
-use Cwd;
+#!/usr/bin/env python
 
-if ($#ARGV == -1) {
-    die " ERROR cice.buildnml: must specify a caseroot input argument";
-}
-my ($CASEROOT) = @ARGV;
-chdir "${CASEROOT}";
+"""CICE namelist creator 
+"""
 
-$ENV{'CASEROOT'} = $CASEROOT;
+# Typically ignore this.
+# pylint: disable=invalid-name
 
-my $CIMEROOT		= `./xmlquery  CIMEROOT 	   -value`;
-my $SRCROOT		= `./xmlquery  SRCROOT			-value`;
-my $OBJROOT		= `./xmlquery  OBJROOT			-value`;
-my $CIMEROOT		= `./xmlquery  CIMEROOT		        -value`;
-my $CICE_AUTO_DECOMP    = `./xmlquery  CICE_AUTO_DECOMP		-value`;
-my $CICE_NAMELIST_OPTS  = `./xmlquery  CICE_NAMELIST_OPTS	-value`;
-my $CICE_CONFIG_OPTS    = `./xmlquery  CICE_CONFIG_OPTS		-value`;
-my $CICE_MODE           = `./xmlquery  CICE_MODE		-value`;
-my $CICE_BLCKX          = `./xmlquery  CICE_BLCKX               -value`;
-my $CICE_BLCKY          = `./xmlquery  CICE_BLCKY               -value`;
-my $CICE_MXBLCKS        = `./xmlquery  CICE_MXBLCKS             -value`;
-my $COMP_INTERFACE	= `./xmlquery  COMP_INTERFACE		-value`;
-my $ICE_GRID		= `./xmlquery  ICE_GRID			-value`;
-my $ICE_NX		= `./xmlquery  ICE_NX			-value`;
-my $ICE_NY 	        = `./xmlquery  ICE_NY			-value`;
-my $ICE_NCPL		= `./xmlquery  ICE_NCPL			-value`;
-my $NTHRDS_ICE		= `./xmlquery  NTHRDS_ICE		-value`;
-my $NTASKS_ICE		= `./xmlquery  NTASKS_ICE		-value`;
-my $NINST_ICE		= `./xmlquery  NINST_ICE		-value`;
-my $RUNDIR		= `./xmlquery  RUNDIR			-value`;
-my $TESTCASE            = `./xmlquery  TESTCASE			-value`;
+# Disable these because this is our standard setup
+# pylint: disable=wildcard-import,unused-wildcard-import,wrong-import-position
 
-my @dirs = ("${CIMEROOT}/utils/perl5lib");
-unshift @INC, @dirs;
-require Config::SetupTools;
-my $sysmod;
+import os, shutil, sys, glob, filecmp, imp
 
-if (! -d "$CASEROOT/Buildconf/ciceconf" ) {
-    $sysmod = "mkdir $CASEROOT/Buildconf/ciceconf";
-    system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-}
+CIMEROOT = os.environ.get("CIMEROOT")
+if CIMEROOT is None:
+    raise SystemExit("ERROR: must set CIMEROOT environment variable")
+sys.path.append(os.path.join(CIMEROOT, "scripts", "Tools"))
 
-#--------------------------------------------------------------------
-# Invoke cice configure - output will go in $CASEROOT/Buildconf/ciceconf
-#--------------------------------------------------------------------
+from standard_script_setup import *
+from CIME.case import Case
+from CIME.nmlgen import NamelistGenerator
+from CIME.utils import expect
+from CIME.buildnml import create_namelist_infile, parse_input
 
-chdir "$CASEROOT/Buildconf/ciceconf";
+logger = logging.getLogger(__name__)
 
-$sysmod = "$SRCROOT/components/cice/bld/configure ";
-$sysmod = "$sysmod -hgrid $ICE_GRID -nx $ICE_NX -ny $ICE_NY ";
-$sysmod = "$sysmod -comp_intf $COMP_INTERFACE -cice_mode $CICE_MODE -nodecomp $CICE_CONFIG_OPTS";
-system($sysmod) == 0 or die "ERROR cice configure: $sysmod failed: $?\n";
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+####################################################################################
+def _create_namelists(case, confdir, infile, nmlgen):
+####################################################################################
+    """Write out the namelist for this component.
 
-# update env_build.xml settings to reflect changes in the configuration
-# this will trigger whether an automatic build is set upon the job resubmission
-if ($CICE_AUTO_DECOMP eq 'TRUE') {
-    my $ntasks = int($NTASKS_ICE / $NINST_ICE);
-    my $hgrid = $ICE_GRID;
-    if ($ICE_GRID eq 'ar9v2') {$hgrid = 'ar9v1';}
-    if ($ICE_GRID eq 'ar9v4') {$hgrid = 'ar9v3';}
+    Most arguments are the same as those for `NamelistGenerator`.
+    The `confdir` argument is used to specify the directory  in which output files will be placed.
+    """
+    #----------------------------------------------------
+    # Clear out old data.
+    #----------------------------------------------------
+    data_list_path = os.path.join(case.get_case_root(), "Buildconf", "cice.input_data_list")
+    if os.path.exists(data_list_path):
+        os.remove(data_list_path)
 
-    chdir "$SRCROOT/components/cice/bld";
-    my $config_args = `./generate_cice_decomp.pl -ccsmroot $SRCROOT -res $hgrid -nx $ICE_NX -ny $ICE_NY -nproc $ntasks -thrds $NTHRDS_ICE -output all `;
-    my @config = split(/\s/, $config_args);
+    #----------------------------------------------------
+    # Create config dictionary
+    #----------------------------------------------------
+    config = {}
 
-    chdir "$CASEROOT";
-    if ( $config[0] >= 0) {
-	$sysmod = "./xmlchange -noecho CICE_BLCKX=$config[2]";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -noecho CICE_BLCKY=$config[3]";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -noecho CICE_MXBLCKS=$config[4]";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -noecho CICE_DECOMPTYPE=$config[5]";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	$sysmod = "./xmlchange -noecho CICE_DECOMPSETTING=$config[6]";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-    } else {
-	die "ERROR cice.buildnml: cice decomp not set for $ICE_GRID on $ntasks x $NTHRDS_ICE procs";
-    }
-}
-chdir "$CASEROOT/Buildconf/ciceconf";
+    cice_mode = case.get_value("CICE_MODE")
+    hgrid = case.get_value('ICE_GRID')
+    config['hgrid'] = hgrid
+    config['cice_mode'] = cice_mode
 
-#--------------------------------------------------------------------
-# Invoke cice build-namelist - output will go in $CASEROOT/Buidlconf/ciceconf
-#--------------------------------------------------------------------
+    cice_config_opts = case.get_value('CICE_CONFIG_OPTS')
+    if "cice5" in cice_config_opts:
+        phys = "cice5"
+    elif "cice4" in cice_config_opts:
+        phys = "cice4"
+    config['phys'] = phys
 
-my $inst_string;
-my $inst_counter = 1;
-while ($inst_counter <= $NINST_ICE) {
+    cam_config_opts = case.get_value('CAM_CONFIG_OPTS')
+    if cam_config_opts is not None:
+        if "cam4" in cam_config_opts:
+            config['cam4'] = ".true."
 
-    # -----------------------------------------------------
-    # determine instance string
-    # -----------------------------------------------------
+    if cice_mode == 'prescribed':
+        config['sstice_stream'] = case.get_value("SSTICE_STREAM")
 
-    $inst_string = "";
-    if ($NINST_ICE > 1) {
-	$inst_string = `printf _%04d $inst_counter`;
+    if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntraero'] = "0"
 
-	# If multi-instance case does not have restart file, use single-case restart
-	# for each instance
-	if ( (! -e "$RUNDIR/rpointer.ice${inst_string}") && (-e "$RUNDIR/rpointer.ice") ) {
-	    $sysmod = "cp -v $RUNDIR/rpointer.ice $RUNDIR/rpointer.ice${inst_string}";
-	    system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-	}
-    }
+    # Note - xml ICE_NCAT, CICE_DECOMPSETTING, CICE_DECOMPTYPE are used 
+    # in setting the cice namelist and are set in buildlib: 
 
-    # -----------------------------------------------------
-    # create ciceconf/namelist
-    # -----------------------------------------------------
+    #----------------------------------------------------
+    # Initialize namelist defaults
+    #----------------------------------------------------
+    nmlgen.init_defaults(infile, config)
 
-    SetupTools::create_namelist_infile("$CASEROOT",
-				       "$CASEROOT/user_nl_cice${inst_string}",
-				       "$CASEROOT/Buildconf/ciceconf/namelist");
+    #----------------------------------------------------
+    # Set values not obtained in the default settings
+    #----------------------------------------------------
+    if nmlgen.get_value('gridcpl_file') == 'UNSET':
+        nmlgen.set_value('gridcpl_file', value="unknown_gridcpl_file")
 
-    # -----------------------------------------------------
-    # call build-namelist- output will go in $CASEROOT/Buildconf/ciceconf/ice_in
-    # -----------------------------------------------------
+    if case.get_value('CICE_DECOMPSETTING') == 'null':
+        processor_shape = nmlgen.get_value('processor_shape')
+    else:
+        # note that CICE_DECOMPSETTING is set in call to buildcpp
+        processor_shape = case.get_value("CICE_DECOMPTYPE")
+    nmlgen.set_value('processor_shape', value=processor_shape)
 
-    $sysmod = "$SRCROOT/components/cice/bld/build-namelist";
-    $sysmod = "$sysmod -infile $CASEROOT/Buildconf/ciceconf/namelist";
-    $sysmod = "$sysmod -inputdata $CASEROOT/Buildconf/cice.input_data_list";
-    $sysmod = "$sysmod -rundir $RUNDIR";
-    $sysmod = "$sysmod -caseroot $CASEROOT";
-    $sysmod = "$sysmod -cimeroot $CIMEROOT";
-    $sysmod = "$sysmod -inst_string \"$inst_string\"";
-    $sysmod = "$sysmod -namelist \"\&cice $CICE_NAMELIST_OPTS\/\" ";
-    $sysmod = "$sysmod -config config_cache.xml";
-    system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
+    # set initial conditions for branch of hybrid runs 
+    # TODO - need to implement multi-instance for these files - the following assumes single instance
+    run_type = case.get_value("RUN_TYPE")
+    if run_type == 'branch' or run_type == 'hybrid':
+        run_refcase = case.get_value("RUN_REFCASE")
+        run_refdate = case.get_value("RUN_REFDATE")
+        run_tod     = case.get_value("RUN_REFTOD")
+	ice_ic = "%s.cice.r.%s-%s.nc" %(run_refcase, run_refdate, run_tod)
+        nmlgen.add_default("ice_ic", value=ice_ic, ignore_abs_path=True)
+    else: 
+        if nmlgen.get_value('ice_ic') == 'UNSET':
+            nmlgen.set_value('ice_ic', value="default")
 
-    # -----------------------------------------------------
-    # Copy resolved namelist to $RUNDIR
-    # -----------------------------------------------------
+    # error checks for prescribed ice mode
+    if cice_mode == 'prescribed':
+        sstice_grid_filename = case.get_value('SSTICE_GRID_FILENAME')
+        sstice_data_filename = case.get_value('SSTICE_DATA_FILENAME')
+        sstice_year_align = case.get_value('SSTICE_YEAR_ALIGN')
+        sstice_year_start = case.get_value('SSTICE_YEAR_START')
+        sstice_year_end = case.get_value('SSTICE_YEAR_END')
+        if sstice_grid_filename == 'UNSET':
+            expect(False,  "%s must be set for cice prescribed mode" %sstice_grid_filename)
+        if sstice_data_filename == 'UNSET':
+            expect(False,  "%s must be set for cice prescribed mode" %sstice_data_filename)
+        if sstice_year_align == 'UNSET':
+            expect(False,  "%s must be set for cice prescribed mode" %sstice_year_align)
+        if sstice_year_start== 'UNSET':
+            expect(False,  "%s must be set for cice prescribed mode" %sstice_year_start)
+        if sstice_year_end== 'UNSET':
+            expect(False,  "%s must be set for cice prescribed mode" %sstice_year_end)
 
-    my $default_ice_in_filename = "ice_in";
-    my $ice_in_filename = "${default_ice_in_filename}${inst_string}";
-    if ( -d ${RUNDIR} ) {
-	$sysmod = "cp $CASEROOT/Buildconf/ciceconf/ice_in ${RUNDIR}/$ice_in_filename";
-	system($sysmod) == 0 or die "ERROR cice.buildnml: $sysmod failed: $?\n";
-    }
+    #----------------------------------------------------
+    # Write out namelist groups
+    #----------------------------------------------------
+    groups=['setup_nml',
+            'grid_nml',
+            'tracer_nml',
+            'thermo_nml',
+            'dynamics_nml',
+            'shortwave_nml',
+            'ponds_nml',
+            'forcing_nml',
+            'domain_nml',
+            'zbgc_nml',
+            'icefields_bgc_nml',
+            'icefields_drag_nml',
+            'icefields_mechred_nml',
+            'icefields_pond_nml',
+            'icefields_nml']
+    if cice_mode == 'prescribed':
+        groups.append('ice_prescribed_nml')
 
-    # -----------------------------------------------------
-    # increment instance counter
-    # -----------------------------------------------------
+    namelist_file = os.path.join(confdir, "ice_in")
+    nmlgen.write_output_file(namelist_file, data_list_path, groups=groups, sorted_groups=False)
 
-    $inst_counter = $inst_counter + 1;
-}
+    logger.debug("cice: grid is %s" %(hgrid))
+    logger.debug("cice: physics is %s "%phys)
 
-exit (0);
+###############################################################################
+def buildnml(case, caseroot, compname):
+###############################################################################
+    """Build the cice namelist """
 
+    # Build the component namelist 
+    if compname != "cice":
+        raise AttributeError
 
+    srcroot = case.get_value("SRCROOT") 
+    rundir = case.get_value("RUNDIR")
+    ninst = case.get_value("NINST_ICE")
+
+    # call buildcpp to obtain cppdefs 
+    call_buildcpp = False
+    if not os.path.exists(os.path.join(caseroot,"LockedFiles","env_build.xml")):
+        call_buildcpp = True
+    else:
+        file1 = os.path.join(caseroot,"env_build.xml")  
+        file2 = os.path.join(caseroot,"LockedFiles","env_build.xml")
+        if not filecmp.cmp(file1, file2):
+            call_buildcpp = True
+    if call_buildcpp:
+        cmd = os.path.join(os.path.join(srcroot,"components","cice","cime_config","buildcpp"))
+        logger.info("     ...calling cice buildcpp to set build time options")
+        try:
+            mod = imp.load_source("buildcpp", cmd)
+            mod.buildcpp(case)
+        except:
+            raise
+
+    # determine the confdir directory
+    confdir = os.path.join(caseroot,"Buildconf","ciceconf")
+    if not os.path.isdir(confdir):
+        os.makedirs(confdir)
+
+    #----------------------------------------------------
+    # Construct the namelist generator 
+    #----------------------------------------------------
+    # determine directory for user modified namelist_definitions.xml and namelist_defaults.xml
+    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice")
+    expect (os.path.isdir(user_xml_dir),
+            "user_xml_dir %s does not exist " %user_xml_dir)
+
+    # user definition *replaces* existing definition.
+    namelist_xml_dir = os.path.join(srcroot, "components", "cice", "cime_config")
+    definition_file = [os.path.join(namelist_xml_dir, "namelist_definition_cice.xml")]
+    user_definition = os.path.join(user_xml_dir, "namelist_definition_cice.xml")
+    if os.path.isfile(user_definition):
+        definition_file = [user_definition]
+    for file_ in definition_file:
+        expect(os.path.isfile(file_), "Namelist XML file %s not found!" % file_)
+
+    # Create the namelist generator object - independent of instance
+    nmlgen = NamelistGenerator(case, definition_file)
+
+    #----------------------------------------------------
+    # Loop over instances
+    #----------------------------------------------------
+    for inst_counter in range(1, ninst+1):
+
+        # determine instance string
+        inst_string = ""
+        if ninst > 1:
+            inst_string = '_' + '%04d' % inst_counter
+
+        # If multi-instance case does not have restart file, use
+        # single-case restart for each instance
+        rpointer = "rpointer.ice" 
+        if (os.path.isfile(os.path.join(rundir,rpointer)) and
+            (not os.path.isfile(os.path.join(rundir,rpointer + inst_string)))):
+            shutil.copy(os.path.join(rundir, rpointer),
+                        os.path.join(rundir, rpointer + inst_string))
+
+        inst_string_label = inst_string
+        if not inst_string_label:
+            inst_string_label = "\"\""
+
+        # create namelist_infile using user_nl_file as input
+        user_nl_file = os.path.join(caseroot, "user_nl_cice" + inst_string)
+        expect(os.path.isfile(user_nl_file),
+               "Missing required user_nl_file %s " %(user_nl_file))
+        infile = os.path.join(confdir, "namelist_infile")
+        create_namelist_infile(case, user_nl_file, infile)
+        namelist_infile = [infile]
+
+        # create namelist 
+        _create_namelists(case, confdir, namelist_infile, nmlgen)
+
+        # copy namelist files to rundir
+        if os.path.isdir(rundir):
+            file1  = os.path.join(confdir, "ice_in")
+            file2 = os.path.join(rundir, "ice_in")
+            if inst_string:
+                file2 += inst_string
+            logger.debug("CICE namelist copy: file1 %s file2 %s " %(file1, file2))
+            shutil.copy2(file1, file2)
+
+###############################################################################
+def _main_func():
+
+    caseroot = parse_input(sys.argv)
+    with Case(caseroot) as case:
+        buildnml(case, caseroot, "cice")
+
+if __name__ == "__main__":
+    _main_func()

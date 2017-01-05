@@ -109,7 +109,7 @@ my $nlon = $opts{'nx'};
 # Try to read from the xml file
 my $dcmp = Decomp::Config->new( \%opts );
 my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"", decompset=>"" );
-my $file = "$cesmroot/components/cice/bld/cice_decomp.xml";
+my $file = "$cesmroot/components/cice/bld/generate_cice_decomp.xml";
 my $matches = $dcmp->ReadXML( $file, \%decomp );
 
 # If no xml entry, try to generate something

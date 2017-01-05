@@ -25,6 +25,7 @@ module ice_prescribed_mod
 
 ! !USES:
 
+   use shr_nl_mod, only : shr_nl_find_group_name
    use shr_strdata_mod
    use shr_dmodel_mod
    use shr_string_mod
@@ -169,23 +170,16 @@ contains
    call get_fileunit(nu_nml)
    if (my_task == master_task) then
       open (nu_nml, file=nml_filename, status='old',iostat=nml_error)
-      if (nml_error /= 0) then
-         nml_error = -1
-      else
-         nml_error =  1
+      call shr_nl_find_group_name(nu_nml, 'ice_prescribed_nml', status=nml_error)
+      if (nml_error == 0) then
+         read(nu_nml, ice_prescribed_nml, iostat=nml_error)
+         if (nml_error > 0) then
+            call shr_sys_abort( 'problem on read of ice_prescribed namelist in ice_prescribed_mod' )
+         endif
       endif
-      do while (nml_error > 0)
-         read(nu_nml, nml=ice_prescribed_nml,iostat=nml_error)
-      end do
-      if (nml_error == 0) close(nu_nml)
-   endif
+   end if
    call release_fileunit(nu_nml)
-   call broadcast_scalar(nml_error,master_task)
-   if (nml_error /= 0) then
-      call abort_ice ('ice: Namelist read error in ice_prescribed_mod')
-   endif
-
-   call broadcast_scalar(prescribed_ice,master_task)
+   call broadcast_scalar(prescribed_ice, master_task)
 
    ! *** If not prescribed ice then return ***
    if (.not. prescribed_ice) RETURN

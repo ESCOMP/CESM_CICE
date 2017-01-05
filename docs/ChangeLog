@@ -1,4 +1,45 @@
 ===============================================================
+cice5_20170104
+Originator: mvertens
+Date: 04 Jan 2017
+Version: 5.0
+One-line Pythonization of namelist generation
+
+Removed the following perl based files - no longer needed
+D       bld/build-namelist
+D       bld/config_files
+D       bld/config_files/definition.xml
+D       bld/configure
+D       bld/namelist_files
+D       bld/namelist_files/namelist_defaults_cice.xml
+D       bld/namelist_files/namelist_definition.xml
+
+Changed the name of the following file for clarity
+D       bld/cice_decomp.xml
+A       bld/generate_cice_decomp.xml
+M       bld/generate_cice_decomp.pl
+
+Added new  file buildcpp which creates the cppdefs and  Filepath
+This is primarily called from buildlib now - but can be called from
+buildnml when only namelist generation is needed (and it depends on the
+cppdefs that are created)
+A       cime_config/buildcpp
+
+New python base namelist generation
+M       cime_config/buildnml
+M       cime_config/config_component.xml
+A       cime_config/namelist_definition_cice.xml
+
+New python based library generation
+M       cime_config/buildlib
+
+Changed the way namelists are read to permit not reading in a namelist that
+is not present - this uses share code - but is the way all CIME namelist reads
+are done
+M       src/drivers/cesm/ice_prescribed_mod.F90
+
+===============================================================
+
 cice5_20161118
 Originator: dbailey
 Date: 18 Nov 2016
