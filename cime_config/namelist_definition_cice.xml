@@ -58,7 +58,7 @@
   <!-- setup_nml                   -->
   <!-- =========================== -->
 
-  <entry id="ice_ic">
+  <entry id="ice_ic" skip_default_entry="true">
     <type>char</type> 
     <category>setup</category> 
     <group>setup_nml</group>

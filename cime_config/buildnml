@@ -99,6 +99,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
 	ice_ic = "%s.cice.r.%s-%s.nc" %(run_refcase, run_refdate, run_tod)
         nmlgen.add_default("ice_ic", value=ice_ic, ignore_abs_path=True)
     else: 
+        nmlgen.add_default("ice_ic")
         if nmlgen.get_value('ice_ic') == 'UNSET':
             nmlgen.set_value('ice_ic', value="default")
 

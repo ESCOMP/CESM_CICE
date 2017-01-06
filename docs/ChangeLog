@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20170106
+Originator: mvertens
+Date: 06 Jan 2017
+Version: 5.0
+One-line Fixed problem in setting ice_ic for hybrid/branch runs
+	
+M       cime_config/buildnml
+M       cime_config/namelist_definition_cice.xml
+	
+===============================================================
 cice5_20170104
 Originator: mvertens
 Date: 04 Jan 2017
