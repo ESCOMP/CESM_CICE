@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170126
+Originator: mvertens
+Date: 13 Jan 2017
+Version: 5.0
+One-line Added cartesian to possible decomptypes
+	
+M       cime_config/config_component.xml
+	
+===============================================================
 cice5_20170113
 Originator: mvertens
 Date: 13 Jan 2017
