@@ -1,4 +1,18 @@
 ===============================================================
+cice5_20170214
+Originator: dbailey
+Date: 14 Feb 2017
+Version: 5.0
+One-line Fixed testlist and component defs.
+
+Also, fixed the mass transport variables. Bfb except history
+file changes.
+
+M       cime_config/testdefs/testlist_cice.xml
+M       cime_config/config_component.xml
+M       src/source/ice_history.F90
+
+===============================================================
 cice5_20170126
 Originator: mvertens
 Date: 13 Jan 2017

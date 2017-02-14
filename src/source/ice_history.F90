@@ -1548,10 +1548,10 @@
       use ice_blocks, only: block, get_block, nx_block, ny_block
       use ice_domain_size, only: nilyr, nslyr
       use ice_fileunits, only: nu_diag
-      use ice_constants, only: c0, c1, p25, puny, secday, depressT, &
+      use ice_constants, only: c0, c1, p25, p5, puny, secday, depressT, &
           awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, cp_ice, spval_dbl, hs_min
       use ice_domain, only: blocks_ice, nblocks
-      use ice_grid, only: tmask, lmask_n, lmask_s, tarea
+      use ice_grid, only: tmask, lmask_n, lmask_s, tarea, dxu, dyu
       use ice_calendar, only: new_year, write_history, &
                               write_ic, time, histfreq, nstreams, month, &
                               new_month
@@ -2039,7 +2039,9 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) &
-                 worka(i,j) = (rhoi*vice(i,j,iblk)+rhos*vsno(i,j,iblk))*uvel(i,j,iblk)*tarea(i,j,iblk)
+                 worka(i,j) = (rhoi*p5*(vice(i+1,j,iblk)+vice(i,j,iblk))*dyu(i,j,iblk) &
+                            +  rhos*p5*(vsno(i+1,j,iblk)+vsno(i,j,iblk))*dyu(i,j,iblk)) &
+                            *  p5*(uvel(i,j-1,iblk)+uvel(i,j,iblk))
            enddo
            enddo
            call accum_hist_field(n_sidmasstranx, iblk, worka(:,:), a2D)
@@ -2050,7 +2052,9 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) &
-                 worka(i,j) = (rhoi*vice(i,j,iblk)+rhos*vsno(i,j,iblk))*vvel(i,j,iblk)*tarea(i,j,iblk)
+                 worka(i,j) = (rhoi*p5*(vice(i,j+1,iblk)+vice(i,j,iblk))*dxu(i,j,iblk) &
+                            +  rhos*p5*(vsno(i,j+1,iblk)+vsno(i,j,iblk))*dxu(i,j,iblk)) &
+                            *  p5*(vvel(i-1,j,iblk)+vvel(i,j,iblk))
            enddo
            enddo
            call accum_hist_field(n_sidmasstrany, iblk, worka(:,:), a2D)

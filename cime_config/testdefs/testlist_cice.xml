@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<testlist>
+<testlist version="2.0">
   <test name="ERI" grid="T62_g16" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="yellowstone" compiler="intel" category="aux_cice"/>
@@ -58,11 +58,6 @@
       <machine name="yellowstone" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS_Ld7" grid="T62_g37" compset="G" testmods="cice/pop">
-    <machines>
-      <machine name="yellowstone" compiler="intel" category="aux_cice"/>
-    </machines>
-  </test>
   <test name="PET" grid="f19_g16" compset="ETEST" testmods="cice/default">
     <machines>
       <machine name="bluewaters" compiler="pgi" category="prebeta"/>
@@ -71,6 +66,21 @@
     </machines>
   </test>
   <test name="PET_Ld2" grid="T62_g16" compset="DTEST" testmods="cice/default">
+    <machines>
+      <machine name="yellowstone" compiler="intel" category="aux_cice"/>
+    </machines>
+  </test>
+  <test name="ERS_Lm3" grid="T62_g37" compset="G" testmods="pop/cice">
+    <machines>
+      <machine name="yellowstone" compiler="intel" category="aux_cice"/>
+    </machines>
+  </test>
+  <test name="ERI" grid="f19_g16_rx1" compset="G" testmods="pop/cice">
+    <machines>
+      <machine name="yellowstone" compiler="intel" category="aux_cice"/>
+    </machines>
+  </test>
+  <test name="PET" grid="f45_g37_rx1" compset="G" testmods="pop/cice">
     <machines>
       <machine name="yellowstone" compiler="intel" category="aux_cice"/>
     </machines>
