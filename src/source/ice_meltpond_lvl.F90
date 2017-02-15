@@ -71,6 +71,7 @@
       hpnd(:,:,:) = c0
       ipnd(:,:,:) = c0
       dhsn(:,:,:) = c0
+      ffracn(:,:,:,:) = c0
 
       end subroutine init_meltponds_lvl
 

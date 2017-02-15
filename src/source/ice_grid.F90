@@ -945,6 +945,8 @@
       ! TLAT.
       !-----------------------------------------------------------------
 
+      ANGLET(:,:,:) = c0                             
+
      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
@@ -979,7 +981,6 @@
             ULON  (i,j,iblk) = c0
             ANGLE (i,j,iblk) = c0                             
 
-            ANGLET(i,j,iblk) = c0                             
             HTN   (i,j,iblk) = 1.e36_dbl_kind
             HTE   (i,j,iblk) = 1.e36_dbl_kind
             dxt   (i,j,iblk) = 1.e36_dbl_kind
@@ -997,6 +998,9 @@
       enddo
       !$OMP END PARALLEL DO
 
+      call ice_HaloUpdate (ULAT,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
       call makemask
 #endif
 #endif

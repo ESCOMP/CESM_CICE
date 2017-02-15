@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20170216
+Originator: dbailey
+Date: 15 Feb 2017
+Version: 5.0
+One-line Fixed some uninitialized variables.
+
+M       src/drivers/cesm/ice_import_export.F90
+M       src/source/ice_grid.F90
+M       src/source/ice_meltpond_lvl.F90
+
+===============================================================
 cice5_20170214
 Originator: dbailey
 Date: 14 Feb 2017

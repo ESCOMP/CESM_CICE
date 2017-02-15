@@ -380,10 +380,23 @@ contains
     !calculate ice thickness from aice and vice. Also
     !create Tsrf from the first tracer (trcr) in ice_state.F
 
+    ailohi(:,:,:) = c0
+    Tsrf(:,:,:) = c0
+    tauxa(:,:,:) = c0
+    tauya(:,:,:) = c0
+    tauxo(:,:,:) = c0
+    tauyo(:,:,:) = c0
+
     !$OMP PARALLEL DO PRIVATE(iblk,i,j,workx,worky)
     do iblk = 1, nblocks
-       do j = 1, ny_block
-          do i = 1, nx_block
+       this_block = get_block(blocks_ice(iblk),iblk)         
+       ilo = this_block%ilo
+       ihi = this_block%ihi
+       jlo = this_block%jlo
+       jhi = this_block%jhi
+
+       do j = jlo,jhi
+          do i = ilo,ihi
 
              ! ice fraction
              ailohi(i,j,iblk) = min(aice(i,j,iblk), c1)
@@ -413,8 +426,14 @@ contains
     !$OMP END PARALLEL DO
 
     do iblk = 1, nblocks
-       do j = 1, ny_block
-          do i = 1, nx_block
+       this_block = get_block(blocks_ice(iblk),iblk)         
+       ilo = this_block%ilo
+       ihi = this_block%ihi
+       jlo = this_block%jlo
+       jhi = this_block%jhi
+
+       do j = jlo,jhi
+          do i = ilo,ihi
              if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
                 flag = .true.
              endif
@@ -423,8 +442,13 @@ contains
     end do
     if (flag) then
        do iblk = 1, nblocks
-          do j = 1, ny_block
-             do i = 1, nx_block
+          this_block = get_block(blocks_ice(iblk),iblk)         
+          ilo = this_block%ilo
+          ihi = this_block%ihi
+          jlo = this_block%jlo
+          jhi = this_block%jhi
+          do j = jlo,jhi
+             do i = ilo,ihi
                 if (tmask(i,j,iblk) .and. ailohi(i,j,iblk) < c0 ) then
                    write(nu_diag,*) &
                         ' (ice) send: ERROR ailohi < 0.0 ',i,j,ailohi(i,j,iblk)
