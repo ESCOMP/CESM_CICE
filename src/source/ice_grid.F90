@@ -919,6 +919,19 @@
       end do
       !$OMP END PARALLEL DO
 
+      call ice_HaloUpdate (TLON,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (TLAT,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (tarea,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
+      call ice_HaloUpdate (hm,             halo_info, &
+                           field_loc_center, field_type_scalar, &
+                           fillValue=c1)
+
       !-----------------------------------------------------------------
       ! Calculate various geometric 2d arrays
       ! The U grid (velocity) is not used when run with sequential CAM
