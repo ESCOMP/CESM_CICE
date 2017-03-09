@@ -2949,32 +2949,6 @@
                     enddo             ! j
                  endif
               endif
-              if (index(avail_hist_fields(n)%vname,'sihc') /= 0) then
-                 if (f_sihc(1:1) /= 'x' .and. n_sihc(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sihc(ns),iblk) = &
-                             a2D(i,j,n_sihc(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sihc(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
-              if (index(avail_hist_fields(n)%vname,'sisnhc') /= 0) then
-                 if (f_sisnhc(1:1) /= 'x' .and. n_sisnhc(ns) /= 0) then
-                    do j = jlo, jhi
-                    do i = ilo, ihi
-                       if (tmask(i,j,iblk)) then
-                             a2D(i,j,n_sisnhc(ns),iblk) = &
-                             a2D(i,j,n_sisnhc(ns),iblk)*avgct(ns)*ravgip(i,j)
-                             if (ravgip(i,j) == c0) a2D(i,j,n_sisnhc(ns),iblk) = spval_dbl
-                       endif
-                    enddo             ! i
-                    enddo             ! j
-                 endif
-              endif
               if (index(avail_hist_fields(n)%vname,'sidmassevapsubl') /= 0) then
                  if (f_sidmassevapsubl(1:1) /= 'x' .and. n_sidmassevapsubl(ns) /= 0) then
                     do j = jlo, jhi
