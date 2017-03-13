@@ -173,76 +173,77 @@
       ! Turn on all CMIP fields in one go.
 
       if (f_CMIP(1:1) /= 'x') then
-         f_sithick = 'mxxxx'
-         f_sisnthick = 'mxxxx'
-         f_siage = 'mxxxx'
-         f_sitemptop = 'mxxxx'
-         f_sitempsnic = 'mxxxx'
-         f_sitempbot = 'mxxxx'
-         f_sispeed = 'mxxxx'
-         f_siu = 'mxxxx'
-         f_siv = 'mxxxx'
-         f_sidmasstranx = 'mxxxx'
-         f_sidmasstrany = 'mxxxx'
-         f_sistrxdtop = 'mxxxx'
-         f_sistrydtop = 'mxxxx'
-         f_sistrxubot = 'mxxxx'
-         f_sistryubot = 'mxxxx'
-         f_sicompstren = 'mxxxx'
-         f_sialb = 'mxxxx'
-         f_sihc = 'mxxxx'
-         f_sisnhc = 'mxxxx'
-         f_sidconcth = 'mxxxx'
-         f_sidconcdyn = 'mxxxx'
-         f_sidmassth = 'mxxxx'
-         f_sidmassdyn = 'mxxxx'
-         f_sidmassevapsubl = 'mxxxx'
-         f_sndmasssnf = 'mxxxx'
-         f_siflswdtop = 'mxxxx'
-         f_siflswutop = 'mxxxx'
-         f_siflswdbot = 'mxxxx'
-         f_sifllwdtop = 'mxxxx'
-         f_sifllwutop = 'mxxxx'
-         f_siflsenstop = 'mxxxx'
-         f_siflsensupbot = 'mxxxx'
-         f_sifllatstop = 'mxxxx'
-         f_siflcondtop = 'mxxxx'
-         f_siflcondbot = 'mxxxx'
-         f_sipr = 'mxxxx'
-         f_siflsaltbot = 'mxxxx'
-         f_siflfwbot = 'mxxxx'
-         f_siflfwdrain = 'mxxxx'
-         f_siforcetiltx = 'mxxxx'
-         f_siforcetilty = 'mxxxx'
-         f_siforcecoriolx = 'mxxxx'
-         f_siforcecorioly = 'mxxxx'
-         f_siforceintstrx = 'mxxxx'
-         f_siforceintstry = 'mxxxx'
-         f_siitdconc = 'mxxxx'
-         f_siitdthick = 'mxxxx'
-         f_siitdsnthick = 'mxxxx'
-         f_sidragtop = 'mxxxx'
-         f_sistreave = 'mxxxx'
-         f_sistremax = 'mxxxx'
-         f_sirdgthick = 'mxxxx'
-         f_aice = 'mxxxx'
-         f_hi = 'mxxxx'
-         f_hs = 'mxxxx'
-         f_divu = 'mxxxx'
-         f_icepresent = 'mxxxx'
-         f_shear = 'mxxxx'
-         f_dvidtd = 'mxxxx'
-         f_dvidtt = 'mxxxx'
-         f_congel = 'mxxxx'
-         f_frazil = 'mxxxx'
-         f_meltl = 'mxxxx'
-         f_meltb = 'mxxxx'
-         f_meltt = 'mxxxx'
-         f_melts = 'mxxxx'
-         f_snoice = 'mxxxx'
-         f_aicen = 'mxxxx'
-         f_vicen = 'mxxxx'
-         f_vsnon = 'mxxxx'
+         f_sithick = f_CMIP
+         f_sisnthick = f_CMIP
+         f_siage = f_CMIP
+         f_sitemptop = f_CMIP
+         f_sitempsnic = f_CMIP
+         f_sitempbot = f_CMIP
+         f_sispeed = f_CMIP
+         f_siu = f_CMIP
+         f_siv = f_CMIP
+         f_sidmasstranx = f_CMIP
+         f_sidmasstrany = f_CMIP
+         f_sistrxdtop = f_CMIP
+         f_sistrydtop = f_CMIP
+         f_sistrxubot = f_CMIP
+         f_sistryubot = f_CMIP
+         f_sicompstren = f_CMIP
+         f_sialb = f_CMIP
+         f_sihc = f_CMIP
+         f_sisnhc = f_CMIP
+         f_sidconcth = f_CMIP
+         f_sidconcdyn = f_CMIP
+         f_sidmassth = f_CMIP
+         f_sidmassdyn = f_CMIP
+         f_sidmassevapsubl = f_CMIP
+         f_sndmasssnf = f_CMIP
+         f_siflswdtop = f_CMIP
+         f_siflswutop = f_CMIP
+         f_siflswdbot = f_CMIP
+         f_sifllwdtop = f_CMIP
+         f_sifllwutop = f_CMIP
+         f_siflsenstop = f_CMIP
+         f_siflsensupbot = f_CMIP
+         f_sifllatstop = f_CMIP
+         f_siflcondtop = f_CMIP
+         f_siflcondbot = f_CMIP
+         f_sipr = f_CMIP
+         f_sifb = f_CMIP
+         f_siflsaltbot = f_CMIP
+         f_siflfwbot = f_CMIP
+         f_siflfwdrain = f_CMIP
+         f_siforcetiltx = f_CMIP
+         f_siforcetilty = f_CMIP
+         f_siforcecoriolx = f_CMIP
+         f_siforcecorioly = f_CMIP
+         f_siforceintstrx = f_CMIP
+         f_siforceintstry = f_CMIP
+         f_siitdconc = f_CMIP
+         f_siitdthick = f_CMIP
+         f_siitdsnthick = f_CMIP
+         f_sidragtop = f_CMIP
+         f_sistreave = f_CMIP
+         f_sistremax = f_CMIP
+         f_sirdgthick = f_CMIP
+         f_aice = f_CMIP
+         f_hi = f_CMIP
+         f_hs = f_CMIP
+         f_divu = f_CMIP
+         f_icepresent = f_CMIP
+         f_shear = f_CMIP
+         f_dvidtd = f_CMIP
+         f_dvidtt = f_CMIP
+         f_congel = f_CMIP
+         f_frazil = f_CMIP
+         f_meltl = f_CMIP
+         f_meltb = f_CMIP
+         f_meltt = f_CMIP
+         f_melts = f_CMIP
+         f_snoice = f_CMIP
+         f_aicen = f_CMIP
+         f_vicen = f_CMIP
+         f_vsnon = f_CMIP
       endif
 
       if (f_CMIP(2:2) == 'd') then
@@ -416,6 +417,7 @@
       call broadcast_scalar (f_siflcondtop, master_task)
       call broadcast_scalar (f_siflcondbot, master_task)
       call broadcast_scalar (f_sipr, master_task)
+      call broadcast_scalar (f_sifb, master_task)
       call broadcast_scalar (f_siflsaltbot, master_task)
       call broadcast_scalar (f_siflfwbot, master_task)
       call broadcast_scalar (f_siflfwdrain, master_task)
@@ -1209,6 +1211,11 @@
              "none", c1, c0,                            &
              ns1, f_sipr)
       
+         call define_hist_field(n_sifb,"sifb","m",tstr2D, tcstr, &
+             "sea ice freeboard above sea level",                &
+             "none", c1, c0,                            &
+             ns1, f_sifb)
+      
          call define_hist_field(n_siflsaltbot,"siflsaltbot","kg m-2 s-1",tstr2D, tcstr, &
              "salt flux from sea ice",                                      &
              "positive downward", c1, c0,                            &
@@ -1549,7 +1556,7 @@
       use ice_domain_size, only: nilyr, nslyr
       use ice_fileunits, only: nu_diag
       use ice_constants, only: c0, c1, p25, p5, puny, secday, depressT, &
-          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, cp_ice, spval_dbl, hs_min
+          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, rhow, cp_ice, spval_dbl, hs_min
       use ice_domain, only: blocks_ice, nblocks
       use ice_grid, only: tmask, lmask_n, lmask_s, tarea, dxu, dyu
       use ice_calendar, only: new_year, write_history, &
@@ -1585,7 +1592,7 @@
       use ice_state ! almost everything
       use ice_shortwave, only: snowfracn
       use ice_therm_shared, only: calculate_Tin_from_qin, Tmlt, ktherm
-      use ice_therm_mushy, only: temperature_mush, temperature_snow
+      use ice_therm_mushy, only: temperature_mush, temperature_snow, density_brine, liquid_fraction
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
       use ice_zbgc_shared, only: skl_bgc
 
@@ -1607,6 +1614,12 @@
       real (kind=dbl_kind) :: & 
            qn                , & ! temporary variable for enthalpy
            hs                , & ! temporary variable for snow depth
+           rho_ocn           , & ! temporary variable for ocean density
+           rho_ice           , & ! temporary variable for ice/brine density
+           Tice              , & ! temporary variable for ice/brine temperature
+           Sbr               , & ! temporary variable for brine salinity
+           phi               , & ! temporary variable for ice/brine fraction
+           rhob              , & ! temporary variable for brine density
            Tmlts                 !  temporary variable for melting temperature
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -1682,7 +1695,8 @@
       !---------------------------------------------------------------
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block, &
-      !$OMP k,n,qn,ns,hs,worka,workb,Tinz4d,Sinz4d,Tsnz4d,worka3)
+      !$OMP k,n,qn,ns,hs,rho_ocn,rho_ice,Tice,Sbr,phi,rhob, &
+      !$OMP worka,workb,Tinz4d,Sinz4d,Tsnz4d,worka3)
       do iblk = 1, nblocks
          this_block = get_block(blocks_ice(iblk),iblk)         
          ilo = this_block%ilo
@@ -2355,6 +2369,36 @@
            enddo
            enddo
            call accum_hist_field(n_sipr, iblk, worka(:,:), a2D)
+         endif
+
+         if (f_sifb(1:1) /= 'x') then
+           worka(:,:) = c0
+           rho_ice = rhoi
+           rho_ocn = rhow
+           do j = jlo, jhi
+           do i = ilo, ihi
+              if (aice(i,j,iblk) > puny) then
+                 if (ktherm == 2) then
+                    rho_ocn = density_brine(sss(i,j,iblk))
+                    rho_ice = c0
+                    do k = 1, nilyr
+                       Tice = temperature_mush(trcr(i,j,nt_qice+k-1,iblk),trcr(i,j,nt_sice+k-1,iblk))
+                       Sbr = trcr(i,j,nt_sice+k-1,iblk)
+                       phi = liquid_fraction(Tice,Sbr)
+                       rhob = density_brine(Sbr)
+                       rho_ice = rho_ice + min(phi*rhob+(c1-phi)*rhoi,rho_ocn) 
+                    enddo
+                    rho_ice = rho_ice / real(nilyr,kind=dbl_kind)
+                 endif
+                 worka(i,j) = ((rho_ocn-rho_ice)*vice(i,j,iblk) - rhos*vsno(i,j,iblk))/rho_ocn
+                 if (worka(i,j) < c0) then
+                    write(nu_diag,*) 'negative fb',rho_ocn,rho_ice,rhos
+                    write(nu_diag,*) vice(i,j,iblk),vsno(i,j,iblk)
+                 endif
+              endif
+           enddo
+           enddo
+           call accum_hist_field(n_sifb, iblk, worka(:,:), a2D)
          endif
 
          if (f_siflsaltbot(1:1) /= 'x') then
@@ -3087,6 +3131,19 @@
                              a2D(i,j,n_sipr(ns),iblk) = &
                              a2D(i,j,n_sipr(ns),iblk)*avgct(ns)*ravgip(i,j)
                              if (ravgip(i,j) == c0) a2D(i,j,n_sipr(ns),iblk) = spval_dbl
+                       endif
+                    enddo             ! i
+                    enddo             ! j
+                 endif
+              endif
+              if (index(avail_hist_fields(n)%vname,'sifb') /= 0) then
+                 if (f_sifb(1:1) /= 'x' .and. n_sifb(ns) /= 0) then
+                    do j = jlo, jhi
+                    do i = ilo, ihi
+                       if (tmask(i,j,iblk)) then
+                             a2D(i,j,n_sifb(ns),iblk) = &
+                             a2D(i,j,n_sifb(ns),iblk)*avgct(ns)*ravgip(i,j)
+                             if (ravgip(i,j) == c0) a2D(i,j,n_sifb(ns),iblk) = spval_dbl
                        endif
                     enddo             ! i
                     enddo             ! j

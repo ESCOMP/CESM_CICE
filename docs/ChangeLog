@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20170313
+Originator: dbailey
+Date: 13 Mar 2017
+Version: 5.0
+One-line Added freeboard history variable.
+
+
+M       src/source/ice_therm_mushy.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_history.F90
+
+===============================================================
 cice5_20170309
 Originator: dbailey
 Date: 09 Mar 2017

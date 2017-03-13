@@ -14,6 +14,7 @@ module ice_therm_mushy
   private
   public :: temperature_mush, &
             temperature_snow, &
+            density_brine, &
             liquid_fraction, &
             temperature_mush_liquid_fraction, &
             liquidus_brine_salinity_mush, &

@@ -259,6 +259,7 @@
            f_siflcondtop = 'x', &
            f_siflcondbot = 'x', &
            f_sipr = 'x', &
+           f_sifb = 'x', &
            f_siflsaltbot = 'x', &
            f_siflfwbot = 'x', &
            f_siflfwdrain = 'x', &
@@ -388,6 +389,7 @@
            f_siflcondtop, &
            f_siflcondbot, &
            f_sipr, &
+           f_sifb, &
            f_siflsaltbot, &
            f_siflfwbot, &
            f_siflfwdrain, &
@@ -516,6 +518,7 @@
            n_siflcondtop,  &
            n_siflcondbot,  &
            n_sipr,  &
+           n_sifb,  &
            n_siflsaltbot,  &
            n_siflfwbot,  &
            n_siflfwdrain,  &
