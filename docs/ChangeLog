@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170424
+Originator: jedwards
+Date: 24 April 2017
+Version: 5.0
+One-line Fixed an OMP issue and efficiency changes.
+
+M       src/drivers/cesm/ice_import_export.F90
+
+===============================================================
 cice5_20170313
 Originator: dbailey
 Date: 13 Mar 2017
