@@ -1,4 +1,120 @@
 ===============================================================
+cice5_20170503
+Originator: dbailey
+Date: 3 May 2017
+Version: 5.0
+One-line Added isotope code and fixed buildcpp.
+
+This update should not be answer changing as the
+isotopes are off by default. When CESM is ready,
+the code in ice_cpl_indicies.F90 needs to be
+updated. Look for ISOTOPE.
+
+Also, the buildcpp script is fixed to allow users
+to change CPP options vi CICE_CONFIG_OPTS.
+
+Deleted the old Latex User Guide. This is now on
+github.
+
+M       cime_config/buildcpp
+M       cime_config/buildnml
+M       cime_config/namelist_definition_cice.xml
+M       src/source/ice_init.F90
+M       src/source/ice_history_bgc.F90
+M       src/source/ice_itd.F90
+M       src/source/ice_fileunits.F90
+M       src/source/ice_mechred.F90
+M       src/source/ice_diagnostics.F90
+M       src/source/ice_therm_vertical.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_itd.F90
+M       src/source/ice_state.F90
+A       src/source/ice_isotope.F90
+M       src/source/ice_atmo.F90
+M       src/source/ice_domain_size.F90
+M       src/drivers/cesm/ice_import_export.F90
+M       src/drivers/cesm/ice_cpl_indices.F90
+D       docs/UsersGuide
+D       docs/UsersGuide/ice_setup.tex
+D       docs/UsersGuide/ice_usrdoc
+D       docs/UsersGuide/ice_usrdoc/node7.html
+D       docs/UsersGuide/ice_usrdoc/node9.html
+D       docs/UsersGuide/ice_usrdoc/WARNINGS
+D       docs/UsersGuide/ice_usrdoc/node10.html
+D       docs/UsersGuide/ice_usrdoc/node20.html
+D       docs/UsersGuide/ice_usrdoc/node12.html
+D       docs/UsersGuide/ice_usrdoc/node30.html
+D       docs/UsersGuide/ice_usrdoc/node22.html
+D       docs/UsersGuide/ice_usrdoc/node40.html
+D       docs/UsersGuide/ice_usrdoc/node14.html
+D       docs/UsersGuide/ice_usrdoc/node32.html
+D       docs/UsersGuide/ice_usrdoc/node24.html
+D       docs/UsersGuide/ice_usrdoc/node42.html
+D       docs/UsersGuide/ice_usrdoc/node16.html
+D       docs/UsersGuide/ice_usrdoc/node34.html
+D       docs/UsersGuide/ice_usrdoc/node26.html
+D       docs/UsersGuide/ice_usrdoc/node18.html
+D       docs/UsersGuide/ice_usrdoc/node36.html
+D       docs/UsersGuide/ice_usrdoc/node28.html
+D       docs/UsersGuide/ice_usrdoc/node38.html
+D       docs/UsersGuide/ice_usrdoc/node2.html
+D       docs/UsersGuide/ice_usrdoc/node4.html
+D       docs/UsersGuide/ice_usrdoc/labels.pl
+D       docs/UsersGuide/ice_usrdoc/node6.html
+D       docs/UsersGuide/ice_usrdoc/images.pl
+D       docs/UsersGuide/ice_usrdoc/node8.html
+D       docs/UsersGuide/ice_usrdoc/ice_usrdoc.html
+D       docs/UsersGuide/ice_usrdoc/images.log
+D       docs/UsersGuide/ice_usrdoc/node11.html
+D       docs/UsersGuide/ice_usrdoc/node21.html
+D       docs/UsersGuide/ice_usrdoc/node13.html
+D       docs/UsersGuide/ice_usrdoc/node31.html
+D       docs/UsersGuide/ice_usrdoc/node23.html
+D       docs/UsersGuide/ice_usrdoc/node41.html
+D       docs/UsersGuide/ice_usrdoc/node15.html
+D       docs/UsersGuide/ice_usrdoc/node33.html
+D       docs/UsersGuide/ice_usrdoc/node25.html
+D       docs/UsersGuide/ice_usrdoc/node17.html
+D       docs/UsersGuide/ice_usrdoc/node35.html
+D       docs/UsersGuide/ice_usrdoc/images.aux
+D       docs/UsersGuide/ice_usrdoc/node27.html
+D       docs/UsersGuide/ice_usrdoc/node19.html
+D       docs/UsersGuide/ice_usrdoc/node37.html
+D       docs/UsersGuide/ice_usrdoc/images.bbl
+D       docs/UsersGuide/ice_usrdoc/node29.html
+D       docs/UsersGuide/ice_usrdoc/images.tex
+D       docs/UsersGuide/ice_usrdoc/node39.html
+D       docs/UsersGuide/ice_usrdoc/ice_usrdoc.css
+D       docs/UsersGuide/ice_usrdoc/internals.pl
+D       docs/UsersGuide/ice_usrdoc/node1.html
+D       docs/UsersGuide/ice_usrdoc/index.html
+D       docs/UsersGuide/ice_usrdoc/images.out
+D       docs/UsersGuide/ice_usrdoc/node3.html
+D       docs/UsersGuide/ice_usrdoc/images.pdf
+D       docs/UsersGuide/ice_usrdoc/node5.html
+D       docs/UsersGuide/ice_history.tex
+D       docs/UsersGuide/ice_nml_example.tex
+D       docs/UsersGuide/master_list.bib
+D       docs/UsersGuide/ice_what_is_cice4.tex
+D       docs/UsersGuide/README_USR
+D       docs/UsersGuide/ice_usrdoc.pdf
+D       docs/UsersGuide/supertabular.sty
+D       docs/UsersGuide/ice_stdout.tex
+D       docs/UsersGuide/ice_restart.tex
+D       docs/UsersGuide/jas.bst
+D       docs/UsersGuide/ice_input_data.tex
+D       docs/UsersGuide/ice_runtypes.tex
+D       docs/UsersGuide/ice_troubleshoot.tex
+D       docs/UsersGuide/ice_change_ncat.tex
+D       docs/UsersGuide/index.html
+D       docs/UsersGuide/ice_nml_var.tex
+D       docs/UsersGuide/Makefile
+D       docs/UsersGuide/natbib.sty
+D       docs/UsersGuide/ice_usrdoc.tex
+D       docs/UsersGuide/ice_build.tex
+
+===============================================================
 cice5_20170424
 Originator: jedwards
 Date: 24 April 2017

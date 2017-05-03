@@ -781,7 +781,7 @@
          ! melting energy/unit area in each column, etot < 0
 
          do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, imelt
@@ -793,7 +793,7 @@
          enddo
 
          do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, imelt
@@ -804,7 +804,7 @@
             enddo               ! ij
          enddo                  ! nilyr
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, imelt
@@ -820,7 +820,7 @@
       ! Limit bottom and lateral heat fluxes if necessary.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, imelt
@@ -953,7 +953,7 @@
       ! Load arrays for vertical thermo calculation.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -980,7 +980,7 @@
       !-----------------------------------------------------------------
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1085,7 +1085,7 @@
       endif                     ! tsno_low
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1104,7 +1104,7 @@
       enddo                     ! nslyr
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1238,7 +1238,7 @@
       !-----------------------------------------------------------------
 
          if (ktherm /= 2) then
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1251,7 +1251,7 @@
 
 ! echmod: is this necessary?
 !         if (ktherm == 1) then
-!!DIR$ CONCURRENT !Cray 
+!!DIR$ CONCURRENT !Cray
 !!cdir nodep      !NEC
 !!ocl novrec      !Fujitsu
 !            do ij = 1, icells
@@ -1266,7 +1266,7 @@
       ! initial energy per unit area of ice/snow, relative to 0 C
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1475,7 +1475,7 @@
       if (.not. l_brine) then 
 
          do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1489,7 +1489,7 @@
          enddo
 
          do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1610,7 +1610,7 @@
       enddo                     ! ij
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1661,7 +1661,7 @@
       enddo                     ! nslyr
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1704,7 +1704,7 @@
       enddo                     ! nilyr
 
       do k = nilyr, 1, -1
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1733,7 +1733,7 @@
       enddo                     ! nilyr
 
       do k = nslyr, 1, -1
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1746,6 +1746,14 @@
             dzs(ij,k) = dzs(ij,k) + dhs         ! zqsn < 0, dhs < 0
             ebot_mlt(ij) = ebot_mlt(ij) - dhs*zqsn(ij,k)
             ebot_mlt(ij) = max(ebot_mlt(ij), c0)
+
+            !-----------------------------------------------------------
+            ! Added here to ensure that the snow-thickness diagostics
+            ! are closed. This is needed for isotope update.
+            !   hs = hs_old + evap - melts - dhs_snoice + dhs_snow
+            ! Jiang Zhu (jzhu47@wisc.edu), Nov. 20, 2014
+            !-----------------------------------------------------------
+            melts(i,j) = melts(i,j) - dhs
 
          enddo                  ! ij
       enddo                     ! nslyr
@@ -1767,7 +1775,7 @@
 !---! Add new snowfall at top surface.
 !---!-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -1805,7 +1813,7 @@
       enddo
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1814,7 +1822,7 @@
       enddo                     ! k
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1881,7 +1889,7 @@
       if (heat_capacity) then
 
          do k = 1, nilyr-1
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1934,7 +1942,7 @@
          enddo
 
          do k = 1, nslyr-1
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -1988,7 +1996,7 @@
       enddo
 
       do k = 1, nslyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -1997,7 +2005,7 @@
       enddo
 
       do k = 1, nilyr
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2123,7 +2131,7 @@
       !-----------------------------------------------------------------
 
       do k = nslyr, 1, -1
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2145,7 +2153,7 @@
       ! Transfer volume and energy from snow to top ice layer.
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -2243,7 +2251,7 @@
          enddo
       enddo                     ! k
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -2345,7 +2353,7 @@
       !----------------------------------------------------------------
       ! If energy is not conserved, print diagnostics and exit.
       !----------------------------------------------------------------
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
     do ij = 1, icells
@@ -2471,7 +2479,7 @@
          ij          , & ! horizontal index, combines i and j loops
          k               ! ice layer index
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells

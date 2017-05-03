@@ -4,7 +4,7 @@
 Set CICE cppdefs
 """
 
-import os, sys 
+import os, sys, re
 
 CIMEROOT = os.environ.get("CIMEROOT")
 if CIMEROOT is None:
@@ -25,9 +25,13 @@ logger = logging.getLogger(__name__)
 def buildcpp(case):
 ###############################################################################
 
+    # determine cice_config_opts
+    cice_config_opts = case.get_value('CICE_CONFIG_OPTS')
+
     # set ice grid settings
     nx = case.get_value("ICE_NX")
     ny = case.get_value("ICE_NY")
+
     ice_grid = case.get_value('ICE_GRID')
     if ice_grid == 'ar9v2':
         hgrid = 'ar9v1'
@@ -66,45 +70,55 @@ def buildcpp(case):
             case.set_value("CICE_DECOMPTYPE", config[5])
             case.set_value("CICE_DECOMPSETTING", config[6])
 
-    # set cice mode
+    # set cice mode and cice_config_opts
     cice_mode = case.get_value("CICE_MODE")
         
     # set cice physics
-    cice_config_opts = case.get_value('CICE_CONFIG_OPTS')
     if "cice5" in cice_config_opts:
         phys = "cice5"
     elif "cice4" in cice_config_opts:
         phys = "cice4"
 
-    # set number of aerosol tracers (valid values are 0->6)
     if cice_mode == 'prescribed':
         ntr_aero = 0
     else:
         ntr_aero = 3
+    ntr_aero = set_nondefault_cpp(cice_config_opts, "ntr_aero", ntr_aero) 
 
     # set number of bgc tracers (valid values are 0->10)
     if cice_mode == 'prescribed':
         nbgclyr = 0
     else:
         nbgclyr = 3
-        
+    nbgclyr = set_nondefault_cpp(cice_config_opts, "nbgclyr", nbgclyr) 
+
+    # set isotope tracer
+    ntr_iso = 0
+    ntr_iso = set_nondefault_cpp(cice_config_opts, "ntr_iso", ntr_iso) 
+
     # set age tracer
     trage = 1
+    trage = set_nondefault_cpp(cice_config_opts, "trage", trage) 
 
     # set first year ice tracer (valid values are 0,1)
     trfy = 1
+    trfy = set_nondefault_cpp(cice_config_opts, "trfy", trfy) 
 
     # set pond tracer (valid values are 0,1)
     trpnd = 1
+    trpnd = set_nondefault_cpp(cice_config_opts, "trpnd", trpnd) 
 
     # set level ice tracer (valid values are 0,1)
     trlvl = 1
+    trlvl = set_nondefault_cpp(cice_config_opts, "trlvl", trlvl) 
 
     # set brine tracer (valid values are 0,1)
     trbri = 0
+    trbri = set_nondefault_cpp(cice_config_opts, "trbri", trbri) 
 
     # set skeletal layer tracer (valid values are 0,1)
     trbgcs = 0
+    trbgcs = set_nondefault_cpp(cice_config_opts, "trbgcs", trbgcs) 
 
     # set number of ice layers
     if phys == "cice4":
@@ -113,15 +127,15 @@ def buildcpp(case):
         nicelyr = 7
     else:
         nicelyr = 8
-        
+
     # set number of snow layers
     if phys == "cice4":
         nsnwlyr = 1
     else:
         nsnwlyr = 3
 
-    # set number of ice categories - TODO - talk to Dave about this
-    # Note that ICE_NCAT is used by both cice and pop - but is set by cice
+    # set number of ice categories 
+    # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
     # and as a result it is assumed that the cice buildcpp is called 
     # BEFORE the pop buildcpp. This order is set by the xml variable
     # COMP_CLASSES in the driver config_component.xml file
@@ -129,6 +143,7 @@ def buildcpp(case):
         ncat = 1
     else:
         ncat = 5
+    ncat = set_nondefault_cpp(cice_config_opts, "ncat", ncat) 
     case.set_value("ICE_NCAT",ncat)
     logger.debug("cice: number of ice categories (ncat) is %s" %ncat)
 
@@ -138,10 +153,10 @@ def buildcpp(case):
     cice_mxblcks = case.get_value("CICE_MXBLCKS")
 
     cice_cppdefs = " -DCCSMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 " \
-                   " -DNICECAT=%s -DNXGLOB=%s -DNYGLOB=%s -DNTRAERO=%s " \
+                   " -DNICECAT=%s -DNXGLOB=%s -DNYGLOB=%s -DNTRAERO=%s -DNTRISO=%s" \
                    " -DNBGCLYR=%s -DNICELYR=%s -DNSNWLYR=%s"  \
                    " -DTRAGE=%s -DTRFY=%s -DTRLVL=%s -DTRPND=%s -DTRBRI=%s -DTRBGCS=%s" \
-                   %(ncat,nx,ny,ntr_aero,nbgclyr,nicelyr,nsnwlyr,trage,trfy,trlvl,trpnd,trbri,trbgcs)
+                   %(ncat,nx,ny,ntr_aero,ntr_iso,nbgclyr,nicelyr,nsnwlyr,trage,trfy,trlvl,trpnd,trbri,trbgcs)
 
     # trigger RASM options with ar9v grid, otherwise set CESM options
     if "ar9v" in hgrid:
@@ -155,6 +170,16 @@ def buildcpp(case):
     case.flush()
 
     return cice_cppdefs
+
+###############################################################################
+def set_nondefault_cpp(cice_config_opts, string, value):
+
+    # overwrite value if need be
+    if string in cice_config_opts:
+        match = re.search(r"\s*-%s\s*(\d+)\s*"%string, cice_config_opts)
+        if match is not None:
+            value = match.group(1)
+    return value
 
 ###############################################################################
 def _main_func():

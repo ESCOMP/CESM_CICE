@@ -28,6 +28,8 @@
 
         max_aero  =   6       , & ! maximum number of aerosols 
         n_aero    = NTRAERO   , & ! number of aerosols in use
+        max_iso   =   3       , & ! maximum number of isotopes
+        n_iso     = NTRISO    , & ! number of isotopes in use
 
         nblyr     = NBGCLYR   , & ! number of bio/brine layers per category
         max_nbtrcr=   9       , & ! maximum number of biology tracers
@@ -43,6 +45,7 @@
                   + TRLVL*2     & ! level/deformed ice
                   + TRPND*3     & ! ponds
                   + n_aero*4    & ! number of aerosols * 4 aero layers
+                  + n_iso*4     & ! number of isotopes * 4 isotope layers
                   + TRBRI       & ! brine height
                   + TRBGCS    , & ! skeletal layer BGC
 !                  + TRBGCZ*nltrcr*nblyr ! for zbgc (off if TRBRI=0)

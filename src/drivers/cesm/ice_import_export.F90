@@ -16,13 +16,15 @@ module ice_import_export
   use ice_flux        , only: fresh, fsalt, zlvl, uatm, vatm, potT, Tair, Qa
   use ice_flux        , only: rhoa, swvdr, swvdf, swidr, swidf, flw, frain
   use ice_flux        , only: fsnow, uocn, vocn, sst, ss_tltx, ss_tlty, frzmlt
-  use ice_flux        , only: sss, tf, wind, fsw, init_flux_atm, init_flux_ocn, faero_atm
-  use ice_flux        , only: faero_ocn
+  use ice_flux        , only: sss, tf, wind, fsw, init_flux_atm, init_flux_ocn
+  use ice_flux        , only: faero_atm, faero_ocn
+  use ice_flux        , only: fiso_atm, fiso_ocn, fiso_rain, fiso_evap, &
+                              Qa_iso, Qref_iso, HDO_ocn, H2_18O_ocn, H2_16O_ocn
   use ice_flux        , only: send_i2x_per_cat, fswthrun_ai
   use ice_ocean       , only: tfrz_option
   use ice_atmo        , only: Cdn_atm
   use ice_state       , only: vice, vsno, aice, aicen_init, trcr
-  use ice_state       , only: tr_aero, tr_iage, tr_FY, tr_pond, tr_lvl
+  use ice_state       , only: tr_aero, tr_iso, tr_iage, tr_FY, tr_pond, tr_lvl
   use ice_domain      , only: nblocks, blocks_ice, halo_info, distrb_info
   use ice_domain_size , only: nx_global, ny_global, block_size_x, block_size_y, max_blocks, ncat
   use ice_grid        , only: tlon, tlat, tarea, tmask, anglet, hm
@@ -256,6 +258,25 @@ contains
                   + x2i(index_x2i_Faxa_dstwet4,n) &
                   + x2i(index_x2i_Faxa_dstdry4,n)
 
+             if (index_x2i_Sa_shum_HDO > 0) then
+
+             Qa_iso(i,j,1,iblk)  = x2i(index_x2i_Sa_shum_HDO,n)
+             Qa_iso(i,j,2,iblk)  = x2i(index_x2i_Sa_shum_16O,n)
+             Qa_iso(i,j,3,iblk)  = x2i(index_x2i_Sa_shum_18O,n)
+
+             fiso_rain(i,j,1,iblk) = x2i(index_x2i_Faxa_rain_HDO,n)
+             fiso_rain(i,j,2,iblk) = x2i(index_x2i_Faxa_rain_16O,n)
+             fiso_rain(i,j,3,iblk) = x2i(index_x2i_Faxa_rain_18O,n)
+
+             fiso_atm(i,j,1,iblk) = x2i(index_x2i_Faxa_snow_HDO,n)
+             fiso_atm(i,j,2,iblk) = x2i(index_x2i_Faxa_snow_16O,n)
+             fiso_atm(i,j,3,iblk) = x2i(index_x2i_Faxa_snow_18O,n)
+
+             HDO_ocn(i,j,iblk)    = x2i(index_x2i_So_roce_HDO,n)
+             H2_16O_ocn(i,j,iblk) = x2i(index_x2i_So_roce_16O,n)
+             H2_18O_ocn(i,j,iblk) = x2i(index_x2i_So_roce_18O,n)
+
+             endif
           enddo    !i
        enddo    !j
 
@@ -537,6 +558,20 @@ contains
                  i2x(index_i2x_Fioi_bcphi ,n)  = faero_ocn(i,j,2,iblk)  ! hydrophilic bc
                 if ( index_i2x_Fioi_flxdst > 0) &
                  i2x(index_i2x_Fioi_flxdst,n)  = faero_ocn(i,j,3,iblk)  ! dust
+
+                if (index_i2x_Fioi_meltw_HDO > 0) then
+
+                i2x(index_i2x_Fioi_meltw_HDO,n) = fiso_ocn (i,j,1,iblk)  !  Isotopes to ocean
+                i2x(index_i2x_Fioi_meltw_16O,n) = fiso_ocn (i,j,2,iblk)  !  Isotopes to ocean
+                i2x(index_i2x_Fioi_meltw_18O,n) = fiso_ocn (i,j,3,iblk)  !  Isotopes to ocean
+                i2x(index_i2x_Faii_evap_HDO ,n) = fiso_evap(i,j,1,iblk)  !  Isotope evap to atm
+                i2x(index_i2x_Faii_evap_16O ,n) = fiso_evap(i,j,2,iblk)  !  Isotope evap to atm
+                i2x(index_i2x_Faii_evap_18O ,n) = fiso_evap(i,j,3,iblk)  !  Isotope evap to atm
+                i2x(index_i2x_Si_qref_HDO   ,n) = Qref_iso(i,j,1,iblk)  !  Isotope qref to atm
+                i2x(index_i2x_Si_qref_16O   ,n) = Qref_iso(i,j,2,iblk)  !  Isotope qref to atm
+                i2x(index_i2x_Si_qref_18O   ,n) = Qref_iso(i,j,3,iblk)  !  Isotope qref to atm
+
+                endif
              end if
           enddo    !i
        enddo    !j

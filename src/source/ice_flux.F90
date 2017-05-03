@@ -16,7 +16,7 @@
       use ice_kinds_mod
       use ice_fileunits, only: nu_diag
       use ice_blocks, only: nx_block, ny_block
-      use ice_domain_size, only: max_blocks, ncat, max_aero, max_nstrm, nilyr
+      use ice_domain_size, only: max_blocks, ncat, max_aero, max_iso, max_nstrm, nilyr
       use ice_constants, only: c0, c1, c5, c10, c20, c180, dragio, &
           depressT, stefan_boltzmann, Tffresh, emissivity
 
@@ -148,6 +148,12 @@
          dimension (nx_block,ny_block,max_aero,max_blocks), public :: &
          faero_atm   ! aerosol deposition rate (kg/m^2 s)
 
+      real (kind=dbl_kind), &
+         dimension (nx_block,ny_block,max_iso,max_blocks), public :: &
+         fiso_atm, &   ! isotope deposition rate (kg/m^2 s)
+         Qa_iso,   &   ! isotope surface specfic humidity (kg/kg)
+         fiso_rain     ! isotope rainfall rate (kg/m^2 s)
+
        ! in from ocean
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
@@ -160,6 +166,11 @@
          hmix    , & ! mixed layer depth (m)
          daice_da    ! data assimilation concentration increment rate 
                      ! (concentration s-1)(only used in hadgem drivers)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
+         HDO_ocn    , & ! isotopes
+         H2_16O_ocn , & ! isotopes
+         H2_18O_ocn     ! isotopes
 
        ! out to atmosphere (if calc_Tsfc)
        ! note Tsfc is in ice_state.F
@@ -202,6 +213,11 @@
          dimension(nx_block,ny_block,max_blocks,max_nstrm), public :: &
          albcnt       ! counter for zenith angle
 
+      real (kind=dbl_kind), &
+        dimension (nx_block,ny_block,max_iso,max_blocks), public :: &
+         fiso_evap, & ! isotope evaporation to atm (kg/m^2/s)
+         Qref_iso     ! 2m atm reference spec humidity (kg/kg)
+
        ! out to ocean 
        ! (Note CICE_IN_NEMO does not use these for coupling.  
        !  It uses fresh_ai,fsalt_ai,fhocn_ai and fswthru_ai)
@@ -224,6 +240,10 @@
       real (kind=dbl_kind), &
         dimension (nx_block,ny_block,max_aero,max_blocks), public :: &
          faero_ocn   ! aerosol flux to ocean  (kg/m^2/s)
+
+      real (kind=dbl_kind), &
+        dimension (nx_block,ny_block,max_iso,max_blocks), public :: &
+         fiso_ocn    ! isotope flux to ocean  (kg/m^2/s)
 
        ! internal
 
@@ -391,6 +411,7 @@
          potT  (:,:,:) = 263.15_dbl_kind ! air potential temp (K)
          Tair  (:,:,:) = 263.15_dbl_kind ! air temperature  (K)
          Qa    (:,:,:) = 0.001_dbl_kind  ! specific humidity (kg/kg)
+         Qa_iso(:,:,:,:) = 0.001_dbl_kind  ! specific humidity (kg/kg)
          swvdr (:,:,:) = 25._dbl_kind    ! shortwave radiation (W/m^2)
          swvdf (:,:,:) = 25._dbl_kind    ! shortwave radiation (W/m^2)
          swidr (:,:,:) = 25._dbl_kind    ! shortwave radiation (W/m^2)
@@ -407,6 +428,7 @@
          potT  (:,:,:) = 253.0_dbl_kind  ! air potential temp (K)
          Tair  (:,:,:) = 253.0_dbl_kind  ! air temperature  (K)
          Qa    (:,:,:) = 0.0006_dbl_kind ! specific humidity (kg/kg)
+         Qa_iso(:,:,:,:) = 0.0006_dbl_kind ! specific humidity (kg/kg)
          swvdr (:,:,:) = c0              ! shortwave radiation (W/m^2)
          swvdf (:,:,:) = c0              ! shortwave radiation (W/m^2)
          swidr (:,:,:) = c0              ! shortwave radiation (W/m^2)
@@ -424,6 +446,7 @@
          potT  (:,:,:) = 273.0_dbl_kind  ! air potential temp (K)
          Tair  (:,:,:) = 273.0_dbl_kind  ! air temperature  (K)
          Qa    (:,:,:) = 0.0035_dbl_kind ! specific humidity (kg/kg)
+         Qa_iso(:,:,:,:) = 0.0035_dbl_kind ! specific humidity (kg/kg)
          swvdr (:,:,:) = 50._dbl_kind    ! shortwave radiation (W/m^2)
          swvdf (:,:,:) = 50._dbl_kind    ! shortwave radiation (W/m^2)
          swidr (:,:,:) = 50._dbl_kind    ! shortwave radiation (W/m^2)
@@ -439,6 +462,8 @@
       endif !     l_winter
 
       faero_atm (:,:,:,:) = c0           ! aerosol deposition rate (kg/m2/s)
+      fiso_atm  (:,:,:,:) = c0           ! isotope deposition rate (kg/m2/s)
+      fiso_rain (:,:,:,:) = c0           ! isotopic rain rate (kg/m2/s)
 
       !-----------------------------------------------------------------
       ! fluxes received from ocean
@@ -484,6 +509,9 @@
       alidr   (:,:,:) = c0
       alvdf   (:,:,:) = c0
       alidf   (:,:,:) = c0
+
+      fiso_evap (:,:,:,:)   = c0  ! isotope evaporation to atm (kg/m2/s)
+      Qref_iso (:,:,:,:)   = c0  ! 2m atm reference spec humidity (kg/kg)
 
       !-----------------------------------------------------------------
       ! fluxes sent to ocean
@@ -570,6 +598,7 @@
       fhocn    (:,:,:)   = c0
       fswthru  (:,:,:)   = c0
       faero_ocn(:,:,:,:) = c0
+      fiso_ocn (:,:,:,:) = c0
  
       flux_bio (:,:,:,:) = c0  ! bgc
 
@@ -740,7 +769,11 @@
                                meltt,  melts,        &
                                meltb,                &
                                congel,  snoice,      &
-                               Uref,     Urefn       )
+                               Uref,     Urefn,      &
+                               Qref_iso, Qrefn_iso,  &
+                               fiso_evap,fiso_evapn, &
+                               fiso_ocn, fiso_ocnn   )
+
                                
       integer (kind=int_kind), intent(in) :: &
           nx_block, ny_block, & ! block dimensions
@@ -783,6 +816,11 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block), optional, intent(in):: &
           Urefn       ! air speed reference level       (m/s)
 
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_iso), optional, intent(in):: &
+          Qrefn_iso, &
+          fiso_evapn,&
+          fiso_ocnn
+
       ! cumulative fluxes
       real (kind=dbl_kind), dimension(nx_block,ny_block), &
           intent(inout):: &
@@ -814,6 +852,12 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block), optional, &
           intent(inout):: &
           Uref        ! air speed reference level       (m/s)
+
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_iso), optional, &
+          intent(inout):: &
+          Qref_iso, &
+          fiso_evap, &
+          fiso_ocn
 
       integer (kind=int_kind) :: &
           ij, i, j    ! horizontal indices
@@ -853,6 +897,15 @@
          Qref     (i,j)  = Qref    (i,j) + Qrefn   (i,j)*aicen(i,j)
          if (present(Urefn) .and. present(Uref)) then
             Uref  (i,j)  = Uref    (i,j) + Urefn   (i,j)*aicen(i,j)
+         endif
+         if (present(Qrefn_iso) .and. present(Qref_iso)) then
+            Qref_iso(i,j,:)  = Qref_iso(i,j,:) + Qrefn_iso(i,j,:)*aicen(i,j)
+         endif
+         if (present(fiso_evapn) .and. present(fiso_evap)) then
+            fiso_evap(i,j,:)  = fiso_evap(i,j,:) + fiso_evapn(i,j,:)*aicen(i,j)
+         endif
+         if (present(fiso_ocnn) .and. present(fiso_ocn)) then
+            fiso_ocn (i,j,:)  = fiso_ocn (i,j,:) + fiso_ocnn (i,j,:)*aicen(i,j)
          endif
 
          ! ocean fluxes
@@ -897,7 +950,11 @@
                                alvdf,    alidf,    &
                                flux_bio,           &
                                fsurf,    fcondtop, &
-                               Uref,     wind      )
+                               Uref,     wind,     &
+                               Qref_iso,           &
+                               fiso_evap,          &
+                               fiso_ocn)
+
 
       integer (kind=int_kind), intent(in) :: &
           nx_block, ny_block, &    ! block dimensions
@@ -943,6 +1000,12 @@
           intent(inout):: &
           Uref        ! air speed reference level       (m/s)
 
+      real (kind=dbl_kind), dimension(nx_block,ny_block,max_iso), optional, &
+          intent(inout):: &
+          Qref_iso, &
+          fiso_evap, &
+          fiso_ocn
+
       real (kind=dbl_kind), dimension(nx_block,ny_block,nbtrcr), &
           intent(inout):: &
           flux_bio    ! tracer flux to ocean from biology (mmol/m2/s)
@@ -983,6 +1046,15 @@
             if (present(Uref)) then
                Uref    (i,j) = Uref    (i,j) * ar
             endif
+            if (present(Qref_iso)) then
+               Qref_iso(i,j,:) = Qref_iso(i,j,:) * ar
+            endif
+            if (present(fiso_evap)) then
+               fiso_evap(i,j,:) = fiso_evap(i,j,:) * ar
+            endif
+            if (present(fiso_ocn)) then
+               fiso_ocn(i,j,:) = fiso_ocn(i,j,:) * ar
+            endif
             fresh   (i,j) = fresh   (i,j) * ar
             fsalt   (i,j) = fsalt   (i,j) * ar
             fhocn   (i,j) = fhocn   (i,j) * ar
@@ -1006,6 +1078,15 @@
             Qref    (i,j) = Qa  (i,j)
             if (present(Uref) .and. present(wind)) then
                Uref    (i,j) = wind(i,j)
+            endif
+            if (present(Qref_iso)) then
+               Qref_iso(i,j,:) = Qa(i,j)
+            endif
+            if (present(fiso_evap)) then
+               fiso_evap(i,j,:) = c0
+            endif
+            if (present(fiso_evap)) then
+               fiso_ocn(i,j,:) = c0
             endif
             fresh   (i,j) = c0
             fsalt   (i,j) = c0

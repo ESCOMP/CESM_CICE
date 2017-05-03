@@ -68,6 +68,9 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
         config['ntraero'] = "0"
 
+    if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntriso'] = "0"
+
     # Note - xml ICE_NCAT, CICE_DECOMPSETTING, CICE_DECOMPTYPE are used 
     # in setting the cice namelist and are set in buildlib: 
 

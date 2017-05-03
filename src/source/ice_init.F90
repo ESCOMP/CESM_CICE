@@ -41,7 +41,7 @@
       use ice_broadcast, only: broadcast_scalar, broadcast_array
       use ice_constants, only: c0, c1, puny
       use ice_diagnostics, only: diag_file, print_global, print_points, latpnt, lonpnt
-      use ice_domain_size, only: max_nstrm, nilyr, nslyr, max_ntrcr, ncat, n_aero
+      use ice_domain_size, only: max_nstrm, nilyr, nslyr, max_ntrcr, ncat, n_aero, n_iso
       use ice_fileunits, only: nu_nml, nu_diag, nml_filename, diag_type, &
           ice_stdout, get_fileunit, release_fileunit, bfbflag
       use ice_fileunits, only: inst_suffix
@@ -75,15 +75,16 @@
       use ice_atmo, only: atmbndy, calc_strair, formdrag, highfreq, natmiter
       use ice_transport_driver, only: advection
       use ice_state, only: tr_iage, tr_FY, tr_lvl, tr_pond, &
-                           tr_pond_cesm, tr_pond_lvl, tr_pond_topo, tr_aero, &
+                           tr_pond_cesm, tr_pond_lvl, tr_pond_topo, tr_aero, tr_iso, &
                            nt_Tsfc, nt_qice, nt_qsno, nt_sice, nt_iage, nt_FY, &
-                           nt_alvl, nt_vlvl, nt_apnd, nt_hpnd, nt_ipnd, nt_aero, &
+                           nt_alvl, nt_vlvl, nt_apnd, nt_hpnd, nt_ipnd, nt_aero, nt_iso, &
                            ntrcr
       use ice_meltpond_cesm, only: restart_pond_cesm, hs0
       use ice_meltpond_topo, only: hp1, restart_pond_topo
       use ice_meltpond_lvl, only: restart_pond_lvl, dpscale, frzpnd, &
                                   rfracmin, rfracmax, pndaspect, hs1
       use ice_aerosol, only: restart_aero
+      use ice_isotope, only: restart_iso
       use ice_therm_shared, only: ktherm, calc_Tsfc, conduct
       use ice_therm_vertical, only: ustar_min, fbot_xfer_type
       use ice_therm_mushy, only: a_rapid_mode, Rac_rapid_mode, aspect_rapid_mode, &
@@ -167,7 +168,8 @@
         tr_pond_cesm, restart_pond_cesm, &
         tr_pond_lvl, restart_pond_lvl, &
         tr_pond_topo, restart_pond_topo, &
-        tr_aero, restart_aero
+        tr_aero, restart_aero, &
+        tr_iso, restart_iso
 
       !-----------------------------------------------------------------
       ! default values
@@ -312,6 +314,8 @@
       restart_pond_topo = .false. ! melt ponds restart
       tr_aero      = .false. ! aerosols
       restart_aero = .false. ! aerosols restart
+      tr_iso      = .false. ! isotopes
+      restart_iso = .false. ! isotopes restart
 
       ! mushy layer gravity drainage physics
       a_rapid_mode      =  0.5e-3_dbl_kind ! channel radius for rapid drainage mode (m)
@@ -554,6 +558,15 @@
          call abort_ice('ice: aerosol tracer conflict: comp_ice, ice_in')
       endif
 
+      if (tr_iso .and. n_iso==0) then
+         if (my_task == master_task) then
+            write (nu_diag,*) 'WARNING: isotopes activated but'
+            write (nu_diag,*) 'WARNING: not allocated in tracer array.'
+            write (nu_diag,*) 'WARNING: Activate in compilation script.'
+         endif
+         call abort_ice('ice: isotope tracer conflict: comp_ice, ice_in')
+      endif
+
       if (tr_aero .and. trim(shortwave) /= 'dEdd') then
          if (my_task == master_task) then
             write (nu_diag,*) 'WARNING: aerosols activated but dEdd'
@@ -774,6 +787,8 @@
       call broadcast_scalar(tr_pond,            master_task)
       call broadcast_scalar(tr_aero,            master_task)
       call broadcast_scalar(restart_aero,       master_task)
+      call broadcast_scalar(tr_iso,             master_task)
+      call broadcast_scalar(restart_iso,        master_task)
       call broadcast_scalar(a_rapid_mode,       master_task)
       call broadcast_scalar(Rac_rapid_mode,     master_task)
       call broadcast_scalar(aspect_rapid_mode,  master_task)
@@ -1005,6 +1020,8 @@
          write(nu_diag,1010) ' restart_pond_topo         = ', restart_pond_topo
          write(nu_diag,1010) ' tr_aero                   = ', tr_aero
          write(nu_diag,1010) ' restart_aero              = ', restart_aero
+         write(nu_diag,1010) ' tr_iso                    = ', tr_iso
+         write(nu_diag,1010) ' restart_iso               = ', restart_iso
 
          nt_Tsfc = 1           ! index tracers, starting with Tsfc = 1
          ntrcr = 1             ! count tracers, starting with Tsfc = 1
@@ -1063,6 +1080,12 @@
              ntrcr = ntrcr + 4*n_aero ! 4 dEdd layers, n_aero species
          endif
               
+         nt_iso = 0
+         if (tr_iso) then
+             nt_iso = ntrcr + 1
+             ntrcr = ntrcr + 4*n_iso ! 4 dEdd layers, n_iso species
+         endif
+              
          if (ntrcr > max_ntrcr) then
             write(nu_diag,*) 'max_ntrcr < number of namelist tracers'
             write(nu_diag,*) 'max_ntrcr = ',max_ntrcr,' ntrcr = ',ntrcr
@@ -1114,6 +1137,7 @@
       call broadcast_scalar(nt_hpnd,  master_task)
       call broadcast_scalar(nt_ipnd,  master_task)
       call broadcast_scalar(nt_aero,  master_task)
+      call broadcast_scalar(nt_iso,  master_task)
 
       if (formdrag) then
          if (nt_apnd==0) then
@@ -1148,14 +1172,15 @@
       use ice_blocks, only: block, get_block, nx_block, ny_block
       use ice_constants, only: c0
       use ice_domain, only: nblocks, blocks_ice
-      use ice_domain_size, only: nilyr, nslyr, max_ntrcr, n_aero
+      use ice_domain_size, only: nilyr, nslyr, max_ntrcr, n_aero, n_iso
       use ice_fileunits, only: nu_diag
       use ice_flux, only: sst, Tf, Tair, salinz, Tmltz
       use ice_grid, only: tmask, ULON, ULAT
       use ice_state, only: trcr_depend, tr_iage, tr_FY, tr_lvl, &
           tr_pond_cesm, nt_apnd, tr_pond_lvl, nt_alvl, tr_pond_topo, &
           nt_Tsfc, nt_sice, nt_qice, nt_qsno, nt_iage, nt_FY, nt_vlvl, &
-          nt_hpnd, nt_ipnd, tr_aero, nt_aero, aicen, trcrn, vicen, vsnon, &
+          nt_hpnd, nt_ipnd, tr_aero, nt_aero, tr_iso, nt_iso, &
+          aicen, trcrn, vicen, vsnon, &
           aice0, aice, vice, vsno, trcr, ntrcr, aice_init, bound_state
       use ice_itd, only: aggregate
       use ice_exit, only: abort_ice
@@ -1249,6 +1274,14 @@
             trcr_depend(nt_aero+(it-1)*4+1) = 2 ! snow
             trcr_depend(nt_aero+(it-1)*4+2) = 1 ! ice
             trcr_depend(nt_aero+(it-1)*4+3) = 1 ! ice
+         enddo
+      endif
+      if (tr_iso) then ! volume-weighted isotopes
+         do it = 1, n_iso
+            trcr_depend(nt_iso+(it-1)*4  ) = 2 ! snow
+            trcr_depend(nt_iso+(it-1)*4+1) = 2 ! snow
+            trcr_depend(nt_iso+(it-1)*4+2) = 1 ! ice
+            trcr_depend(nt_iso+(it-1)*4+3) = 1 ! ice
          enddo
       endif
 

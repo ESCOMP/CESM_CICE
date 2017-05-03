@@ -28,7 +28,7 @@
       use ice_kinds_mod
       use ice_constants
       use ice_communicate, only: my_task, master_task
-      use ice_domain_size, only: ncat, max_aero, nilyr, nslyr, n_aero, nblyr
+      use ice_domain_size, only: ncat, max_aero, max_iso, nilyr, nslyr, n_aero, n_iso, nblyr
       use ice_fileunits, only: nu_diag
 
       implicit none
@@ -1520,6 +1520,7 @@
                               fresh,                   &
                               fsalt,       fhocn,      &
                               faero_ocn,   tr_aero,    &
+                              fiso_ocn,    tr_iso,     &
                               tr_pond_topo,            &
                               heat_capacity,           &
                               nbtrcr,      first_ice,  &
@@ -1556,6 +1557,7 @@
 
       logical (kind=log_kind), intent(in) :: &
          tr_aero,      & ! aerosol flag
+         tr_iso,       & ! isotope flag
          tr_pond_topo, & ! topo pond flag
          heat_capacity   ! if false, ice and snow have zero heat capacity
 
@@ -1588,6 +1590,10 @@
          intent(inout), optional :: &
          faero_ocn    ! aerosol flux to ocean     (kg/m^2/s)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
+         intent(inout), optional :: &
+         fiso_ocn     ! isotope flux to ocean     (kg/m^2/s)
+
       logical (kind=log_kind), intent(in), optional ::   &
          limit_aice_in      ! if false, allow aice to be out of bounds
                             ! may want to allow this for unit tests
@@ -1611,6 +1617,9 @@
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_aero) :: &
          dfaero_ocn   ! zapped aerosol flux   (kg/m^2/s)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso) :: &
+         dfiso_ocn    ! zapped isotope flux   (kg/m^2/s)
+
       logical (kind=log_kind) ::   &
          limit_aice         ! if true, check for aice out of bounds
 
@@ -1633,6 +1642,7 @@
       dfsalt(:,:) = c0
       dfhocn(:,:) = c0
       dfaero_ocn(:,:,:) = c0
+      dfiso_ocn(:,:,:) = c0
 
       !-----------------------------------------------------------------
       ! Compute total ice area.
@@ -1713,8 +1723,10 @@
                                vicen,    vsnon,     &
                                dfpond,              &
                                dfresh,   dfsalt,    &
-                               dfhocn,   dfaero_ocn,&
-                               tr_aero,  tr_pond_topo, &
+                               dfhocn,   &
+                               dfaero_ocn,tr_aero,  &
+                               dfiso_ocn,  tr_iso,  &
+                               tr_pond_topo, &
                                first_ice,nbtrcr,    &
                                flux_bio, l_stop,    &
                                istop,    jstop)
@@ -1731,7 +1743,8 @@
                                 aicen,                &
                                 trcrn,      vsnon,    &
                                 dfresh,     dfhocn,   &
-                                dfaero_ocn, tr_aero)
+                                dfaero_ocn, tr_aero,  &
+                                dfiso_ocn, tr_iso)
 
     !-------------------------------------------------------------------
     ! Update ice-ocean fluxes for strict conservation
@@ -1747,6 +1760,8 @@
            fhocn     (:,:)   = fhocn(:,:)       + dfhocn(:,:)
       if (present(faero_ocn)) &
            faero_ocn (:,:,:) = faero_ocn(:,:,:) + dfaero_ocn(:,:,:)
+      if (present(fiso_ocn)) &
+           fiso_ocn (:,:,:) = fiso_ocn(:,:,:) + dfiso_ocn(:,:,:)
 
       !----------------------------------------------------------------
       ! If using zero-layer model (no heat capacity), check that the 
@@ -1782,14 +1797,16 @@
                                   vicen,    vsnon,     &
                                   dfpond,              &
                                   dfresh,   dfsalt,    &
-                                  dfhocn,   dfaero_ocn,&
-                                  tr_aero,  tr_pond_topo, &
+                                  dfhocn,   &
+                                  dfaero_ocn,tr_aero,  &
+                                  dfiso_ocn, tr_iso,   &
+                                  tr_pond_topo, &
                                   first_ice,nbtrcr,    &
                                   flux_bio, l_stop,    &
                                   istop,    jstop)
 
-      use ice_state, only: nt_Tsfc, nt_qice, nt_qsno, nt_aero, nt_apnd, nt_hpnd, &
-                           nt_fbri, tr_brine
+      use ice_state, only: nt_Tsfc, nt_qice, nt_qsno, nt_aero, nt_iso, &
+                           nt_apnd, nt_hpnd, nt_fbri, tr_brine
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -1830,8 +1847,13 @@
          intent(out) :: &
          dfaero_ocn   ! zapped aerosol flux   (kg/m^2/s)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
+         intent(out) :: &
+         dfiso_ocn   ! zapped isotope flux   (kg/m^2/s)
+
       logical (kind=log_kind), intent(in) :: &
          tr_aero, &   ! aerosol flag
+         tr_iso, &   ! isotope flag
          tr_pond_topo ! pond flag
 
       logical (kind=log_kind), dimension (nx_block,ny_block,ncat),intent(inout) :: &
@@ -1928,6 +1950,21 @@
             enddo                  ! ij
          endif
 
+         if (tr_iso) then
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+               do it = 1, n_iso
+                  xtmp = (vicen(i,j,n)*(trcrn(i,j,nt_iso+2+4*(it-1),n) &
+                                      + trcrn(i,j,nt_iso+3+4*(it-1),n)))/dt
+                  dfiso_ocn(i,j,it) = dfiso_ocn(i,j,it) + xtmp
+               enddo                 ! n
+            enddo                  ! ij
+         endif
+
       !-----------------------------------------------------------------
       ! Zap ice energy and use ocean heat to melt ice
       !-----------------------------------------------------------------
@@ -1981,7 +2018,8 @@
                        dt,             ntrcr,        &
                        trcrn(:,:,:,n), vsnon(:,:,n), &
                        dfresh,         dfhocn,       &
-                       dfaero_ocn,     tr_aero)
+                       dfaero_ocn,     tr_aero,      &
+                       dfiso_ocn,      tr_iso)
 
       !-----------------------------------------------------------------
       ! Zap tracers
@@ -2077,12 +2115,30 @@
             enddo                  ! ij
          endif
 
+         if (tr_iso) then
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+               do it = 1, n_iso
+                  xtmp = (vsnon(i,j,n)*(trcrn(i,j,nt_iso  +4*(it-1),n) &
+                                      + trcrn(i,j,nt_iso+1+4*(it-1),n)) &
+                       +  vicen(i,j,n)*(trcrn(i,j,nt_iso+2+4*(it-1),n) &
+                                      + trcrn(i,j,nt_iso+3+4*(it-1),n))) &
+                       * (aice(i,j)-c1)/aice(i,j) / dt
+                  dfiso_ocn(i,j,it) = dfiso_ocn(i,j,it) + xtmp
+               enddo               ! it
+            enddo                  ! ij
+         endif
+
       !----------------------------------------------------------------- 
       ! Zap ice energy and use ocean heat to melt ice 
       !----------------------------------------------------------------- 
        
          do k = 1, nilyr 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu 
             do ij = 1, icells 
@@ -2102,7 +2158,7 @@
       !----------------------------------------------------------------- 
 
          do k = 1, nslyr 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu
             do ij = 1, icells
@@ -2121,7 +2177,7 @@
       ! Zap ice and snow volume, add water and salt to ocean
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu 
          do ij = 1, icells 
@@ -2150,7 +2206,7 @@
       ! Correct aice
       !-----------------------------------------------------------------
 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu 
       do ij = 1, icells 
@@ -2172,9 +2228,10 @@
                           dt,         ntrcr,    &
                           trcrn,      vsnon,    &
                           dfresh,     dfhocn,   &
-                          dfaero_ocn, tr_aero)
+                          dfaero_ocn, tr_aero,  &
+                          dfiso_ocn,  tr_iso)
 
-      use ice_state, only: nt_qsno, nt_aero
+      use ice_state, only: nt_qsno, nt_aero, nt_iso
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -2205,8 +2262,13 @@
          intent(inout) :: &
          dfaero_ocn   ! zapped aerosol flux   (kg/m^2/s)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
+         intent(inout) :: &
+         dfiso_ocn   ! zapped isotope flux   (kg/m^2/s)
+
       logical (kind=log_kind), intent(in) :: &
-         tr_aero      ! aerosol flag
+         tr_aero, &      ! aerosol flag
+         tr_iso      ! isotope flag
 
       ! local variables
 
@@ -2218,7 +2280,7 @@
 
       ! aerosols
       if (tr_aero) then
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2235,9 +2297,28 @@
 
       endif ! tr_aero
 
+      ! isotopes
+      if (tr_iso) then
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC 
+!ocl novrec      !Fujitsu
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+
+            do it = 1, n_iso
+               xtmp = (vsnon(i,j)*(trcrn(i,j,nt_iso  +4*(it-1))     &
+                                 + trcrn(i,j,nt_iso+1+4*(it-1))))/dt
+               dfiso_ocn(i,j,it) = dfiso_ocn(i,j,it) + xtmp
+            enddo                 ! it
+
+         enddo               ! ij
+
+      endif ! tr_iso
+
       ! snow enthalpy tracer
       do k = 1, nslyr 
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu
          do ij = 1, icells
@@ -2253,7 +2334,7 @@
       enddo                  ! k
 
       ! snow volume
-!DIR$ CONCURRENT !Cray 
+!DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC 
 !ocl novrec      !Fujitsu
       do ij = 1, icells
@@ -2276,7 +2357,8 @@
                                       aicen,                &
                                       trcrn,      vsnon,    &
                                       dfresh,     dfhocn,   &
-                                      dfaero_ocn, tr_aero)
+                                      dfaero_ocn, tr_aero,  &
+                                      dfiso_ocn,  tr_iso)
 
       use ice_state, only: nt_qsno 
       use ice_therm_shared, only: heat_capacity, Tmin
@@ -2311,8 +2393,13 @@
          intent(inout) :: &
          dfaero_ocn   ! zapped aerosol flux   (kg/m^2/s)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso), &
+         intent(inout) :: &
+         dfiso_ocn   ! zapped isotope flux   (kg/m^2/s)
+
       logical (kind=log_kind), intent(in) :: &
-         tr_aero      ! aerosol flag
+         tr_aero, &      ! aerosol flag
+         tr_iso          ! isotope flag
 
       ! local variables
 
@@ -2407,7 +2494,8 @@
                        dt,             ntrcr,        &
                        trcrn(:,:,:,n), vsnon(:,:,n), &
                        dfresh,         dfhocn,       &
-                       dfaero_ocn,     tr_aero)
+                       dfaero_ocn,     tr_aero,      &
+                       dfiso_ocn,      tr_iso)
 
         enddo ! n
 

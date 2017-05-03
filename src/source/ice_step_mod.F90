@@ -158,6 +158,7 @@
       subroutine step_therm1 (dt, iblk)
 
       use ice_aerosol
+      use ice_isotope
       use ice_age, only: increment_age
       use ice_atmo, only: calc_strair, &
           atmbndy, atmo_boundary_const, atmo_boundary_layer, &
@@ -169,17 +170,19 @@
       use ice_calendar, only: yday, istep1
       use ice_communicate, only: my_task
       use ice_domain, only: blocks_ice
-      use ice_domain_size, only: ncat, nilyr
+      use ice_domain_size, only: ncat, nilyr, max_iso
       use ice_exit, only: abort_ice
       use ice_fileunits, only: nu_diag
       use ice_flux, only: frzmlt, sst, Tf, strocnxT, strocnyT, rside, &
           meltsn, melttn, meltbn, congeln, snoicen, dsnown, uatm, vatm, &
           wind, rhoa, potT, Qa, zlvl, strax, stray, flatn, fsensn, fsurfn, fcondtopn, &
           flw, fsnow, fpond, sss, mlt_onset, frz_onset, faero_atm, faero_ocn, &
+          fiso_atm, fiso_ocn, Qa_iso, Qref_iso, fiso_evap, fiso_rain, &
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
           flat, fswabs, flwout, evap, Tref, Qref, Uref, fresh, fsalt, fhocn, &
           fswthru, meltt, melts, meltb, meltl, congel, snoice, fcondbot, fcondbotn, &
-          set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnic
+          set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnic, &
+          HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_firstyear, only: update_FYarea
       use ice_grid, only: lmask_n, lmask_s, TLAT, TLON
       use ice_itd, only: hi_min
@@ -192,8 +195,9 @@
       use ice_state, only: aice, aicen, aice_init, aicen_init, vicen_init, &
           vice, vicen, vsno, vsnon, ntrcr, trcrn, &
           nt_apnd, nt_hpnd, nt_ipnd, nt_alvl, nt_vlvl, nt_Tsfc, &
-          tr_iage, nt_iage, tr_FY, nt_FY, tr_aero, tr_pond, tr_pond_cesm, &
-          tr_pond_lvl, nt_qice, nt_sice, tr_pond_topo, uvel, vvel
+          tr_iage, nt_iage, tr_FY, nt_FY, tr_aero, tr_iso, &
+          tr_pond, tr_pond_cesm, tr_pond_lvl, &
+          nt_qice, nt_sice, tr_pond_topo, uvel, vvel
       use ice_therm_shared, only: calc_Tsfc
       use ice_therm_vertical, only: frzmlt_bottom_lateral, thermo_vertical
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_ponds
@@ -231,6 +235,11 @@
          Trefn       , & ! air tmp reference level                (K)
          Urefn       , & ! air speed reference level            (m/s)
          Qrefn           ! air sp hum reference level         (kg/kg)
+
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_iso) :: &
+         Qrefn_iso   , & ! air sp hum reference level         (kg/kg)
+         fiso_evapn  , & ! flux of vapor, atmos to ice   (kg m-2 s-1)
+         fiso_ocnn       ! flux of water, ice to ocean     (kg/m^2/s)
 
       ! other local variables
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -426,6 +435,8 @@
                                    lhcoef,         shcoef,         &
                                    Cdn_atm(:,:,iblk),              &
                                    Cd_atm_n,                &
+                                   Qa_iso = Qa_iso(:,:,:,iblk),    &
+                                   Qref_iso = Qrefn_iso,           &
                                    uice=uvel(:,:,iblk),            &
                                    vice=vvel(:,:,iblk),            &
                                    Uref=Urefn                      )
@@ -436,6 +447,7 @@
                ! Initialize for safety
                Trefn (:,:)  = c0
                Qrefn (:,:)  = c0
+               Qrefn_iso(:,:,:)  = c0
                Urefn (:,:)  = c0
                lhcoef(:,:)  = c0
                shcoef(:,:)  = c0
@@ -590,6 +602,37 @@
          endif
 
       !-----------------------------------------------------------------
+      ! Isotope update
+      !-----------------------------------------------------------------
+         if (tr_iso .and. icells > 0) then
+
+               call update_isotope (nx_block, ny_block, &
+                                    dt, icells, &
+                                    indxi, indxj, &
+                                    melttn(:,:,n,iblk), &
+                                    meltsn(:,:,n,iblk), &
+                                    meltbn(:,:,n,iblk), &
+                                    congeln(:,:,n,iblk), &
+                                    snoicen(:,:,n,iblk), &
+                                    evapn,                 &
+                                    fsnow(:,:,iblk), &
+                                    Qrefn_iso(:,:,:),                &
+                                    trcrn(:,:,:,n,iblk), &
+                                    aicen_init(:,:,n,iblk), &
+                                    vicen_init(:,:,n,iblk), &
+                                    vsnon_init(:,:), &
+                                    vicen(:,:,n,iblk), &
+                                    vsnon(:,:,n,iblk), &
+                                    aicen(:,:,n,iblk), &
+                                    fiso_atm(:,:,:,iblk), &
+                                    fiso_evapn(:,:,:),              &
+                                    fiso_ocnn(:,:,:),               &
+                                    HDO_ocn(:,:,iblk), &
+                                    H2_16O_ocn(:,:,iblk), &
+                                    H2_18O_ocn(:,:,iblk))
+         endif
+
+      !-----------------------------------------------------------------
       ! Melt ponds
       ! If using tr_pond_cesm, the full calculation is performed here.
       ! If using tr_pond_topo, the rest of the calculation is done after
@@ -702,7 +745,13 @@
                             meltt   (:,:,iblk),  melts   (:,:,iblk),  &
                             meltb   (:,:,iblk),                       &
                             congel  (:,:,iblk),  snoice  (:,:,iblk),  &
-                            Uref=Uref(:,:,iblk), Urefn=Urefn          )
+                            Uref=Uref(:,:,iblk), Urefn=Urefn,         &
+                            Qref_iso=Qref_iso(:,:,:,iblk), &
+                            Qrefn_iso=Qrefn_iso(:,:,:),&
+                            fiso_evap=fiso_evap(:,:,:,iblk), &
+                            fiso_evapn=fiso_evapn(:,:,:),&
+                            fiso_ocn=fiso_ocn(:,:,:,iblk), &
+                            fiso_ocnn=fiso_ocnn(:,:,:))
 
       !-----------------------------------------------------------------
       ! handle per-category i2x fields, no merging
@@ -757,16 +806,16 @@
       use ice_domain, only: blocks_ice
       use ice_domain_size, only: ncat
       use ice_exit, only: abort_ice
-      use ice_flux, only: fresh, frain, fpond, frzmlt, frazil, frz_onset, &
-          update_ocn_f, fsalt, Tf, sss, salinz, fhocn, faero_ocn, rside, &
-          meltl, frazil_diag
+      use ice_flux, only: fresh, frain, fiso_rain, fpond, frzmlt, frazil, frz_onset, &
+          update_ocn_f, fsalt, Tf, sss, salinz, fhocn, faero_ocn, fiso_ocn, rside, &
+          meltl, frazil_diag, HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_fileunits, only: nu_diag
       use ice_grid, only: tmask
       use ice_itd, only: cleanup_itd, kitd, aggregate_area, reduce_area
       use ice_therm_itd, only: lateral_melt, linear_itd, add_new_ice
       use ice_zbgc_shared, only: ocean_bio, flux_bio
       use ice_state, only: aice, aicen, aice0, ntrcr, trcr_depend, &
-          aicen_init, vicen_init, trcrn, vicen, vsnon, nbtrcr, tr_aero, &
+          aicen_init, vicen_init, trcrn, vicen, vsnon, nbtrcr, tr_aero, tr_iso, &
           tr_pond_topo
       use ice_therm_shared, only: heat_capacity
       use ice_therm_vertical, only: phi_init, dSin0_frazil
@@ -816,6 +865,8 @@
          do i = 1, nx_block
             fresh     (i,j,iblk) = fresh(i,j,iblk)       &
                                  + frain(i,j,iblk)*aice(i,j,iblk)
+            fiso_ocn(i,j,:,iblk) = fiso_ocn(i,j,:,iblk)  &
+                                 + fiso_rain(i,j,:,iblk)*aice(i,j,iblk)
          enddo
          enddo
 
@@ -919,6 +970,10 @@
                            sss       (:,:,  iblk),          &
                            salinz    (:,:,:,iblk),          &
                            phi_init, dSin0_frazil,          &
+                           fiso_ocn  (:,:,:, iblk),         &
+                           HDO_ocn   (:,:,iblk),            &
+                           H2_16O_ocn   (:,:,iblk),         &
+                           H2_18O_ocn   (:,:,iblk),         &
                            nbtrcr,                          &
                            flux_bio  (:,:,1:nbtrcr,iblk),   &
                            ocean_bio (:,:,1:nbtrcr,iblk),   &
@@ -948,6 +1003,7 @@
                             fsalt     (:,:,  iblk), &    
                             fhocn     (:,:,  iblk), &
                             faero_ocn (:,:,:,iblk), &
+                            fiso_ocn  (:,:,:,iblk), &
                             rside     (:,:,  iblk), &
                             meltl     (:,:,  iblk), &
                             aicen     (:,:,:,iblk), &
@@ -987,6 +1043,7 @@
                            fresh   (:,:,  iblk), fsalt     (:,:,iblk), &
                            fhocn   (:,:,  iblk),                       &
                            faero_ocn(:,:,:,iblk),tr_aero,              &
+                           fiso_ocn (:,:,:,iblk),tr_iso,               &
                            tr_pond_topo,         heat_capacity,        &
                            nbtrcr,               first_ice(:,:,:,iblk),&
                            flux_bio(:,:,1:nbtrcr,iblk),                &
@@ -1224,14 +1281,14 @@
       use ice_exit, only: abort_ice
       use ice_fileunits, only: nu_diag
       use ice_flux, only: rdg_conv, rdg_shear, dardg1dt, dardg2dt, &
-          dvirdgdt, opening, fpond, fresh, fhocn, faero_ocn, &
+          dvirdgdt, opening, fpond, fresh, fhocn, faero_ocn, fiso_ocn, &
           aparticn, krdgn, aredistn, vredistn, dardg1ndt, dardg2ndt, &
           dvirdgndt, araftn, vraftn, fsalt
       use ice_grid, only: tmask
       use ice_itd, only: cleanup_itd
       use ice_mechred, only: ridge_ice
       use ice_state, only: ntrcr, aicen, trcrn, vicen, vsnon, aice0, &
-          trcr_depend, aice, tr_aero, tr_pond_topo, nbtrcr
+          trcr_depend, aice, tr_aero, tr_iso, tr_pond_topo, nbtrcr
       use ice_therm_shared, only: heat_capacity
       use ice_zbgc_shared, only: flux_bio, first_ice
 
@@ -1310,6 +1367,7 @@
                          fpond   (:,:,iblk),                             &
                          fresh   (:,:,iblk),   fhocn     (:,:,iblk),     &
                          faero_ocn(:,:,:,iblk),                          &
+                         fiso_ocn(:,:,:,iblk),                           &
                          aparticn(:,:,:,iblk), krdgn     (:,:,:,iblk),   &
                          aredistn(:,:,:,iblk), vredistn  (:,:,:,iblk),   &
                          dardg1ndt(:,:,:,iblk),dardg2ndt (:,:,:,iblk),   &
@@ -1346,6 +1404,7 @@
                            fresh   (:,:,  iblk), fsalt     (:,:,iblk), &
                            fhocn   (:,:,  iblk),                       &
                            faero_ocn(:,:,:,iblk),tr_aero,              &
+                           fiso_ocn (:,:,:,iblk),tr_iso,               &
                            tr_pond_topo,         heat_capacity,        &
                            nbtrcr,               first_ice(:,:,:,iblk),&
                            flux_bio(:,:,1:nbtrcr,iblk),                &

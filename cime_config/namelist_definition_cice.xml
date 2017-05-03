@@ -748,6 +748,31 @@
     </values>
   </entry>
 
+  <entry id="tr_iso">
+    <type>logical</type>  
+    <category>tracers</category> 
+    <group>tracer_nml</group>
+    <desc>
+      Aerosol tracers.
+    </desc>
+    <values>
+      <value>.true.</value>
+      <value ntriso="0">.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_iso">
+    <type>logical</type>  
+    <category>tracers</category> 
+    <group>tracer_nml</group>
+    <desc>
+      Aerosol restart from file.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- Thermo_nml parameterizations -->
   <!-- =========================== -->
@@ -4249,6 +4274,30 @@
     </values>
   </entry>
 
+  <entry id="f_fiso_atm">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_bgc_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_fiso_ocn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_bgc_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
   <entry id="f_aero">
     <type>char</type>
     <category>history</category>
@@ -4262,6 +4311,30 @@
   </entry>
 
   <entry id="f_aeron">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_bgc_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_iso">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_bgc_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_ison">
     <type>char</type>
     <category>history</category>
     <group>icefields_bgc_nml</group>
