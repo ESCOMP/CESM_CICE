@@ -566,6 +566,10 @@
          watery(i,j) = vocn(i,j)*cosw + uocn(i,j)*sinw*sign(c1,fm(i,j))
 
          ! combine tilt with wind stress
+#ifdef CESMCOUPLED
+#define coupled
+#endif
+
 #ifndef coupled
          ! calculate tilt from geostrophic currents if needed
          strtltx(i,j) = -fm(i,j)*vocn(i,j)

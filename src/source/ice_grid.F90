@@ -732,7 +732,7 @@
 #ifdef ncdf
 !     use ice_boundary
       use ice_domain_size
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       use ice_scam, only : scmlat, scmlon, single_column
 #endif
       use ice_constants, only: c0, c1, pi, pi2, rad_to_deg, puny, p5, p25, &
@@ -785,7 +785,7 @@
       ! - Read in lon/lat centers in degrees from kmt file
       ! - Read in ocean from "kmt" file (1 for ocean, 0 for land)
       !-----------------------------------------------------------------
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
 
       ! Determine dimension of domain file and check for consistency
 

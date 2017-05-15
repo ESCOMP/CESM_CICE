@@ -206,7 +206,7 @@
 
       if (trim(shortwave) == 'dEdd') then ! delta Eddington
 
-#ifndef CCSMCOUPLED
+#ifndef CESMCOUPLED
          ! These come from the driver in the coupled model.
          call init_orbit       ! initialize orbital parameters
 #endif

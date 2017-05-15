@@ -605,7 +605,7 @@
         iday = mday
         isec = sec - dt
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
         if (write_ic) isec = sec
 #endif
         ! construct filename

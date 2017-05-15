@@ -18,7 +18,7 @@
    use ice_exit, only: abort_ice
    use ice_fileunits, only: nu_diag
    use ice_communicate, only: my_task, master_task
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
    use perf_mod
 #endif
 
@@ -54,7 +54,7 @@
       timer_readwrite,        &! read/write
       timer_diags,            &! diagnostics/history
       timer_hist,             &! diagnostics/history
-#if (defined CCSMCOUPLED)
+#if (defined CESMCOUPLED)
       timer_cplrecv,          &! receive from coupler
       timer_rcvsnd,           &! time between receive to send
       timer_cplsend,          &! send to coupled
@@ -176,7 +176,7 @@
    call get_ice_timer(timer_hist,     'History  ',nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bound,    'Bound',    nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_bgc,      'BGC',      nblocks,distrb_info%nprocs)
-#if (defined CCSMCOUPLED)
+#if (defined CESMCOUPLED)
    call get_ice_timer(timer_cplrecv,  'Cpl-recv', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_rcvsnd,   'Rcv->Snd', nblocks,distrb_info%nprocs)
    call get_ice_timer(timer_cplsend,  'Cpl-Send', nblocks,distrb_info%nprocs)
@@ -318,7 +318,7 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
    real (dbl_kind) :: wall, usr, sys
 #else
    double precision MPI_WTIME
@@ -348,7 +348,7 @@
          !*** start block timer
 
          all_timers(timer_id)%block_started(block_id) = .true.
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
          call t_startf('ICE:'//all_timers(timer_id)%name)
          call t_stampf(wall, usr, sys)
          all_timers(timer_id)%block_cycles1(block_id) = wall
@@ -367,7 +367,7 @@
             all_timers(timer_id)%node_started = .true.
             all_timers(timer_id)%num_starts   = 1
             all_timers(timer_id)%num_stops    = 0
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
             call t_stampf(wall, usr, sys)
             all_timers(timer_id)%node_cycles1 = wall
 #else
@@ -393,7 +393,7 @@
          !*** start node timer
 
          all_timers(timer_id)%node_started = .true.
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
          call t_startf('ICE:'//all_timers(timer_id)%name)
          call t_stampf(wall, usr, sys)
          all_timers(timer_id)%node_cycles1 = wall
@@ -430,7 +430,7 @@
                                ! (if timer called outside of block
                                ! region, no block info required)
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
    real (dbl_kind) :: wall, usr, sys
 #else
    double precision MPI_WTIME
@@ -452,7 +452,7 @@
 !
 !-----------------------------------------------------------------------
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
    call t_stopf('ICE:'//all_timers(timer_id)%name)
    call t_stampf(wall, usr, sys)
    cycles2 = wall

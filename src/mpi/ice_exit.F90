@@ -23,7 +23,7 @@
 
 !  This routine aborts the ice model and prints an error message.
 
-#if (defined CCSMCOUPLED)
+#if (defined CESMCOUPLED)
       use ice_fileunits, only: nu_diag, flush_fileunit
       use shr_sys_mod
 #else
@@ -35,11 +35,11 @@
 
       ! local variables
 
-#ifndef CCSMCOUPLED
+#ifndef CESMCOUPLED
       integer (int_kind) :: ierr ! MPI error flag
 #endif
 
-#if (defined CCSMCOUPLED)
+#if (defined CESMCOUPLED)
       call flush_fileunit(nu_diag)
       write (nu_diag,*) error_message
       call flush_fileunit(nu_diag)

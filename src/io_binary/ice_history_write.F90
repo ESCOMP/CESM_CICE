@@ -90,7 +90,7 @@
         write (nu_hdr, 999) 'source',title,' '
 
         write (nu_hdr, 999) 'file name contains model date',trim(ncfile(ns)),' '
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
         write (nu_hdr, 999) 'runid',runid,' '
 #endif
         if (use_leap_years) then

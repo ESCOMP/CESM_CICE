@@ -798,7 +798,7 @@
       !-----------------------------------------------------------------
       ! ... the user should change these to something useful ...
       !-----------------------------------------------------------------
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
         status = nf90_put_att(ncid,nf90_global,'title',runid)
         if (status /= nf90_noerr) call abort_ice( &
                       'ice: Error in global attribute title')

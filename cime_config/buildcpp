@@ -152,7 +152,7 @@ def buildcpp(case):
     cice_blcky   = case.get_value("CICE_BLCKY")
     cice_mxblcks = case.get_value("CICE_MXBLCKS")
 
-    cice_cppdefs = " -DCCSMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 " \
+    cice_cppdefs = " -DCESMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 " \
                    " -DNICECAT=%s -DNXGLOB=%s -DNYGLOB=%s -DNTRAERO=%s -DNTRISO=%s" \
                    " -DNBGCLYR=%s -DNICELYR=%s -DNSNWLYR=%s"  \
                    " -DTRAGE=%s -DTRFY=%s -DTRLVL=%s -DTRPND=%s -DTRBRI=%s -DTRBGCS=%s" \

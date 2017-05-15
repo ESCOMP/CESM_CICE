@@ -36,7 +36,7 @@
    ! stop timers and print timer info
    !-------------------------------------------------------------------
 
-      call ice_timer_stop(timer_total)        ! stop timing entire run
+!     call ice_timer_stop(timer_total)        ! stop timing entire run
       call ice_timer_print_all(stats=.false.) ! print timing information
 
 !echmod      if (nu_diag /= 6) close (nu_diag) ! diagnostic output
@@ -51,6 +51,10 @@
    !-------------------------------------------------------------------
    ! quit MPI
    !-------------------------------------------------------------------
+
+#ifdef CESMCOUPLED
+#define coupled
+#endif
 
 #ifndef coupled
       call end_run       ! quit MPI

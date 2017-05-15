@@ -98,7 +98,7 @@
  
 ! Solar declination for next time step
  
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       if (calendar_type == "GREGORIAN") then
          ydayp1 = min(nextsw_cday, real(days_per_year,kind=dbl_kind))
       else
@@ -131,7 +131,7 @@
                       *cos((sec/secday-p5)*c2*pi + tlon(i,j)) !cos(hour angle)
       enddo
  
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       endif
 #endif
 

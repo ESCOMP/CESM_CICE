@@ -248,17 +248,17 @@
     </values>
   </entry>
 
-  <!-- <entry id="write_ic"> -->
-  <!--   <type>logical</type>   -->
-  <!--   <category>setup</category>  -->
-  <!--   <group>setup_nml</group> -->
-  <!--   <desc> -->
-  <!--     if true, write initial history file -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.false.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="write_ic">
+    <type>logical</type>  
+    <category>setup</category> 
+    <group>setup_nml</group>
+    <desc>
+      if true, write initial state
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
 
   <!-- =========================== -->
   <!-- Diagnostic output -->
@@ -2769,7 +2769,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value hgrid="ar9v4">mdhxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>

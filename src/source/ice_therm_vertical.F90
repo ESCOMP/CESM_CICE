@@ -94,7 +94,7 @@
 
       use ice_communicate, only: my_task
       use ice_therm_mushy, only: temperature_changes_salinity
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       use ice_prescribed_mod, only: prescribed_ice
 #endif
 
@@ -471,7 +471,7 @@
       ! If prescribed ice, set hi back to old values
       !-----------------------------------------------------------------
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       if (prescribed_ice) then
          do ij = 1, icells
             i = indxi(ij)

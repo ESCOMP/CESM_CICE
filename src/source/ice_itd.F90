@@ -150,7 +150,7 @@
             hin_max(0) = c0     ! minimum ice thickness, m
          else
             ! delta function itd category limits
-#ifndef CCSMCOUPLED
+#ifndef CESMCOUPLED
             hi_min = p1    ! minimum ice thickness allowed (m) for thermo
 #endif
             cc1 = max(1.1_dbl_kind/rncat,c1*hi_min)

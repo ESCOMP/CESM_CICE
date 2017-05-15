@@ -1,4 +1,42 @@
 ===============================================================
+cice5_20170511
+Originator: dbailey
+Date: 11 May 2017
+Version: 5.0
+One-line Fix coupled CPP flag.
+
+Fixed bug where the CPP flag, coupled was not activated.
+Also changed CCSMCOUPLED to CESMCOUPLED.
+
+M       cime_config/buildcpp
+M       cime_config/namelist_definition_cice.xml
+M       src/mpi/ice_timers.F90
+M       src/mpi/ice_exit.F90
+M       src/io_netcdf/ice_restart.F90
+M       src/io_netcdf/ice_history_write.F90
+M       src/source/ice_init.F90
+M       src/source/ice_domain.F90
+M       src/source/ice_calendar.F90
+M       src/source/ice_dyn_shared.F90
+M       src/source/ice_itd.F90
+M       src/source/ice_shortwave.F90
+M       src/source/ice_fileunits.F90
+M       src/source/ice_diagnostics.F90
+M       src/source/ice_therm_vertical.F90
+M       src/source/ice_flux.F90
+M       src/source/ice_therm_bl99.F90
+M       src/source/ice_grid.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_orbital.F90
+M       src/source/ice_restart_driver.F90
+M       src/io_binary/ice_history_write.F90
+M       src/drivers/cesm/CICE_InitMod.F90
+M       src/drivers/cesm/CICE_RunMod.F90
+M       src/drivers/cesm/CICE_FinalMod.F90
+M       src/io_pio/ice_restart.F90
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20170503
 Originator: dbailey
 Date: 3 May 2017

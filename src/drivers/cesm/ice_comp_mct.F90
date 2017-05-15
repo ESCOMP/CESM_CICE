@@ -502,7 +502,7 @@ contains
 !EOP
 !---------------------------------------------------------------------------
 
-    call ice_timer_start(timer_total) ! time entire run
+!   call ice_timer_start(timer_total) ! time entire run
     call t_barrierf('cice_run_total_BARRIER',MPI_COMM_ICE)
     call t_startf ('cice_run_total')
 
@@ -597,7 +597,7 @@ contains
     ! Could put this logic in the driver - but it seems easier here 
 
     ! Need to stop this at the end of every run phase in a coupled run.
-    call ice_timer_stop(timer_total)        ! stop timing
+!   call ice_timer_stop(timer_total)        ! stop timing
 
     stop_now = seq_timemgr_StopAlarmIsOn( EClock )
     if (stop_now) then
@@ -632,6 +632,9 @@ contains
 ! Finalize CICE
 !
 ! !USES:
+
+  use ice_timers, only: timer_total, ice_timer_stop
+
 !
 !------------------------------------------------------------------------------
 !BOP
@@ -647,6 +650,9 @@ contains
 !
 !EOP
 !---------------------------------------------------------------------------
+
+
+  call ice_timer_stop(timer_total)
 
   end subroutine ice_final_mct
 

@@ -232,7 +232,7 @@
 
       idate = (nyr+year_init-1)*10000 + month*100 + mday ! date (yyyymmdd) 
 
-#ifndef CCSMCOUPLED
+#ifndef CESMCOUPLED
       if (istep >= npt+1)  stop_now = 1
       if (istep == npt .and. dump_last) write_restart = 1 ! last timestep
 #endif

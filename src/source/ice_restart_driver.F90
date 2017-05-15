@@ -125,7 +125,7 @@
       !-----------------------------------------------------------------
       ! radiation fields
       !-----------------------------------------------------------------
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       call write_restart_field(nu_dump,0,coszen,'ruf8','coszen',1,diag)
 #endif
       call write_restart_field(nu_dump,0,scale_factor,'ruf8','scale_factor',1,diag)
@@ -304,7 +304,7 @@
       if (my_task == master_task) &
          write(nu_diag,*) 'radiation fields'
 
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
       call read_restart_field(nu_restart,0,coszen,'ruf8', &
            'coszen',1,diag, field_loc_center, field_type_scalar)
 #endif

@@ -677,7 +677,7 @@
       !-----------------------------------------------------------------
       ! ... the user should change these to something useful ...
       !-----------------------------------------------------------------
-#ifdef CCSMCOUPLED
+#ifdef CESMCOUPLED
         status = pio_put_att(File,pio_global,'title',runid)
 #else
         title  = 'sea ice model output for CICE'
