@@ -1,7 +1,19 @@
 ===============================================================
-cice5_20170511
+cice5_20170516
 Originator: dbailey
-Date: 11 May 2017
+Date: 16 May 2017
+Version: 5.0
+One-line Fix cice-pop test.
+
+ M      cime_config
+ A       cime_config/testdefs/testmods_dirs/cice/pop/user_nl_pop
+ D       cime_config/testdefs/testmods_dirs/cice/pop/user_nl_pop2
+ M       cime_config/testdefs/testlist_cice.xml
+
+===============================================================
+cice5_20170515
+Originator: dbailey
+Date: 15 May 2017
 Version: 5.0
 One-line Fix coupled CPP flag.
 
