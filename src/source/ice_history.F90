@@ -226,24 +226,6 @@
          f_sistreave = f_CMIP
          f_sistremax = f_CMIP
          f_sirdgthick = f_CMIP
-         f_aice = f_CMIP
-         f_hi = f_CMIP
-         f_hs = f_CMIP
-         f_divu = f_CMIP
-         f_icepresent = f_CMIP
-         f_shear = f_CMIP
-         f_dvidtd = f_CMIP
-         f_dvidtt = f_CMIP
-         f_congel = f_CMIP
-         f_frazil = f_CMIP
-         f_meltl = f_CMIP
-         f_meltb = f_CMIP
-         f_meltt = f_CMIP
-         f_melts = f_CMIP
-         f_snoice = f_CMIP
-         f_aicen = f_CMIP
-         f_vicen = f_CMIP
-         f_vsnon = f_CMIP
       endif
 
       if (f_CMIP(2:2) == 'd') then
@@ -435,6 +417,9 @@
       call broadcast_scalar (f_aicen, master_task)
       call broadcast_scalar (f_vicen, master_task)
       call broadcast_scalar (f_vsnon, master_task)
+      call broadcast_scalar (f_fswsfcn, master_task)
+      call broadcast_scalar (f_fswintn, master_task)
+      call broadcast_scalar (f_fswthrun, master_task)
       call broadcast_scalar (f_trsig, master_task)
       call broadcast_scalar (f_icepresent, master_task)
       call broadcast_scalar (f_fsurf_ai, master_task)
@@ -1316,6 +1301,18 @@
               "snow depth on ice, categories","volume per unit area of snow", c1, c0, &           
               ns1, f_vsnon)
 
+           call define_hist_field(n_fswsfcn,"fswsfcn","W m-2",tstr3Dc, tcstr, &
+              "surface absorbed shortwave, categories","none", c1, c0, &           
+              ns1, f_fswsfcn)
+
+           call define_hist_field(n_fswintn,"fswintn","W m-2",tstr3Dc, tcstr, &
+              "internal absorbed shortwave, categories","none", c1, c0, &           
+              ns1, f_fswintn)
+
+           call define_hist_field(n_fswthrun,"fswthrun","W m-2",tstr3Dc, tcstr, &
+              "penetrating shortwave, categories","none", c1, c0, &           
+              ns1, f_fswthrun)
+
            call define_hist_field(n_snowfracn,"snowfracn","1",tstr3Dc, tcstr, &
              "category mean snow fraction",                     &
              "snow fraction per unit grid cell area", c1, c0,       &
@@ -1590,7 +1587,7 @@
       use ice_history_pond, only: accum_hist_pond
       use ice_history_drag, only: accum_hist_drag
       use ice_state ! almost everything
-      use ice_shortwave, only: snowfracn
+      use ice_shortwave, only: snowfracn, fswsfcn, fswintn, fswthrun
       use ice_therm_shared, only: calculate_Tin_from_qin, Tmlt, ktherm
       use ice_therm_mushy, only: temperature_mush, temperature_snow, density_brine, liquid_fraction
       use ice_timers, only: ice_timer_start, ice_timer_stop, timer_readwrite
@@ -2544,6 +2541,15 @@
          if (f_vsnon   (1:1) /= 'x') &
              call accum_hist_field(n_vsnon-n2D, iblk, ncat_hist, &
                                    vsnon(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fswsfcn   (1:1) /= 'x') &
+             call accum_hist_field(n_fswsfcn-n2D, iblk, ncat_hist, &
+                                   fswsfcn(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fswintn   (1:1) /= 'x') &
+             call accum_hist_field(n_fswintn-n2D, iblk, ncat_hist, &
+                                   fswintn(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fswthrun   (1:1) /= 'x') &
+             call accum_hist_field(n_fswthrun-n2D, iblk, ncat_hist, &
+                                   fswthrun(:,:,1:ncat_hist,iblk), a3Dc)
          if (f_snowfracn(1:1) /= 'x') &
              call accum_hist_field(n_snowfracn-n2D, iblk, ncat_hist, &
                                    snowfracn(:,:,1:ncat_hist,iblk), a3Dc)

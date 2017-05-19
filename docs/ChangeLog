@@ -1,4 +1,23 @@
 ===============================================================
+cice5_20170519
+Originator: dbailey
+Date: 19 May 2017
+Version: 5.0
+One-line History updates.
+
+This tag contains changes to history variables as well
+as some test changes and buildcpp change for SCAM mode.
+
+M       cime_config/testdefs/testlist_cice.xml
+M       cime_config/buildcpp
+M       cime_config/namelist_definition_cice.xml
+M       cime_config/config_pes.xml
+M       src/source/ice_history_shared.F90
+M       src/source/ice_history.F90
+M       src/drivers/cesm/CICE_InitMod.F90
+M       src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20170516
 Originator: dbailey
 Date: 16 May 2017

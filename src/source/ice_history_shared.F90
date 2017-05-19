@@ -278,6 +278,9 @@
            f_sistremax = 'x', &
            f_aicen     = 'x', f_vicen      = 'x', &
            f_vsnon     = 'x',                     &
+           f_fswsfcn   = 'x',                     &
+           f_fswintn   = 'x',                     &
+           f_fswthrun  = 'x',                     &
            f_trsig     = 'm', f_icepresent = 'm', &
            f_fsurf_ai  = 'm', f_fcondtop_ai= 'm', &
            f_fmeltt_ai = 'm',                     &
@@ -408,6 +411,9 @@
            f_sistremax, &
            f_aicen,     f_vicen    , &
            f_vsnon,                  &
+           f_fswsfcn,                &
+           f_fswintn,                &
+           f_fswthrun,               &
            f_trsig,     f_icepresent,&
            f_fsurf_ai,  f_fcondtop_ai,&
            f_fmeltt_ai, &
@@ -535,7 +541,10 @@
            n_sirdgthick, &
            n_sistreave, &
            n_sistremax, &
-           n_vsnon,                        &
+           n_vsnon,     &
+           n_fswsfcn,   &
+           n_fswintn,   &
+           n_fswthrun,   &
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &
            n_strairx    , n_strairy    , &

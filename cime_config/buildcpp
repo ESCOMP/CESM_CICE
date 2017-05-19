@@ -44,6 +44,19 @@ def buildcpp(case):
     # - invoke generate_cice_decomp.pl and update env_build.xml settings to 
     # reflect changes in the configuration this will trigger 
     cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
+
+    pts_mode = case.get_value("PTS_MODE")
+    if pts_mode:
+        # explicitl set values for single column mode
+        nx = 1
+        ny = 1
+        cice_auto_decomp = False
+        case.set_value("CICE_BLCKX", 1)
+        case.set_value("CICE_BLCKY", 1)
+        case.set_value("CICE_MXBLCKS", 1)
+        case.set_value("CICE_DECOMPTYPE", "cartesian")
+        case.set_value("CICE_DECOMPSETTING", "null")
+
     if cice_auto_decomp:
         ntasks_ice = case.get_value("NTASKS_ICE")
         nthrds_ice = case.get_value("NTHRDS_ICE")

@@ -74,7 +74,7 @@
       use ice_shortwave, only: init_shortwave
       use ice_state, only: tr_aero
       use ice_therm_vertical, only: init_thermo_vertical
-      use ice_timers, only: timer_total, init_ice_timers, ice_timer_start
+      use ice_timers, only: timer_total, init_ice_timers, ice_timer_start, ice_timer_stop
       use ice_transport_driver, only: init_transport
       use ice_zbgc, only: init_zbgc
       use ice_zbgc_shared, only: skl_bgc
@@ -156,7 +156,10 @@
       call init_flux_atm        ! initialize atmosphere fluxes sent to coupler
       call init_flux_ocn        ! initialize ocean fluxes sent to coupler
 
+
 !      if (write_ic) call accum_hist(dt) ! write initial conditions 
+
+      call ice_timer_stop(timer_total)   ! stop timing entire run
 
       end subroutine cice_init
 
