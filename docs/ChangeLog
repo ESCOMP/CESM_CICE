@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170522
+Originator: jedwards
+Date: 22 May 2017
+Version: 5.0
+One-line config_compsets.xml update (align with cime schema)
+
+M cime_config/config_compsets.xml
+
+===============================================================
 cice5_20170519
 Originator: dbailey
 Date: 19 May 2017
@@ -244,28 +253,28 @@ Originator: mvertens
 Date: 13 Jan 2017
 Version: 5.0
 One-line Added cartesian to possible decomptypes
-	
+
 M       cime_config/config_component.xml
-	
+
 ===============================================================
 cice5_20170113
 Originator: mvertens
 Date: 13 Jan 2017
 Version: 5.0
 One-line Added roundrobin to possible decomptypes
-	
+
 M       cime_config/config_component.xml
-	
+
 ===============================================================
 cice5_20170106
 Originator: mvertens
 Date: 06 Jan 2017
 Version: 5.0
 One-line Fixed problem in setting ice_ic for hybrid/branch runs
-	
+
 M       cime_config/buildnml
 M       cime_config/namelist_definition_cice.xml
-	
+
 ===============================================================
 cice5_20170104
 Originator: mvertens
@@ -1223,11 +1232,11 @@ A       bld/cice.buildlib
 A       bld/cice.buildnml
 D       bld/cice.buildnml.csh
 D       bld/cice.cpl7.template
-	
+
 M       bld/cice_decomp.xml
 M       bld/configure
 M       bld/generate_cice_decomp.pl
-	
+
 A       cesmtest
 A       cesmtest/testlist_cice.xml
 A       cesmtest/testmods_dirs
@@ -1235,7 +1244,7 @@ A       cesmtest/testmods_dirs/cice
 A       cesmtest/testmods_dirs/cice/default
 A       cesmtest/testmods_dirs/cice/default/shell_commands
 A       cesmtest/testmods_dirs/cice/default/user_nl_cice
-	
+
 ===============================================================
 cice5_20150311
 Originator: dbailey
@@ -1389,7 +1398,7 @@ cice5_20150128
 Originator: jedwards
 Date: Jan 28, 2015
 Version: 5.0
-One-line Summary:pio interface fix 
+One-line Summary:pio interface fix
 
 M       src/io_pio/ice_restart.F90
 
@@ -1655,7 +1664,7 @@ cice5_23_cice5.0.4
 Originator: tcraig
 Date: Sep 28, 2014
 Version: 5.0
-One-line Summary: Merge lanl r839 trunk mods 
+One-line Summary: Merge lanl r839 trunk mods
 
 M       src/source/ice_init.F90
 M       src/source/ice_mechred.F90
@@ -1952,21 +1961,21 @@ M      bld/namelist_files/namelist_defaults_cice.xml
 M      src/source/ice_distribution.F90
 M      src/drivers/cesm/ice_comp_mct.F90
 M      bld/cice_decomp.xml
-	
+
 ===============================================================
 cice5_05_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: fix missing values on history files
 
 M      src/io_netcdf/ice_history_write.F90
 M      src/io_pio/ice_history_write.F90
-	
+
 ===============================================================
 cice5_04_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: cice5 working in cesm1_3_beta07
 
@@ -1976,21 +1985,21 @@ M      bld/namelist_files/namelist_definition.xml
 M      src/mpi/ice_exit.F90
 M      src/source/ice_init.F90
 M      src/source/ice_orbital.F90
-	
+
 ===============================================================
 cice5_03_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: minor bug fixes
 
 M      src/source/ice_fileunits.F90
 M      src/input_templates/run_ice.Linux.NCAR.yellowstone
-	
+
 ===============================================================
 cice5_02_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: Update capability to run with CESM
 
@@ -2009,7 +2018,7 @@ M      src/drivers/cesm/ice_comp_mct.F90
 ===============================================================
 cice5_01_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: Initial capability to run with CESM
 
@@ -2047,11 +2056,11 @@ A      src/drivers/cesm/ice_cpl_indices.F90
 A      src/drivers/cesm/ice_comp_mct.F90
 A      src/drivers/cesm/ice_prescribed_mod.F90
 M      src/comp_ice
-	
+
 ===============================================================
 cice5_00_cice5.0.4
 Originator: tcraig
-Date: 
+Date:
 Version: 5.0
 One-line Summary: Original import of cice5.0.4
 ===============================================================
