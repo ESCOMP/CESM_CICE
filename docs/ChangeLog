@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170601
+Originator: dbailey
+Date: 01 Jun 2017
+Version: 5.0
+One-line: Add one to maxblocks.
+
+M       bld/generate_cice_decomp.pl
+
+===============================================================
 cice5_20170522
 Originator: jedwards
 Date: 22 May 2017
