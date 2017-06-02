@@ -93,6 +93,9 @@ def buildcpp(case):
         phys = "cice4"
 
     if cice_mode == 'prescribed':
+         case.set_value("CICE_DECOMPTYPE", "roundrobin")
+
+    if cice_mode == 'prescribed':
         ntr_aero = 0
     else:
         ntr_aero = 3

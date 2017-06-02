@@ -288,7 +288,7 @@ sub CalcDecompInfo {
   #print "tcx2 $bsize $blksize \n";
 
   if ($bsize > 0) {
-      $mblocks = ($nlats * $nlons + $bsize * $nprocs - 1)/($bsize * $nprocs) + 1;
+      $mblocks = ($nlats * $nlons + $bsize * $nprocs - 1)/($bsize * $nprocs);
       $decomp{'nlats'}      = $nlats;
       $decomp{'nlons'}      = $nlons;
       $decomp{'bsize_x'}    = $bsizex;
