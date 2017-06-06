@@ -464,7 +464,8 @@
       processor shape
     </desc>
     <values>
-      <value>square-pop</value>
+      <value cice_decomp_setting="null">square-ice</value>
+      <value>$CICE_DECOMPSETTING</value>
     </values>
   </entry>
 

@@ -1,4 +1,18 @@
 ===============================================================
+cice5_20170606
+Originator: dbailey
+Date: 06 Jun 2017
+Version: 5.0
+One-line: Fix DECOMPSETTING.
+
+Fix CICE_DECOMPSETTING and processor_shape. Also, force
+prescribed ice mode to use the roundrobin distribution.
+
+M       cime_config/buildcpp
+M       cime_config/buildnml
+M       cime_config/namelist_definition_cice.xml
+
+===============================================================
 cice5_20170602
 Originator: dbailey
 Date: 01 Jun 2017
