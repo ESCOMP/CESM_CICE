@@ -89,7 +89,6 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if case.get_value('CICE_DECOMPSETTING') == 'null':
         config['cice_decomp_setting'] = 'null'
         processor_shape = nmlgen.get_default('processor_shape', config=config)
-        case.set_value('CICE_DECOMPSETTING',value=processor_shape)
     else:
         processor_shape = case.get_value("CICE_DECOMPSETTING")
     nmlgen.set_value('processor_shape', value=processor_shape)

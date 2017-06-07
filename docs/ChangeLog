@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20170607
+Originator: dbailey
+Date: 07 Jun 2017
+Version: 5.0
+One-line: Better fix for DECOMPSETTING.
+
+M       bld/generate_cice_decomp.pl
+M       cime_config/buildcpp
+M       cime_config/buildnml
+
+===============================================================
 cice5_20170606
 Originator: dbailey
 Date: 06 Jun 2017

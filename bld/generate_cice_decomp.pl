@@ -294,7 +294,7 @@ sub CalcDecompInfo {
       $decomp{'bsize_x'}    = $bsizex;
       $decomp{'bsize_y'}    = $bsizey;
       $decomp{'maxblocks'}  = $mblocks;
-      $decomp{'decompset'}  = "null";
+      $decomp{'decompset'}  = "square-ice";
       $decomp{'decomptype'} = $dtype;
   }
 

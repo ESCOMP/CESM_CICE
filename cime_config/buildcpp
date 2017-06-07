@@ -55,7 +55,7 @@ def buildcpp(case):
         case.set_value("CICE_BLCKY", 1)
         case.set_value("CICE_MXBLCKS", 1)
         case.set_value("CICE_DECOMPTYPE", "cartesian")
-        case.set_value("CICE_DECOMPSETTING", "null")
+        case.set_value("CICE_DECOMPSETTING", "square-ice")
 
     if cice_auto_decomp:
         ntasks_ice = case.get_value("NTASKS_ICE")
