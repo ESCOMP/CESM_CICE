@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170626
+Originator: dbailey
+Date: 26 Jun 2017
+Version: 5.0
+One-line: Bug fix for lcdf64.
+
+M       src/io_pio/ice_history_write.F90
+
+===============================================================
 cice5_20170607
 Originator: dbailey
 Date: 07 Jun 2017

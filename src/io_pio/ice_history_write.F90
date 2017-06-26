@@ -25,8 +25,6 @@
       public :: ice_write_hist
       save
       
-      logical (kind=log_kind), public :: lcdf64
-
 !=======================================================================
 
       contains
@@ -56,7 +54,7 @@
           lont_bounds, latt_bounds, lonu_bounds, latu_bounds
       use ice_history_shared
       use ice_itd, only: hin_max
-      use ice_restart_shared, only: runid
+      use ice_restart_shared, only: runid, lcdf64
       use netcdf
 #endif
       use ice_pio	
