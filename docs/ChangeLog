@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170627
+Originator: dbailey
+Date: 26 Jun 2017
+Version: 5.0
+One-line: Remove ESMF driver.
+
+D       src/drivers/cesm/ice_comp_esmf.F90
+
+===============================================================
 cice5_20170626
 Originator: dbailey
 Date: 26 Jun 2017
