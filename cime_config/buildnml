@@ -71,6 +71,18 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
         config['ntriso'] = "0"
 
+    if "DTRAGE=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntrage'] = "0"
+
+    if "DTRFY=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntrfy'] = "0"
+
+    if "DTRPND=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntrpnd'] = "0"
+
+    if "DTRLVL=0" in case.get_value("CICE_CPPDEFS"):
+        config['ntrlvl'] = "0"
+
     # Note - xml ICE_NCAT, CICE_DECOMPSETTING, CICE_DECOMPTYPE are used 
     # in setting the cice namelist and are set in buildlib: 
 

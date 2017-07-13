@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20170713
+Originator: dbailey
+Date: 13 July 2017
+Version: 5.0
+One-line: Fix handling of tracers in buildnml.
+
+M       cime_config/buildnml
+M       cime_config/namelist_definition_cice.xml
+
+===============================================================
 cice5_20170627
 Originator: dbailey
 Date: 26 Jun 2017
