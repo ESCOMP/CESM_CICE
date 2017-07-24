@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170724
+Originator: dbailey
+Date: 24 July 2017
+Version: 5.0
+One-line: Add workaround for shortwave.
+
+M       src/source/ice_therm_mushy.F90
+
+===============================================================
 cice5_20170713
 Originator: dbailey
 Date: 13 July 2017

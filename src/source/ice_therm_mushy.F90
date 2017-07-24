@@ -267,8 +267,44 @@ contains
     integer(kind=int_kind) :: &
          ij, &           ! icells index
          i,  &           ! i index
-         j               ! j index
+         j,  &           ! j index
+         k               ! k index
     
+    real(kind=dbl_kind) :: frac, dTemp, Tmlt, Iswabs_tmp, dt_rhoi_hlyr, ci, dswabs
+
+#ifdef CCSMCOUPLED
+      frac = c1
+      dTemp = p01
+#else
+      frac = 0.9_dbl_kind
+      dTemp = 0.02_dbl_kind
+#endif
+      do k = 1, nilyr
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+
+            Iswabs_tmp = c0 ! all Iswabs is moved into fswsfc
+
+            Tmlt = liquidus_temperature_mush(zSin(ij,k))
+
+            dt_rhoi_hlyr = dt / (rhoi*hilyr(ij))
+            if (zTin(ij,k) <= Tmlt - dTemp) then
+               ci = cp_ice - Lfresh * Tmlt / (zTin(ij,k)**2)
+               Iswabs_tmp = min(Iswabs(i,j,k), &
+                  frac*(Tmlt-zTin(ij,k))*ci/dt_rhoi_hlyr)
+            endif
+            if (Iswabs_tmp < puny) Iswabs_tmp = c0
+
+            dswabs = min(Iswabs(i,j,k) - Iswabs_tmp, fswint(i,j))
+
+            fswsfc(i,j)   = fswsfc(i,j) + dswabs
+            fswint(i,j)   = fswint(i,j) - dswabs
+            Iswabs(i,j,k) = Iswabs_tmp
+
+         enddo
+      enddo
+
     ! loop over cells
     do ij = 1, icells
        i = indxi(ij)
