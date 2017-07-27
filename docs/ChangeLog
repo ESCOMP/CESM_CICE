@@ -1,4 +1,16 @@
 ===============================================================
+cice5_20170727
+Originator: dbailey
+Date: 27 July 2017
+Version: 5.0
+One-line: Change default albedos.
+
+Keep options for -phys cam4 and cam5.
+
+M       cime_config/buildnml
+M       cime_config/namelist_definition_cice.xml
+
+===============================================================
 cice5_20170724
 Originator: dbailey
 Date: 24 July 2017

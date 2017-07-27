@@ -61,6 +61,8 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if cam_config_opts is not None:
         if "cam4" in cam_config_opts:
             config['cam4'] = ".true."
+        elif "cam5" in cam_config_opts:
+            config['cam5'] = ".true."
 
     if cice_mode == 'prescribed':
         config['sstice_stream'] = case.get_value("SSTICE_STREAM")
