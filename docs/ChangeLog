@@ -1,4 +1,23 @@
 ===============================================================
+cice5_20170825
+Originator: dbailey
+Date: 25 August 2017
+Version: 5.0
+One-line: Fix ice_ic.
+
+Fix ice_ic behaviour for startup runs.
+PIO related changes from jedwards.
+
+M       cime_config/config_component.xml
+M       cime_config/namelist_definition_cice.xml
+M       cime_config/testdefs/testlist_cice.xml
+M       src/drivers/cesm/ice_comp_mct.F90
+M       src/drivers/cesm/ice_prescribed_mod.F90
+M       src/io_pio/ice_history_write.F90
+M       src/io_pio/ice_pio.F90
+M       src/io_pio/ice_restart.F90
+
+===============================================================
 cice5_20170727
 Originator: dbailey
 Date: 27 July 2017

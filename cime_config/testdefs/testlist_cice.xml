@@ -80,7 +80,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS" grid="f19_g17_rx1" compset="GECO" testmods="pop/cice">
+  <test name="ERS" grid="f19_g17_rx1" compset="G1850ECO" testmods="pop/cice">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>

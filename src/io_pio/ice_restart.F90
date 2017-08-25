@@ -12,7 +12,7 @@
       use ice_kinds_mod
       use ice_restart_shared, only: &
           restart, restart_ext, restart_dir, restart_file, pointer_file, &
-          runid, runtype, use_restart_time, restart_format, lcdf64, lenstr
+          runid, runtype, use_restart_time, restart_format, lenstr
       use ice_pio
       use pio
 
@@ -55,7 +55,7 @@
 
       integer (kind=int_kind) :: status
 
-      if (present(ice_ic)) then 
+      if (present(ice_ic)) then
          filename = trim(ice_ic)
       else
          if (my_task == master_task) then
@@ -75,7 +75,7 @@
       if (restart_format == 'pio') then
          File%fh=-1
          call ice_pio_init(mode='read', filename=trim(filename), File=File)
-      
+
          call ice_pio_initdecomp(iodesc=iodesc2d)
          call ice_pio_initdecomp(ndim3=ncat  , iodesc=iodesc3d_ncat,remap=.true.)
 
@@ -101,7 +101,7 @@
       call broadcast_scalar(istep0,master_task)
       call broadcast_scalar(time,master_task)
       call broadcast_scalar(time_forc,master_task)
-      
+
       istep1 = istep0
 
       ! if runid is bering then need to correct npt for istep0
@@ -160,13 +160,13 @@
          iyear = nyr + year_init - 1
          imonth = month
          iday = mday
-      
+
          write(filename,'(a,a,a,i4.4,a,i2.2,a,i2.2,a,i5.5)') &
               restart_dir(1:lenstr(restart_dir)), &
               restart_file(1:lenstr(restart_file)),'.', &
               iyear,'-',month,'-',mday,'-',sec
       end if
-        
+
       if (restart_format /= 'bin') filename = trim(filename) // '.nc'
 
       ! write pointer (path/file)
@@ -177,10 +177,10 @@
       endif
 
       if (restart_format == 'pio') then
-      
+
          File%fh=-1
          call ice_pio_init(mode='write',filename=trim(filename), File=File, &
-              clobber=.true., cdf64=lcdf64 )
+              clobber=.true.)
 
          status = pio_put_att(File,pio_global,'istep1',istep1)
          status = pio_put_att(File,pio_global,'time',time)
@@ -485,14 +485,14 @@
                   write(nu_diag,*) ''
                endif
             endif
-         
+
          endif
       else
          call abort_ice("Invalid restart_format: "//restart_format)
       endif
 
       end subroutine read_restart_field
-      
+
 !=======================================================================
 
 ! Writes a single restart field.
@@ -541,10 +541,10 @@
             write(nu_diag,*)'Parallel restart file write: ',vname
 
          status = pio_inq_varid(File,trim(vname),vardesc)
-         
+
          status = pio_inq_varndims(File, vardesc, ndims)
 
-         if (ndims==3) then 
+         if (ndims==3) then
             call pio_write_darray(File, vardesc, iodesc3d_ncat,work(:,:,:,1:nblocks), &
                  status, fillval=c0)
          elseif (ndims == 2) then
@@ -618,7 +618,7 @@
         status        ! status variable from netCDF routine
 
       status = pio_def_var(File,trim(vname),pio_double,dims,vardesc)
-        
+
       end subroutine define_rest_field
 
 !=======================================================================

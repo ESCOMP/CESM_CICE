@@ -7,7 +7,7 @@
 !         Elizabeth C. Hunke and William H. Lipscomb, LANL
 !         C. M. Bitz, UW
 !
-! 2004 WHL: Block structure added 
+! 2004 WHL: Block structure added
 ! 2006 ECH: Accepted some CCSM code into mainstream CICE
 !           Added ice_present, aicen, vicen; removed aice1...10, vice1...1.
 !           Added histfreq_n and histfreq='h' options, removed histfreq='w'
@@ -24,7 +24,7 @@
       private
       public :: ice_write_hist
       save
-      
+
 !=======================================================================
 
       contains
@@ -54,10 +54,10 @@
           lont_bounds, latt_bounds, lonu_bounds, latu_bounds
       use ice_history_shared
       use ice_itd, only: hin_max
-      use ice_restart_shared, only: runid, lcdf64
+      use ice_restart_shared, only: runid
       use netcdf
 #endif
-      use ice_pio	
+      use ice_pio
       use pio
 
       integer (kind=int_kind), intent(in) :: ns
@@ -151,7 +151,7 @@
 
       File%fh=-1
       call ice_pio_init(mode='write', filename=trim(filename), File=File, &
-	clobber=.true., cdf64=lcdf64)
+	clobber=.true.)
 
       call ice_pio_initdecomp(iodesc=iodesc2d)
       call ice_pio_initdecomp(ndim3=ncat_hist, iodesc=iodesc3dc)
@@ -324,7 +324,7 @@
           endif
           if (f_bounds) then
               status = pio_put_att(File, varid, 'bounds', trim(coord_bounds(i)))
-          endif          
+          endif
         enddo
 
         ! Extra dimensions (NCAT, NZILYR, NZSLYR, NZBLYR)
@@ -345,7 +345,7 @@
         ! Attributes for tmask defined separately, since it has no units
         if (igrd(n_tmask)) then
            status = pio_def_var(File, 'tmask', pio_real, dimid2, varid)
-           status = pio_put_att(File,varid, 'long_name', 'ocean grid mask') 
+           status = pio_put_att(File,varid, 'long_name', 'ocean grid mask')
            status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
            status = pio_put_att(File, varid, 'missing_value', spval)
            status = pio_put_att(File, varid,'_FillValue',spval)
@@ -353,7 +353,7 @@
         endif
         if (igrd(n_blkmask)) then
            status = pio_def_var(File, 'blkmask', pio_real, dimid2, varid)
-           status = pio_put_att(File,varid, 'long_name', 'ice grid block mask') 
+           status = pio_put_att(File,varid, 'long_name', 'ice grid block mask')
            status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
            status = pio_put_att(File,varid,'comment', 'mytask + iblk/100')
            status = pio_put_att(File, varid, 'missing_value', spval)
@@ -380,7 +380,7 @@
           if (f_bounds) then
              status = pio_def_var(File, trim(var_nverts(i)%short_name), &
                                    pio_real,dimid_nverts, varid)
-             status = & 
+             status = &
              pio_put_att(File,varid, 'long_name', trim(var_nverts(i)%long_name))
              status = &
              pio_put_att(File, varid, 'units', trim(var_nverts(i)%units))
@@ -388,7 +388,7 @@
              status = pio_put_att(File, varid,'_FillValue',spval)
           endif
         enddo
- 
+
       !-----------------------------------------------------------------
       ! define attributes for time-variant variables
       !-----------------------------------------------------------------
@@ -513,7 +513,7 @@
             endif
           endif
         enddo  ! num_avail_hist_fields_3Dz
-        
+
       !-----------------------------------------------------------------
       ! 3D (biology layers)
       !-----------------------------------------------------------------
@@ -756,7 +756,7 @@
           bnd_start  = (/1,1/)
           bnd_length = (/2,1/)
           status = pio_put_var(File,varid,ival=time_bounds, &
-                   start=bnd_start(:),count=bnd_length(:)) 
+                   start=bnd_start(:),count=bnd_length(:))
         endif
 
       !-----------------------------------------------------------------
@@ -789,7 +789,7 @@
             status = pio_inq_varid(File, var_nz(i)%short_name, varid)
             SELECT CASE (var_nz(i)%short_name)
               CASE ('NCAT')
-                status = pio_put_var(File, varid, hin_max(1:ncat_hist)) 
+                status = pio_put_var(File, varid, hin_max(1:ncat_hist))
               CASE ('VGRDi')
                 status = pio_put_var(File, varid, (/(k, k=1,nzilyr)/))
               CASE ('VGRDs')
@@ -814,7 +814,7 @@
 !        call pio_write_darray(File, varid, iodesc2d, &
 !                              bm(:,:,1:nblocks), status, fillval=spval_dbl)
 !      endif
-        
+
       do i = 1, nvar       ! note: n_tmask=1, n_blkmask=2
          if (igrd(i)) then
             SELECT CASE (var(i)%req%short_name)
@@ -859,19 +859,19 @@
       do i = 1, nvar_verts
         SELECT CASE (var_nverts(i)%short_name)
         CASE ('lont_bounds')
-           do ivertex = 1, nverts 
+           do ivertex = 1, nverts
               workr3v(ivertex,:,:,:) = lont_bounds(ivertex,:,:,1:nblocks)
            enddo
         CASE ('latt_bounds')
-           do ivertex = 1, nverts 
+           do ivertex = 1, nverts
               workr3v(ivertex,:,:,:) = latt_bounds(ivertex,:,:,1:nblocks)
            enddo
         CASE ('lonu_bounds')
-           do ivertex = 1, nverts 
+           do ivertex = 1, nverts
               workr3v(ivertex,:,:,:) = lonu_bounds(ivertex,:,:,1:nblocks)
            enddo
         CASE ('latu_bounds')
-           do ivertex = 1, nverts 
+           do ivertex = 1, nverts
               workr3v(ivertex,:,:,:) = latu_bounds(ivertex,:,:,1:nblocks)
            enddo
         END SELECT

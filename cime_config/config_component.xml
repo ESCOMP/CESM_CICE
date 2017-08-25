@@ -2,7 +2,12 @@
 
 <?xml-stylesheet type="text/xsl" href="definitions_variables" ?>
 
-<definitions_variables>
+<entry_id version="3.0">
+
+  <description>
+    <desc ice="CICE[%PRES]">Sea ICE (cice) model version 5</desc>
+    <desc option="PRES"> :prescribed cice</desc>
+  </description>
 
   <entry id="COMP_ICE">
     <type>char</type>
@@ -18,8 +23,8 @@
     <valid_values>prognostic,prescribed,thermo_only</valid_values>
     <default_value>prognostic</default_value>
     <values>
-      <value compset="CICE4?_">prognostic</value>
-      <value compset="CICE4?%PRES_">prescribed</value>
+      <value compset="CICE_">prognostic</value>
+      <value compset="CICE%PRES_">prescribed</value>
     </values>
     <group>build_component_cice</group>
     <file>env_build.xml</file>
@@ -30,7 +35,6 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <value compset="_CICE4"> -phys cice4 </value>
       <value compset="_CICE[_%]"> -phys cice5 </value>
     </values>
     <group>build_component_cice</group>
@@ -145,10 +149,6 @@
     </desc>
   </entry>
 
-  <description>
-    <desc compset="_CICE4?%PRES_">prescribed cice:</desc>
-    <desc compset="_CICE4?_">prognostic cice:</desc>
-  </description>
 
   <help>
     =========================================
@@ -156,4 +156,4 @@
     =========================================
   </help>
 
-</definitions_variables>
+</entry_id>
