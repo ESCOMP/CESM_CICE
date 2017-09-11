@@ -184,7 +184,9 @@
          Tref    , & ! 2m atm reference temperature (K)
          Qref    , & ! 2m atm reference spec humidity (kg/kg)
          Uref    , & ! 10m atm reference wind speed (m/s)
-         evap        ! evaporative water flux (kg/m^2/s)
+         evap    , & ! evaporative water flux (kg/m^2/s)
+         evapi   , & ! evaporative water flux over ice (kg/m^2/s)
+         evaps       ! evaporative water flux over snow (kg/m^2/s)
 
        ! albedos aggregated over categories (if calc_Tsfc)
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), public :: &
@@ -502,6 +504,8 @@
       flwout  (:,:,:) = -stefan_boltzmann*Tffresh**4   
                         ! in case atm model diagnoses Tsfc from flwout
       evap    (:,:,:) = c0
+      evapi   (:,:,:) = c0
+      evaps   (:,:,:) = c0
       Tref    (:,:,:) = c0
       Qref    (:,:,:) = c0
       Uref    (:,:,:) = c0
@@ -568,6 +572,8 @@
       fswabs  (:,:,:) = c0
       flwout  (:,:,:) = c0
       evap    (:,:,:) = c0
+      evapi   (:,:,:) = c0
+      evaps   (:,:,:) = c0
       Tref    (:,:,:) = c0
       Qref    (:,:,:) = c0
       Uref    (:,:,:) = c0
@@ -750,6 +756,7 @@
                                fsensn,   flatn,      & 
                                fswabsn,  flwoutn,    &
                                evapn,                &
+                               evapin,   evapsn,     &
                                Trefn,    Qrefn,      &
                                Tbotn,    Tsnicn,      &
                                freshn,   fsaltn,     &
@@ -761,6 +768,7 @@
                                fsens,    flat,       & 
                                fswabs,   flwout,     &
                                evap,                 & 
+                               evapi,    evaps,      & 
                                Tref,     Qref,       &
                                Tbot,     Tsnic,       &
                                fresh,    fsalt,      & 
@@ -799,6 +807,8 @@
           fswabsn , & ! shortwave absorbed heat flx     (W/m**2)
           flwoutn , & ! upwd lw emitted heat flx        (W/m**2)
           evapn   , & ! evaporation                     (kg/m2/s)
+          evapin   , & ! evaporation                     (kg/m2/s)
+          evapsn   , & ! evaporation                     (kg/m2/s)
           Trefn   , & ! air tmp reference level         (K)
           Tbotn   , & ! ice bottom temperature          (C)
           Tsnicn  , & ! snow ice interface temperature  (C)
@@ -835,6 +845,8 @@
           fswabs  , & ! shortwave absorbed heat flx     (W/m**2)
           flwout  , & ! upwd lw emitted heat flx        (W/m**2)
           evap    , & ! evaporation                     (kg/m2/s)
+          evapi   , & ! evaporation                     (kg/m2/s)
+          evaps   , & ! evaporation                     (kg/m2/s)
           Tref    , & ! air tmp reference level         (K)
           Tbot    , & ! sea ice bottom temperature      (C)
           Tsnic   , & ! snow ice interface temperature  (C)
@@ -891,6 +903,8 @@
          flwout   (i,j)  = flwout  (i,j) &
              + (flwoutn(i,j) - (c1-emissivity)*flw(i,j))*aicen(i,j)
          evap     (i,j)  = evap    (i,j) + evapn   (i,j)*aicen(i,j)
+         evapi     (i,j)  = evapi    (i,j) + evapin   (i,j)*aicen(i,j)
+         evaps     (i,j)  = evaps    (i,j) + evapsn   (i,j)*aicen(i,j)
          Tref     (i,j)  = Tref    (i,j) + Trefn   (i,j)*aicen(i,j)
          Tbot     (i,j)  = Tbot    (i,j) + Tbotn   (i,j)*aicen(i,j)
          Tsnic    (i,j)  = Tsnic   (i,j) + Tsnicn  (i,j)*aicen(i,j)
@@ -1071,16 +1085,16 @@
             fsens   (i,j) = c0
             flat    (i,j) = c0
             fswabs  (i,j) = c0
-            flwout  (i,j) = -stefan_boltzmann *(Tf(i,j) + Tffresh)**4
+            flwout  (i,j) = c0
                ! to make upward longwave over ocean reasonable for history file
             evap    (i,j) = c0
-            Tref    (i,j) = Tair(i,j)
-            Qref    (i,j) = Qa  (i,j)
+            Tref    (i,j) = c0
+            Qref    (i,j) = c0
             if (present(Uref) .and. present(wind)) then
                Uref    (i,j) = wind(i,j)
             endif
             if (present(Qref_iso)) then
-               Qref_iso(i,j,:) = Qa(i,j)
+               Qref_iso(i,j,:) = c0
             endif
             if (present(fiso_evap)) then
                fiso_evap(i,j,:) = c0

@@ -83,6 +83,7 @@
                                   fcondbotn, &
                                   fsensn,      flatn,     &
                                   flwoutn,     evapn,     &
+                                  evapin,      evapsn,    &
                                   freshn,      fsaltn,    &
                                   fhocnn,      meltt,     &
                                   melts,       meltb,     &
@@ -154,7 +155,9 @@
       ! coupler fluxes to atmosphere
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out):: &
          flwoutn , & ! outgoing longwave radiation (W/m^2) 
-         evapn       ! evaporative water flux (kg/m^2/s) 
+         evapn   , & ! evaporative water flux (kg/m^2/s) 
+         evapin   , & ! evaporative water flux (kg/m^2/s) 
+         evapsn       ! evaporative water flux (kg/m^2/s) 
 
       ! Note: these are intent out if calc_Tsfc = T, otherwise intent in
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(inout):: &
@@ -250,6 +253,8 @@
       do i=1, nx_block
          flwoutn(i,j) = c0
          evapn  (i,j) = c0
+         evapin  (i,j) = c0
+         evapsn  (i,j) = c0
 
          freshn (i,j) = c0
          fsaltn (i,j) = c0
@@ -440,6 +445,7 @@
                                 fcondtopn,    fcondbotn, &
                                 fsnow,        hsn_new,  &
                                 fhocnn,       evapn,    &
+                                evapin,       evapsn,   &
                                 meltt,        melts,    &
                                 meltb,        iage,     &
                                 congel,       snoice,   &
@@ -1298,6 +1304,7 @@
                                     fcondtopn, fcondbotn, &
                                     fsnow,     hsn_new,  &
                                     fhocnn,    evapn,    &
+                                    evapin,    evapsn,   &
                                     meltt,     melts,    &
                                     meltb,     iage,     &
                                     congel,    snoice,   &  
@@ -1365,7 +1372,9 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out):: &
          fhocnn      , & ! fbot, corrected for any surplus energy (W m-2)
-         evapn           ! ice/snow mass sublimated/condensed (kg m-2 s-1)
+         evapn       , & ! ice/snow mass sublimated/condensed (kg m-2 s-1)
+         evapin       , & ! ice mass sublimated/condensed (kg m-2 s-1)
+         evapsn           ! snow mass sublimated/condensed (kg m-2 s-1)
 
       real (kind=dbl_kind), dimension (icells), intent(out):: &
          hsn_new         ! thickness of new snow (m)
@@ -1537,10 +1546,12 @@
             dhs = econ(ij) / (zqsn(ij,1) - rhos*Lvap) ! econ < 0, dhs > 0
             dzs(ij,1) = dzs(ij,1) + dhs
             evapn(i,j) = evapn(i,j) + dhs*rhos
+            evapsn(i,j) = evapsn(i,j) + dhs*rhos
          else                        ! add ice with enthalpy zqin(ij,1)
             dhi = econ(ij) / (qm(ij,1) - rhoi*Lvap) ! econ < 0, dhi > 0
             dzi(ij,1) = dzi(ij,1) + dhi
             evapn(i,j) = evapn(i,j) + dhi*rhoi
+            evapin(i,j) = evapin(i,j) + dhi*rhoi
             ! enthalpy of melt water
             emlt_atm(ij) = emlt_atm(ij) - qmlt(ij,1) * dhi 
          endif
@@ -1642,6 +1653,7 @@
             esub(ij) = esub(ij) - dhs*qsub
             esub(ij) = max(esub(ij), c0)   ! in case of roundoff error
             evapn(i,j) = evapn(i,j) + dhs*rhos
+            evapsn(i,j) = evapsn(i,j) + dhs*rhos
 
          !--------------------------------------------------------------
          ! Melt snow (top)
@@ -1678,6 +1690,7 @@
             esub(ij) = esub(ij) - dhi*qsub
             esub(ij) = max(esub(ij), c0)
             evapn(i,j) = evapn(i,j) + dhi*rhoi
+            evapin(i,j) = evapin(i,j) + dhi*rhoi
             emlt_ocn(ij) = emlt_ocn(ij) - qmlt(ij,k) * dhi 
 
          !--------------------------------------------------------------

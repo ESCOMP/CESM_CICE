@@ -5,7 +5,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI" grid="f45_g37_rx1" compset="DTEST" testmods="cice/default">
+  <test name="ERI" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="hobart" compiler="intel" category="prealpha"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
@@ -16,7 +16,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS_IOP_Ld5" grid="f45_g37_rx1" compset="DTEST" testmods="cice/default">
+  <test name="ERS_IOP_Ld5" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="janus" compiler="intel" category="prebeta"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -85,7 +85,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET" grid="f45_g37_rx1" compset="G" testmods="pop/cice">
+  <test name="PET" grid="f19_g17_rx1" compset="G" testmods="pop/cice">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>

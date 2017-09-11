@@ -179,7 +179,7 @@
           flw, fsnow, fpond, sss, mlt_onset, frz_onset, faero_atm, faero_ocn, &
           fiso_atm, fiso_ocn, Qa_iso, Qref_iso, fiso_evap, fiso_rain, &
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
-          flat, fswabs, flwout, evap, Tref, Qref, Uref, fresh, fsalt, fhocn, &
+          flat, fswabs, flwout, evap, evapi, evaps, Tref, Qref, Uref, fresh, fsalt, fhocn, &
           fswthru, meltt, melts, meltb, meltl, congel, snoice, fcondbot, fcondbotn, &
           set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnic, &
           HDO_ocn, H2_16O_ocn, H2_18O_ocn
@@ -226,6 +226,8 @@
          fswabsn     , & ! shortwave absorbed by ice          (W/m^2)
          flwoutn     , & ! upward LW at surface               (W/m^2)
          evapn       , & ! flux of vapor, atmos to ice   (kg m-2 s-1)
+         evapin      , & ! flux of vapor over ice   (kg m-2 s-1)
+         evapsn      , & ! flux of vapor over snow   (kg m-2 s-1)
          freshn      , & ! flux of water, ice to ocean     (kg/m^2/s)
          fsaltn      , & ! flux of salt, ice to ocean      (kg/m^2/s)
          fhocnn      , & ! fbot corrected for leftover energy (W/m^2)
@@ -535,7 +537,9 @@
                                 fcondbotn(:,:,n,iblk),                    &
                                 fsensn(:,:,n,iblk),  flatn(:,:,n,iblk),   &
                                 flwoutn,                                  &
-                                evapn,               freshn,              &
+                                evapn,                                    &
+                                evapin,              evapsn,              &
+                                freshn,              &
                                 fsaltn,              fhocnn,              &
                                 melttn(:,:,n,iblk),  meltsn(:,:,n,iblk),  &
                                 meltbn(:,:,n,iblk),                       &
@@ -728,6 +732,7 @@
                             fsensn(:,:,n,iblk), flatn(:,:,n,iblk),    &
                             fswabsn,            flwoutn,              &
                             evapn,                                    &
+                            evapin,             evapsn,               &
                             Trefn,              Qrefn,                &
                             Tbotn,              Tsnicn,               &
                             freshn,             fsaltn,               &
@@ -739,6 +744,7 @@
                             fsens   (:,:,iblk), flat      (:,:,iblk), &
                             fswabs  (:,:,iblk), flwout    (:,:,iblk), &
                             evap    (:,:,iblk),                       &
+                            evapi   (:,:,iblk), evaps     (:,:,iblk), &
                             Tref    (:,:,iblk), Qref      (:,:,iblk), &
                             Tbot    (:,:,iblk), Tsnic     (:,:,iblk), &
                             fresh   (:,:,iblk), fsalt     (:,:,iblk), &

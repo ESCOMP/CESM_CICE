@@ -1,4 +1,21 @@
 ===============================================================
+cice5_20170911
+Originator: dbailey
+Date: 11 September 2017
+Version: 5.0
+One-line: Updated SIMIP variables.
+
+Hopefully the last iteration of SIMIP variable updates. Also
+remove f45 tests.
+
+M       cime_config/testdefs/testlist_cice.xml
+M       src/source/ice_flux.F90
+M       src/source/ice_history.F90
+M       src/source/ice_history_shared.F90
+M       src/source/ice_step_mod.F90
+M       src/source/ice_therm_vertical.F90
+
+===============================================================
 cice5_20170825
 Originator: dbailey
 Date: 25 August 2017
