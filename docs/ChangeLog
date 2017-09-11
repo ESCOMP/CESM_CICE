@@ -1,4 +1,15 @@
 ===============================================================
+cice5_20170912
+Originator: dbailey
+Date: 11 September 2017
+Version: 5.0
+One-line: Add CMIP6 usermods.
+
+A       cime_config/usermods_dirs
+A       cime_config/usermods_dirs/cmip6
+A       cime_config/usermods_dirs/cmip6/user_nl_cice
+
+===============================================================
 cice5_20170911
 Originator: dbailey
 Date: 11 September 2017
