@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20170920
+Originator: dbailey
+Date: 20 September 2017
+Version: 5.0
+One-line: Add NTASKS_PER_INST_ICE.
+
+M       cime_config/buildcpp
+
+===============================================================
 cice5_20170912
 Originator: dbailey
 Date: 11 September 2017
