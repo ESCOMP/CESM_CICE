@@ -61,9 +61,7 @@ def buildcpp(case):
         ntasks_ice = case.get_value("NTASKS_ICE")
         nthrds_ice = case.get_value("NTHRDS_ICE")
         ninst_ice = case.get_value("NINST_ICE")
-        ntasks_per_inst_ice = case.get_value("NTASKS_PER_INST_ICE")
-        #ntasks = int(ntasks_ice / ninst_ice)
-        ntasks = ntasks_per_inst_ice * ninst_ice
+        ntasks = case.get_value("NTASKS_PER_INST_ICE")
         srcroot = case.get_value("SRCROOT")
 
         cmd = os.path.join(srcroot, "components", "cice", "bld", "generate_cice_decomp.pl")
