@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20171208
+Originator: dbailey
+Date: 08 December 2017
+Version: 5.0
+One-line: Update hobart pe counts.
+
+modified:   cime_config/config_pes.xml
+
+===============================================================
 cice5_20170927
 Originator: dbailey
 Date: 27 September 2017
