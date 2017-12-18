@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20171218
+Originator: dbailey
+Date: 18 December 2017
+Version: 5.0
+One-line: Remove initial barrier in ice_comp_mct.
+
+modified:   src/drivers/cesm/ice_comp_mct.F90
+
+===============================================================
 cice5_20171208
 Originator: dbailey
 Date: 08 December 2017
