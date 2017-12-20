@@ -72,6 +72,7 @@
       <value hgrid='gx1v6'>$DIN_LOC_ROOT/ice/cice/b.e15.B1850G.f09_g16.pi_control.25.cice.r.0041-01-01-00000.nc</value>
       <value hgrid='gx1v7'>$DIN_LOC_ROOT/ice/cice/b.e15.B1850G.f09_g16.pi_control.25.cice.r.0041-01-01-00000.nc</value>
       <value hgrid='tx0.1v2'>$DIN_LOC_ROOT/ice/cice/g.e11.G.T62_t12.002.cice.r.0016-01-01-00000.nc</value>
+      <value hgrid='tx0.1v3'>$DIN_LOC_ROOT/ice/cice/g.e11.G.T62_t12.002.cice.r.0016-01-01-00000.nc</value>
       <value hgrid='ar9v3'>$DIN_LOC_ROOT/ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</value>
       <value hgrid='ar9v4'>$DIN_LOC_ROOT/ice/cice/cice5ic/r26RBRCICE5g0.cice.r.1990-09-01-00000.nc</value>
     </values>
@@ -190,6 +191,7 @@
     <values>
       <value>1</value>
       <value hgrid="tx0.1v2">3</value>
+      <value hgrid="tx0.1v3">3</value>
     </values>
   </entry>
 
@@ -377,6 +379,7 @@
       <value>displaced_pole</value> 
       <value cice_mode="prescribed">latlon</value>
       <value hgrid="tx0.1v2">tripole</value> 
+      <value hgrid="tx0.1v3">tripole</value> 
       <value hgrid="tx1v1">tripole</value> 
       <value hgrid="ar9v3">regional</value> 
       <value hgrid="ar9v4">regional</value> 
@@ -397,6 +400,7 @@
       <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/horiz_grid_20010402.ieeer8</value> 
       <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/horiz_grid_20030806.ieeer8</value> 
       <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8</value> 
+      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/horiz_grid_200709.ieeer8</value> 
       <value hgrid="tx1v1">$DIN_LOC_ROOT/ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8</value>
       <value hgrid="ar9v3">$DIN_LOC_ROOT/ice/cice/ar9v3_20101118.grid</value>
       <value hgrid="ar9v4">$DIN_LOC_ROOT/ice/cice/ar9v3_20101118.grid</value>
@@ -418,6 +422,7 @@
       <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/topography_20161215.ieeei4</value> 
       <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/topography_20100105.ieeei4</value> 
       <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/topography_200709.ieeei4</value> 
+      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/topography_20170718.ieeei4</value> 
       <value hgrid="tx1v1">$DIN_LOC_ROOT/ocn/pop/tx1v1/grid/topography_20050510.ieeei4</value>
       <value hgrid="ar9v3">$DIN_LOC_ROOT/ocn/pop/ar9v3/grid/kmt.ar9v3.ocn.ChanBarrier.20100622.ieeei4</value>
       <value hgrid="ar9v4">$DIN_LOC_ROOT/ice/cice/ar9v3_20110106.kmt</value>
@@ -492,6 +497,7 @@
       <value>latitude</value>
       <value distribution_type='spacecurve'>erfc</value>
       <value hgrid="tx0.1v2" distribution_type='spacecurve'>file</value>
+      <value hgrid="tx0.1v3" distribution_type='spacecurve'>file</value>
     </values>
   </entry>
 
@@ -518,6 +524,7 @@
     <values>
       <value>open</value>
       <value hgrid ='tx0.1v2'>tripole</value>
+      <value hgrid ='tx0.1v3'>tripole</value>
       <value hgrid ='tx1v1'>tripole</value>
     </values>
   </entry>
