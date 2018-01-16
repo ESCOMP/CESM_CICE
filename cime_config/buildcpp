@@ -41,8 +41,8 @@ def buildcpp(case):
         hgrid = ice_grid
 
     # determine decomposition xml variables if CICE_AUTO_DECOMP is true
-    # - invoke generate_cice_decomp.pl and update env_build.xml settings to 
-    # reflect changes in the configuration this will trigger 
+    # - invoke generate_cice_decomp.pl and update env_build.xml settings to
+    # reflect changes in the configuration this will trigger
     cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
 
     pts_mode = case.get_value("PTS_MODE")
@@ -58,7 +58,6 @@ def buildcpp(case):
         case.set_value("CICE_DECOMPSETTING", "square-ice")
 
     if cice_auto_decomp:
-        ntasks_ice = case.get_value("NTASKS_ICE")
         nthrds_ice = case.get_value("NTHRDS_ICE")
         ninst_ice = case.get_value("NINST_ICE")
         ntasks = case.get_value("NTASKS_PER_INST_ICE")
@@ -85,7 +84,7 @@ def buildcpp(case):
 
     # set cice mode and cice_config_opts
     cice_mode = case.get_value("CICE_MODE")
-        
+
     # set cice physics
     if "cice5" in cice_config_opts:
         phys = "cice5"
@@ -99,42 +98,42 @@ def buildcpp(case):
         ntr_aero = 0
     else:
         ntr_aero = 3
-    ntr_aero = set_nondefault_cpp(cice_config_opts, "ntr_aero", ntr_aero) 
+    ntr_aero = set_nondefault_cpp(cice_config_opts, "ntr_aero", ntr_aero)
 
     # set number of bgc tracers (valid values are 0->10)
     if cice_mode == 'prescribed':
         nbgclyr = 0
     else:
         nbgclyr = 3
-    nbgclyr = set_nondefault_cpp(cice_config_opts, "nbgclyr", nbgclyr) 
+    nbgclyr = set_nondefault_cpp(cice_config_opts, "nbgclyr", nbgclyr)
 
     # set isotope tracer
     ntr_iso = 0
-    ntr_iso = set_nondefault_cpp(cice_config_opts, "ntr_iso", ntr_iso) 
+    ntr_iso = set_nondefault_cpp(cice_config_opts, "ntr_iso", ntr_iso)
 
     # set age tracer
     trage = 1
-    trage = set_nondefault_cpp(cice_config_opts, "trage", trage) 
+    trage = set_nondefault_cpp(cice_config_opts, "trage", trage)
 
     # set first year ice tracer (valid values are 0,1)
     trfy = 1
-    trfy = set_nondefault_cpp(cice_config_opts, "trfy", trfy) 
+    trfy = set_nondefault_cpp(cice_config_opts, "trfy", trfy)
 
     # set pond tracer (valid values are 0,1)
     trpnd = 1
-    trpnd = set_nondefault_cpp(cice_config_opts, "trpnd", trpnd) 
+    trpnd = set_nondefault_cpp(cice_config_opts, "trpnd", trpnd)
 
     # set level ice tracer (valid values are 0,1)
     trlvl = 1
-    trlvl = set_nondefault_cpp(cice_config_opts, "trlvl", trlvl) 
+    trlvl = set_nondefault_cpp(cice_config_opts, "trlvl", trlvl)
 
     # set brine tracer (valid values are 0,1)
     trbri = 0
-    trbri = set_nondefault_cpp(cice_config_opts, "trbri", trbri) 
+    trbri = set_nondefault_cpp(cice_config_opts, "trbri", trbri)
 
     # set skeletal layer tracer (valid values are 0,1)
     trbgcs = 0
-    trbgcs = set_nondefault_cpp(cice_config_opts, "trbgcs", trbgcs) 
+    trbgcs = set_nondefault_cpp(cice_config_opts, "trbgcs", trbgcs)
 
     # set number of ice layers
     if phys == "cice4":
@@ -150,16 +149,16 @@ def buildcpp(case):
     else:
         nsnwlyr = 3
 
-    # set number of ice categories 
+    # set number of ice categories
     # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
-    # and as a result it is assumed that the cice buildcpp is called 
+    # and as a result it is assumed that the cice buildcpp is called
     # BEFORE the pop buildcpp. This order is set by the xml variable
     # COMP_CLASSES in the driver config_component.xml file
     if cice_mode == 'prescribed':
         ncat = 1
     else:
         ncat = 5
-    ncat = set_nondefault_cpp(cice_config_opts, "ncat", ncat) 
+    ncat = set_nondefault_cpp(cice_config_opts, "ncat", ncat)
     case.set_value("ICE_NCAT",ncat)
     logger.debug("cice: number of ice categories (ncat) is %s" %ncat)
 
@@ -181,7 +180,7 @@ def buildcpp(case):
     # determine cice_cppdefs used in build
     cice_cppdefs = cice_cppdefs + " -DBLCKX=%s -DBLCKY=%s -DMXBLCKS=%s"%(cice_blckx, cice_blcky, cice_mxblcks)
 
-    # update the xml variable CICE_CPPDEFS with the above definition 
+    # update the xml variable CICE_CPPDEFS with the above definition
     case.set_value("CICE_CPPDEFS", cice_cppdefs)
     case.flush()
 

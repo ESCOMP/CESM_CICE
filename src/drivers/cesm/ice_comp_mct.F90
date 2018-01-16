@@ -64,6 +64,7 @@ module ice_comp_mct
   use ice_global_reductions
   use ice_broadcast
   use CICE_RunMod
+  use ice_atmo, only : flux_convergence_tolerance, flux_convergence_max_iteration, use_coldair_outbreak_mod
 
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -251,10 +252,18 @@ contains
        endif
     endif
 
+    ! atmice flux calculation
+    call seq_infodata_GetData(infodata, &
+         coldair_outbreak_mod=use_coldair_outbreak_mod, &
+         flux_convergence=flux_convergence_tolerance, &
+         flux_max_iteration=flux_convergence_max_iteration)
+
     if (my_task == master_task) then
        write(nu_diag,*) trim(subname),' inst_name   = ',trim(inst_name)
        write(nu_diag,*) trim(subname),' inst_index  = ',inst_index
        write(nu_diag,*) trim(subname),' inst_suffix = ',trim(inst_suffix)
+       write(nu_diag,*) trim(subname),' flux_convergence = ', flux_convergence_tolerance
+       write(nu_diag,*) trim(subname),' flux_convergence_max_iteration = ', flux_convergence_max_iteration
     endif
 
     !---------------------------------------------------------------------------

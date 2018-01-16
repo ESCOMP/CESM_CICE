@@ -8,7 +8,7 @@
 ! 2003: Vectorized by Clifford Chen (Fujitsu) and William Lipscomb
 ! 2004: Block structure added by William Lipscomb
 ! 2006: Converted to free source form (F90) by Elizabeth Hunke
-! 2013: Form drag routine added (neutral_drag_coeffs) by David Schroeder 
+! 2013: Form drag routine added (neutral_drag_coeffs) by David Schroeder
 ! 2014: Adjusted form drag and added high frequency coupling by Andrew Roberts
 
       module ice_atmo
@@ -56,6 +56,11 @@
          Cdn_ocn_keel, & ! keel drag coefficient
          Cd_atm          ! atm drag ratio at measurement height
 
+      ! This are set in the drv_in namelist and passed using infodata
+      real(kind=dbl_kind), public :: flux_convergence_tolerance
+      integer, public :: flux_convergence_max_iteration
+      logical, public :: use_coldair_outbreak_mod
+
 !=======================================================================
 
       contains
@@ -67,7 +72,7 @@
 ! (1) All fluxes are positive downward,  \\
 ! (2) Here, tstar = (WT)/U*, and qstar = (WQ)/U*,  \\
 ! (3) wind speeds should all be above a minimum speed (eg. 1.0 m/s). \\
-! (4) highfreq is from Roberts et al. (2015), Annals, doi:10.3189/2015AoG69A760 
+! (4) highfreq is from Roberts et al. (2015), Annals, doi:10.3189/2015AoG69A760
 !
 ! ASSUME:
 !  The saturation humidity of air at T(K): qsat(T)  (kg/m**3)
@@ -76,12 +81,12 @@
 
       subroutine atmo_boundary_layer (nx_block, ny_block, &
                                       sfctype,  icells,   &
-                                      indxi,    indxj,    & 
+                                      indxi,    indxj,    &
                                       Tsf,      potT,     &
-                                      uatm,     vatm,     &  
-                                      wind,     zlvl,     &  
+                                      uatm,     vatm,     &
+                                      wind,     zlvl,     &
                                       Qa,       rhoa,     &
-                                      strx,     stry,     &   
+                                      strx,     stry,     &
                                       Tref,     Qref,     &
                                       delt,     delq,     &
                                       lhcoef,   shcoef,   &
@@ -89,7 +94,7 @@
                                       Cd_atm_n,    &
                                       Qa_iso, Qref_iso,   &
                                       uice,     vice,     &
-                                      Uref                )     
+                                      Uref                )
 
 
       use ice_fileunits, only: nu_diag
@@ -119,7 +124,7 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(inout) :: &
          Cdn_atm      ! neutral drag coefficient
- 
+
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(out) :: &
          Cd_atm_n ! atm drag coefficient
 
@@ -154,9 +159,10 @@
       ! local variables
 
       logical (kind=log_kind), save :: &
-         firstpass=.true. ! high frequency checks on first pass
+         firstpass=.true. ! checks on first pass
 
       integer (kind=int_kind) :: &
+         iter,  & ! iteration in flux convergence calculation
          k     , & ! iteration index
          i, j  , & ! horizontal indices
          n     , & ! counter
@@ -201,7 +207,11 @@
          zTrf  = c2                 ! reference height for air temp (m)
 
       real (kind=dbl_kind) :: &
-         ratio
+         ratio, vscl, ustar_prev(icells)
+       !--- cold air outbreak parameters  (Mahrt & Sun 1995,MWR) -------------
+      real(kind=dbl_kind),parameter    :: alpha = 1.4_dbl_kind
+      real(kind=dbl_kind),parameter    :: maxscl = c2  ! maximum wind scaling for flux
+      real(kind=dbl_kind),parameter    :: td0 = -c10   ! start t-ts for scaling
 
       ! local functions
       real (kind=dbl_kind) :: &
@@ -224,8 +234,11 @@
       !------------------------------------------------------------
       ! Initialize
       !------------------------------------------------------------
+      if (firstpass) then
 
-      if (highfreq) then       
+      endif
+
+      if (highfreq) then
 
        ! high frequency coupling follows Roberts et al. (2015)
        if (my_task==master_task.and.firstpass.and.sfctype(1:3)=='ice') then
@@ -234,7 +247,6 @@
          else
           call abort_ice('High frequency RASM coupling missing uice and vice')
          endif
-         firstpass = .false. 
        endif
 
        umin  = p5 ! minumum allowable wind-ice speed difference of 0.5 m/s
@@ -289,8 +301,8 @@
                vmag(ij) = max(umin, wind(i,j))
             endif
 
-            if (formdrag .and. Cdn_atm(i,j) > puny) then 
-               rdn(ij)  = sqrt(Cdn_atm(i,j))               
+            if (formdrag .and. Cdn_atm(i,j) > puny) then
+               rdn(ij)  = sqrt(Cdn_atm(i,j))
             else
                rdn(ij)  = vonkar/log(zref/iceruf) ! neutral coefficient
                Cdn_atm(i,j) = rdn(ij) * rdn(ij)
@@ -320,16 +332,29 @@
          i = indxi(ij)
          j = indxj(ij)
 
+         TsfK      = Tsf(i,j) + Tffresh     ! surface temp (K)
+         ! Cold Air Outbreak Modification:
+         ! Increase windspeed for negative delt
+         ! based on Mahrt & Sun 1995,MWR
+         if (use_coldair_outbreak_mod) then
+            ! Mahrt and Sun adjustment
+            delt(i,j) = potT(i,j) - TsfK
+
+            if (delt(i,j).lt.td0) then
+               vscl=min((c1+alpha*(abs(delt(i,j)-td0)**p5/abs(vmag(ij)))),maxscl)
+               vmag(ij)=vmag(ij)*vscl
+            endif
+         endif
+
       !------------------------------------------------------------
       ! define some more needed variables
       !------------------------------------------------------------
 
-         TsfK       = Tsf(i,j) + Tffresh     ! surface temp (K)
          qsat       = qqq * exp(-TTT/TsfK)   ! saturation humidity (kg/m^3)
          ssq        = qsat / rhoa(i,j)       ! sat surf hum (kg/kg)
 
          thva(ij)   = potT(i,j) * (c1 + zvir * Qa(i,j)) ! virtual pot temp (K)
-         delt(i,j)  = potT(i,j) - TsfK       ! pot temp diff (K)
+
          delq(i,j)  = Qa(i,j) - ssq          ! spec hum dif (kg/kg)
          alz(ij)    = log(zlvl(i,j)/zref)
          cp(ij)     = cp_air*(c1 + cpvir*ssq)
@@ -352,14 +377,21 @@
       !------------------------------------------------------------
       ! iterate to converge on Z/L, ustar, tstar and qstar
       !------------------------------------------------------------
-
-      do k = 1, natmiter
-
+      iter = 0
+      ustar_prev = 2.0_SHR_KIND_R8 * ustar
+      do while (iter <= flux_convergence_max_iteration)
+         iter = iter + 1
          do ij = 1, icells
             i = indxi(ij)
             j = indxj(ij)
-
-        ! compute stability & evaluate all stability functions
+            if ( (flux_convergence_tolerance > 0.0_SHR_KIND_R8 .and. &
+                 abs((ustar(ij) - ustar_prev(ij))/ustar(ij)) <= flux_convergence_tolerance)) then
+               exit
+            endif
+            ! compute stability & evaluate all stability functions
+            ustar_prev(ij) = ustar(ij)
+            iter = iter +1
+            ustar_prev = ustar(ij)
             hol(ij) = vonkar * gravit * zlvl(i,j) &
                    * (tstar(ij)/thva(ij) &
                     + qstar(ij)/(c1/zvir+Qa(i,j))) &
@@ -389,7 +421,10 @@
             qstar(ij) = re(ij) * delq(i,j)
 
          enddo                  ! ij
-      enddo                     ! end iteration
+      enddo                     ! iter
+      if (iter <= 0) then
+         call abort_ice('error in ice_atmo flux calculation ')
+      endif
 
       if (calc_strair) then
 
@@ -491,7 +526,7 @@
             else
                Uref(i,j) = vmag(ij) * rd(ij) / rdn(ij)
             endif
-         endif ! (present(Uref)) 
+         endif ! (present(Uref))
 
          if (present(Qref_iso)) then
             do n = 1, n_iso
@@ -503,6 +538,7 @@
          endif
 
       enddo                     ! ij
+      firstpass = .false.
 
       end subroutine atmo_boundary_layer
 
@@ -515,15 +551,15 @@
 
       subroutine atmo_boundary_const (nx_block, ny_block, &
                                       sfctype,  icells,   &
-                                      indxi,    indxj,    & 
-                                      uatm,     vatm,     &  
+                                      indxi,    indxj,    &
+                                      uatm,     vatm,     &
                                       wind,     rhoa,     &
-                                      strx,     stry,     &   
+                                      strx,     stry,     &
                                       Tsf,      potT,     &
                                       Qa,                 &
                                       delt,     delq,     &
                                       lhcoef,   shcoef,   &
-                                      Cdn_atm)  
+                                      Cdn_atm)
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block, & ! block dimensions
@@ -654,8 +690,8 @@
 
 !=======================================================================
 
-! Neutral drag coefficients for ocean and atmosphere also compute the 
-! intermediate necessary variables ridge height, distance, floe size	 
+! Neutral drag coefficients for ocean and atmosphere also compute the
+! intermediate necessary variables ridge height, distance, floe size
 ! based upon Tsamados et al. (2014), JPO, DOI: 10.1175/JPO-D-13-0215.1.
 ! Places where the code varies from the paper are commented.
 !
@@ -687,28 +723,28 @@
          nx_block, ny_block, & ! block dimensions
          ilo,ihi,jlo,jhi,    & ! beginning and end of physical domain
          ncat
-         
+
       integer (kind=int_kind), dimension(nx_block*ny_block) :: &
          indxi, indxj    ! compressed i and j indices
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), &
          intent(in) :: &
-         apnd     ,& ! melt pond fraction of sea ice 
-         hpnd     ,& ! mean melt pond depth over sea ice 
+         apnd     ,& ! melt pond fraction of sea ice
+         hpnd     ,& ! mean melt pond depth over sea ice
          ipnd     ,& ! mean ice pond depth over sea ice in cat n
          alvl     ,& ! level ice area fraction (of grid cell ?)
-         vlvl        ! level ice mean thickness 
-         
+         vlvl        ! level ice mean thickness
+
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(in) :: &
          aice     , & ! concentration of ice
          vice     , & ! volume per unit area of ice
-         vsno         ! volume per unit area of snow 
-         
+         vsno         ! volume per unit area of snow
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat), intent(in) :: &
          aicen    , & ! concentration of ice
          vicen    , & ! volume per unit area of ice (m)
-         vsnon        ! volume per unit area of snow (m)   
-     
+         vsnon        ! volume per unit area of snow (m)
+
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(out) :: &
          hfreebd      , & ! freeboard (m)
@@ -719,33 +755,33 @@
          dkeel        , & ! distance between keels
          lfloe        , & ! floe length (m)
          dfloe        , & ! distance between floes
-         Cdn_ocn      , & ! ocean-ice neutral drag coefficient 
-         Cdn_ocn_skin , & ! drag coefficient due to skin drag 
-         Cdn_ocn_floe , & ! drag coefficient due to floe edges 
-         Cdn_ocn_keel , & ! drag coefficient dur to keels 
-         Cdn_atm      , & ! ice-atmosphere drag coefficient 
-         Cdn_atm_skin , & ! drag coefficient due to skin drag 
-         Cdn_atm_floe , & ! drag coefficient due to floe edges 
-         Cdn_atm_pond , & ! drag coefficient dur to ponds 
-         Cdn_atm_rdg      ! drag coefficient dur to ridges 
+         Cdn_ocn      , & ! ocean-ice neutral drag coefficient
+         Cdn_ocn_skin , & ! drag coefficient due to skin drag
+         Cdn_ocn_floe , & ! drag coefficient due to floe edges
+         Cdn_ocn_keel , & ! drag coefficient dur to keels
+         Cdn_atm      , & ! ice-atmosphere drag coefficient
+         Cdn_atm_skin , & ! drag coefficient due to skin drag
+         Cdn_atm_floe , & ! drag coefficient due to floe edges
+         Cdn_atm_pond , & ! drag coefficient dur to ponds
+         Cdn_atm_rdg      ! drag coefficient dur to ridges
 
-      real (kind=dbl_kind), parameter :: & 
-                                      ! [,] = range of values that can be tested 
+      real (kind=dbl_kind), parameter :: &
+                                      ! [,] = range of values that can be tested
          csw       = 0.002_dbl_kind ,&! ice-ocn drag coefficient [0.0005,0.005]
-         csa       = 0.0005_dbl_kind,&! ice-air drag coefficient [0.0001,0.001] 
-         dragia    = 0.0012_dbl_kind,&! ice-air drag coefficient [0.0005,0.002] 
+         csa       = 0.0005_dbl_kind,&! ice-air drag coefficient [0.0001,0.001]
+         dragia    = 0.0012_dbl_kind,&! ice-air drag coefficient [0.0005,0.002]
          mrdg      = c20            ,&! screening effect see Lu2011 [5,50]
          mrdgo     = c10            ,&! screening effect see Lu2011 [5,50]
-         beta      = p5             ,&! power exponent appearing in astar and 
+         beta      = p5             ,&! power exponent appearing in astar and
                                       ! L=Lmin(A*/(A*-A))**beta [0,1]
          Lmin      = c8             ,&! min length of floe (m) [5,100]
          Lmax      = 300._dbl_kind  ,&! max length of floe (m) [30,3000]
          Lmoy      = 300._dbl_kind  ,&! average length of floe (m) [30,1000]
-         cfa       = p2             ,&! Eq. 12 ratio of local from drag over 
-                                      ! geometrical parameter [0,1] 
-         cfw       = p2             ,&! Eq. 15 ratio of local from drag over 
+         cfa       = p2             ,&! Eq. 12 ratio of local from drag over
                                       ! geometrical parameter [0,1]
-         cpa       = p2             ,&! Eq. 16 ratio of local form drag over 
+         cfw       = p2             ,&! Eq. 15 ratio of local from drag over
+                                      ! geometrical parameter [0,1]
+         cpa       = p2             ,&! Eq. 16 ratio of local form drag over
                                       ! geometrical parameter [0,1]
          cra       = p2             ,&! Eq. 10 local form drag coefficient [0,1]
          crw       = p2             ,&! Eq. 11 local form drag coefficient [0,1]
@@ -759,14 +795,14 @@
          phik      = 0.8_dbl_kind   ,&! porosity of keels  [0.4,1]
          hkoverhr  = c4             ,&! hkeel/hridge ratio [4,8]
          dkoverdr  = c1             ,&! dkeel/distrdg ratio [1,5]
-         sHGB      = 0.18_dbl_kind  ,&! Lupkes2012 Eq. 28, Hanssen1988, 
+         sHGB      = 0.18_dbl_kind  ,&! Lupkes2012 Eq. 28, Hanssen1988,
                                       ! Steele1989 suggest instead 0.18
-         alpha2    = c0             ,&! weight functions for area of 
+         alpha2    = c0             ,&! weight functions for area of
          beta2     = p75              ! ridged ice [0,1]
 
        integer (kind=int_kind) :: &
          icells, & ! number of cells that require atmo fluxes
-         n     , & ! category index       
+         n     , & ! category index
          i, j  , & ! horizontal indices
          ij        ! combined ij index
 
@@ -775,7 +811,7 @@
          ctecaf,    & ! constante
          ctecwf,    & ! constante
          sca,       & ! wind attenuation function
-         scw,       & ! ocean attenuation function	     
+         scw,       & ! ocean attenuation function
          lp,        & ! pond length (m)
          ctecar,    &
          ctecwk,    &
@@ -787,7 +823,7 @@
          vpond    , & ! mean melt pond depth over grid cell
          ipond    , & ! mean melt pond ice depth over grid cell
          ardg     , & ! ridged ice area fraction of grid cell
-         vrdg         ! ridged ice mean thickness  
+         vrdg         ! ridged ice mean thickness
 
       real (kind=dbl_kind), parameter :: &
          ocnruf   = 0.000327_dbl_kind, & ! ocean surface roughness (m)
@@ -806,21 +842,21 @@
       !-----------------------------------------------------------------
 
       hfreebd(:,:)=c0
-      hdraft (:,:)=c0       
-      hridge (:,:)=c0       
-      distrdg(:,:)=c0    
-      hkeel  (:,:)=c0 
-      dkeel  (:,:)=c0 
+      hdraft (:,:)=c0
+      hridge (:,:)=c0
+      distrdg(:,:)=c0
+      hkeel  (:,:)=c0
+      dkeel  (:,:)=c0
       lfloe  (:,:)=c0
-      dfloe  (:,:)=c0 
+      dfloe  (:,:)=c0
       Cdn_ocn(:,:)=dragio
-      Cdn_ocn_skin(:,:)=c0 
-      Cdn_ocn_floe(:,:)=c0 
-      Cdn_ocn_keel(:,:)=c0 
+      Cdn_ocn_skin(:,:)=c0
+      Cdn_ocn_floe(:,:)=c0
+      Cdn_ocn_keel(:,:)=c0
       Cdn_atm(:,:) = (vonkar/log(zref/iceruf)) * (vonkar/log(zref/iceruf))
-      Cdn_atm_skin(:,:)=c0 
-      Cdn_atm_floe(:,:)=c0 
-      Cdn_atm_pond(:,:)=c0 
+      Cdn_atm_skin(:,:)=c0
+      Cdn_atm_floe(:,:)=c0
+      Cdn_atm_pond(:,:)=c0
       Cdn_atm_rdg (:,:)=c0
 
       !-----------------------------------------------------------------
@@ -830,14 +866,14 @@
       icells = 0
       do j = jlo, jhi
         do i = ilo, ihi
-          if (aice(i,j) > p001) then 
+          if (aice(i,j) > p001) then
             icells = icells + 1
             indxi(icells) = i
             indxj(icells) = j
           endif
         enddo               ! i
       enddo               ! j
-         
+
 !DIR$ CONCURRENT !Cray
 !cdir nodep      !NEC
 !ocl novrec      !Fujitsu
@@ -848,7 +884,7 @@
       !------------------------------------------------------------
       ! Initialize inside loop where concentration > 0.1%
       !------------------------------------------------------------
- 
+
         Cdn_atm_skin(i,j) = csa
         Cdn_ocn_skin(i,j) = csw
 
@@ -864,8 +900,8 @@
         vpond = c0
         ipond = c0
         do n = 1,ncat
-          ! area of pond per unit area of grid cell 
-          apond = apond+apnd(i,j,n)*aicen(i,j,n)  
+          ! area of pond per unit area of grid cell
+          apond = apond+apnd(i,j,n)*aicen(i,j,n)
           ! volume of pond per unit area of grid cell
           vpond = vpond+apnd(i,j,n)*hpnd(i,j,n)*aicen(i,j,n)
           ! volume of lid per unit area of grid cell
@@ -876,12 +912,12 @@
         hdraft(i,j) = (rhoi*vice(i,j)+rhos*vsno(i,j))*aii/rhow ! without ponds
         hfreebd(i,j) = (vice(i,j)+vsno(i,j))*aii-hdraft(i,j)
 
-        ! Do not allow draft larger than ice thickness (see Eq. 28)  
+        ! Do not allow draft larger than ice thickness (see Eq. 28)
         if (hdraft(i,j) >= vice(i,j)*aii) then
           ! replace excess snow with ice so hi~=hdraft
           hfreebd(i,j) = (hdraft(i,j)*ai*(c1-rhoi/rhow) + &
                     (vsno(i,j)-(vice(i,j)-hdraft(i,j)*ai)*rhoi/rhos) * &
-                    (c1-rhos/rhow))*aii ! Stoessel1993  
+                    (c1-rhos/rhow))*aii ! Stoessel1993
         endif
 
         ! floe size parameterization see Eq. 13
@@ -889,27 +925,27 @@
 
         ! distance between floes parameterization see Eq. 14
         dfloe(i,j) = lfloe(i,j) * (c1/sqrt(ai) - c1)
- 
-        ! Relate ridge height and distance between ridges to 
+
+        ! Relate ridge height and distance between ridges to
         ! ridged ice area fraction and ridged ice mean thickness
         ! Assumes total volume of ridged ice is split into ridges and keels.
-        ! Then assume total ridges volume over total area of ridges = 
+        ! Then assume total ridges volume over total area of ridges =
         ! volume of one average ridge / area of one average ridge
         ! Same for keels.
 
         ardg=c0
         vrdg=c0
         do n=1,ncat
-          ! ridged ice area fraction over grid cell 
+          ! ridged ice area fraction over grid cell
           ardg=ardg+(c1-alvl(i,j,n))*aicen(i,j,n)
           ! total ridged ice volume per unit grid cell area
           vrdg=vrdg+(c1-vlvl(i,j,n))*vicen(i,j,n)
         enddo
-      
-        ! hridge, hkeel, distrdg and dkeel estimates from CICE for 
+
+        ! hridge, hkeel, distrdg and dkeel estimates from CICE for
         ! simple triangular geometry
 
-        if (ardg > p001) then 
+        if (ardg > p001) then
 
           ! see Eq. 25 and Eq. 26
           hridge(i,j) = vrdg/ardg*c2 &
@@ -923,12 +959,12 @@
           ! Use the height of ridges relative to the mean freeboard of
           ! the pack.  Therefore skin drag and ridge drag differ in
           ! this code as compared to  Tsamados et al. (2014) equations
-          ! 10 and 18, which reference both to sea level. 
+          ! 10 and 18, which reference both to sea level.
           tmp1 = max(c0,hridge(i,j) - hfreebd(i,j))
 
       !------------------------------------------------------------
       ! Skin drag (atmo)
-      !------------------------------------------------------------	  
+      !------------------------------------------------------------
 
           Cdn_atm_skin(i,j) = csa*(c1 - mrdg*tmp1/distrdg(i,j))
           Cdn_atm_skin(i,j) = max(min(Cdn_atm_skin(i,j),camax),c0)
@@ -955,24 +991,24 @@
 
       !------------------------------------------------------------
       ! Skin drag bottom ice (ocean)
-      !------------------------------------------------------------	  
-  
+      !------------------------------------------------------------
+
           Cdn_ocn_skin(i,j) = csw * (c1 - mrdgo*tmp1/dkeel(i,j))
           Cdn_ocn_skin(i,j) = max(min(Cdn_ocn_skin(i,j),cwmax), c0)
-  
+
       !------------------------------------------------------------
       ! Keel effect (ocean)
       !------------------------------------------------------------
 
           if (tmp1 > puny) then
-            scw = c1 - exp(-sHGB*dkeel(i,j)/tmp1) 
+            scw = c1 - exp(-sHGB*dkeel(i,j)/tmp1)
             ctecwk = crw*p5
 
             Cdn_ocn_keel(i,j) = ctecwk*tmp1/dkeel(i,j)*scw* &
-                        (log(tmp1*icerufi)/log(zref*icerufi))**c2  
+                        (log(tmp1*icerufi)/log(zref*icerufi))**c2
             Cdn_ocn_keel(i,j) = max(min(Cdn_ocn_keel(i,j),cwmax),c0)
           endif
-  
+
         endif ! ardg > 0.001
 
       !------------------------------------------------------------
@@ -982,7 +1018,7 @@
         if (hfreebd(i,j) > puny) then
           sca = c1 - exp(-sl*beta*(c1-ai))
           ctecaf = cfa*p5*(log(hfreebd(i,j)*ocnrufi)/log(zref*ocnrufi))**c2*sca
-          Cdn_atm_floe(i,j) = ctecaf * hfreebd(i,j) / lfloe(i,j)  
+          Cdn_atm_floe(i,j) = ctecaf * hfreebd(i,j) / lfloe(i,j)
           Cdn_atm_floe(i,j) = max(min(Cdn_atm_floe(i,j),camax),c0)
         endif
 
@@ -997,7 +1033,7 @@
                    * (log(hfreebd(i,j)*ocnrufi)/log(zref*ocnrufi))**c2
           Cdn_atm_pond(i,j) = min(Cdn_atm_pond(i,j),camax)
         endif
-  
+
       !------------------------------------------------------------
       ! Floe edge drag effect (ocean)
       !------------------------------------------------------------
@@ -1023,7 +1059,7 @@
 
         Cdn_ocn(i,j) = Cdn_ocn_skin(i,j) + Cdn_ocn_floe(i,j) + &
                        Cdn_ocn_keel(i,j)
-        Cdn_ocn(i,j) = min(Cdn_ocn(i,j),cwmax)  
+        Cdn_ocn(i,j) = min(Cdn_ocn(i,j),cwmax)
 
       enddo                     ! ij
 

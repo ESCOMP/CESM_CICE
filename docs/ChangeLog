@@ -1,20 +1,67 @@
 ===============================================================
+cice5_20180116
+Originator: jedwards
+Date: 16 Jan 2018
+Version: 5.0
+One-line: Add flux convergence to atmice flux
+
+M       cime_config/buildcpp
+M       src/drivers/cesm/ice_comp_mct.F90
+M       src/source/ice_atmo.F90
+
+===============================================================
+cice5_20171220
+Originator: dbailey
+Date: 20 December 2017
+Version: 5.0
+One-line: Add new tx0.1v3 settings
+
+M       cime_config/namelist_definition_cice.xml
+
+===============================================================
 cice5_20171218
 Originator: dbailey
 Date: 18 December 2017
 Version: 5.0
-One-line: Remove initial barrier in ice_comp_mct.
+One-line: Remove initial barrier in ice_comp_mct
 
-modified:   src/drivers/cesm/ice_comp_mct.F90
+M       src/drivers/cesm/ice_comp_mct.F90
 
 ===============================================================
 cice5_20171208
 Originator: dbailey
 Date: 08 December 2017
 Version: 5.0
-One-line: Update hobart pe counts.
+One-line: Update hobart PE counts.
 
-modified:   cime_config/config_pes.xml
+Also delete PDFs and grid information.
+
+M       cime_config/config_pes.xml
+D       src/doc
+D       src/doc/cicedoc.pdf
+D       src/doc/PDF
+D       src/doc/PDF/HHL_OceMod2013.pdf
+D       src/doc/PDF/TFW_JGR2013.pdf
+D       src/doc/PDF/Hunke_JCP2001.pdf
+D       src/doc/PDF/BL_NCAR2007.pdf
+D       src/doc/PDF/BFLM_OceMod2013.pdf
+D       src/doc/PDF/Lipscomb_JGR2001.pdf
+D       src/doc/PDF/LAUR-03-2219.pdf
+D       src/doc/PDF/DB_JCP2000.pdf
+D       src/doc/PDF/HD_MWR2002.pdf
+D       src/doc/PDF/THB_JGR2013.pdf
+D       src/doc/PDF/BL_JGR1999.pdf
+D       src/doc/PDF/CGHM_JPO2004.pdf
+D       src/doc/PDF/HD_JPO1997.pdf
+D       src/doc/PDF/FSFH_JGR2012.pdf
+D       src/doc/PDF/LH_MWR2004.pdf
+D       src/doc/PDF/CMHB_IJHPCA2014.pdf
+D       src/doc/PDF/HZ_MWR1999.pdf
+D       src/doc/PDF/HBBLH_JClim2012.pdf
+D       src/doc/PDF/LHMJ_JGR07.pdf
+D       src/doc/PDF/Elliot_etal_JGR2012.pdf
+D       src/input_templates/gx1
+D       src/input_templates/gx3
 
 ===============================================================
 cice5_20170927
