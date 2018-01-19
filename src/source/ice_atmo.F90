@@ -377,49 +377,44 @@
       !------------------------------------------------------------
       ! iterate to converge on Z/L, ustar, tstar and qstar
       !------------------------------------------------------------
-      iter = 0
       ustar_prev = 2.0_SHR_KIND_R8 * ustar
-      do while (iter <= flux_convergence_max_iteration)
-         iter = iter + 1
+      do iter =1,flux_convergence_max_iteration
          do ij = 1, icells
             i = indxi(ij)
             j = indxj(ij)
-            if ( (flux_convergence_tolerance > 0.0_SHR_KIND_R8 .and. &
+            if (.not. (flux_convergence_tolerance > c0 .and. &
                  abs((ustar(ij) - ustar_prev(ij))/ustar(ij)) <= flux_convergence_tolerance)) then
-               exit
-            endif
-            ! compute stability & evaluate all stability functions
-            ustar_prev(ij) = ustar(ij)
-            iter = iter +1
-            ustar_prev = ustar(ij)
-            hol(ij) = vonkar * gravit * zlvl(i,j) &
-                   * (tstar(ij)/thva(ij) &
-                    + qstar(ij)/(c1/zvir+Qa(i,j))) &
-                   / ustar(ij)**2
-            hol(ij)    = sign( min(abs(hol(ij)),c10), hol(ij) )
-            stable(ij) = p5 + sign(p5 , hol(ij))
-            xqq    = max(sqrt(abs(c1 - c16*hol(ij))) , c1)
-            xqq    = sqrt(xqq)
 
-            ! Jordan et al 1999
-            psimhs = -(0.7_dbl_kind*hol(ij) &
-                   + 0.75_dbl_kind*(hol(ij)-14.3_dbl_kind) &
-                   * exp(-0.35_dbl_kind*hol(ij)) + 10.7_dbl_kind)
-            psimh  = psimhs*stable(ij) &
+               ! compute stability & evaluate all stability functions
+               ustar_prev(ij) = ustar(ij)
+               hol(ij) = vonkar * gravit * zlvl(i,j) &
+                    * (tstar(ij)/thva(ij) &
+                    + qstar(ij)/(c1/zvir+Qa(i,j))) &
+                    / ustar(ij)**2
+               hol(ij)    = sign( min(abs(hol(ij)),c10), hol(ij) )
+               stable(ij) = p5 + sign(p5 , hol(ij))
+               xqq    = max(sqrt(abs(c1 - c16*hol(ij))) , c1)
+               xqq    = sqrt(xqq)
+
+               ! Jordan et al 1999
+               psimhs = -(0.7_dbl_kind*hol(ij) &
+                    + 0.75_dbl_kind*(hol(ij)-14.3_dbl_kind) &
+                    * exp(-0.35_dbl_kind*hol(ij)) + 10.7_dbl_kind)
+               psimh  = psimhs*stable(ij) &
                     + (c1 - stable(ij))*psimhu(xqq)
-            psixh(ij)  = psimhs*stable(ij) &
+               psixh(ij)  = psimhs*stable(ij) &
                     + (c1 - stable(ij))*psixhu(xqq)
 
-        ! shift all coeffs to measurement height and stability
-            rd(ij) = rdn(ij) / (c1+rdn(ij)/vonkar*(alz(ij)-psimh))
-            rh(ij) = rhn(ij) / (c1+rhn(ij)/vonkar*(alz(ij)-psixh(ij)))
-            re(ij) = ren(ij) / (c1+ren(ij)/vonkar*(alz(ij)-psixh(ij)))
+               ! shift all coeffs to measurement height and stability
+               rd(ij) = rdn(ij) / (c1+rdn(ij)/vonkar*(alz(ij)-psimh))
+               rh(ij) = rhn(ij) / (c1+rhn(ij)/vonkar*(alz(ij)-psixh(ij)))
+               re(ij) = ren(ij) / (c1+ren(ij)/vonkar*(alz(ij)-psixh(ij)))
 
-        ! update ustar, tstar, qstar using updated, shifted coeffs
-            ustar(ij) = rd(ij) * vmag(ij)
-            tstar(ij) = rh(ij) * delt(i,j)
-            qstar(ij) = re(ij) * delq(i,j)
-
+               ! update ustar, tstar, qstar using updated, shifted coeffs
+               ustar(ij) = rd(ij) * vmag(ij)
+               tstar(ij) = rh(ij) * delt(i,j)
+               qstar(ij) = re(ij) * delq(i,j)
+            endif
          enddo                  ! ij
       enddo                     ! iter
       if (iter <= 0) then

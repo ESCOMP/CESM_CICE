@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20180118
+Originator: jedwards
+Date: 18 Jan 2018
+Version: 5.0
+One-line: Correction to flux convergence to atmice flux
+
+M       src/source/ice_atmo.F90
+
+===============================================================
 cice5_20180116
 Originator: jedwards
 Date: 16 Jan 2018
