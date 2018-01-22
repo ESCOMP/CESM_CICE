@@ -1751,6 +1751,9 @@
 !ocl novrec      !Fujitsu
          do ij = 1, icells
 
+            i = indxi(ij)
+            j = indxj(ij)
+
          !--------------------------------------------------------------
          ! Melt snow (only if all the ice has melted)
          !--------------------------------------------------------------
