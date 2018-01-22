@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20180122
+Originator: jedwards
+Date: 22 Jan 2018
+Version: 5.0
+One-line: Bug fix in thermo.
+
+	modified:   src/source/ice_therm_vertical.F90
+
+===============================================================
 cice5_20180118
 Originator: jedwards
 Date: 18 Jan 2018
