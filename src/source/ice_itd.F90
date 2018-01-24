@@ -20,7 +20,7 @@
 !
 ! 2004 WHL: Added multiple snow layers, block structure, cleanup_itd
 ! 2006 ECH: Added WMO standard ice thickness categories as kcatbound=2
-!           Streamlined for efficiency 
+!           Streamlined for efficiency
 !           Converted to free source form (F90)
 
       module ice_itd
@@ -109,23 +109,23 @@
       !-----------------------------------------------------------------
       ! Choose category boundaries based on one of four options.
       !
-      ! The first formula (kcatbound = 0) was used in Lipscomb (2001) 
+      ! The first formula (kcatbound = 0) was used in Lipscomb (2001)
       !  and in CICE versions 3.0 and 3.1.
       !
       ! The second formula is more user-friendly in the sense that it
       !  is easy to obtain round numbers for category boundaries:
       !
-      !    H(n) = n * [d1 + d2*(n-1)] 
-      ! 
+      !    H(n) = n * [d1 + d2*(n-1)]
+      !
       ! Default values are d1 = 300/ncat, d2 = 50/ncat.
-      ! For ncat = 5, boundaries in cm are 60, 140, 240, 360, which are 
+      ! For ncat = 5, boundaries in cm are 60, 140, 240, 360, which are
       !  close to the standard values given by the first formula.
       ! For ncat = 10, boundaries in cm are 30, 70, 120, 180, 250, 330,
-      !  420, 520, 630.    
+      !  420, 520, 630.
       !
       ! The third option provides support for World Meteorological
       !  Organization classification based on thickness.  The full
-      !  WMO thickness distribution is used if ncat = 7;  if ncat=5 
+      !  WMO thickness distribution is used if ncat = 7;  if ncat=5
       !  or ncat = 6, some of the thinner categories are combined.
       ! For ncat = 5,  boundaries are         30, 70, 120, 200, >200 cm.
       ! For ncat = 6,  boundaries are     15, 30, 70, 120, 200, >200 cm.
@@ -199,7 +199,7 @@
             hin_max(n) = wmo6(n)
          enddo
        elseif (ncat == 7) then
-         ! all thickness categories 
+         ! all thickness categories
          data wmo7 / 0.10_dbl_kind, 0.15_dbl_kind, &
                     0.30_dbl_kind, 0.70_dbl_kind,  &
                     1.20_dbl_kind, 2.00_dbl_kind,  &
@@ -221,7 +221,7 @@
          do n = 1, ncat
             write (nu_diag,*) hin_max(n-1),' < Cat ',n, ' < ',hin_max(n)
             ! Write integer n to character string
-            write (c_nc, '(i2)') n    
+            write (c_nc, '(i2)') n
 
             ! Write hin_max to character string
             write (c_hinmax1, '(f6.3)') hin_max(n-1)
@@ -427,7 +427,7 @@
                   i = indxi(ij)
                   j = indxj(ij)
                   atrcr(ij,it) = atrcr(ij,it)  &
-                               + trcrn(i,j,it,n)*trcrn(i,j,nt_fbri,n)*vicen(i,j,n) 
+                               + trcrn(i,j,it,n)*trcrn(i,j,nt_fbri,n)*vicen(i,j,n)
                enddo            ! ij
             endif               ! trcr_depend
          enddo                  ! ntrcr
@@ -458,7 +458,7 @@
 
 !=======================================================================
 
-! Aggregate ice area (but not other state variables) over thickness 
+! Aggregate ice area (but not other state variables) over thickness
 ! categories.
 !
 ! authors: William H. Lipscomb, LANL
@@ -849,7 +849,7 @@
          trcrn     ! ice tracers
 
       ! NOTE: Third index of donor, daice, dvice should be ncat-1,
-      !       except that compilers would have trouble when ncat = 1 
+      !       except that compilers would have trouble when ncat = 1
       integer (kind=int_kind), dimension(icells,ncat), &
          intent(in) :: &
          donor             ! donor category index
@@ -876,8 +876,9 @@
          it                ! tracer index
 
       real (kind=dbl_kind), dimension(icells,ntrcr,ncat) :: &
-         atrcrn            ! aicen*trcrn   
-
+         atrcrn            ! aicen*trcrn
+      real (kind=dbl_kind), dimension(nx_block, ny_block, ntrcr) :: &
+           wtrcrn          ! trcrn workarray
      ! real (kind=dbl_kind), dimension(icells,ncat) :: &
      !    dvbrine            ! brine volume transferred
 
@@ -910,7 +911,7 @@
       l_stop = .false.
       istop = 0
       jstop = 0
-
+      wtrcrn = c0
       !-----------------------------------------------------------------
       ! Define variables equal to aicen*trcrn, vicen*trcrn, vsnon*trcrn
       !-----------------------------------------------------------------
@@ -966,13 +967,13 @@
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
-                  atrcrn(ij,it,n) = vicen(i,j,n) &   
+                  atrcrn(ij,it,n) = vicen(i,j,n) &
                                   * trcrn(i,j,nt_fbri,n) &
                                   * trcrn(i,j,it,n)
                enddo
             endif
          enddo
-     
+
       enddo
 
       !-----------------------------------------------------------------
@@ -1001,9 +1002,9 @@
                      daice_negative = .true.
                   endif
                endif
-         
+
                if (dvice(ij,n) < c0) then
-                  if (dvice(ij,n) > -puny*vicen(i,j,nd)) then   
+                  if (dvice(ij,n) > -puny*vicen(i,j,nd)) then
                      daice(ij,n) = c0 ! shift no ice
                      dvice(ij,n) = c0
                   else
@@ -1018,7 +1019,7 @@
                   else
                      daice_greater_aicen = .true.
                   endif
-               endif    
+               endif
 
                if (dvice(ij,n) > vicen(i,j,nd)*(c1-puny)) then
                   if (dvice(ij,n) < vicen(i,j,nd)*(c1+puny)) then
@@ -1208,7 +1209,7 @@
 
                atrcrn(m,it,nd) = atrcrn(m,it,nd) - datrcr
                atrcrn(m,it,nr) = atrcrn(m,it,nr) + datrcr
-            
+
             enddo               ! ij
          enddo                  ! ntrcr
       enddo                     ! boundaries, 1 to ncat-1
@@ -1224,7 +1225,7 @@
             j = indxj(ij)
 
             if (aicen(i,j,n) > puny) then
-               hicen(ij,n) = vicen (i,j,n) / aicen(i,j,n)                
+               hicen(ij,n) = vicen (i,j,n) / aicen(i,j,n)
             else
                hicen(ij,n) = c0
             endif
@@ -1235,8 +1236,16 @@
                                ntrcr,           trcr_depend,    &
                                atrcrn(:,:,  n), aicen(:,:,  n), &
                                vicen (:,:,  n), vsnon(:,:,  n), &
-                               trcrn (:,:,:,n))
-
+                               wtrcrn (:,:,:))
+         do it = 1,ntrcr
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+               if (any(donor(ij,:) > 0)) then
+                  trcrn(i,j,it,n) = wtrcrn(i,j,it)
+               endif
+            enddo
+         enddo
       enddo                     ! ncat
 
       end subroutine shift_ice
@@ -1408,7 +1417,7 @@
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
-               if (aicen(i,j) > puny) then  
+               if (aicen(i,j) > puny) then
                   trcrn(i,j,it) = atrcrn(ij,it) / aicen(i,j)
                else
                   trcrn(i,j,it) = Tocnfrz
@@ -1419,7 +1428,7 @@
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
-               if (aicen(i,j) > puny) then  
+               if (aicen(i,j) > puny) then
                   trcrn(i,j,it) = atrcrn(ij,it) / aicen(i,j)
                else
                   trcrn(i,j,it) = c0
@@ -1488,8 +1497,8 @@
             do ij = 1, icells
                i = indxi(ij)
                j = indxj(ij)
-               if (trcrn(i,j,nt_fbri)*vicen(i,j) > c0 ) then 
-                  trcrn(i,j,it) = atrcrn(ij,it) / (trcrn(i,j,nt_fbri)*vicen(i,j)) 
+               if (trcrn(i,j,nt_fbri)*vicen(i,j) > c0 ) then
+                  trcrn(i,j,it) = atrcrn(ij,it) / (trcrn(i,j,nt_fbri)*vicen(i,j))
                else
                   trcrn(i,j,it) = c0
                endif
@@ -1502,10 +1511,10 @@
 !=======================================================================
 
 ! Cleanup subroutine that rebins thickness categories if necessary,
-!  eliminates very small ice areas while conserving mass and energy, 
-!  aggregates state variables, and does a boundary call.  
+!  eliminates very small ice areas while conserving mass and energy,
+!  aggregates state variables, and does a boundary call.
 ! It is a good idea to call this subroutine after the thermodynamics
-!  (thermo_vertical/thermo_itd) and again after the dynamics 
+!  (thermo_vertical/thermo_itd) and again after the dynamics
 !  (evp/transport/ridging).
 !
 ! author: William H. Lipscomb, LANL
@@ -1529,30 +1538,30 @@
                               istop,         jstop,    &
                               limit_aice_in)
 
-      integer (kind=int_kind), intent(in) :: & 
-         nx_block, ny_block, & ! block dimensions 
+      integer (kind=int_kind), intent(in) :: &
+         nx_block, ny_block, & ! block dimensions
          ilo,ihi,jlo,jhi   , & ! beginning and end of physical domain
          ntrcr                 ! number of tracers in use
- 
-      real (kind=dbl_kind), intent(in) :: & 
-         dt        ! time step 
- 
+
+      real (kind=dbl_kind), intent(in) :: &
+         dt        ! time step
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat),  &
-         intent(inout) :: & 
-         aicen , & ! concentration of ice 
-         vicen , & ! volume per unit area of ice          (m) 
-         vsnon     ! volume per unit area of snow         (m) 
- 
+         intent(inout) :: &
+         aicen , & ! concentration of ice
+         vicen , & ! volume per unit area of ice          (m)
+         vsnon     ! volume per unit area of snow         (m)
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat),  &
-         intent(inout) :: & 
-         trcrn     ! ice tracers 
+         intent(inout) :: &
+         trcrn     ! ice tracers
 
       real (kind=dbl_kind), dimension (nx_block,ny_block),  &
-         intent(inout) :: & 
+         intent(inout) :: &
          aice  , & ! total ice concentration
-         aice0     ! concentration of open water 
-     
-      integer (kind=int_kind), dimension(ntrcr), intent(in) :: & 
+         aice0     ! concentration of open water
+
+      integer (kind=int_kind), dimension(ntrcr), intent(in) :: &
          trcr_depend  ! tracer dependency information
 
       logical (kind=log_kind), intent(in) :: &
@@ -1574,7 +1583,7 @@
 
       integer (kind=int_kind), intent(in) :: &
          nbtrcr       ! number of bgc tracers
-      
+
       real (kind=dbl_kind), dimension (nx_block,ny_block), &
          intent(inout), optional :: &
          fpond    , & ! fresh water flux to ponds (kg/m^2/s)
@@ -1653,7 +1662,7 @@
                            aice,     aice0)
 
       if (limit_aice) then  ! check for aice out of bounds
-      
+
          do j = jlo,jhi
          do i = ilo,ihi
             if (aice(i,j) > c1+puny .or. aice(i,j) < -puny) then
@@ -1751,9 +1760,9 @@
     !-------------------------------------------------------------------
 
       if (present(fpond)) &
-           fpond     (:,:)   = fpond(:,:)       + dfpond(:,:) 
+           fpond     (:,:)   = fpond(:,:)       + dfpond(:,:)
       if (present(fresh)) &
-           fresh     (:,:)   = fresh(:,:)       + dfresh(:,:) 
+           fresh     (:,:)   = fresh(:,:)       + dfresh(:,:)
       if (present(fsalt)) &
            fsalt     (:,:)   = fsalt(:,:)       + dfsalt(:,:)
       if (present(fhocn)) &
@@ -1764,8 +1773,8 @@
            fiso_ocn (:,:,:) = fiso_ocn(:,:,:) + dfiso_ocn(:,:,:)
 
       !----------------------------------------------------------------
-      ! If using zero-layer model (no heat capacity), check that the 
-      ! energy of snow and ice is correct. 
+      ! If using zero-layer model (no heat capacity), check that the
+      ! energy of snow and ice is correct.
       !----------------------------------------------------------------
 
       if (.not. heat_capacity) then
@@ -1857,7 +1866,7 @@
          tr_pond_topo ! pond flag
 
       logical (kind=log_kind), dimension (nx_block,ny_block,ncat),intent(inout) :: &
-         first_ice   ! For bgc tracers.  Set to  true if zapping ice 
+         first_ice   ! For bgc tracers.  Set to  true if zapping ice
 
       logical (kind=log_kind), intent(out) :: &
          l_stop       ! if true, abort on return
@@ -2024,7 +2033,7 @@
       !-----------------------------------------------------------------
       ! Zap tracers
       !-----------------------------------------------------------------
-         
+
          if (ntrcr >= 2) then
             do it = 2, ntrcr
                if (tr_brine .and. it == nt_fbri) then
@@ -2038,7 +2047,7 @@
                      i = indxi(ij)
                      j = indxj(ij)
                      trcrn(i,j,it,n) = c0
-                  enddo               
+                  enddo
                endif
             enddo
          endif
@@ -2133,69 +2142,69 @@
             enddo                  ! ij
          endif
 
-      !----------------------------------------------------------------- 
-      ! Zap ice energy and use ocean heat to melt ice 
-      !----------------------------------------------------------------- 
-       
-         do k = 1, nilyr 
-!DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
-!ocl novrec      !Fujitsu 
-            do ij = 1, icells 
-               i = indxi(ij) 
-               j = indxj(ij) 
- 
-               xtmp = trcrn(i,j,nt_qice+k-1,n) &
-                    * vicen(i,j,n)/real(nilyr,kind=dbl_kind) &
-                    * (aice(i,j)-c1)/aice(i,j) / dt ! < 0 
-               dfhocn(i,j) = dfhocn(i,j) + xtmp 
- 
-            enddo               ! ij 
-         enddo                  ! k 
- 
-      !----------------------------------------------------------------- 
-      ! Zap snow energy and use ocean heat to melt snow 
-      !----------------------------------------------------------------- 
+      !-----------------------------------------------------------------
+      ! Zap ice energy and use ocean heat to melt ice
+      !-----------------------------------------------------------------
 
-         do k = 1, nslyr 
+         do k = 1, nilyr
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
+!cdir nodep      !NEC
 !ocl novrec      !Fujitsu
             do ij = 1, icells
-               i = indxi(ij) 
-               j = indxj(ij) 
- 
-               xtmp = trcrn(i,j,nt_qsno+k-1,n) &
-                    * vsnon(i,j,n)/real(nslyr,kind=dbl_kind) &
-                    * (aice(i,j)-c1)/aice(i,j) / dt ! < 0 
-               dfhocn(i,j) = dfhocn(i,j) + xtmp 
- 
+               i = indxi(ij)
+               j = indxj(ij)
+
+               xtmp = trcrn(i,j,nt_qice+k-1,n) &
+                    * vicen(i,j,n)/real(nilyr,kind=dbl_kind) &
+                    * (aice(i,j)-c1)/aice(i,j) / dt ! < 0
+               dfhocn(i,j) = dfhocn(i,j) + xtmp
+
             enddo               ! ij
          enddo                  ! k
- 
+
+      !-----------------------------------------------------------------
+      ! Zap snow energy and use ocean heat to melt snow
+      !-----------------------------------------------------------------
+
+         do k = 1, nslyr
+!DIR$ CONCURRENT !Cray
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+            do ij = 1, icells
+               i = indxi(ij)
+               j = indxj(ij)
+
+               xtmp = trcrn(i,j,nt_qsno+k-1,n) &
+                    * vsnon(i,j,n)/real(nslyr,kind=dbl_kind) &
+                    * (aice(i,j)-c1)/aice(i,j) / dt ! < 0
+               dfhocn(i,j) = dfhocn(i,j) + xtmp
+
+            enddo               ! ij
+         enddo                  ! k
+
       !-----------------------------------------------------------------
       ! Zap ice and snow volume, add water and salt to ocean
       !-----------------------------------------------------------------
 
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
-!ocl novrec      !Fujitsu 
-         do ij = 1, icells 
-            i = indxi(ij) 
-            j = indxj(ij) 
- 
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+         do ij = 1, icells
+            i = indxi(ij)
+            j = indxj(ij)
+
             xtmp = (rhoi*vicen(i,j,n) + rhos*vsnon(i,j,n)) &
-                 * (aice(i,j)-c1)/aice(i,j) / dt 
-            dfresh(i,j) = dfresh(i,j) + xtmp 
- 
+                 * (aice(i,j)-c1)/aice(i,j) / dt
+            dfresh(i,j) = dfresh(i,j) + xtmp
+
             xtmp = rhoi*vicen(i,j,n)*ice_ref_salinity*p001 &
                  * (aice(i,j)-c1)/aice(i,j) / dt
-            dfsalt(i,j) = dfsalt(i,j) + xtmp 
- 
-            aicen(i,j,n) = aicen(i,j,n) * (c1/aice(i,j)) 
-            vicen(i,j,n) = vicen(i,j,n) * (c1/aice(i,j)) 
+            dfsalt(i,j) = dfsalt(i,j) + xtmp
+
+            aicen(i,j,n) = aicen(i,j,n) * (c1/aice(i,j))
+            vicen(i,j,n) = vicen(i,j,n) * (c1/aice(i,j))
             vsnon(i,j,n) = vsnon(i,j,n) * (c1/aice(i,j))
- 
+
          enddo                  ! ij
 
       ! Note: Tracers are unchanged.
@@ -2207,11 +2216,11 @@
       !-----------------------------------------------------------------
 
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
-!ocl novrec      !Fujitsu 
-      do ij = 1, icells 
-         i = indxi(ij) 
-         j = indxj(ij) 
+!cdir nodep      !NEC
+!ocl novrec      !Fujitsu
+      do ij = 1, icells
+         i = indxi(ij)
+         j = indxj(ij)
          aice(i,j) = c1
          aice0(i,j) = c0
       enddo
@@ -2237,7 +2246,7 @@
          nx_block, ny_block, & ! block dimensions
          icells            , & ! number of ice/ocean grid cells
          ntrcr                 ! number of tracers in use
- 
+
       real (kind=dbl_kind), intent(in) :: &
          dt           ! time step
 
@@ -2281,7 +2290,7 @@
       ! aerosols
       if (tr_aero) then
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
+!cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
             i = indxi(ij)
@@ -2300,7 +2309,7 @@
       ! isotopes
       if (tr_iso) then
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
+!cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
             i = indxi(ij)
@@ -2317,9 +2326,9 @@
       endif ! tr_iso
 
       ! snow enthalpy tracer
-      do k = 1, nslyr 
+      do k = 1, nslyr
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
+!cdir nodep      !NEC
 !ocl novrec      !Fujitsu
          do ij = 1, icells
             i = indxi(ij)
@@ -2335,7 +2344,7 @@
 
       ! snow volume
 !DIR$ CONCURRENT !Cray
-!cdir nodep      !NEC 
+!cdir nodep      !NEC
 !ocl novrec      !Fujitsu
       do ij = 1, icells
          i = indxi(ij)
@@ -2350,7 +2359,7 @@
       end subroutine zap_snow
 
 !=======================================================================
-   
+
       subroutine zap_snow_temperature(nx_block,   ny_block, &
                                       ilo, ihi, jlo, jhi,   &
                                       dt,         ntrcr,    &
@@ -2360,7 +2369,7 @@
                                       dfaero_ocn, tr_aero,  &
                                       dfiso_ocn,  tr_iso)
 
-      use ice_state, only: nt_qsno 
+      use ice_state, only: nt_qsno
       use ice_therm_shared, only: heat_capacity, Tmin
       use ice_calendar, only: istep1
 
@@ -2373,8 +2382,8 @@
          dt           ! time step
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat),  &
-         intent(in) :: & 
-         aicen        ! concentration of ice 
+         intent(in) :: &
+         aicen        ! concentration of ice
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,ncat), &
          intent(inout) :: &
@@ -2423,7 +2432,7 @@
          l_zap             ! logical whether zap snow
 
       rnslyr = real(nslyr,kind=dbl_kind)
-      
+
       do n = 1, ncat
 
       !-----------------------------------------------------------------
@@ -2446,7 +2455,7 @@
 
                ! snow enthalpy and max temperature
                if (hsn > hs_min .and. heat_capacity) then
-                  ! zqsn < 0              
+                  ! zqsn < 0
                   zqsn = trcrn(i,j,nt_qsno+k-1,n)
                   Tmax = -zqsn*puny*rnslyr / &
                        (rhos*cp_ice*vsnon(i,j,n))
@@ -2454,7 +2463,7 @@
                   zqsn = -rhos * Lfresh
                   Tmax = puny
                endif
-                     
+
                ! snow temperature
                zTsn = (Lfresh + zqsn/rhos)/cp_ice
 
@@ -2508,8 +2517,8 @@
 ! This subroutine is only called if heat_capacity = .false.
 !
 ! author: Alison McLaren, Met Office
-!         May 2010:  ECH replaced eicen, esnon with trcrn but did not test 
-! the changes.  The loop below runs over n=1,ncat and I added loops 
+!         May 2010:  ECH replaced eicen, esnon with trcrn but did not test
+! the changes.  The loop below runs over n=1,ncat and I added loops
 ! over k, making the test more stringent.
 
       subroutine zerolayer_check (nx_block,    ny_block,   &
@@ -2522,25 +2531,25 @@
 
       use ice_state, only: nt_qice, nt_qsno
 
-      integer (kind=int_kind), intent(in) :: & 
-         nx_block, ny_block, & ! block dimensions 
+      integer (kind=int_kind), intent(in) :: &
+         nx_block, ny_block, & ! block dimensions
          ntrcr             , & ! number of tracers in use
          icells                ! number of grid cells with ice
 
       integer (kind=int_kind), dimension (nx_block*ny_block), &
          intent(in) :: &
          indxi, indxj      ! compressed i/j indices
- 
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat),  &
-         intent(inout) :: & 
-         aicen , & ! concentration of ice 
-         vicen , & ! volume per unit area of ice          (m) 
-         vsnon     ! volume per unit area of snow         (m) 
+         intent(inout) :: &
+         aicen , & ! concentration of ice
+         vicen , & ! volume per unit area of ice          (m)
+         vsnon     ! volume per unit area of snow         (m)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ntrcr,ncat), &
          intent(inout) :: &
          trcrn        ! ice tracers
-      
+
       logical (kind=log_kind), intent(out) :: &
          l_stop    ! if true, abort on return
 
@@ -2559,10 +2568,10 @@
                                       ! (so max volume error = puny)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
-         eicen     ! energy of melting for each ice layer (J/m^2) 
- 
+         eicen     ! energy of melting for each ice layer (J/m^2)
+
       real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
-         esnon     ! energy of melting for each snow layer (J/m^2) 
+         esnon     ! energy of melting for each snow layer (J/m^2)
 
       logical (kind=log_kind) :: &
          ice_energy_correct  , & ! zero layer ice energy check
@@ -2679,12 +2688,3 @@
       end module ice_itd
 
 !=======================================================================
-
-
-
-
-
-
-
-
-
