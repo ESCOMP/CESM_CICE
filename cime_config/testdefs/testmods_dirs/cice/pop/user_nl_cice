@@ -6,6 +6,7 @@
 !----------------------------------------------------------------------------------
 histfreq	= 'd','x','x','x','x'
 histfreq_n	=  1,1,1,1,1
+f_bounds = .false.
 f_hi		= 'dxxxx'
 f_hs		= 'dxxxx'
 f_Tsfc		= 'dxxxx'
