@@ -301,7 +301,7 @@
     </values>
   </entry>
 
-  <entry id="bfbflag">
+  <entry id="bfbflag" modify_via_xml="BFBFLAG">
     <type>logical</type>  
     <category>setup</category> 
     <group>setup_nml</group>
@@ -309,7 +309,7 @@
       logical to control bit-for-bit computations
     </desc>
     <values>
-      <value>.false.</value>
+      <value>$BFBFLAG</value>
     </values>
   </entry>
 
