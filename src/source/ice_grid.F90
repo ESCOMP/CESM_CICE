@@ -42,7 +42,8 @@
          grid_type        !  current options are rectangular (default),
                           !  displaced_pole, tripole, regional
 
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), &
+           public,target :: &
          dxt    , & ! width of T-cell through the middle (m)
          dyt    , & ! height of T-cell through the middle (m)
          dxu    , & ! width of U-cell through the middle (m)
@@ -78,7 +79,7 @@
          lont_bounds, & ! longitude of gridbox corners for T point
          latt_bounds, & ! latitude of gridbox corners for T point
          lonu_bounds, & ! longitude of gridbox corners for U point
-         latu_bounds    ! latitude of gridbox corners for U point       
+         latu_bounds    ! latitude of gridbox corners for U point
 
       ! geometric quantities used for remapping transport
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
@@ -97,11 +98,12 @@
          dimension (2,2,nx_block,ny_block,max_blocks), public :: &
          mne, & ! matrices used for coordinate transformations in remapping
          mnw, & ! ne = northeast corner, nw = northwest, etc.
-         mse, & 
+         mse, &
          msw
 
       ! masks
-      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), public :: &
+      real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks), &
+           public, target :: &
          hm     , & ! land/boundary mask, thickness (T-cell)
          bm     , & ! task/block id
          uvm        ! land/boundary mask, velocity (U-cell)
@@ -128,11 +130,11 @@
 !=======================================================================
 
 ! Distribute blocks across processors.  The distribution is optimized
-! based on latitude and topography, contained in the ULAT and KMT arrays. 
+! based on latitude and topography, contained in the ULAT and KMT arrays.
 !
 ! authors: William Lipscomb and Phil Jones, LANL
 
-      subroutine init_grid1 
+      subroutine init_grid1
 
       use ice_blocks, only: nx_block, ny_block
       use ice_broadcast, only: broadcast_array
@@ -258,7 +260,7 @@
 
       type (block) :: &
          this_block           ! block information for current block
-      
+
       !-----------------------------------------------------------------
       ! lat, lon, cell widths, angle, land mask
       !-----------------------------------------------------------------
@@ -270,7 +272,7 @@
             call popgrid_nc     ! read POP grid lengths from nc file
          else
             call popgrid        ! read POP grid lengths directly
-         endif 
+         endif
       elseif (trim(grid_type) == 'latlon') then
          call latlongrid        ! lat lon grid for sequential CCSM (CAM mode)
          return
@@ -286,7 +288,7 @@
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -318,8 +320,8 @@
             cyp(i,j,iblk) = (c1p5*HTE(i,j,iblk) - p5*HTE(i-1,j,iblk))
             cxp(i,j,iblk) = (c1p5*HTN(i,j,iblk) - p5*HTN(i,j-1,iblk))
             ! match order of operations in cyp, cxp for tripole grids
-            cym(i,j,iblk) = -(c1p5*HTE(i-1,j,iblk) - p5*HTE(i,j,iblk)) 
-            cxm(i,j,iblk) = -(c1p5*HTN(i,j-1,iblk) - p5*HTN(i,j,iblk)) 
+            cym(i,j,iblk) = -(c1p5*HTE(i-1,j,iblk) - p5*HTE(i,j,iblk))
+            cxm(i,j,iblk) = -(c1p5*HTN(i,j-1,iblk) - p5*HTN(i,j,iblk))
          enddo
          enddo
 
@@ -375,7 +377,7 @@
       ! Compute ANGLE on T-grid
       !-----------------------------------------------------------------
       ANGLET = c0
-      
+
       if (trim(grid_type) == 'cpom_grid') then
          ANGLET(:,:,:) = ANGLE(:,:,:)
       else
@@ -383,7 +385,7 @@
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block, &
       !$OMP                     angle_0,angle_w,angle_s,angle_sw)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -432,7 +434,7 @@
          enddo
          !$OMP END PARALLEL DO
       endif  ! regional
-      
+
       call ice_timer_start(timer_bound)
       call ice_HaloUpdate (ANGLET,           halo_info, &
                            field_loc_center, field_type_angle, &
@@ -474,7 +476,7 @@
 
 !=======================================================================
 
-! POP displaced pole grid and land mask (or tripole). 
+! POP displaced pole grid and land mask (or tripole).
 ! Grid record number, field and units are: \\
 ! (1) ULAT  (radians)    \\
 ! (2) ULON  (radians)    \\
@@ -482,7 +484,7 @@
 ! (4) HTE   (cm)         \\
 ! (5) HUS   (cm)         \\
 ! (6) HUW   (cm)         \\
-! (7) ANGLE (radians)   
+! (7) ANGLE (radians)
 !
 ! Land mask record number and field is (1) KMT.
 !
@@ -521,13 +523,13 @@
       !-----------------------------------------------------------------
 
       call ice_read(nu_kmt,1,work1,'ida4',diag, &
-                    field_loc=field_loc_center, & 
+                    field_loc=field_loc_center, &
                     field_type=field_type_scalar)
 
       hm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -549,14 +551,14 @@
       allocate(work_g1(nx_global,ny_global))
 
       call ice_read_global(nu_grid,1,work_g1,'rda8',.true.)   ! ULAT
-      call gridbox_verts(work_g1,latt_bounds)       
+      call gridbox_verts(work_g1,latt_bounds)
       call scatter_global(ULAT, work_g1, master_task, distrb_info, &
                           field_loc_NEcorner, field_type_scalar)
       call ice_HaloExtrapolate(ULAT, distrb_info, &
                                ew_boundary_type, ns_boundary_type)
 
       call ice_read_global(nu_grid,2,work_g1,'rda8',.true.)   ! ULON
-      call gridbox_verts(work_g1,lont_bounds)       
+      call gridbox_verts(work_g1,lont_bounds)
       call scatter_global(ULON, work_g1, master_task, distrb_info, &
                           field_loc_NEcorner, field_type_scalar)
       call ice_HaloExtrapolate(ULON, distrb_info, &
@@ -568,7 +570,7 @@
 
       !-----------------------------------------------------------------
       ! cell dimensions
-      ! calculate derived quantities from global arrays to preserve 
+      ! calculate derived quantities from global arrays to preserve
       ! information on boundaries
       !-----------------------------------------------------------------
 
@@ -644,13 +646,13 @@
 
       fieldname='kmt'
       call ice_read_nc(fid_kmt,1,fieldname,work1,diag, &
-                       field_loc=field_loc_center, & 
+                       field_loc=field_loc_center, &
                        field_type=field_type_scalar)
 
       hm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -673,7 +675,7 @@
 
       fieldname='ulat'
       call ice_read_global_nc(fid_grid,1,fieldname,work_g1,diag) ! ULAT
-      call gridbox_verts(work_g1,latt_bounds)       
+      call gridbox_verts(work_g1,latt_bounds)
       call scatter_global(ULAT, work_g1, master_task, distrb_info, &
                           field_loc_NEcorner, field_type_scalar)
       call ice_HaloExtrapolate(ULAT, distrb_info, &
@@ -681,14 +683,14 @@
 
       fieldname='ulon'
       call ice_read_global_nc(fid_grid,2,fieldname,work_g1,diag) ! ULON
-      call gridbox_verts(work_g1,lont_bounds)       
+      call gridbox_verts(work_g1,lont_bounds)
       call scatter_global(ULON, work_g1, master_task, distrb_info, &
                           field_loc_NEcorner, field_type_scalar)
       call ice_HaloExtrapolate(ULON, distrb_info, &
                                ew_boundary_type, ns_boundary_type)
 
       fieldname='angle'
-      call ice_read_global_nc(fid_grid,7,fieldname,work_g1,diag) ! ANGLE    
+      call ice_read_global_nc(fid_grid,7,fieldname,work_g1,diag) ! ANGLE
       call scatter_global(ANGLE, work_g1, master_task, distrb_info, &
                           field_loc_NEcorner, field_type_angle)
 
@@ -698,7 +700,7 @@
 
       !-----------------------------------------------------------------
       ! cell dimensions
-      ! calculate derived quantities from global arrays to preserve 
+      ! calculate derived quantities from global arrays to preserve
       ! information on boundaries
       !-----------------------------------------------------------------
 
@@ -722,7 +724,7 @@
 
 !=======================================================================
 
-! Read in kmt file that matches CAM lat-lon grid and has single column 
+! Read in kmt file that matches CAM lat-lon grid and has single column
 ! functionality
 ! author: Mariana Vertenstein
 ! 2007: Elizabeth Hunke upgraded to netcdf90 and cice ncdf calls
@@ -741,8 +743,8 @@
       use netcdf
 
       integer (kind=int_kind) :: &
-         i, j, iblk    
-      
+         i, j, iblk
+
       integer (kind=int_kind) :: &
          ni, nj, ncid, dimid, varid, ier
 
@@ -773,7 +775,7 @@
         status                ! status flag
 
       real (kind=dbl_kind), allocatable :: &
-           lats(:),lons(:),pos_lons(:), glob_grid(:,:)  ! temporaries 
+           lats(:),lons(:),pos_lons(:), glob_grid(:,:)  ! temporaries
 
       real (kind=dbl_kind) :: &
          pos_scmlon,&         ! temporary
@@ -833,12 +835,12 @@
          status = nf90_get_var(ncid, varid, glob_grid, start3, count3)
          if (status /= nf90_noerr) call abort_ice (subname//' get_var yc')
          do j = 1,nj
-            lats(j) = glob_grid(1,j) 
+            lats(j) = glob_grid(1,j)
          end do
-         
+
          ! convert lons array and scmlon to 0,360 and find index of value closest to 0
          ! and obtain single-column longitude/latitude indices to retrieve
-         
+
          pos_lons(:)= mod(lons(:) + 360._dbl_kind,360._dbl_kind)
          pos_scmlon = mod(scmlon  + 360._dbl_kind,360._dbl_kind)
          start(1) = (MINLOC(abs(pos_lons-pos_scmlon),dim=1))
@@ -936,7 +938,7 @@
       ! Calculate various geometric 2d arrays
       ! The U grid (velocity) is not used when run with sequential CAM
       ! because we only use thermodynamic sea ice.  However, ULAT is used
-      ! in the default initialization of CICE so we calculate it here as 
+      ! in the default initialization of CICE so we calculate it here as
       ! a "dummy" so that CICE will initialize with ice.  If a no ice
       ! initialization is OK (or desired) this can be commented out and
       ! ULAT will remain 0 as specified above.  ULAT is located at the
@@ -945,11 +947,11 @@
       ! TLAT.
       !-----------------------------------------------------------------
 
-      ANGLET(:,:,:) = c0                             
+      ANGLET(:,:,:) = c0
 
      !$OMP PARALLEL DO PRIVATE(iblk,this_block,ilo,ihi,jlo,jhi,i,j)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -970,16 +972,16 @@
             tinyarea(i,j,iblk) = puny*tarea(i,j,iblk)
 
             if (single_column) then
-               ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/nj)  
+               ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/nj)
             else
                if (ny_global == 1) then
                   ULAT  (i,j,iblk) = TLAT(i,j,iblk)
                else
-                  ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)  
+                  ULAT  (i,j,iblk) = TLAT(i,j,iblk)+(pi/ny_global)
                endif
             endif
             ULON  (i,j,iblk) = c0
-            ANGLE (i,j,iblk) = c0                             
+            ANGLE (i,j,iblk) = c0
 
             HTN   (i,j,iblk) = 1.e36_dbl_kind
             HTE   (i,j,iblk) = 1.e36_dbl_kind
@@ -1214,7 +1216,7 @@
       hm(:,:,:) = c0
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1383,8 +1385,8 @@
          enddo
       enddo
       ! extrapolate to obtain dyu along j=ny_global
-      ! for CESM: use NYGLOB to prevent a compile time out of bounds 
-      ! error when ny_global=1 as in the se dycore; this code is not 
+      ! for CESM: use NYGLOB to prevent a compile time out of bounds
+      ! error when ny_global=1 as in the se dycore; this code is not
       ! exersized in prescribed mode.
 #if (NYGLOB>2)
       do i = 1, nx_global
@@ -1403,7 +1405,7 @@
       do i = 1, nx_global
          ! assume cyclic; noncyclic will be handled during scatter
          im1 = i-1
-         if (i == 1) im1 = nx_global 
+         if (i == 1) im1 = nx_global
          work_g2(i,j) = p5*(work_g(i,j) + work_g(im1,j))    ! dyt
       enddo
       enddo
@@ -1447,7 +1449,7 @@
       bm = c0
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1543,7 +1545,7 @@
       !$OMP                     x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4, &
       !$OMP                     tx,ty,tz,da)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1585,9 +1587,9 @@
 
             ! TLAT in radians North
             TLAT(i,j,iblk) = asin(tz)
-            
+
          enddo                  ! i
-         enddo                  ! j         
+         enddo                  ! j
       enddo                     ! iblk
       !$OMP END PARALLEL DO
 
@@ -1662,7 +1664,7 @@
       use ice_domain_size, only: max_blocks
 
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks), &
-           intent(inout) :: & 
+           intent(inout) :: &
            work
 
       ! local variables
@@ -1713,7 +1715,7 @@
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1792,10 +1794,10 @@
 
       type (block) :: &
          this_block           ! block information for current block
-      
+
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1806,7 +1808,7 @@
             work2(i,j,iblk) = p25 *  &
                              (work1(i,  j  ,iblk) * uarea(i,  j,  iblk)  &
                             + work1(i-1,j  ,iblk) * uarea(i-1,j,  iblk)  &
-                            + work1(i,  j-1,iblk) * uarea(i,  j-1,iblk)  & 
+                            + work1(i,  j-1,iblk) * uarea(i,  j-1,iblk)  &
                             + work1(i-1,j-1,iblk) * uarea(i-1,j-1,iblk)) &
                             / tarea(i,  j,  iblk)
          enddo
@@ -1855,7 +1857,7 @@
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1867,12 +1869,12 @@
             latu_bounds(1,i,j,iblk)=TLAT(i  ,j  ,iblk)*rad_to_deg
             latu_bounds(2,i,j,iblk)=TLAT(i+1,j  ,iblk)*rad_to_deg
             latu_bounds(3,i,j,iblk)=TLAT(i+1,j+1,iblk)*rad_to_deg
-            latu_bounds(4,i,j,iblk)=TLAT(i  ,j+1,iblk)*rad_to_deg         
+            latu_bounds(4,i,j,iblk)=TLAT(i  ,j+1,iblk)*rad_to_deg
 
             lonu_bounds(1,i,j,iblk)=TLON(i  ,j  ,iblk)*rad_to_deg
             lonu_bounds(2,i,j,iblk)=TLON(i+1,j  ,iblk)*rad_to_deg
             lonu_bounds(3,i,j,iblk)=TLON(i+1,j+1,iblk)*rad_to_deg
-            lonu_bounds(4,i,j,iblk)=TLON(i  ,j+1,iblk)*rad_to_deg         
+            lonu_bounds(4,i,j,iblk)=TLON(i  ,j+1,iblk)*rad_to_deg
 
          enddo
          enddo
@@ -2095,7 +2097,7 @@
       if (my_task == master_task) then
          do j = 1, ny_global
          do i = 2, nx_global
-            work_g2(i,j) = work_g(i-1,j  ) * rad_to_deg         
+            work_g2(i,j) = work_g(i-1,j  ) * rad_to_deg
          enddo
          enddo
          ! extrapolate
