@@ -59,8 +59,8 @@
   <!-- =========================== -->
 
   <entry id="ice_ic" skip_default_entry="true">
-    <type>char</type> 
-    <category>setup</category> 
+    <type>char</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       Method of ice cover initialization.
@@ -79,8 +79,8 @@
   </entry>
 
   <entry id="pointer_file">
-    <type>char</type> 
-    <category>setup</category> 
+    <type>char</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       restart pointer filename
@@ -103,8 +103,8 @@
   </entry>
 
   <entry id="restart_format">
-    <type>char</type> 
-    <category>setup</category> 
+    <type>char</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       Restart file format. bin, nc, or pio
@@ -116,8 +116,8 @@
   </entry>
 
   <entry id="restart_ext">
-    <type>logical</type> 
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       Restart with extended grid
@@ -136,6 +136,18 @@
     </desc>
     <values>
       <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="history_precision">
+    <type>integer</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      history precision (4 or 8)
+    </desc>
+    <values>
+      <value>4</value>
     </values>
   </entry>
 
@@ -169,11 +181,11 @@
   </entry>
 
   <entry id="year_init">
-    <type>integer</type>  
-    <category>setup</category> 
+    <type>integer</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      Initial year. 
+      Initial year.
     </desc>
     <values>
       <value>1</value>
@@ -182,11 +194,11 @@
   </entry>
 
   <entry id="ndtd">
-    <type>integer</type>  
-    <category>setup</category> 
+    <type>integer</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      number of dynamic time steps per thermodynamic time step 
+      number of dynamic time steps per thermodynamic time step
     </desc>
     <values>
       <value>1</value>
@@ -200,25 +212,25 @@
   <!-- =========================== -->
 
   <entry id="histfreq">
-    <type>char(10)</type>  
-    <category>setup</category> 
+    <type>char(10)</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      frequency of history output (once per 1,h,d,m,y) 
+      frequency of history output (once per 1,h,d,m,y)
     </desc>
     <values>
-      <value>m,x,x,x,x</value> 
+      <value>m,x,x,x,x</value>
       <value hgrid="ar9v3">m,d,h,x,x</value>
       <value hgrid="ar9v4">m,d,h,x,x</value>
     </values>
   </entry>
 
   <entry id="dumpfreq">
-    <type>char</type>  
-    <category>setup</category> 
+    <type>char</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      frequency of restart output (once per 1,h,d,m,y) 
+      frequency of restart output (once per 1,h,d,m,y)
     </desc>
     <values>
       <value>x</value>
@@ -226,8 +238,8 @@
   </entry>
 
   <entry id="histfreq_n">
-    <type>integer(5)</type>  
-    <category>setup</category> 
+    <type>integer(5)</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       frequency of history output (10 = once per 10 h,d,m,y)
@@ -238,8 +250,8 @@
   </entry>
 
   <entry id="hist_avg">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       if true, write time-averages (not snapshots)
@@ -250,8 +262,8 @@
   </entry>
 
   <entry id="write_ic">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       if true, write initial state
@@ -266,8 +278,8 @@
   <!-- =========================== -->
 
   <entry id="diagfreq">
-    <type>integer</type>  
-    <category>setup</category> 
+    <type>integer</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       diagnostic output frequency (10 = once per 10 dt)
@@ -278,8 +290,8 @@
   </entry>
 
   <entry id="print_global">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       logical to print out diagnostics for global output
@@ -290,8 +302,8 @@
   </entry>
 
   <entry id="print_points">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       logical to print out diagnostics for point data
@@ -302,8 +314,8 @@
   </entry>
 
   <entry id="bfbflag" modify_via_xml="BFBFLAG">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       logical to control bit-for-bit computations
@@ -314,8 +326,8 @@
   </entry>
 
   <entry id="lonpnt">
-    <type>real(2)</type>  
-    <category>setup</category> 
+    <type>real(2)</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       list of longitudes for point diagnostics
@@ -326,8 +338,8 @@
   </entry>
 
   <entry id="latpnt">
-    <type>real(2)</type>  
-    <category>setup</category> 
+    <type>real(2)</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       list of latitudes for point diagnostics
@@ -338,8 +350,8 @@
   </entry>
 
   <entry id="lcdf64">
-    <type>logical</type>  
-    <category>setup</category> 
+    <type>logical</type>
+    <category>setup</category>
     <group>setup_nml</group>
     <desc>
       64 bit offset
@@ -354,41 +366,41 @@
   <!-- =========================== -->
 
   <entry id="grid_format">
-    <type>char</type>  
-    <category>grid</category> 
+    <type>char</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <desc>
       file format ('bin'=binary or 'nc'=netcdf)
     </desc>
     <valid_values>bin,nc</valid_values>
     <values>
-      <value>bin</value> 
+      <value>bin</value>
       <value cice_mode="prescribed">nc</value>
     </values>
   </entry>
 
   <entry id="grid_type">
-    <type>char</type>  
-    <category>grid</category> 
+    <type>char</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <desc>
       type of grid
     </desc>
     <valid_values>displaced_pole,tripole,panarctic,latlon,rectangular</valid_values>
     <values>
-      <value>displaced_pole</value> 
+      <value>displaced_pole</value>
       <value cice_mode="prescribed">latlon</value>
-      <value hgrid="tx0.1v2">tripole</value> 
-      <value hgrid="tx0.1v3">tripole</value> 
-      <value hgrid="tx1v1">tripole</value> 
-      <value hgrid="ar9v3">regional</value> 
-      <value hgrid="ar9v4">regional</value> 
+      <value hgrid="tx0.1v2">tripole</value>
+      <value hgrid="tx0.1v3">tripole</value>
+      <value hgrid="tx1v1">tripole</value>
+      <value hgrid="ar9v3">regional</value>
+      <value hgrid="ar9v4">regional</value>
     </values>
   </entry>
 
   <entry id="grid_file">
-    <type>char</type>  
-    <category>grid</category> 
+    <type>char</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <input_pathname>abs</input_pathname>
     <desc>
@@ -396,21 +408,21 @@
     </desc>
     <values>
       <value cice_mode="prescribed">$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE</value>
-      <value hgrid="gx1v6">$DIN_LOC_ROOT/ocn/pop/gx1v6/grid/horiz_grid_20010402.ieeer8</value> 
-      <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/horiz_grid_20010402.ieeer8</value> 
-      <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/horiz_grid_20030806.ieeer8</value> 
-      <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8</value> 
-      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/horiz_grid_200709.ieeer8</value> 
+      <value hgrid="gx1v6">$DIN_LOC_ROOT/ocn/pop/gx1v6/grid/horiz_grid_20010402.ieeer8</value>
+      <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/horiz_grid_20010402.ieeer8</value>
+      <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/horiz_grid_20030806.ieeer8</value>
+      <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8</value>
+      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/horiz_grid_200709.ieeer8</value>
       <value hgrid="tx1v1">$DIN_LOC_ROOT/ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8</value>
       <value hgrid="ar9v3">$DIN_LOC_ROOT/ice/cice/ar9v3_20101118.grid</value>
       <value hgrid="ar9v4">$DIN_LOC_ROOT/ice/cice/ar9v3_20101118.grid</value>
-      <value hgrid="us20">$DIN_LOC_ROOT/ice/cice/domain.ocn.us20.20110426.nc</value> 
+      <value hgrid="us20">$DIN_LOC_ROOT/ice/cice/domain.ocn.us20.20110426.nc</value>
     </values>
   </entry>
 
   <entry id="kmt_file">
-    <type>char</type>  
-    <category>grid</category> 
+    <type>char</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <input_pathname>abs</input_pathname>
     <desc>
@@ -418,21 +430,21 @@
     </desc>
     <values>
       <value cice_mode="prescribed">$ICE_DOMAIN_PATH/$ICE_DOMAIN_FILE</value>
-      <value hgrid="gx1v6">$DIN_LOC_ROOT/ocn/pop/gx1v6/grid/topography_20090204.ieeei4</value> 
-      <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/topography_20161215.ieeei4</value> 
-      <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/topography_20100105.ieeei4</value> 
-      <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/topography_200709.ieeei4</value> 
-      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/topography_20170718.ieeei4</value> 
+      <value hgrid="gx1v6">$DIN_LOC_ROOT/ocn/pop/gx1v6/grid/topography_20090204.ieeei4</value>
+      <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/topography_20161215.ieeei4</value>
+      <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/topography_20100105.ieeei4</value>
+      <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/topography_200709.ieeei4</value>
+      <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/topography_20170718.ieeei4</value>
       <value hgrid="tx1v1">$DIN_LOC_ROOT/ocn/pop/tx1v1/grid/topography_20050510.ieeei4</value>
       <value hgrid="ar9v3">$DIN_LOC_ROOT/ocn/pop/ar9v3/grid/kmt.ar9v3.ocn.ChanBarrier.20100622.ieeei4</value>
       <value hgrid="ar9v4">$DIN_LOC_ROOT/ice/cice/ar9v3_20110106.kmt</value>
-      <value hgrid="us20">$DIN_LOC_ROOT/ice/cice/domain.ocn.us20.20110426.nc</value> 
+      <value hgrid="us20">$DIN_LOC_ROOT/ice/cice/domain.ocn.us20.20110426.nc</value>
     </values>
   </entry>
 
   <entry id="kcatbound">
-    <type>integer</type>  
-    <category>grid</category> 
+    <type>integer</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <desc>
       category boundary formula (0 = old, 1 = new)
@@ -443,8 +455,8 @@
   </entry>
 
   <entry id="gridcpl_file">
-    <type>char</type>  
-    <category>grid</category> 
+    <type>char</type>
+    <category>grid</category>
     <group>grid_nml</group>
     <input_pathname>abs</input_pathname>
     <desc>
@@ -461,8 +473,8 @@
   <!-- =========================== -->
 
   <entry id="processor_shape" modify_via_xml="CICE_DECOMPSETTING">
-    <type>char</type>  
-    <category>decomp</category> 
+    <type>char</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       processor shape
@@ -474,8 +486,8 @@
   </entry>
 
   <entry id="distribution_type" modify_via_xml="CICE_DECOMPTYPE">
-    <type>char</type>  
-    <category>decomp</category> 
+    <type>char</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       method to use for distributing blocks among processors
@@ -486,8 +498,8 @@
   </entry>
 
   <entry id="distribution_wght">
-    <type>char</type>  
-    <category>decomp</category> 
+    <type>char</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       method to use for distributing blocks
@@ -502,8 +514,8 @@
   </entry>
 
   <entry id="ew_boundary_type">
-    <type>char</type>  
-    <category>decomp</category> 
+    <type>char</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       type of boundary in logical east-west dir
@@ -515,8 +527,8 @@
   </entry>
 
   <entry id="ns_boundary_type">
-    <type>char</type>  
-    <category>decomp</category> 
+    <type>char</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
     </desc>
@@ -530,8 +542,8 @@
   </entry>
 
   <entry id="maskhalo_dyn">
-    <type>logical</type>  
-    <category>decomp</category> 
+    <type>logical</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       turn on masked halos in subcycling
@@ -542,8 +554,8 @@
   </entry>
 
   <entry id="maskhalo_remap">
-    <type>logical</type>  
-    <category>decomp</category> 
+    <type>logical</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       turn on masked halos in tracer halo update in remap
@@ -554,8 +566,8 @@
   </entry>
 
   <entry id="maskhalo_bound">
-    <type>logical</type>  
-    <category>decomp</category> 
+    <type>logical</type>
+    <category>decomp</category>
     <group>domain_nml</group>
     <desc>
       turn on masked halos in state bound
@@ -570,8 +582,8 @@
   <!-- =========================== -->
 
   <entry id="tr_iage">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Ice age tracer.
@@ -586,8 +598,8 @@
   </entry>
 
   <entry id="restart_age">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Ice age restart from file.
@@ -598,8 +610,8 @@
   </entry>
 
   <entry id="tr_fy">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       FY area tracer.
@@ -614,8 +626,8 @@
   </entry>
 
   <entry id="restart_fy">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       FY area restart from file.
@@ -626,8 +638,8 @@
   </entry>
 
   <entry id="tr_lvl">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       lvl tracer.
@@ -642,8 +654,8 @@
   </entry>
 
   <entry id="restart_lvl">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       lvl restart from file.
@@ -654,8 +666,8 @@
   </entry>
 
   <entry id="tr_pond_cesm">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond volume tracer.
@@ -670,8 +682,8 @@
   </entry>
 
   <entry id="restart_pond_cesm">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond volume restart from file.
@@ -682,8 +694,8 @@
   </entry>
 
   <entry id="tr_pond_topo">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond topo tracer.
@@ -694,8 +706,8 @@
   </entry>
 
   <entry id="restart_pond_topo">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond topo restart from file.
@@ -708,8 +720,8 @@
   </entry>
 
   <entry id="tr_pond_lvl">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond lvl tracer.
@@ -724,8 +736,8 @@
   </entry>
 
   <entry id="restart_pond_lvl">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Pond lvl restart from file.
@@ -736,8 +748,8 @@
   </entry>
 
   <entry id="tr_aero">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Aerosol tracers.
@@ -749,8 +761,8 @@
   </entry>
 
   <entry id="restart_aero">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Aerosol restart from file.
@@ -761,8 +773,8 @@
   </entry>
 
   <entry id="tr_iso">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Aerosol tracers.
@@ -774,8 +786,8 @@
   </entry>
 
   <entry id="restart_iso">
-    <type>logical</type>  
-    <category>tracers</category> 
+    <type>logical</type>
+    <category>tracers</category>
     <group>tracer_nml</group>
     <desc>
       Aerosol restart from file.
@@ -790,120 +802,120 @@
   <!-- =========================== -->
 
   <entry id="kitd">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       type of itd conversions (0 = delta, 1 = linear)
     </desc>
     <valid_values>0,1</valid_values>
     <values>
-      <value>1</value> 
-      <value cice_mode='prescribed'>0</value> 
-      <value cice_mode='thermo_only'>0</value> 
+      <value>1</value>
+      <value cice_mode='prescribed'>0</value>
+      <value cice_mode='thermo_only'>0</value>
     </values>
   </entry>
 
   <entry id="ktherm">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       type of thermodynamics (0=zero-layer, 1=bitz/lipscomb, 2=mushy)
     </desc>
     <valid_values>0,1,2</valid_values>
     <values>
-      <value>2</value> 
-      <value phys="cice4">1</value> 
-      <value hgrid="ar9v3">1</value> 
-      <value hgrid="ar9v4">1</value> 
+      <value>2</value>
+      <value phys="cice4">1</value>
+      <value hgrid="ar9v3">1</value>
+      <value hgrid="ar9v4">1</value>
     </values>
   </entry>
 
   <entry id="conduct">
-    <type>char</type>  
-    <category>parameterizations</category> 
+    <type>char</type>
+    <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       conductivity (MU71, bubbly)
     </desc>
     <valid_values>MU71,bubbly</valid_values>
     <values>
-      <value>MU71</value> 
-      <value hgrid="ar9v3">bubbly</value> 
-      <value hgrid="ar9v4">bubbly</value> 
+      <value>MU71</value>
+      <value hgrid="ar9v3">bubbly</value>
+      <value hgrid="ar9v4">bubbly</value>
     </values>
   </entry>
 
   <entry id="a_rapid_mode">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       brine channel diameter (m)
     </desc>
     <values>
-      <value>0.5e-03</value> 
+      <value>0.5e-03</value>
     </values>
   </entry>
 
   <entry id="rac_rapid_mode">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       critical Rayleigh number
     </desc>
     <values>
-      <value>10</value> 
+      <value>10</value>
     </values>
   </entry>
 
   <entry id="aspect_rapid_mode">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       brine convection aspect ratio
     </desc>
     <values>
-      <value>1.0</value> 
+      <value>1.0</value>
     </values>
   </entry>
 
   <entry id="dsdt_slow_mode">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       drainage strength parameter m/s/K
     </desc>
     <values>
-      <value>-1.5e-07</value> 
+      <value>-1.5e-07</value>
     </values>
   </entry>
 
   <entry id="phi_c_slow_mode">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       critical liquid fraction between 0 and 1
     </desc>
     <values>
-      <value>0.05</value> 
+      <value>0.05</value>
     </values>
   </entry>
 
   <entry id="phi_i_mushy">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>thermo_nml</group>
     <desc>
       solid fraction at lower boundary between 0 and 1
     </desc>
     <values>
-      <value>0.85</value> 
+      <value>0.85</value>
     </values>
   </entry>
 
@@ -912,51 +924,51 @@
   <!-- =========================== -->
 
   <entry id="kdyn">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       type of dynamics (0=off, 1=evp, 2=eap)
     </desc>
     <valid_values>0,1,2</valid_values>
     <values>
-      <value>1</value> 
-      <value  cice_mode='prescribed'>0</value> 
-      <value  cice_mode='thermo_only'>0</value> 
-      <value  hgrid="ar9v3">2</value> 
-      <value  hgrid="ar9v4">2</value> 
+      <value>1</value>
+      <value  cice_mode='prescribed'>0</value>
+      <value  cice_mode='thermo_only'>0</value>
+      <value  hgrid="ar9v3">2</value>
+      <value  hgrid="ar9v4">2</value>
     </values>
   </entry>
 
   <entry id="revised_evp">
-    <type>logical</type>  
-    <category>parameterizations</category> 
+    <type>logical</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       use revised EVP formulation
     </desc>
     <values>
-      <value hgrid="ar9v3">.false.</value> 
-      <value hgrid="ar9v4">.false.</value> 
-      <value>.false.</value> 
+      <value hgrid="ar9v3">.false.</value>
+      <value hgrid="ar9v4">.false.</value>
+      <value>.false.</value>
     </values>
   </entry>
 
   <entry id="ndte">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       subcycles per dynamics timestep
     </desc>
     <values>
-      <value> 120 </value> 
+      <value> 120 </value>
     </values>
   </entry>
 
   <entry id="advection">
-    <type>char</type>  
-    <category>parameterizations</category> 
+    <type>char</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       incremental remapping transport scheme, remap or upwind
@@ -968,23 +980,23 @@
   </entry>
 
   <entry id="kstrength">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       ice strength formulation (0=Hibler 79, 1=Rothrock 75)
     </desc>
     <valid_values>0,1</valid_values>
     <values>
-      <value>1</value> 
-      <value cice_mode='prescribed'>0</value> 
-      <value cice_mode='thermo_only'>0</value> 
+      <value>1</value>
+      <value cice_mode='prescribed'>0</value>
+      <value cice_mode='thermo_only'>0</value>
     </values>
   </entry>
 
   <entry id="krdg_partic">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       ridging participation function (0=Thorndike et al 75, 1=new participation )
@@ -996,8 +1008,8 @@
   </entry>
 
   <entry id="krdg_redist">
-    <type>integer</type>  
-    <category>parameterizations</category> 
+    <type>integer</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       ridging distribution function (0=old Hibler 80, 1=new redistribution)
@@ -1009,8 +1021,8 @@
   </entry>
 
   <entry id="mu_rdg">
-    <type>real</type>  
-    <category>parameterizations</category> 
+    <type>real</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       e-folding scale of ridged ice
@@ -1023,8 +1035,8 @@
   </entry>
 
   <entry id="cf">
-    <type>real</type>  
-    <category>parameterizations</category> 
+    <type>real</type>
+    <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
       Ratio of ridging work to PE change in ridging
@@ -1041,8 +1053,8 @@
   <!-- =========================== -->
 
   <entry id="shortwave">
-    <type>char</type>  
-    <category>swrad</category> 
+    <type>char</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       shortwave method, 'default' ('ccsm3') or 'dEdd'
@@ -1054,11 +1066,11 @@
   </entry>
 
   <entry id="albedo_type">
-    <type>char</type>  
-    <category>albedos</category> 
+    <type>char</type>
+    <category>albedos</category>
     <group>shortwave_nml</group>
     <desc>
-      albedo parameterization, 'default' ('ccsm3') or 'constant' 
+      albedo parameterization, 'default' ('ccsm3') or 'constant'
     </desc>
     <valid_values>default,constant</valid_values>
     <values>
@@ -1067,60 +1079,60 @@
   </entry>
 
   <entry id="albicev">
-    <type>real</type>  
-    <category>albedos</category> 
+    <type>real</type>
+    <category>albedos</category>
     <group>shortwave_nml</group>
     <desc>
       visible ice albedo for h gt ahmax
     </desc>
     <values>
-      <value>0.75</value> 
-      <value hgrid="gx3v7">0.68</value> 
+      <value>0.75</value>
+      <value hgrid="gx3v7">0.68</value>
     </values>
   </entry>
 
   <entry id="albicei">
-    <type>real</type>  
-    <category>albedos</category> 
+    <type>real</type>
+    <category>albedos</category>
     <group>shortwave_nml</group>
     <desc>
       near-ir ice albedo for h gt ahmax
     </desc>
     <values>
-      <value>0.45</value> 
-      <value hgrid="gx3v7">0.30</value> 
+      <value>0.45</value>
+      <value hgrid="gx3v7">0.30</value>
     </values>
   </entry>
 
   <entry id="albsnowv">
-    <type>real</type>  
-    <category>albedos</category> 
+    <type>real</type>
+    <category>albedos</category>
     <group>shortwave_nml</group>
     <desc>
       cold snow albedo, visible
     </desc>
     <values>
-      <value>0.98</value> 
-      <value hgrid="gx3v7">0.91</value> 
+      <value>0.98</value>
+      <value hgrid="gx3v7">0.91</value>
     </values>
   </entry>
 
   <entry id="albsnowi">
-    <type>real</type>  
-    <category>albedos</category> 
+    <type>real</type>
+    <category>albedos</category>
     <group>shortwave_nml</group>
     <desc>
       cold snow albedo, near IR
     </desc>
     <values>
-      <value>0.73</value> 
-      <value hgrid="gx3v7">0.63</value> 
+      <value>0.73</value>
+      <value hgrid="gx3v7">0.63</value>
     </values>
   </entry>
 
   <entry id="ahmax">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       albedo is constant above this thickness
@@ -1131,8 +1143,8 @@
   </entry>
 
   <entry id="r_ice">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       tuning parameter for delta-eddington shortwave for sea ice albedo
@@ -1143,8 +1155,8 @@
   </entry>
 
   <entry id="r_pnd">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       tuning parameter for delta-eddington shortwave for ponded sea ice albedo
@@ -1155,8 +1167,8 @@
   </entry>
 
   <entry id="r_snw">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       tuning parameter for delta-eddington shortwave for broadband snow albedo
@@ -1172,8 +1184,8 @@
   </entry>
 
   <entry id="dt_mlt">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       melt onset temperature tunable parameter for dEdd albedo
@@ -1189,8 +1201,8 @@
   </entry>
 
   <entry id="rsnw_mlt">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       maximum melting snow grain radius tunable parameter for dEdd albedo
@@ -1206,8 +1218,8 @@
   </entry>
 
   <entry id="kalg">
-    <type>real</type>  
-    <category>swrad</category> 
+    <type>real</type>
+    <category>swrad</category>
     <group>shortwave_nml</group>
     <desc>
       algae absorption coefficient for 0.5 m thick layer
@@ -1222,7 +1234,7 @@
   <!-- =========================== -->
 
   <entry id="hp1">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1234,7 +1246,7 @@
   </entry>
 
   <entry id="hs0">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1246,7 +1258,7 @@
   </entry>
 
   <entry id="hs1">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1258,11 +1270,11 @@
   </entry>
 
   <entry id="dpscale">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
-      time scale for flushing in permeable ice 
+      time scale for flushing in permeable ice
     </desc>
     <values>
       <value> 1.0e-3 </value>
@@ -1270,7 +1282,7 @@
   </entry>
 
   <entry id="frzpnd">
-    <type>char</type>  
+    <type>char</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1285,7 +1297,7 @@
   </entry>
 
   <entry id="rfracmin">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1299,7 +1311,7 @@
   </entry>
 
   <entry id="rfracmax">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>
@@ -1313,7 +1325,7 @@
   </entry>
 
   <entry id="pndaspect">
-    <type>real</type>  
+    <type>real</type>
     <category>parameterizations</category>
     <group>ponds_nml</group>
     <desc>

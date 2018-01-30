@@ -21,11 +21,11 @@
       use ice_kinds_mod
       use pio, only : pio_real, pio_double
       use ice_constants, only : spval, spval_dbl
+
       implicit none
       private
       public :: ice_write_hist
 
-      integer :: history_precision = pio_real
 
 !=======================================================================
 
@@ -59,6 +59,7 @@
       use ice_restart_shared, only: runid
       use netcdf
 #endif
+      use shr_infnan_mod, only : shr_infnan_isnan
       use ice_pio
       use pio
 
@@ -160,13 +161,13 @@
       call ice_pio_init(mode='write', filename=trim(filename), File=File, &
 	clobber=.true.)
 
-      call ice_pio_initdecomp(iodesc=iodesc2d)
-      call ice_pio_initdecomp(ndim3=ncat_hist, iodesc=iodesc3dc)
-      call ice_pio_initdecomp(ndim3=nzilyr,     iodesc=iodesc3di)
-      call ice_pio_initdecomp(ndim3=nzlyrb,    iodesc=iodesc3db)
-      call ice_pio_initdecomp(ndim3=nverts, inner_dim=.true., iodesc=iodesc3dv)
-      call ice_pio_initdecomp(ndim3=nzilyr,  ndim4=ncat_hist,  iodesc=iodesc4di)
-      call ice_pio_initdecomp(ndim3=nzslyr,  ndim4=ncat_hist,  iodesc=iodesc4ds)
+      call ice_pio_initdecomp(iodesc=iodesc2d, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=ncat_hist, iodesc=iodesc3dc, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=nzilyr,     iodesc=iodesc3di, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=nzlyrb,    iodesc=iodesc3db, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=nverts, inner_dim=.true., iodesc=iodesc3dv, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=nzilyr,  ndim4=ncat_hist,  iodesc=iodesc4di, ice_precision=history_precision)
+      call ice_pio_initdecomp(ndim3=nzslyr,  ndim4=ncat_hist,  iodesc=iodesc4ds, ice_precision=history_precision)
 
 !      ltime = time/int(secday)
       ltime = real(time/int(secday),kind=real_kind)
@@ -323,8 +324,13 @@
                                 dimid2, varid)
           status = pio_put_att(File,varid,'long_name',trim(coord_var(i)%long_name))
           status = pio_put_att(File, varid, 'units', trim(coord_var(i)%units))
-          status = pio_put_att(File, varid, 'missing_value', spval)
-          status = pio_put_att(File, varid,'_FillValue',spval)
+          if (history_precision == pio_real) then
+             status = pio_put_att(File, varid, 'missing_value', spval)
+             status = pio_put_att(File, varid,'_FillValue',spval)
+          else
+             status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+             status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+          endif
           if (coord_var(i)%short_name == 'ULAT') then
              status = pio_put_att(File,varid,'comment', &
                   trim('Latitude of NE corner of T grid cell'))
@@ -354,8 +360,13 @@
            status = pio_def_var(File, 'tmask', history_precision, dimid2, varid)
            status = pio_put_att(File,varid, 'long_name', 'ocean grid mask')
            status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
-           status = pio_put_att(File, varid, 'missing_value', spval)
-           status = pio_put_att(File, varid,'_FillValue',spval)
+          if (history_precision == pio_real) then
+             status = pio_put_att(File, varid, 'missing_value', spval)
+             status = pio_put_att(File, varid,'_FillValue',spval)
+          else
+             status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+             status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+          endif
            status = pio_put_att(File,varid,'comment', '0 = land, 1 = ocean')
         endif
         if (igrd(n_blkmask)) then
@@ -363,8 +374,13 @@
            status = pio_put_att(File,varid, 'long_name', 'ice grid block mask')
            status = pio_put_att(File, varid, 'coordinates', 'TLON TLAT')
            status = pio_put_att(File,varid,'comment', 'mytask + iblk/100')
-           status = pio_put_att(File, varid, 'missing_value', spval)
-           status = pio_put_att(File, varid,'_FillValue',spval)
+          if (history_precision == pio_real) then
+             status = pio_put_att(File, varid, 'missing_value', spval)
+             status = pio_put_att(File, varid,'_FillValue',spval)
+          else
+             status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+             status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+          endif
         endif
 
         do i = 3, nvar       ! note: n_tmask=1, n_blkmask=2
@@ -374,8 +390,13 @@
              status = pio_put_att(File,varid, 'long_name', trim(var(i)%req%long_name))
              status = pio_put_att(File, varid, 'units', trim(var(i)%req%units))
              status = pio_put_att(File, varid, 'coordinates', trim(var(i)%coordinates))
-             status = pio_put_att(File, varid, 'missing_value', spval)
-             status = pio_put_att(File, varid,'_FillValue',spval)
+             if (history_precision == pio_real) then
+                status = pio_put_att(File, varid, 'missing_value', spval)
+                status = pio_put_att(File, varid,'_FillValue',spval)
+             else
+                status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+                status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+             endif
           endif
         enddo
 
@@ -391,8 +412,13 @@
              pio_put_att(File,varid, 'long_name', trim(var_nverts(i)%long_name))
              status = &
              pio_put_att(File, varid, 'units', trim(var_nverts(i)%units))
-             status = pio_put_att(File, varid, 'missing_value', spval)
-             status = pio_put_att(File, varid,'_FillValue',spval)
+             if (history_precision == pio_real) then
+                status = pio_put_att(File, varid, 'missing_value', spval)
+                status = pio_put_att(File, varid,'_FillValue',spval)
+             else
+                status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+                status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+             endif
           endif
         enddo
 
@@ -420,8 +446,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -468,8 +499,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -505,9 +541,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
-
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
                 status = pio_put_att(File,varid,'cell_methods','time: mean')
@@ -542,8 +582,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -585,8 +630,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -623,8 +673,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -661,8 +716,13 @@
                         trim(avail_hist_fields(n)%vcoord))
             status = pio_put_att(File,varid,'cell_measures', &
                         trim(avail_hist_fields(n)%vcellmeas))
-            status = pio_put_att(File,varid,'missing_value',spval)
-            status = pio_put_att(File,varid,'_FillValue',spval)
+            if (history_precision == pio_real) then
+               status = pio_put_att(File, varid, 'missing_value', spval)
+               status = pio_put_att(File, varid,'_FillValue',spval)
+            else
+               status = pio_put_att(File, varid, 'missing_value', spval_dbl)
+               status = pio_put_att(File, varid,'_FillValue',spval_dbl)
+            endif
 
             ! Add cell_methods attribute to variables if averaged
             if (hist_avg .and. histfreq(ns) /= '1') then
@@ -795,7 +855,8 @@
                    do ii=1,nx_block
                       if (pworkr2(ii,j,iblk) .ne. spval_dbl) then
                          if(coord_var(i)%short_name .eq. 'TLON') then
-                            rworkr2(ii,j,iblk) = real(mod(pworkr2(ii,j,iblk)*rad_to_deg + c360, c360), kind=real_kind)
+                            rworkr2(ii,j,iblk) = real(mod(pworkr2(ii,j,iblk)*rad_to_deg + c360, c360),&
+                                 kind=real_kind)
                          else
                             rworkr2(ii,j,iblk) = real(pworkr2(ii,j,iblk)*rad_to_deg, kind=real_kind)
                          endif

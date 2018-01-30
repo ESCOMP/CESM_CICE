@@ -4,6 +4,7 @@
 ! f_albsno	= '1xxxx'
 ! f_albpnd	= '1xxxx'
 !----------------------------------------------------------------------------------
+history_precision = 8
 histfreq	= '1','x','x','x','x'
 histfreq_n	=  1,1,1,1,1
 f_bounds = .false.
