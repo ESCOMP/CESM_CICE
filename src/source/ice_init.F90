@@ -645,6 +645,22 @@
          endif
       endif
 
+         if (.not. tr_lvl) then
+         if (my_task == master_task) then
+            write (nu_diag,*) 'WARNING: formdrag=T but tr_lvl=F'
+            write (nu_diag,*) 'WARNING: Setting tr_lvl=T'
+         endif
+         tr_lvl = .true.
+      endif
+   endif
+
+      if (trim(fbot_xfer_type) == 'Cdn_ocn' .and. .not. formdrag)  then
+         if (my_task == master_task) then
+            write (nu_diag,*) 'WARNING: formdrag=F but fbot_xfer_type=Cdn_ocn'
+            write (nu_diag,*) 'WARNING: Setting fbot_xfer_type = constant'
+         endif
+         fbot_xfer_type = 'constant'
+      endif
       if (my_task == master_task) then
          if(history_precision .ne. 4 .and. history_precision .ne. 8) then
             write (nu_diag,*) 'ERROR: bad value for history_precision, allowed values: 4, 8'
@@ -657,22 +673,6 @@
          endif
       endif
 
-      if (.not. tr_lvl) then
-         if (my_task == master_task) then
-            write (nu_diag,*) 'WARNING: formdrag=T but tr_lvl=F'
-            write (nu_diag,*) 'WARNING: Setting tr_lvl=T'
-         endif
-         tr_lvl = .true.
-      endif
-      endif
-
-      if (trim(fbot_xfer_type) == 'Cdn_ocn' .and. .not. formdrag)  then
-         if (my_task == master_task) then
-            write (nu_diag,*) 'WARNING: formdrag=F but fbot_xfer_type=Cdn_ocn'
-            write (nu_diag,*) 'WARNING: Setting fbot_xfer_type = constant'
-         endif
-         fbot_xfer_type = 'constant'
-      endif
 
 
       call broadcast_scalar(history_precision,      master_task)
