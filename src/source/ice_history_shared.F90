@@ -3,17 +3,17 @@
 !
 ! Output files: netCDF or binary data, Fortran unformatted dumps
 !
-! The following variables are currently hard-wired as snapshots 
+! The following variables are currently hard-wired as snapshots
 !   (instantaneous rather than time-averages):
 !   divu, shear, sig1, sig2, trsig, mlt_onset, frz_onset, hisnap, aisnap
 !
 ! Options for histfreq: '1','h','d','m','y','x', where x means that
-!   output stream will not be used (recommended for efficiency).  
-! histfreq_n can be any nonnegative integer, where 0 means that the 
+!   output stream will not be used (recommended for efficiency).
+! histfreq_n can be any nonnegative integer, where 0 means that the
 !   corresponding histfreq frequency will not be used.
 ! The flags (f_<field>) can be set to '1','h','d','m','y' or 'x', where
 !   n means the field will not be written.  To output the same field at
-!   more than one frequency, for instance monthy and daily, set 
+!   more than one frequency, for instance monthy and daily, set
 !   f_<field> = 'md'.
 !
 ! authors Tony Craig and Bruce Briegleb, NCAR
@@ -32,7 +32,7 @@
 
       private
       public :: define_hist_field, accum_hist_field, icefields_nml, construct_filename
-      
+
       logical (kind=log_kind), public :: &
          hist_avg  ! if true, write averaged data instead of snapshots
 
@@ -125,7 +125,7 @@
          a4Di(:,:,:,:,:,:), & ! field accumulations/averages, 4D categories,vertical, ice
          a4Ds(:,:,:,:,:,:), & ! field accumulations/averages, 4D categories,vertical, snow
          a4Db(:,:,:,:,:,:)    ! field accumulations/averages, 4D categories,vertical, bio
-         
+
       real (kind=dbl_kind), allocatable, public :: &
          Tinz4d (:,:,:,:)    , & ! array for Tin
          Tsnz4d (:,:,:,:)    , & ! array for Tsn
@@ -133,6 +133,8 @@
 
       real (kind=dbl_kind), public :: &
          avgct(max_nstrm)   ! average sample counter
+
+      integer (kind=int_kind), public :: history_precision
 
       logical (kind=log_kind), public :: &
          igrd (nvar), &        ! true if grid field is written to output file
@@ -158,12 +160,12 @@
          tstr4Db = 'TLON TLAT VGRDb NCAT', & ! vcoord for T cell, 4D, bio
          ustr4Db = 'ULON ULAT VGRDb NCAT'    ! vcoord for U cell, 4D, bio
 !ferret
-!         tstr4Di  = 'TLON TLAT VGRDi NCAT time', & ! ferret can not handle time 
+!         tstr4Di  = 'TLON TLAT VGRDi NCAT time', & ! ferret can not handle time
 !         ustr4Di  = 'ULON ULAT VGRDi NCAT time', & ! index on 4D variables.
 !         tstr4Ds  = 'TLON TLAT VGRDs NCAT time', & ! Use 'ferret' lines instead
 !         ustr4Ds  = 'ULON ULAT VGRDs NCAT time', & ! (below also)
-!         tstr4Db  = 'TLON TLAT VGRDb NCAT time', & 
-!         ustr4Db  = 'ULON ULAT VGRDb NCAT time'    
+!         tstr4Db  = 'TLON TLAT VGRDb NCAT time', &
+!         ustr4Db  = 'ULON ULAT VGRDb NCAT time'
 
       !---------------------------------------------------------------
       ! flags: write to output file if true or histfreq value
@@ -298,13 +300,13 @@
            f_keffn_top = 'x', &
            f_Tinz      = 'x', f_Sinz       = 'x', &
            f_Tsnz      = 'x', &
-           f_a11       = 'x', f_a12        = 'x', & 
-           f_e11       = 'x', f_e12        = 'x', & 
-           f_e22       = 'x',			  & 
-           f_s11       = 'x', f_s12        = 'x', & 
-           f_s22       = 'x',		          & 
-           f_yieldstress11       = 'x', 	  & 
-           f_yieldstress12       = 'x',           & 
+           f_a11       = 'x', f_a12        = 'x', &
+           f_e11       = 'x', f_e12        = 'x', &
+           f_e22       = 'x',			  &
+           f_s11       = 'x', f_s12        = 'x', &
+           f_s22       = 'x',		          &
+           f_yieldstress11       = 'x', 	  &
+           f_yieldstress12       = 'x',           &
            f_yieldstress22       = 'x'
 
       !---------------------------------------------------------------
@@ -329,7 +331,7 @@
            f_uatm,      f_vatm     , &
            f_fswdn,     f_flwdn    , &
            f_fswup, &
-           f_snow,      f_snow_ai  , &     
+           f_snow,      f_snow_ai  , &
            f_rain,      f_rain_ai  , &
            f_sst,       f_sss      , &
            f_uocn,      f_vocn     , &
@@ -353,8 +355,8 @@
            f_snoice,    f_dsnow    , &
            f_meltt,     f_melts    , &
            f_meltb,     f_meltl    , &
-           f_fresh,     f_fresh_ai , &  
-           f_fsalt,     f_fsalt_ai , &  
+           f_fresh,     f_fresh_ai , &
+           f_fsalt,     f_fsalt_ai , &
            f_fhocn,     f_fhocn_ai , &
            f_fswthru,   f_fswthru_ai,&
            f_strairx,   f_strairy  , &
@@ -443,7 +445,7 @@
            f_e22                   , &
            f_s11, 	f_s12	   , &
            f_s22                   , &
-           f_yieldstress11         , &	
+           f_yieldstress11         , &
            f_yieldstress12	   , &
            f_yieldstress22
 
@@ -458,7 +460,7 @@
            n_uarea      = 4,  &
            n_dxt        = 5,  &
            n_dyt        = 6,  &
-           n_dxu        = 7,  & 
+           n_dxu        = 7,  &
            n_dyu        = 8,  &
            n_HTN        = 9,  &
            n_HTE        = 10, &
@@ -584,7 +586,7 @@
            n_trsig      , n_icepresent , &
            n_iage       , n_FY         , &
            n_fsurf_ai   , &
-           n_fcondtop_ai, n_fmeltt_ai  , &   
+           n_fcondtop_ai, n_fmeltt_ai  , &
            n_aicen      , n_vicen      , &
            n_fsurfn_ai   , &
            n_fcondtopn_ai, &
@@ -730,7 +732,7 @@
 
       character (len=*), intent(in) :: &
          vhistfreq      ! history frequency
- 
+
       integer (kind=int_kind), intent(in) :: &
          ns             ! history file stream index
 
@@ -821,7 +823,7 @@
       integer (int_kind), dimension(max_nstrm), intent(in) :: &
          id                ! location in avail_fields array for use in
                            ! later routines
-        
+
       integer (kind=int_kind), intent(in) :: iblk
 
       real (kind=dbl_kind), intent(in) :: &
@@ -880,7 +882,7 @@
       integer (int_kind), dimension(max_nstrm), intent(in) :: &
          id                ! location in avail_fields array for use in
                            ! later routines
-        
+
       integer (kind=int_kind), intent(in) :: iblk
 
       integer (kind=int_kind), intent(in) :: &
@@ -944,7 +946,7 @@
       integer (int_kind), dimension(max_nstrm), intent(in) :: &
          id                ! location in avail_fields array for use in
                            ! later routines
-        
+
       integer (kind=int_kind), intent(in) :: iblk
 
       integer (kind=int_kind), intent(in) :: &

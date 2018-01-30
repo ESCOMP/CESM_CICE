@@ -6,7 +6,7 @@
 ! authors Elizabeth C. Hunke and William H. Lipscomb, LANL
 !         C. M. Bitz, UW
 !
-! 2004 WHL: Block structure added 
+! 2004 WHL: Block structure added
 ! 2006 ECH: Added namelist variables, warnings.
 !           Replaced old default initial ice conditions with 3.14 version.
 !           Converted to free source form (F90).
@@ -53,7 +53,7 @@
           restart, restart_ext, restart_dir, restart_file, pointer_file, &
           runid, runtype, use_restart_time, restart_format, lcdf64
       use ice_history_shared, only: hist_avg, history_dir, history_file, &
-                             incond_dir, incond_file
+                             incond_dir, incond_file, history_precision
       use ice_exit, only: abort_ice
       use ice_itd, only: kitd, kcatbound
       use ice_ocean, only: oceanmixed_ice, tfrz_option
@@ -91,6 +91,7 @@
                                  dSdt_slow_mode, phi_c_slow_mode, &
                                  phi_i_mushy
       use ice_restoring, only: restore_ice
+      use pio, only : pio_real, pio_double
 #ifdef CESMCOUPLED
       use shr_file_mod, only: shr_file_setIO
 #endif
@@ -106,7 +107,7 @@
 
       logical :: exists
 
-      real (kind=real_kind) :: rpcesm, rplvl, rptopo 
+      real (kind=real_kind) :: rpcesm, rplvl, rptopo
 
       !-----------------------------------------------------------------
       ! Namelist variables.
@@ -123,7 +124,7 @@
         print_global,   print_points,   latpnt,          lonpnt,        &
         dbug,           histfreq,       histfreq_n,      hist_avg,      &
         history_dir,    history_file,                                   &
-        write_ic,       incond_dir,     incond_file
+        write_ic,       incond_dir,     incond_file, history_precision
 
       namelist /grid_nml/ &
         grid_format,    grid_type,       grid_file,     kmt_file,       &
@@ -181,9 +182,9 @@
       istep0 = 0             ! no. of steps taken in previous integrations,
                              ! real (dumped) or imagined (to set calendar)
 #ifndef CESMCOUPLED
-      dt = 3600.0_dbl_kind   ! time step, s      
+      dt = 3600.0_dbl_kind   ! time step, s
 #endif
-      npt = 99999            ! total number of time steps (dt) 
+      npt = 99999            ! total number of time steps (dt)
       diagfreq = 24          ! how often diag output is written
       print_points = .false. ! if true, print point data
       print_global = .true.  ! if true, print global diagnostic data
@@ -195,7 +196,7 @@
       histfreq(3) = 'd'      ! output frequency option for different streams
       histfreq(4) = 'm'      ! output frequency option for different streams
       histfreq(5) = 'y'      ! output frequency option for different streams
-      histfreq_n(:) = 1      ! output frequency 
+      histfreq_n(:) = 1      ! output frequency
       hist_avg = .true.      ! if true, write time-averages (not snapshots)
       history_dir  = './'    ! write to executable dir for default
       history_file = 'iceh'  ! history file name prefix
@@ -213,6 +214,7 @@
       pointer_file = 'ice.restart_file'
       restart_format = 'nc'  ! file format ('bin'=binary or 'nc'=netcdf or 'pio')
       lcdf64       = .false. ! 64 bit offset for netCDF
+      history_precision = 4    ! write history files in single precision
       ice_ic       = 'default'      ! latitude and sst-dependent
       grid_format  = 'bin'          ! file format ('bin'=binary or 'nc'=netcdf)
       grid_type    = 'rectangular'  ! define rectangular grid internally
@@ -231,7 +233,7 @@
       krdg_partic = 1        ! 1 = new participation, 0 = Thorndike et al 75
       krdg_redist = 1        ! 1 = new redistribution, 0 = Hibler 80
       mu_rdg = 3             ! e-folding scale of ridged ice, krdg_partic=1 (m^0.5)
-      Cf = 17.0_dbl_kind     ! ratio of ridging work to PE change in ridging 
+      Cf = 17.0_dbl_kind     ! ratio of ridging work to PE change in ridging
       advection  = 'remap'   ! incremental remapping transport scheme
       shortwave = 'default'  ! 'default' or 'dEdd' (delta-Eddington)
       albedo_type = 'default'! or 'constant'
@@ -254,7 +256,7 @@
       hp1       = 0.01_dbl_kind   ! critical pond lid thickness for topo ponds
       hs0       = 0.03_dbl_kind   ! snow depth for transition to bare sea ice (m)
       hs1       = 0.03_dbl_kind   ! snow depth for transition to bare pond ice (m)
-      dpscale   = c1              ! alter e-folding time scale for flushing 
+      dpscale   = c1              ! alter e-folding time scale for flushing
       frzpnd    = 'cesm'          ! melt pond refreezing parameterization
       rfracmin  = 0.15_dbl_kind   ! minimum retained fraction of meltwater
       rfracmax  = 0.85_dbl_kind   ! maximum retained fraction of meltwater
@@ -304,7 +306,7 @@
       restart_age  = .false. ! ice age restart
       tr_FY        = .false. ! ice age
       restart_FY   = .false. ! ice age restart
-      tr_lvl       = .false. ! level ice 
+      tr_lvl       = .false. ! level ice
       restart_lvl  = .false. ! level ice restart
       tr_pond_cesm = .false. ! CESM melt ponds
       restart_pond_cesm = .false. ! melt ponds restart
@@ -341,7 +343,7 @@
             nml_error = -1
          else
             nml_error =  1
-         endif 
+         endif
 
          do while (nml_error > 0)
             print*,'Reading setup_nml'
@@ -442,7 +444,7 @@
             'WARNING: runtype, restart, ice_ic are inconsistent:'
             write(nu_diag,*) trim(runtype), restart, trim(ice_ic)
             write(nu_diag,*) &
-            'WARNING: Initializing with NO ICE: ' 
+            'WARNING: Initializing with NO ICE: '
             write(nu_diag,*) ' '
             endif
             ice_ic = 'none'
@@ -463,7 +465,7 @@
       ! netcdf is unavailable
       grid_format     = 'bin'
       atm_data_format = 'bin'
-      ocn_data_format = 'bin' 
+      ocn_data_format = 'bin'
 #endif
 
       chartmp = advection(1:6)
@@ -609,7 +611,7 @@
       endif
 #endif
 
-      if (trim(atm_data_type) == 'hadgem' .and. & 
+      if (trim(atm_data_type) == 'hadgem' .and. &
              trim(precip_units) /= 'mks') then
          if (my_task == master_task) &
          write (nu_diag,*) &
@@ -638,19 +640,19 @@
 
       if (tr_pond_cesm) then
          if (my_task == master_task) then
-            write (nu_diag,*) 'ERROR: formdrag=T but frzpnd=''cesm''' 
+            write (nu_diag,*) 'ERROR: formdrag=T but frzpnd=''cesm'''
             call abort_ice('ice_init: Formdrag and no hlid')
          endif
       endif
 
-      if (.not. tr_lvl) then
+         if (.not. tr_lvl) then
          if (my_task == master_task) then
             write (nu_diag,*) 'WARNING: formdrag=T but tr_lvl=F'
             write (nu_diag,*) 'WARNING: Setting tr_lvl=T'
          endif
          tr_lvl = .true.
       endif
-      endif
+   endif
 
       if (trim(fbot_xfer_type) == 'Cdn_ocn' .and. .not. formdrag)  then
          if (my_task == master_task) then
@@ -659,8 +661,21 @@
          endif
          fbot_xfer_type = 'constant'
       endif
+      if (my_task == master_task) then
+         if(history_precision .ne. 4 .and. history_precision .ne. 8) then
+            write (nu_diag,*) 'ERROR: bad value for history_precision, allowed values: 4, 8'
+            call abort_ice('ice_init: history_precision')
+         endif
+         if( history_precision == 4) then
+            history_precision = pio_real
+         else
+            history_precision = pio_double
+         endif
+      endif
 
 
+
+      call broadcast_scalar(history_precision,      master_task)
       call broadcast_scalar(days_per_year,      master_task)
       call broadcast_scalar(use_leap_years,     master_task)
       call broadcast_scalar(year_init,          master_task)
@@ -675,7 +690,7 @@
       call broadcast_scalar(diag_file,          master_task)
       do n = 1, max_nstrm
          call broadcast_scalar(histfreq(n),     master_task)
-      enddo  
+      enddo
       call broadcast_array(histfreq_n,          master_task)
       call broadcast_scalar(hist_avg,           master_task)
       call broadcast_scalar(history_dir,        master_task)
@@ -833,6 +848,13 @@
          write(nu_diag,1050) ' histfreq                  = ', histfreq(:)
          write(nu_diag,1040) ' histfreq_n                = ', histfreq_n(:)
          write(nu_diag,1010) ' hist_avg                  = ', hist_avg
+         if(history_precision == pio_real) then
+            write(nu_diag,*) ' history_precision     = 4'
+         elseif(history_precision == pio_double) then
+            write(nu_diag,*) ' history_precision     = 8'
+         else
+            write(nu_diag,1020) ' history_precision     = ',history_precision
+         endif
          if (.not. hist_avg) write (nu_diag,*) 'History data will be snapshots'
          write(nu_diag,*)    ' history_dir               = ', &
                                trim(history_dir)
@@ -956,7 +978,7 @@
                                trim(atm_data_dir)
             write(nu_diag,*) ' precip_units              = ', &
                                trim(precip_units)
-         endif 
+         endif
 
          write(nu_diag,1010) ' update_ocn_f              = ', update_ocn_f
          write(nu_diag,1010) ' l_mpond_fresh             = ', l_mpond_fresh
@@ -982,12 +1004,12 @@
                                trim(ocn_data_dir)
             write(nu_diag,1010) ' restore_sst               = ', &
                                restore_sst
-         endif 
+         endif
          write(nu_diag,1010) ' restore_ice               = ', &
                                restore_ice
          if (restore_ice .or. restore_sst) &
          write(nu_diag,1020) ' trestore                  = ', trestore
- 
+
 #ifdef CESMCOUPLED
 #define coupled
 #endif
@@ -1073,7 +1095,7 @@
                  nt_ipnd = ntrcr      ! on level-ice ponds (if frzpnd='hlid')
              endif
              if (tr_pond_topo) then
-                 ntrcr = ntrcr + 1    ! 
+                 ntrcr = ntrcr + 1    !
                  nt_ipnd = ntrcr      ! refrozen pond ice lid thickness
              endif
          endif
@@ -1083,18 +1105,18 @@
              nt_aero = ntrcr + 1
              ntrcr = ntrcr + 4*n_aero ! 4 dEdd layers, n_aero species
          endif
-              
+
          nt_iso = 0
          if (tr_iso) then
              nt_iso = ntrcr + 1
              ntrcr = ntrcr + 4*n_iso ! 4 dEdd layers, n_iso species
          endif
-              
+
          if (ntrcr > max_ntrcr) then
             write(nu_diag,*) 'max_ntrcr < number of namelist tracers'
             write(nu_diag,*) 'max_ntrcr = ',max_ntrcr,' ntrcr = ',ntrcr
             call abort_ice('max_ntrcr < number of namelist tracers')
-         endif                               
+         endif
 
          write(nu_diag,*) ' '
          write(nu_diag,1020) 'ntrcr = ', ntrcr
@@ -1122,7 +1144,7 @@
              grid_type  /=  'rectangular'    .and. &
              grid_type  /=  'cpom_grid'      .and. &
              grid_type  /=  'regional'       .and. &
-             grid_type  /=  'latlon' ) then 
+             grid_type  /=  'latlon' ) then
             call abort_ice('ice_init: unknown grid_type')
          endif
 
@@ -1207,7 +1229,7 @@
       !-----------------------------------------------------------------
 
       if (my_task == master_task) then
- 
+
          if (nilyr < 1) then
             write (nu_diag,*) 'nilyr =', nilyr
             write (nu_diag,*) 'Must have at least one ice layer'
@@ -1297,7 +1319,7 @@
       !$OMP                     iglob,jglob)
       do iblk = 1, nblocks
 
-         this_block = get_block(blocks_ice(iblk),iblk)         
+         this_block = get_block(blocks_ice(iblk),iblk)
          ilo = this_block%ilo
          ihi = this_block%ihi
          jlo = this_block%jlo
@@ -1400,7 +1422,7 @@
          iglob(nx_block)   , & ! global indices
          jglob(ny_block)       !
 
-      character(len=char_len_long), intent(in) :: & 
+      character(len=char_len_long), intent(in) :: &
          ice_ic      ! method of ice cover initialization
 
       logical (kind=log_kind), dimension (nx_block,ny_block), &
@@ -1414,8 +1436,8 @@
 
       real (kind=dbl_kind), dimension (nx_block,ny_block), intent(in) :: &
          Tair    , & ! air temperature  (K)
-         Tf      , & ! freezing temperature (C) 
-         sst         ! sea surface temperature (C) 
+         Tf      , & ! freezing temperature (C)
+         sst         ! sea surface temperature (C)
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,nilyr), &
          intent(in) :: &
@@ -1453,7 +1475,7 @@
 
       real (kind=dbl_kind), parameter :: &
          hsno_init = 0.20_dbl_kind   , & ! initial snow thickness (m)
-         edge_init_nh =  70._dbl_kind, & ! initial ice edge, N.Hem. (deg) 
+         edge_init_nh =  70._dbl_kind, & ! initial ice edge, N.Hem. (deg)
          edge_init_sh = -60._dbl_kind    ! initial ice edge, S.Hem. (deg)
 
       indxi(:) = 0
@@ -1468,7 +1490,7 @@
             aicen(i,j,n) = c0
             vicen(i,j,n) = c0
             vsnon(i,j,n) = c0
-            trcrn(i,j,nt_Tsfc,n) = Tf(i,j)  ! surface temperature 
+            trcrn(i,j,nt_Tsfc,n) = Tf(i,j)  ! surface temperature
             if (max_ntrcr >= 2) then
                do it = 2, max_ntrcr
                   trcrn(i,j,it,n) = c0
@@ -1512,9 +1534,9 @@
 
       ! initial category areas in cells with ice
          hbar = c3  ! initial ice thickness with greatest area
-                    ! Note: the resulting average ice thickness 
+                    ! Note: the resulting average ice thickness
                     ! tends to be less than hbar due to the
-                    ! nonlinear distribution of ice thicknesses 
+                    ! nonlinear distribution of ice thicknesses
          sum = c0
          do n = 1, ncat
             if (n < ncat) then
@@ -1613,7 +1635,7 @@
 
             ! surface temperature
             if (calc_Tsfc) then
-        
+
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
@@ -1634,7 +1656,7 @@
 
             if (heat_capacity) then
 
-               ! ice enthalpy, salinity 
+               ! ice enthalpy, salinity
                do k = 1, nilyr
                   do ij = 1, icells
                      i = indxi(ij)
@@ -1668,7 +1690,7 @@
                      j = indxj(ij)
                      Ti = min(c0, trcrn(i,j,nt_Tsfc,n))
                      trcrn(i,j,nt_qsno+k-1,n) = -rhos*(Lfresh - cp_ice*Ti)
-                     
+
                   enddo            ! ij
                enddo               ! nslyr
 
@@ -1680,7 +1702,7 @@
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
-                  trcrn(i,j,nt_qice+k-1,n) = -rhoi * Lfresh 
+                  trcrn(i,j,nt_qice+k-1,n) = -rhoi * Lfresh
                   trcrn(i,j,nt_sice+k-1,n) = salinz(i,j,k)
                enddo            ! ij
 
@@ -1688,7 +1710,7 @@
                do ij = 1, icells
                   i = indxi(ij)
                   j = indxj(ij)
-                  trcrn(i,j,nt_qsno+k-1,n) = -rhos * Lfresh 
+                  trcrn(i,j,nt_qsno+k-1,n) = -rhos * Lfresh
                enddo            ! ij
 
             endif               ! heat_capacity
