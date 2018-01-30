@@ -1,4 +1,30 @@
 ===============================================================
+cice5_20180130
+Originator: jedwards
+Date: 30 Jan 2018
+Version: 5.0
+One-line: Add double precision history option.
+
+	modified:   cime_config/namelist_definition_cice.xml
+        modified:   cime_config/testdefs/testmods_dirs/cice/default/user_nl_cice
+        modified:   cime_config/testdefs/testmods_dirs/cice/pop/user_nl_cice
+        modified:   cime_config/testdefs/testmods_dirs/cice/step/user_nl_cice
+        modified:   src/io_pio/ice_history_write.F90
+        modified:   src/io_pio/ice_pio.F90
+        modified:   src/source/ice_grid.F90
+        modified:   src/source/ice_history_shared.F90
+        modified:   src/source/ice_init.F90
+
+===============================================================
+cice5_20180124
+Originator: jedwards
+Date: 24 Jan 2018
+Version: 5.0
+One-line: Bug fix in ITD.
+
+	modified:   src/source/ice_itd.F90
+
+===============================================================
 cice5_20180122
 Originator: jedwards
 Date: 22 Jan 2018
