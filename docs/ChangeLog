@@ -1,4 +1,22 @@
 ===============================================================
+cice5_20180403
+Originator: dbailey
+Date: 03 Apr 2018
+Version: 5.0
+One-line: 
+
+        modified:   cime_config/namelist_definition_cice.xml
+
+===============================================================
+cice5_20180213
+Originator: dbailey
+Date: 13 Feb 2018
+Version: 5.0
+One-line: 
+
+        modified:   cime_config/testdefs/testlist_cice.xml
+
+===============================================================
 cice5_20180130
 Originator: jedwards
 Date: 30 Jan 2018
