@@ -769,6 +769,8 @@
 
         status = pio_put_att(File,pio_global,'time_period_freq',trim(time_period_freq))
 
+        status = pio_put_att(File,pio_global,'model_doi_url',trim(model_doi_url))
+
         if (use_leap_years) then
           write(title,'(a,i3,a)') 'This year has ',int(dayyr),' days'
         else

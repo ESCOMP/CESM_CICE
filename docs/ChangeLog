@@ -1,9 +1,20 @@
 ===============================================================
+cice5_20180416
+Originator: dbailey
+Date: 16 Apr 2018
+Version: 5.0
+One-line: Add model_doi_url.
+
+	modified:   src/drivers/cesm/ice_comp_mct.F90
+	modified:   src/io_pio/ice_history_write.F90
+	modified:   src/source/ice_history_shared.F90
+
+===============================================================
 cice5_20180403
 Originator: dbailey
 Date: 03 Apr 2018
 Version: 5.0
-One-line: 
+One-line: Change default r_snw.
 
         modified:   cime_config/namelist_definition_cice.xml
 

@@ -122,7 +122,7 @@ contains
     use CICE_InitMod
     use ice_restart_shared, only: runid, runtype, restart_dir, restart_format
     use ice_history,        only: accum_hist
-    use ice_history_shared, only: history_dir, history_file
+    use ice_history_shared, only: history_dir, history_file, model_doi_url
 !
 ! !ARGUMENTS:
     type(ESMF_Clock)         , intent(inout) :: EClock
@@ -191,6 +191,9 @@ contains
     ! Determine orbital parameters
     call seq_infodata_GetData(infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
          orb_lambm0=lambm0, orb_obliqr=obliqr)
+
+    ! Get model_doi_url
+    call seq_infodata_GetData(infodata, model_doi_url=model_doi_url)
 
     !   call shr_init_memusage()
 

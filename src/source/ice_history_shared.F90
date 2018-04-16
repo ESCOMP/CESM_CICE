@@ -47,6 +47,8 @@
       character (len=char_len_long), public :: &
          pointer_file      ! input pointer file for restarts
 
+      character (len=char_len_long), public :: model_doi_url
+
       !---------------------------------------------------------------
       ! Instructions for adding a field: (search for 'example')
       !     Here:
