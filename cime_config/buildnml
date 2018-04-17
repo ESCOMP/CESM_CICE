@@ -114,7 +114,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
         run_refcase = case.get_value("RUN_REFCASE")
         run_refdate = case.get_value("RUN_REFDATE")
         run_tod     = case.get_value("RUN_REFTOD")
-	ice_ic = "%s.cice.r.%s-%s.nc" %(run_refcase, run_refdate, run_tod)
+        ice_ic = "%s.cice.r.%s-%s.nc" %(run_refcase, run_refdate, run_tod)
         nmlgen.add_default("ice_ic", value=ice_ic, ignore_abs_path=True)
     else: 
         nmlgen.add_default("ice_ic")

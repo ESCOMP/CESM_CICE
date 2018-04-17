@@ -75,7 +75,7 @@ def buildcpp(case):
             logger.debug("     %s"%err)
 
         config = out.split()
-        if config[0] > 0:
+        if int(config[0]) > 0:
             case.set_value("CICE_BLCKX", config[2])
             case.set_value("CICE_BLCKY", config[3])
             case.set_value("CICE_MXBLCKS",config[4])
