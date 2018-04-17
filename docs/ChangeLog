@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20180417
+Originator: dbailey
+Date: 17 Apr 2018
+Version: 5.0
+One-line: Fix some pythong issues.
+
+	modified:   cime_config/buildcpp
+	modified:   cime_config/buildnml
+
+===============================================================
 cice5_20180416
 Originator: dbailey
 Date: 16 Apr 2018
