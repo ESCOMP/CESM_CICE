@@ -1,9 +1,18 @@
 ===============================================================
+cice5_20180418
+Originator: dbailey
+Date: 17 Apr 2018
+Version: 5.0
+One-line: Fix attributes for sicompstren.
+
+        modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20180417
 Originator: dbailey
 Date: 17 Apr 2018
 Version: 5.0
-One-line: Fix some pythong issues.
+One-line: Fix some python issues.
 
 	modified:   cime_config/buildcpp
 	modified:   cime_config/buildnml

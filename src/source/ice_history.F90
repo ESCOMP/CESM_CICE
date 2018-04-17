@@ -1102,7 +1102,7 @@
              "none", c1, c0,         &
              ns1, f_sistryubot)
       
-         call define_hist_field(n_sicompstren,"sicompstren","N m-2",ustr2D, ucstr,  &
+         call define_hist_field(n_sicompstren,"sicompstren","N m-1",tstr2D, tcstr,  &
              "compressive sea ice strength",                      &
              "none", c1, c0,         &
              ns1, f_sicompstren)
