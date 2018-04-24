@@ -65,6 +65,7 @@
       integer (int_kind), dimension(:,:,:), pointer :: &
          sendAddr,         &! src addresses for each sent message
          recvAddr           ! dst addresses for each recvd message
+
      !variables for reducing the size of send, receive, and tripole buffer
       integer (int_kind) :: &
            lenUsedTripoleBuf,&! length of tripole buffer actually used
@@ -2513,8 +2514,9 @@ contains
 
    integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
 
-  integer (int_kind) :: &
+   integer (int_kind) :: &
        tbegin, tend, margin ! indices for tripole buffer
+
 !-----------------------------------------------------------------------
 !
 !  initialize error code and fill value
@@ -2570,11 +2572,13 @@ contains
 !  post receives
 !
 !-----------------------------------------------------------------------
+
    lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz
-      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum), len, mpiR8,   &
+      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum+len), len, mpiR8,   &
                      halo%recvTask(nmsg),               &
                      mpitagHalo + halo%recvTask(nmsg),  &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -2586,8 +2590,10 @@ contains
 !  fill send buffer and post sends
 !
 !-----------------------------------------------------------------------
+
    lenAccum = 0
    lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
       do n=1,halo%sizeSend(nmsg)
@@ -2634,6 +2640,7 @@ contains
 !    tripole buffer and will be treated later
 !
 !-----------------------------------------------------------------------
+
    !allocate tripole buffer only when it is actually used.
    if (halo%lenUsedTripoleBuf .gt. 0) then
       margin = 4
@@ -2693,6 +2700,7 @@ contains
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
    lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
@@ -2748,6 +2756,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
            do i = max(2, nxGlobal/2-halo%lenUsedTripoleBuf+1),nxGlobal/2
@@ -2773,6 +2782,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
            do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
@@ -2811,6 +2821,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
            do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2 - 1
@@ -2836,9 +2847,10 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -2938,7 +2950,6 @@ contains
    end if
 
 
-
 !-----------------------------------------------------------------------
 
  end subroutine ice_HaloUpdate3DR8
@@ -3003,13 +3014,16 @@ contains
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (real_kind), dimension(:,:), allocatable :: &
-      bufSend, bufRecv            ! 3d send,recv buffers
+   real (real_kind), dimension(:), allocatable :: &
+      bufSend, bufRecv            ! flatten send,recv buffers
 
    real (real_kind), dimension(:,:,:), allocatable :: &
       bufTripole                  ! 3d tripole buffer
 
-   integer (int_kind) :: len ! length of message
+   integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
+
+   integer (int_kind) :: &
+       tbegin, tend, margin ! indices for tripole buffer
 
 !-----------------------------------------------------------------------
 !
@@ -3051,9 +3065,8 @@ contains
 
    nz = size(array, dim=3)
 
-   allocate(bufSend(bufSizeSend*nz, halo%numMsgSend),  &
-            bufRecv(bufSizeRecv*nz, halo%numMsgRecv),  &
-            bufTripole(nxGlobal, halo%tripoleRows, nz), &
+   allocate(bufSend(halo%lenUsedSendBuf*nz),  &
+            bufRecv(halo%lenUsedRecvBuf*nz),  &
             stat=ierr)
 
    if (ierr > 0) then
@@ -3062,21 +3075,21 @@ contains
       return
    endif
 
-   bufTripole = fill
-
 !-----------------------------------------------------------------------
 !
 !  post receives
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz
-      call MPI_IRECV(bufRecv(1:len,nmsg), len, mpiR4,   &
+      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum+len), len, mpiR4,   &
                      halo%recvTask(nmsg),               &
                      mpitagHalo + halo%recvTask(nmsg),  &
                      halo%communicator, rcvRequest(nmsg), ierr)
+      lenAccum = lenAccum + len
    end do
 
 !-----------------------------------------------------------------------
@@ -3085,28 +3098,27 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+   lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
-      i=0
       do n=1,halo%sizeSend(nmsg)
          iSrc     = halo%sendAddr(1,n,nmsg)
          jSrc     = halo%sendAddr(2,n,nmsg)
          srcBlock = halo%sendAddr(3,n,nmsg)
 
          do k=1,nz
-            i = i + 1
-            bufSend(i,nmsg) = array(iSrc,jSrc,k,srcBlock)
+            lenAccum = lenAccum + 1
+            bufSend(lenAccum) = array(iSrc,jSrc,k,srcBlock)
          end do
       end do
-      do n=i+1,bufSizeSend*nz
-         bufSend(n,nmsg) = fill  ! fill remainder of buffer
-      end do
 
-      len = halo%SizeSend(nmsg)*nz
-      call MPI_ISEND(bufSend(1:len,nmsg), len, mpiR4, &
+      call MPI_ISEND(bufSend(lenPrevAccum+1:lenAccum), lenAccum-lenPrevAccum, mpiR4, &
                      halo%sendTask(nmsg),             &
                      mpitagHalo + my_task,            &
                      halo%communicator, sndRequest(nmsg), ierr)
+      lenPrevAccum = lenAccum
    end do
 
 !-----------------------------------------------------------------------
@@ -3136,6 +3148,24 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   !allocate tripole buffer only when it is actually used.
+   if (halo%lenUsedTripoleBuf .gt. 0) then
+      margin = 4
+      tbegin = max(1, nxGlobal/2-halo%lenUsedTripoleBuf+1-margin)
+      tend = min(nxGlobal, nxGlobal/2+halo%lenUsedTripoleBuf+margin)
+      allocate(bufTripole(tbegin:tend, halo%tripoleRows, nz), &
+           stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate3DR4: error allocating tripole buffer')
+         return
+      endif
+
+      bufTripole = fill
+   endif
+
+
    do nmsg=1,halo%numLocalCopies
       iSrc     = halo%srcLocalAddr(1,nmsg)
       jSrc     = halo%srcLocalAddr(2,nmsg)
@@ -3151,6 +3181,10 @@ contains
                array(iSrc,jSrc,k,srcBlock)
             end do
          else if (dstBlock < 0) then ! tripole copy into buffer
+
+            ! offset is applied to adjust index to move closer to nxGlobal/2
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do k=1,nz
                bufTripole(iDst,jDst,k) = &
                array(iSrc,jSrc,k,srcBlock)
@@ -3172,6 +3206,8 @@ contains
 
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
       i = 0
       do n=1,halo%sizeRecv(nmsg)
@@ -3181,13 +3217,16 @@ contains
 
          if (dstBlock > 0) then
             do k=1,nz
-               i = i + 1
-               array(iDst,jDst,k,dstBlock) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               array(iDst,jDst,k,dstBlock) = bufRecv(lenAccum)
             end do
          else if (dstBlock < 0) then !tripole
+
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do k=1,nz
-               i = i + 1
-               bufTripole(iDst,jDst,k) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               bufTripole(iDst,jDst,k) = bufRecv(lenAccum)
             end do
          endif
       end do
@@ -3226,8 +3265,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 2,nxGlobal/2
+           do i = max(2, nxGlobal/2-halo%lenUsedTripoleBuf+1),nxGlobal/2
               iDst = nxGlobal - i + 2
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3236,6 +3276,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_NEcorner)   ! cell corner location
 
@@ -3250,8 +3291,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3260,6 +3302,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_Nface)   ! cell corner (velocity) location
 
@@ -3287,8 +3330,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2 - 1
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2 - 1
               iDst = nxGlobal - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3297,6 +3341,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_Eface)   ! cell center location
 
@@ -3311,8 +3356,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3321,6 +3367,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case default
            call abort_ice( &
@@ -3360,6 +3407,10 @@ contains
             !*** otherwise do the copy
 
             if (jSrc <= halo%tripoleRows .and. jSrc>0 .and. jDst>0) then
+
+               ! offset is applied to adjust index to move closer to nxGlobal/2
+               iSrc = iSrc + sign(halo%offsetTripoleBuf, nxGlobal/2-iSrc)
+
                do k=1,nz
                   array(iDst,jDst,k,dstBlock) = isign*    &
                                   bufTripole(iSrc,jSrc,k)
@@ -3387,13 +3438,24 @@ contains
       return
    endif
 
-   deallocate(bufSend, bufRecv, bufTripole, stat=ierr)
+   deallocate(bufSend, bufRecv, stat=ierr)
 
    if (ierr > 0) then
       call abort_ice( &
          'ice_HaloUpdate3DR4: error deallocating 3d buffers')
       return
    endif
+
+   if (allocated(bufTripole)) then
+      deallocate(bufTripole, stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate3DR4: error deallocating 3d tripole buffer')
+         return
+      endif
+
+   end if
 
 !-----------------------------------------------------------------------
 
@@ -3459,13 +3521,16 @@ contains
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   integer (int_kind), dimension(:,:), allocatable :: &
-      bufSend, bufRecv            ! 3d send,recv buffers
+   integer (int_kind), dimension(:), allocatable :: &
+      bufSend, bufRecv            ! flatten send,recv buffers
 
    integer (int_kind), dimension(:,:,:), allocatable :: &
       bufTripole                  ! 3d tripole buffer
 
-   integer (int_kind) :: len ! length of message
+   integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
+
+   integer (int_kind) :: &
+       tbegin, tend, margin ! indices for tripole buffer
 
 !-----------------------------------------------------------------------
 !
@@ -3507,9 +3572,8 @@ contains
 
    nz = size(array, dim=3)
 
-   allocate(bufSend(bufSizeSend*nz, halo%numMsgSend),  &
-            bufRecv(bufSizeRecv*nz, halo%numMsgRecv),  &
-            bufTripole(nxGlobal, halo%tripoleRows, nz), &
+   allocate(bufSend(halo%lenUsedSendBuf*nz),  &
+            bufRecv(halo%lenUsedRecvBuf*nz),  &
             stat=ierr)
 
    if (ierr > 0) then
@@ -3518,21 +3582,22 @@ contains
       return
    endif
 
-   bufTripole = fill
-
 !-----------------------------------------------------------------------
 !
 !  post receives
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz
-      call MPI_IRECV(bufRecv(1:len,nmsg), len, MPI_INTEGER, &
+      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum+len), len, MPI_INTEGER, &
                      halo%recvTask(nmsg),                   &
                      mpitagHalo + halo%recvTask(nmsg),      &
                      halo%communicator, rcvRequest(nmsg), ierr)
+      lenAccum = lenAccum + len
    end do
 
 !-----------------------------------------------------------------------
@@ -3541,28 +3606,27 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+   lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
-      i=0
       do n=1,halo%sizeSend(nmsg)
          iSrc     = halo%sendAddr(1,n,nmsg)
          jSrc     = halo%sendAddr(2,n,nmsg)
          srcBlock = halo%sendAddr(3,n,nmsg)
 
          do k=1,nz
-            i = i + 1
-            bufSend(i,nmsg) = array(iSrc,jSrc,k,srcBlock)
+            lenAccum = lenAccum + 1
+            bufSend(lenAccum) = array(iSrc,jSrc,k,srcBlock)
          end do
       end do
-      do n=i+1,bufSizeSend*nz
-         bufSend(n,nmsg) = fill  ! fill remainder of buffer
-      end do
 
-      len = halo%SizeSend(nmsg)*nz
-      call MPI_ISEND(bufSend(1:len,nmsg), len, MPI_INTEGER, &
+      call MPI_ISEND(bufSend(lenPrevAccum+1:lenAccum), lenAccum-lenPrevAccum, MPI_INTEGER, &
                      halo%sendTask(nmsg),                   &
                      mpitagHalo + my_task,                  &
                      halo%communicator, sndRequest(nmsg), ierr)
+      lenPrevAccum = lenAccum
    end do
 
 !-----------------------------------------------------------------------
@@ -3592,6 +3656,24 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   !allocate tripole buffer only when it is actually used.
+   if (halo%lenUsedTripoleBuf .gt. 0) then
+      margin = 4
+      tbegin = max(1, nxGlobal/2-halo%lenUsedTripoleBuf+1-margin)
+      tend = min(nxGlobal, nxGlobal/2+halo%lenUsedTripoleBuf+margin)
+      allocate(bufTripole(tbegin:tend, halo%tripoleRows, nz), &
+           stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate3DI4: error allocating tripole buffer')
+         return
+      endif
+
+      bufTripole = fill
+   endif
+
+
    do nmsg=1,halo%numLocalCopies
       iSrc     = halo%srcLocalAddr(1,nmsg)
       jSrc     = halo%srcLocalAddr(2,nmsg)
@@ -3607,6 +3689,10 @@ contains
                array(iSrc,jSrc,k,srcBlock)
             end do
          else if (dstBlock < 0) then ! tripole copy into buffer
+
+            ! offset is applied to adjust index to move closer to nxGlobal/2
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do k=1,nz
                bufTripole(iDst,jDst,k) = &
                array(iSrc,jSrc,k,srcBlock)
@@ -3628,8 +3714,9 @@ contains
 
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
-      i = 0
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
          jDst     = halo%recvAddr(2,n,nmsg)
@@ -3637,13 +3724,16 @@ contains
 
          if (dstBlock > 0) then
             do k=1,nz
-               i = i + 1
-               array(iDst,jDst,k,dstBlock) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               array(iDst,jDst,k,dstBlock) = bufRecv(lenAccum)
             end do
          else if (dstBlock < 0) then !tripole
+
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do k=1,nz
-               i = i + 1
-               bufTripole(iDst,jDst,k) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               bufTripole(iDst,jDst,k) = bufRecv(lenAccum)
             end do
          endif
       end do
@@ -3682,8 +3772,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 2,nxGlobal/2
+           do i = max(2, nxGlobal/2-halo%lenUsedTripoleBuf+1),nxGlobal/2
               iDst = nxGlobal - i + 2
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3692,6 +3783,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_NEcorner)   ! cell corner location
 
@@ -3706,8 +3798,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3716,6 +3809,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_Nface)   ! cell corner (velocity) location
 
@@ -3743,8 +3837,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2 - 1
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2 - 1
               iDst = nxGlobal - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3753,6 +3848,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case (field_loc_Eface)   ! cell center location
 
@@ -3767,8 +3863,9 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k)
               x2 = bufTripole(iDst,halo%tripoleRows,k)
@@ -3777,6 +3874,7 @@ contains
               bufTripole(iDst,halo%tripoleRows,k) = isign*xavg
            end do
            end do
+           end if
 
         case default
            call abort_ice( &
@@ -3816,6 +3914,10 @@ contains
             !*** otherwise do the copy
 
             if (jSrc <= halo%tripoleRows .and. jSrc>0 .and. jDst>0) then
+
+               ! offset is applied to adjust index to move closer to nxGlobal/2
+               iSrc = iSrc + sign(halo%offsetTripoleBuf, nxGlobal/2-iSrc)
+
                do k=1,nz
                   array(iDst,jDst,k,dstBlock) = isign*    &
                                   bufTripole(iSrc,jSrc,k)
@@ -3843,13 +3945,24 @@ contains
       return
    endif
 
-   deallocate(bufSend, bufRecv, bufTripole, stat=ierr)
+   deallocate(bufSend, bufRecv, stat=ierr)
 
    if (ierr > 0) then
       call abort_ice( &
          'ice_HaloUpdate3DI4: error deallocating 3d buffers')
       return
    endif
+
+   if (allocated(bufTripole)) then
+      deallocate(bufTripole, stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate3DI4: error deallocating 3d tripole buffer')
+         return
+      endif
+
+   end if
 
 !-----------------------------------------------------------------------
 
@@ -3922,9 +4035,9 @@ contains
       bufTripole                  ! 4d tripole buffer
 
    integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
+
    integer (int_kind) :: &
         tbegin, tend, margin ! for tripole buffer index calculation
-
 
 !-----------------------------------------------------------------------
 !
@@ -3982,7 +4095,9 @@ contains
 !  post receives
 !
 !-----------------------------------------------------------------------
+
    lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz*nt
@@ -3998,8 +4113,10 @@ contains
 !  fill send buffer and post sends
 !
 !-----------------------------------------------------------------------
+
    lenAccum = 0
    lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
       do n=1,halo%sizeSend(nmsg)
@@ -4114,6 +4231,7 @@ contains
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
    lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
@@ -4124,7 +4242,7 @@ contains
             do l=1,nt
             do k=1,nz
                lenAccum = lenAccum + 1
-               array(iDst,jDst,k,l,dstBlock) = bufRecv(i)
+               array(iDst,jDst,k,l,dstBlock) = bufRecv(lenAccum)
             end do
             end do
          else if (dstBlock < 0) then !tripole
@@ -4173,6 +4291,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
@@ -4200,6 +4319,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
@@ -4240,6 +4360,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
@@ -4267,6 +4388,7 @@ contains
 
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
+
            if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
@@ -4435,13 +4557,16 @@ contains
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (real_kind), dimension(:,:), allocatable :: &
-      bufSend, bufRecv            ! 4d send,recv buffers
+   real (real_kind), dimension(:), allocatable :: &
+      bufSend, bufRecv            ! flatten send,recv buffers
 
    real (real_kind), dimension(:,:,:,:), allocatable :: &
       bufTripole                  ! 4d tripole buffer
 
-   integer (int_kind) :: len ! length of message
+   integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
+
+   integer (int_kind) :: &
+        tbegin, tend, margin ! for tripole buffer index calculation
 
 !-----------------------------------------------------------------------
 !
@@ -4484,9 +4609,8 @@ contains
    nz = size(array, dim=3)
    nt = size(array, dim=4)
 
-   allocate(bufSend(bufSizeSend*nz*nt, halo%numMsgSend),   &
-            bufRecv(bufSizeRecv*nz*nt, halo%numMsgRecv),   &
-            bufTripole(nxGlobal, halo%tripoleRows, nz, nt), &
+   allocate(bufSend(halo%lenUsedSendBuf*nz*nt),   &
+            bufRecv(halo%lenUsedRecvBuf*nz*nt),   &
             stat=ierr)
 
    if (ierr > 0) then
@@ -4495,21 +4619,22 @@ contains
       return
    endif
 
-   bufTripole = fill
-
 !-----------------------------------------------------------------------
 !
 !  post receives
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz*nt
-      call MPI_IRECV(bufRecv(1:len,nmsg), len, mpiR4,  &
+      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum+len), len, mpiR4,  &
                      halo%recvTask(nmsg),              &
                      mpitagHalo + halo%recvTask(nmsg), &
                      halo%communicator, rcvRequest(nmsg), ierr)
+      lenAccum = lenAccum + len
    end do
 
 !-----------------------------------------------------------------------
@@ -4518,9 +4643,11 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+   lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
-      i=0
       do n=1,halo%sizeSend(nmsg)
          iSrc     = halo%sendAddr(1,n,nmsg)
          jSrc     = halo%sendAddr(2,n,nmsg)
@@ -4528,21 +4655,17 @@ contains
 
          do l=1,nt
          do k=1,nz
-            i = i + 1
-            bufSend(i,nmsg) = array(iSrc,jSrc,k,l,srcBlock)
+            lenAccum = lenAccum + 1
+            bufSend(lenAccum) = array(iSrc,jSrc,k,l,srcBlock)
          end do
          end do
       end do
 
-      do n=i+1,bufSizeSend*nz*nt
-         bufSend(n,nmsg) = fill  ! fill remainder of buffer
-      end do
-
-      len = halo%SizeSend(nmsg)*nz*nt
-      call MPI_ISEND(bufSend(1:len,nmsg), len, mpiR4, &
+      call MPI_ISEND(bufSend(lenPrevAccum+1:lenAccum), lenAccum-lenPrevAccum, mpiR4, &
                      halo%sendTask(nmsg),             &
                      mpitagHalo + my_task,            &
                      halo%communicator, sndRequest(nmsg), ierr)
+     lenPrevAccum = lenAccum
    end do
 
 !-----------------------------------------------------------------------
@@ -4572,6 +4695,24 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   ! allocate tripole buffer only when it is used
+   ! lenUsedTripoleBuf is pre-calculated in ice_HaloCreate
+   if (halo%lenUsedTripoleBuf .gt. 0) then
+      margin = 4
+      tbegin = max(1, nxGlobal/2-halo%lenUsedTripoleBuf+1-margin)
+      tend = min(nxGlobal, nxGlobal/2+halo%lenUsedTripoleBuf+margin)
+      allocate(bufTripole(tbegin:tend, halo%tripoleRows, nz, nt), &
+            stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+            'ice_HaloUpdate4DR4: error allocating tripole buffer')
+         return
+      endif
+
+      bufTripole = fill
+   endif
+
    do nmsg=1,halo%numLocalCopies
       iSrc     = halo%srcLocalAddr(1,nmsg)
       jSrc     = halo%srcLocalAddr(2,nmsg)
@@ -4589,6 +4730,10 @@ contains
             end do
             end do
          else if (dstBlock < 0) then ! tripole copy into buffer
+
+            ! offset is applied to adjust index to move closer to nxGlobal/2
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do l=1,nt
             do k=1,nz
                bufTripole(iDst,jDst,k,l) = &
@@ -4614,8 +4759,9 @@ contains
 
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
-      i = 0
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
          jDst     = halo%recvAddr(2,n,nmsg)
@@ -4624,15 +4770,18 @@ contains
          if (dstBlock > 0) then
             do l=1,nt
             do k=1,nz
-               i = i + 1
-               array(iDst,jDst,k,l,dstBlock) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               array(iDst,jDst,k,l,dstBlock) = bufRecv(lenAccum)
             end do
             end do
          else if (dstBlock < 0) then !tripole
+
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do l=1,nt
             do k=1,nz
-               i = i + 1
-               bufTripole(iDst,jDst,k,l) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               bufTripole(iDst,jDst,k,l) = bufRecv(lenAccum)
             end do
             end do
          endif
@@ -4672,9 +4821,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 2,nxGlobal/2
+           do i = max(2, nxGlobal/2-halo%lenUsedTripoleBuf+1),nxGlobal/2
               iDst = nxGlobal - i + 2
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -4684,6 +4834,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_NEcorner)   ! cell corner location
 
@@ -4698,9 +4849,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -4710,6 +4862,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_Nface)   ! cell corner (velocity) location
 
@@ -4737,9 +4890,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2 - 1
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2 - 1
               iDst = nxGlobal - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -4749,6 +4903,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_Eface)   ! cell center location
 
@@ -4763,9 +4918,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -4775,6 +4931,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case default
            call abort_ice( &
@@ -4814,6 +4971,9 @@ contains
             !*** otherwise do the copy
 
             if (jSrc <= halo%tripoleRows .and. jSrc>0 .and. jDst>0) then
+
+               iSrc = iSrc + sign(halo%offsetTripoleBuf, nxGlobal/2-iSrc)
+
                do l=1,nt
                do k=1,nz
                   array(iDst,jDst,k,l,dstBlock) = isign*    &
@@ -4843,13 +5003,24 @@ contains
       return
    endif
 
-   deallocate(bufSend, bufRecv, bufTripole, stat=ierr)
+   deallocate(bufSend, bufRecv, stat=ierr)
 
    if (ierr > 0) then
       call abort_ice( &
          'ice_HaloUpdate4DR4: error deallocating 4d buffers')
       return
    endif
+
+   if (allocated(bufTripole)) then
+      deallocate(bufTripole, stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate4DR4: error deallocating 4d tripole buffer')
+         return
+      endif
+
+   end if
 
 !-----------------------------------------------------------------------
 
@@ -4915,13 +5086,16 @@ contains
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   integer (int_kind), dimension(:,:), allocatable :: &
-      bufSend, bufRecv            ! 4d send,recv buffers
+   integer (int_kind), dimension(:), allocatable :: &
+      bufSend, bufRecv            ! flatten send,recv buffers
 
    integer (int_kind), dimension(:,:,:,:), allocatable :: &
       bufTripole                  ! 4d tripole buffer
 
-   integer (int_kind) :: len  ! length of messages
+   integer (int_kind) :: len, lenAccum, lenPrevAccum ! length of message
+
+   integer (int_kind) :: &
+        tbegin, tend, margin ! for tripole buffer index calculation
 
 !-----------------------------------------------------------------------
 !
@@ -4964,9 +5138,8 @@ contains
    nz = size(array, dim=3)
    nt = size(array, dim=4)
 
-   allocate(bufSend(bufSizeSend*nz*nt, halo%numMsgSend),   &
-            bufRecv(bufSizeRecv*nz*nt, halo%numMsgRecv),   &
-            bufTripole(nxGlobal, halo%tripoleRows, nz, nt), &
+   allocate(bufSend(halo%lenUsedSendBuf*nz*nt),   &
+            bufRecv(halo%lenUsedRecvBuf*nz*nt),   &
             stat=ierr)
 
    if (ierr > 0) then
@@ -4975,21 +5148,22 @@ contains
       return
    endif
 
-   bufTripole = fill
-
 !-----------------------------------------------------------------------
 !
 !  post receives
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
 
       len = halo%SizeRecv(nmsg)*nz*nt
-      call MPI_IRECV(bufRecv(1:len,nmsg), len, MPI_INTEGER, &
+      call MPI_IRECV(bufRecv(lenAccum+1:lenAccum+len), len, MPI_INTEGER, &
                      halo%recvTask(nmsg),                   &
                      mpitagHalo + halo%recvTask(nmsg),      &
                      halo%communicator, rcvRequest(nmsg), ierr)
+      lenAccum = lenAccum + len
    end do
 
 !-----------------------------------------------------------------------
@@ -4998,9 +5172,11 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   lenAccum = 0
+   lenPrevAccum = 0
+
    do nmsg=1,halo%numMsgSend
 
-      i=0
       do n=1,halo%sizeSend(nmsg)
          iSrc     = halo%sendAddr(1,n,nmsg)
          jSrc     = halo%sendAddr(2,n,nmsg)
@@ -5008,21 +5184,17 @@ contains
 
          do l=1,nt
          do k=1,nz
-            i = i + 1
-            bufSend(i,nmsg) = array(iSrc,jSrc,k,l,srcBlock)
+            lenAccum = lenAccum + 1
+            bufSend(lenAccum) = array(iSrc,jSrc,k,l,srcBlock)
          end do
          end do
       end do
 
-      do n=i+1,bufSizeSend*nz*nt
-         bufSend(n,nmsg) = fill  ! fill remainder of buffer
-      end do
-
-      len = halo%SizeSend(nmsg)*nz*nt
-      call MPI_ISEND(bufSend(1:len,nmsg), len, MPI_INTEGER, &
+      call MPI_ISEND(bufSend(lenPrevAccum+1:lenAccum), lenAccum-lenPrevAccum, MPI_INTEGER, &
                      halo%sendTask(nmsg),                   &
                      mpitagHalo + my_task,                  &
                      halo%communicator, sndRequest(nmsg), ierr)
+     lenPrevAccum = lenAccum
    end do
 
 !-----------------------------------------------------------------------
@@ -5052,6 +5224,25 @@ contains
 !
 !-----------------------------------------------------------------------
 
+   ! allocate tripole buffer only when it is used
+   ! lenUsedTripoleBuf is pre-calculated in ice_HaloCreate
+   if (halo%lenUsedTripoleBuf .gt. 0) then
+      margin = 4
+      tbegin = max(1, nxGlobal/2-halo%lenUsedTripoleBuf+1-margin)
+      tend = min(nxGlobal, nxGlobal/2+halo%lenUsedTripoleBuf+margin)
+      allocate(bufTripole(tbegin:tend, halo%tripoleRows, nz, nt), &
+            stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+            'ice_HaloUpdate4DI4: error allocating tripole buffer')
+         return
+      endif
+
+      bufTripole = fill
+   endif
+
+
    do nmsg=1,halo%numLocalCopies
       iSrc     = halo%srcLocalAddr(1,nmsg)
       jSrc     = halo%srcLocalAddr(2,nmsg)
@@ -5069,6 +5260,10 @@ contains
             end do
             end do
          else if (dstBlock < 0) then ! tripole copy into buffer
+
+            ! offset is applied to adjust index to move closer to nxGlobal/2
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do l=1,nt
             do k=1,nz
                bufTripole(iDst,jDst,k,l) = &
@@ -5094,8 +5289,9 @@ contains
 
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
+   lenAccum = 0
+
    do nmsg=1,halo%numMsgRecv
-      i = 0
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
          jDst     = halo%recvAddr(2,n,nmsg)
@@ -5104,15 +5300,18 @@ contains
          if (dstBlock > 0) then
             do l=1,nt
             do k=1,nz
-               i = i + 1
-               array(iDst,jDst,k,l,dstBlock) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               array(iDst,jDst,k,l,dstBlock) = bufRecv(lenAccum)
             end do
             end do
          else if (dstBlock < 0) then !tripole
+
+            iDst = iDst + sign(halo%offsetTripoleBuf, nxGlobal/2-iDst)
+
             do l=1,nt
             do k=1,nz
-               i = i + 1
-               bufTripole(iDst,jDst,k,l) = bufRecv(i,nmsg)
+               lenAccum = lenAccum + 1
+               bufTripole(iDst,jDst,k,l) = bufRecv(lenAccum)
             end do
             end do
          endif
@@ -5152,9 +5351,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 2,nxGlobal/2
+           do i = max(2, nxGlobal/2-halo%lenUsedTripoleBuf+1),nxGlobal/2
               iDst = nxGlobal - i + 2
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -5164,6 +5364,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_NEcorner)   ! cell corner location
 
@@ -5178,9 +5379,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -5190,6 +5392,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_Nface)   ! cell corner (velocity) location
 
@@ -5217,9 +5420,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2 - 1
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2 - 1
               iDst = nxGlobal - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -5229,6 +5433,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case (field_loc_Eface)   ! cell center location
 
@@ -5243,9 +5448,10 @@ contains
            !*** top row is degenerate, so must enforce symmetry
            !***   use average of two degenerate points for value
 
+           if (halo%lenUsedTripoleBuf .gt. 0) then
            do l=1,nt
            do k=1,nz
-           do i = 1,nxGlobal/2
+           do i = nxGlobal/2-halo%lenUsedTripoleBuf+1,nxGlobal/2
               iDst = nxGlobal + 1 - i
               x1 = bufTripole(i   ,halo%tripoleRows,k,l)
               x2 = bufTripole(iDst,halo%tripoleRows,k,l)
@@ -5255,6 +5461,7 @@ contains
            end do
            end do
            end do
+           end if
 
         case default
            call abort_ice( &
@@ -5294,6 +5501,9 @@ contains
             !*** otherwise do the copy
 
             if (jSrc <= halo%tripoleRows .and. jSrc>0 .and. jDst>0) then
+
+               iSrc = iSrc + sign(halo%offsetTripoleBuf, nxGlobal/2-iSrc)
+
                do l=1,nt
                do k=1,nz
                   array(iDst,jDst,k,l,dstBlock) = isign*    &
@@ -5323,13 +5533,25 @@ contains
       return
    endif
 
-   deallocate(bufSend, bufRecv, bufTripole, stat=ierr)
+   deallocate(bufSend, bufRecv, stat=ierr)
 
    if (ierr > 0) then
       call abort_ice( &
          'ice_HaloUpdate4DI4: error deallocating 4d buffers')
       return
    endif
+
+   if (allocated(bufTripole)) then
+      deallocate(bufTripole, stat=ierr)
+
+      if (ierr > 0) then
+         call abort_ice( &
+              'ice_HaloUpdate4DI4: error deallocating 4d tripole buffer')
+         return
+      endif
+
+   end if
+
 
 !-----------------------------------------------------------------------
 
