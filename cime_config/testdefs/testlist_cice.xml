@@ -46,6 +46,7 @@
   <test name="ERS_Ld5" grid="T62_s11" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="hobart" compiler="intel" category="prebeta"/>
+      <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
   <test name="ERS_Ld5" grid="f09_g17" compset="ETEST" testmods="cice/default">
