@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20180424
+Originator: dbailey
+Date:  24 Apr 2018
+Version: 5.0
+One-line: Merge Youngsung's halo changes.
+
+	modified:   cime_config/testdefs/testlist_cice.xml
+	modified:   src/mpi/ice_boundary.F90
+
+===============================================================
 cice5_20180418
 Originator: dbailey
 Date: 17 Apr 2018
