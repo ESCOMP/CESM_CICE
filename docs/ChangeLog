@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20180530
+Originator: dbailey
+Date:  30 May 2018
+Version: 5.0
+One-line: Inputdata fix.
+
+	modified:   cime_config/namelist_definition_cice.xml
+
+===============================================================
 cice5_20180424
 Originator: dbailey
 Date:  24 Apr 2018
