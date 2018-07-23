@@ -1608,8 +1608,9 @@
       use ice_blocks, only: block, get_block, nx_block, ny_block
       use ice_domain_size, only: nilyr, nslyr
       use ice_fileunits, only: nu_diag
-      use ice_constants, only: c0, c1, p25, p5, puny, secday, depressT, rhofresh, Tffresh, &
-          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, rhow, cp_ice, spval_dbl, hs_min
+      use ice_constants, only: c0, c1, c100, p25, p5, puny, secday, depressT, rhofresh, Tffresh, &
+          awtvdr, awtidr, awtvdf, awtidf, Lfresh, rhoi, rhos, rhow, cp_ice, spval_dbl, hs_min, &
+          p001, ice_ref_salinity
       use ice_domain, only: blocks_ice, nblocks
       use ice_grid, only: tmask, lmask_n, lmask_s, tarea, dxu, dyu
       use ice_calendar, only: new_year, write_history, &
@@ -1673,6 +1674,8 @@
            Sbr               , & ! temporary variable for brine salinity
            phi               , & ! temporary variable for ice/brine fraction
            rhob              , & ! temporary variable for brine density
+           dfresh            , & ! temporary variable for fresh water
+           dfsalt            , & ! temporary variable for salt
            Tmlts                 !  temporary variable for melting temperature
 
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
@@ -1844,6 +1847,8 @@
            call accum_hist_field(n_fswup, iblk, worka(:,:), a2D)
          endif
 
+
+         print *,"alvdr_ai",maxval(maxval(alvdr_ai(:,:,iblk),1),1)
 
          if (f_albsni (1:1) /= 'x') &
              call accum_hist_field(n_albsni, iblk, &
@@ -2295,7 +2300,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = frazil(i,j,iblk)*rhoi
+                 worka(i,j) = frazil(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2307,7 +2312,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = congel(i,j,iblk)*rhoi
+                 worka(i,j) = congel(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2319,7 +2324,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = snoice(i,j,iblk)*rhoi
+                 worka(i,j) = snoice(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2343,7 +2348,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = meltt(i,j,iblk)*rhoi
+                 worka(i,j) = meltt(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2355,7 +2360,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = meltb(i,j,iblk)*rhoi
+                 worka(i,j) = meltb(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2367,7 +2372,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = meltl(i,j,iblk)*rhoi
+                 worka(i,j) = meltl(i,j,iblk)*rhoi/dt
               endif
            enddo
            enddo
@@ -2403,7 +2408,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = melts(i,j,iblk)*rhos
+                 worka(i,j) = melts(i,j,iblk)*rhos/dt
               endif
            enddo
            enddo
@@ -2578,7 +2583,10 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*fsalt(i,j,iblk)
+!                Add in frazil flux
+                 dfresh = -frazil(i,j,iblk)
+                 dfsalt = ice_ref_salinity*p001*dfresh
+                 worka(i,j) = aice(i,j,iblk)*(fsalt(i,j,iblk)+dfsalt)
               endif
            enddo
            enddo
@@ -2590,7 +2598,9 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*fresh(i,j,iblk)
+!                Add in frazil flux
+                 dfresh = -frazil(i,j,iblk)
+                 worka(i,j) = aice(i,j,iblk)*(fresh(i,j,iblk)+dfresh)
               endif
            enddo
            enddo
@@ -3524,43 +3534,48 @@
               enddo             ! i
               enddo             ! j
               endif
-              if (avail_hist_fields(n)%vname(1:6) == 'albsni') then
-              do j = jlo, jhi
-              do i = ilo, ihi
-                 if (tmask(i,j,iblk)) then 
-                    ravgctz = c0
-                    if (albcnt(i,j,iblk,ns) > puny) &
-                        ravgctz = c1/albcnt(i,j,iblk,ns)
-                    if (f_albsni (1:1) /= 'x' .and. n_albsni(ns) /= 0) &
-                       a2D(i,j,n_albsni(ns),iblk) = &
-                       a2D(i,j,n_albsni(ns),iblk)*avgct(ns)*ravgctz
-                 endif
-              enddo             ! i
-              enddo             ! j
-              endif
-              if (avail_hist_fields(n)%vname(1:8) == 'alvdr_ai') then
-              do j = jlo, jhi
-              do i = ilo, ihi
-                 if (tmask(i,j,iblk)) then 
-                    ravgctz = c0
-                    if (albcnt(i,j,iblk,ns) > puny) &
-                        ravgctz = c1/albcnt(i,j,iblk,ns)
-                    if (f_alvdr_ai (1:1) /= 'x' .and. n_alvdr_ai(ns) /= 0) &
-                       a2D(i,j,n_alvdr_ai(ns),iblk) = &
-                       a2D(i,j,n_alvdr_ai(ns),iblk)*avgct(ns)*ravgctz
-                    if (f_alvdf_ai (1:1) /= 'x' .and. n_alvdf_ai(ns) /= 0) &
-                       a2D(i,j,n_alvdf_ai(ns),iblk) = &
-                       a2D(i,j,n_alvdf_ai(ns),iblk)*avgct(ns)*ravgctz
-                    if (f_alidr_ai (1:1) /= 'x' .and. n_alidr_ai(ns) /= 0) &
-                       a2D(i,j,n_alidr_ai(ns),iblk) = &
-                       a2D(i,j,n_alidr_ai(ns),iblk)*avgct(ns)*ravgctz
-                    if (f_alidf_ai (1:1) /= 'x' .and. n_alidf_ai(ns) /= 0) &
-                       a2D(i,j,n_alidf_ai(ns),iblk) = &
-                       a2D(i,j,n_alidf_ai(ns),iblk)*avgct(ns)*ravgctz
-                 endif
-              enddo             ! i
-              enddo             ! j
-              endif
+!             if (avail_hist_fields(n)%vname(1:6) == 'albsni') then
+!             do j = jlo, jhi
+!             do i = ilo, ihi
+!                if (tmask(i,j,iblk)) then 
+!                   ravgctz = c0
+!                   if (albcnt(i,j,iblk,ns) > puny) &
+!                       ravgctz = c1/albcnt(i,j,iblk,ns)
+!                   if (f_albsni (1:1) /= 'x' .and. n_albsni(ns) /= 0) &
+!                      a2D(i,j,n_albsni(ns),iblk) = &
+!                      a2D(i,j,n_albsni(ns),iblk)*avgct(ns)*ravgctz
+!                endif
+!             enddo             ! i
+!             enddo             ! j
+!             endif
+!             if (avail_hist_fields(n)%vname(1:8) == 'alvdr_ai') then
+!             do j = jlo, jhi
+!             do i = ilo, ihi
+!                if (tmask(i,j,iblk)) then 
+!                   ravgctz = c0
+!                   if (albcnt(i,j,iblk,ns) > puny) &
+!                       ravgctz = c1/albcnt(i,j,iblk,ns)
+!                   if (f_alvdr_ai (1:1) /= 'x' .and. n_alvdr_ai(ns) /= 0) then 
+!                      a2D(i,j,n_alvdr_ai(ns),iblk) = &
+!                      (a2D(i,j,n_alvdr_ai(ns),iblk)-(avgct(ns)-albcnt(i,j,iblk,ns))*c100)*avgct(ns)*ravgctz
+!                   endif
+!                   if (a2D(i,j,n_alvdr_ai(ns),iblk) .gt. 100.0_dbl_kind) then
+!                      print *,'albcnt',albcnt(i,j,iblk,ns),ravgctz,avgct(ns)
+!                      print *,'alvdr_ai',a2D(i,j,n_alvdr_ai(ns),iblk)
+!                   endif
+!                   if (f_alvdf_ai (1:1) /= 'x' .and. n_alvdf_ai(ns) /= 0) &
+!                      a2D(i,j,n_alvdf_ai(ns),iblk) = &
+!                      a2D(i,j,n_alvdf_ai(ns),iblk)*avgct(ns)*ravgctz
+!                   if (f_alidr_ai (1:1) /= 'x' .and. n_alidr_ai(ns) /= 0) &
+!                      a2D(i,j,n_alidr_ai(ns),iblk) = &
+!                      a2D(i,j,n_alidr_ai(ns),iblk)*avgct(ns)*ravgctz
+!                   if (f_alidf_ai (1:1) /= 'x' .and. n_alidf_ai(ns) /= 0) &
+!                      a2D(i,j,n_alidf_ai(ns),iblk) = &
+!                      a2D(i,j,n_alidf_ai(ns),iblk)*avgct(ns)*ravgctz
+!                endif
+!             enddo             ! i
+!             enddo             ! j
+!             endif
 
               endif
            enddo                ! n
