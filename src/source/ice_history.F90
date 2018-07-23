@@ -2584,7 +2584,7 @@
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
 !                Add in frazil flux
-                 dfresh = -frazil(i,j,iblk)
+                 dfresh = -rhoi*frazil(i,j,iblk)/dt
                  dfsalt = ice_ref_salinity*p001*dfresh
                  worka(i,j) = aice(i,j,iblk)*(fsalt(i,j,iblk)+dfsalt)
               endif
@@ -2599,7 +2599,7 @@
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
 !                Add in frazil flux
-                 dfresh = -frazil(i,j,iblk)
+                 dfresh = -rhoi*frazil(i,j,iblk)/dt
                  worka(i,j) = aice(i,j,iblk)*(fresh(i,j,iblk)+dfresh)
               endif
            enddo
