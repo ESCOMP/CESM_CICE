@@ -1,4 +1,31 @@
 ===============================================================
+cice5_20180803
+Originator: dbailey
+Date:  03 Aug 2018
+Version: 5.0
+One-line: Additional history fixes.
+
+	modified:   src/source/ice_history.F90
+
+===============================================================
+cice5_20180724
+Originator: dbailey
+Date:  23 July 2018
+Version: 5.0
+One-line: Additional CMIP variable fixes.
+
+	modified:   src/source/ice_history.F90
+
+===============================================================
+cice5_20180723
+Originator: dbailey
+Date:  23 July 2018
+Version: 5.0
+One-line: History variable fixes.
+
+	modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20180530
 Originator: dbailey
 Date:  30 May 2018
