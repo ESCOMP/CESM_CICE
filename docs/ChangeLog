@@ -1,4 +1,14 @@
 ===============================================================
+cice5_20180807
+Originator: dbailey
+Date:  07 Aug 2018
+Version: 5.0
+One-line: Additional history fixes.
+
+	modified:   cime_config/namelist_definition_cice.xml
+	modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20180803
 Originator: dbailey
 Date:  03 Aug 2018
