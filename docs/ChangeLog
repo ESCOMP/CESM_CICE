@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20180808
+Originator: dbailey
+Date:  08 Aug 2018
+Version: 5.0
+One-line: Fix config_compsets.xml
+
+	modified:   cime_config/config_compsets.xml
+
+===============================================================
 cice5_20180807
 Originator: dbailey
 Date:  07 Aug 2018
