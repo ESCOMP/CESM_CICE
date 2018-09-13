@@ -227,13 +227,13 @@
          f_siforcecorioly = 'mxxxx'
          f_siforceintstrx = 'mxxxx'
          f_siforceintstry = 'mxxxx'
-         f_siitdconc = 'mxxxx'
-         f_siitdthick = 'mxxxx'
-         f_siitdsnthick = 'mxxxx'
          f_sidragtop = 'mxxxx'
          f_sistreave = 'mxxxx'
          f_sistremax = 'mxxxx'
          f_sirdgthick = 'mxxxx'
+         f_siitdconc = 'mxxxx'
+         f_siitdthick = 'mxxxx'
+         f_siitdsnthick = 'mxxxx'
 
          ! Turn off CICE duplicates
          f_iage = 'xxxxx'
@@ -1413,18 +1413,6 @@
              "snow fraction per unit grid cell area", c1, c0,       &
               ns1, f_snowfracn)
 
-           call define_hist_field(n_siitdconc,"siitdconc","1",tstr3Dc, tcstr, & 
-              "ice area, categories","none", c1, c0,                  &            
-              ns1, f_siitdconc)
-
-           call define_hist_field(n_siitdthick,"siitdthick","m",tstr3Dc, tcstr, & 
-              "ice thickness, categories","none", c1, c0,                  &            
-              ns1, f_siitdthick)
-
-           call define_hist_field(n_siitdsnthick,"siitdsnthick","m",tstr3Dc, tcstr, & 
-              "snow thickness, categories","none", c1, c0,                  &            
-              ns1, f_siitdsnthick)
-
            call define_hist_field(n_fsurfn_ai,"fsurfn_ai","W/m2",tstr3Dc, tcstr, & 
               "net surface heat flux, categories","weighted by ice area", c1, c0, &            
               ns1, f_fsurfn_ai)
@@ -1449,6 +1437,19 @@
               "effective thermal conductivity of the top ice layer, categories", &
               "multilayer scheme", c1, c0,      &           
               ns1, f_keffn_top)
+
+           ! CMIP 3D fields
+           call define_hist_field(n_siitdconc,"siitdconc","1",tstr3Dc, tcstr, & 
+              "ice area, categories","none", c1, c0,                  &            
+              ns1, f_siitdconc)
+
+           call define_hist_field(n_siitdthick,"siitdthick","m",tstr3Dc, tcstr, & 
+              "ice thickness, categories","none", c1, c0,                  &            
+              ns1, f_siitdthick)
+
+           call define_hist_field(n_siitdsnthick,"siitdsnthick","m",tstr3Dc, tcstr, & 
+              "snow thickness, categories","none", c1, c0,                  &            
+              ns1, f_siitdsnthick)
 
       endif ! if (histfreq(ns1) /= 'x') then
       enddo ! ns1
@@ -1667,13 +1668,13 @@
           fswthru_ai, strairx, strairy, strtltx, strtlty, strintx, strinty, &
           strocnx, strocny, fm, daidtt, dvidtt, daidtd, dvidtd, fsurf, &
           fcondtop, fsurfn, fcondtopn, flatn, fsensn, albcnt, prs_sig, &
-          fcondbot, fcondbotn, &
+          fcondbot, fcondbotn, update_ocn_f, &
           stressp_1, stressm_1, stress12_1, &
           stressp_2, stressm_2, stress12_2, &
           stressp_3, stressm_3, stress12_3, &
           stressp_4, stressm_4, stress12_4, sig1, sig2, &
           mlt_onset, frz_onset, dagedtt, dagedtd, fswint_ai, keffn_top, &
-          snowfrac, alvdr_ai, alvdf_ai, alidr_ai, alidf_ai, Tbot, Tsnic
+          snowfrac, alvdr_ai, alvdf_ai, alidr_ai, alidf_ai, Tbot, Tsnice
       use ice_atmo, only: formdrag, Cd_atm
       use ice_meltpond_cesm, only: hs0
       use ice_history_shared ! almost everything
@@ -2117,7 +2118,7 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (vsno(i,j,iblk) > puny .and. aice_init(i,j,iblk) > puny) then
-                 worka(i,j) = aice(i,j,iblk)*(Tsnic(i,j,iblk)/aice_init(i,j,iblk)+Tffresh)
+                 worka(i,j) = aice(i,j,iblk)*(Tsnice(i,j,iblk)/aice_init(i,j,iblk)+Tffresh)
               else
                  worka(i,j) = aice(i,j,iblk)*(trcr(i,j,nt_Tsfc,iblk)+Tffresh)
               endif
@@ -2607,10 +2608,10 @@
                     rho_ice = rho_ice / real(nilyr,kind=dbl_kind)
                  endif
                  worka(i,j) = ((rho_ocn-rho_ice)*vice(i,j,iblk) - rhos*vsno(i,j,iblk))/rho_ocn
-                 if (worka(i,j) < c0) then
-                    write(nu_diag,*) 'negative fb',rho_ocn,rho_ice,rhos
-                    write(nu_diag,*) vice(i,j,iblk),vsno(i,j,iblk)
-                 endif
+!                if (worka(i,j) < c0) then
+!                   write(nu_diag,*) 'negative fb',rho_ocn,rho_ice,rhos
+!                   write(nu_diag,*) vice(i,j,iblk),vsno(i,j,iblk)
+!                endif
               endif
            enddo
            enddo
@@ -2623,7 +2624,13 @@
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
 !                Add in frazil flux
-                 dfresh = -rhoi*(frazil(i,j,iblk)-frazil_diag(i,j,iblk))/dt
+                 if (.not. update_ocn_f) then
+                 if ( ktherm == 2) then
+                    dfresh = -rhoi*(frazil(i,j,iblk)-frazil_diag(i,j,iblk))/dt
+                 else
+                    dfresh = -rhoi*frazil(i,j,iblk)/dt 
+                 endif
+                 endif
                  dfsalt = ice_ref_salinity*p001*dfresh
                  worka(i,j) = aice(i,j,iblk)*(fsalt(i,j,iblk)+dfsalt)
               endif
@@ -2638,7 +2645,13 @@
            do i = ilo, ihi
               if (aice(i,j,iblk) > puny) then
 !                Add in frazil flux
-                 dfresh = -rhoi*(frazil(i,j,iblk)-frazil_diag(i,j,iblk))/dt
+                 if (.not. update_ocn_f) then
+                 if ( ktherm == 2) then
+                    dfresh = -rhoi*(frazil(i,j,iblk)-frazil_diag(i,j,iblk))/dt
+                 else
+                    dfresh = -rhoi*frazil(i,j,iblk)/dt 
+                 endif
+                 endif
                  worka(i,j) = aice(i,j,iblk)*(fresh(i,j,iblk)+dfresh)
               endif
            enddo
@@ -2778,6 +2791,29 @@
              call accum_hist_field(n_snowfracn-n2D, iblk, ncat_hist, &
                                    snowfracn(:,:,1:ncat_hist,iblk), a3Dc)
 
+         if (f_keffn_top (1:1) /= 'x') &
+             call accum_hist_field(n_keffn_top-n2D, iblk, ncat_hist, &
+                                   keffn_top(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fsurfn_ai   (1:1) /= 'x') &
+             call accum_hist_field(n_fsurfn_ai-n2D, iblk, ncat_hist, &
+                  fsurfn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fcondtopn_ai   (1:1) /= 'x') &
+             call accum_hist_field(n_fcondtopn_ai-n2D, iblk, ncat_hist, &
+                  fcondtopn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_flatn_ai   (1:1) /= 'x') &
+             call accum_hist_field(n_flatn_ai-n2D, iblk, ncat_hist, &
+                  flatn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
+         if (f_fsensn_ai   (1:1) /= 'x') &
+             call accum_hist_field(n_fsensn_ai-n2D, iblk, ncat_hist, &
+                  fsensn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
+         ! Calculate surface heat flux that causes melt (calculated by the 
+         ! atmos in HadGEM3 so needed for checking purposes)
+         if (f_fmelttn_ai   (1:1) /= 'x') &
+             call accum_hist_field(n_fmelttn_ai-n2D, iblk, ncat_hist, &
+                  max(fsurfn(:,:,1:ncat_hist,iblk) - fcondtopn(:,:,1:ncat_hist,iblk),c0) &
+                      *aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
+
+         ! CMIP 3D fields
          if (f_siitdconc   (1:1) /= 'x') then
            worka3(:,:,:) = c0
            do n = 1,ncat_hist
@@ -2819,28 +2855,6 @@
            enddo
            call accum_hist_field(n_siitdsnthick-n2D, iblk, ncat_hist, worka3(:,:,:), a3Dc)
          endif
-
-         if (f_keffn_top (1:1) /= 'x') &
-             call accum_hist_field(n_keffn_top-n2D, iblk, ncat_hist, &
-                                   keffn_top(:,:,1:ncat_hist,iblk), a3Dc)
-         if (f_fsurfn_ai   (1:1) /= 'x') &
-             call accum_hist_field(n_fsurfn_ai-n2D, iblk, ncat_hist, &
-                  fsurfn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
-         if (f_fcondtopn_ai   (1:1) /= 'x') &
-             call accum_hist_field(n_fcondtopn_ai-n2D, iblk, ncat_hist, &
-                  fcondtopn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
-         if (f_flatn_ai   (1:1) /= 'x') &
-             call accum_hist_field(n_flatn_ai-n2D, iblk, ncat_hist, &
-                  flatn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
-         if (f_fsensn_ai   (1:1) /= 'x') &
-             call accum_hist_field(n_fsensn_ai-n2D, iblk, ncat_hist, &
-                  fsensn(:,:,1:ncat_hist,iblk)*aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
-         ! Calculate surface heat flux that causes melt (calculated by the 
-         ! atmos in HadGEM3 so needed for checking purposes)
-         if (f_fmelttn_ai   (1:1) /= 'x') &
-             call accum_hist_field(n_fmelttn_ai-n2D, iblk, ncat_hist, &
-                  max(fsurfn(:,:,1:ncat_hist,iblk) - fcondtopn(:,:,1:ncat_hist,iblk),c0) &
-                      *aicen_init(:,:,1:ncat_hist,iblk), a3Dc)
 
 ! example for 3D field (x,y,z)
 !         if (f_field3dz   (1:1) /= 'x') &
@@ -3579,6 +3593,18 @@
 
            do n = 1, num_avail_hist_fields_3Dc
               nn = n2D + n
+              do k = 1, ncat_hist
+              do j = jlo, jhi
+              do i = ilo, ihi
+                 if (.not. tmask(i,j,iblk) .or. ravgipn(i,j,k) == c0) then ! mask out land points
+                    a3Dc(i,j,k,n,iblk) = spval_dbl
+                 else                            ! convert units
+                    a3Dc(i,j,k,n,iblk) = avail_hist_fields(nn)%cona*a3Dc(i,j,k,n,iblk) &
+                                   * ravgct + avail_hist_fields(nn)%conb
+                 endif
+              enddo             ! i
+              enddo             ! j
+              enddo             ! k
               if (avail_hist_fields(nn)%vhistfreq == histfreq(ns)) then 
               if (index(avail_hist_fields(nn)%vname,'siitdthick') /= 0) then
                  if (f_siitdthick(1:1) /= 'x' .and. n_siitdthick(ns)-n2D /= 0) then
@@ -3609,18 +3635,6 @@
                  endif
               endif
               endif
-              do k = 1, ncat_hist
-              do j = jlo, jhi
-              do i = ilo, ihi
-                 if (.not. tmask(i,j,iblk) .or. ravgipn(i,j,k) == c0) then ! mask out land points
-                    a3Dc(i,j,k,n,iblk) = spval_dbl
-                 else                            ! convert units
-                    a3Dc(i,j,k,n,iblk) = avail_hist_fields(nn)%cona*a3Dc(i,j,k,n,iblk) &
-                                   * ravgct + avail_hist_fields(nn)%conb
-                 endif
-              enddo             ! i
-              enddo             ! j
-              enddo             ! k
            enddo                ! n
 
            do n = 1, num_avail_hist_fields_3Dz

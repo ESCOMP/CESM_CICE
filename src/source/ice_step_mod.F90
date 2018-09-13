@@ -181,7 +181,7 @@
           frain, Tair, coszen, strairxT, strairyT, fsurf, fcondtop, fsens, &
           flat, fswabs, flwout, evap, evapi, evaps, Tref, Qref, Uref, fresh, fsalt, fhocn, &
           fswthru, meltt, melts, meltb, meltl, congel, snoice, fcondbot, fcondbotn, &
-          set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnic, &
+          set_sfcflux, merge_fluxes, send_i2x_per_cat, fswthrun_ai, Tbot, Tsnice, &
           HDO_ocn, H2_16O_ocn, H2_18O_ocn
       use ice_firstyear, only: update_FYarea
       use ice_grid, only: lmask_n, lmask_s, TLAT, TLON
@@ -246,7 +246,7 @@
       ! other local variables
       real (kind=dbl_kind), dimension (nx_block,ny_block) :: &
          Tbotn       , & ! ice bottom surface temperature (deg C)
-         Tsnicn      , & ! snow-ice interface temperature (deg C)
+         Tsnicen      , & ! snow-ice interface temperature (deg C)
          fbot        , & ! ice-ocean heat flux at bottom surface (W/m^2)
          shcoef      , & ! transfer coefficient for sensible heat
          lhcoef          ! transfer coefficient for latent heat
@@ -526,7 +526,7 @@
                                 Qa     (:,:,iblk),   rhoa (:,:,iblk),     &
                                 fsnow  (:,:,iblk),   fpond (:,:,iblk),    &
                                 fbot,                Tbotn,                &
-                                Tsnicn, &
+                                Tsnicen, &
                                 sss  (:,:,iblk),                          &
                                 lhcoef,              shcoef,              &
                                 fswsfcn(:,:,n,iblk), fswintn(:,:,n,iblk), &
@@ -734,7 +734,7 @@
                             evapn,                                    &
                             evapin,             evapsn,               &
                             Trefn,              Qrefn,                &
-                            Tbotn,              Tsnicn,               &
+                            Tbotn,              Tsnicen,               &
                             freshn,             fsaltn,               &
                             fhocnn,             fswthrun(:,:,n,iblk), &
                             strairxT(:,:,iblk), strairyT  (:,:,iblk), &
@@ -746,7 +746,7 @@
                             evap    (:,:,iblk),                       &
                             evapi   (:,:,iblk), evaps     (:,:,iblk), &
                             Tref    (:,:,iblk), Qref      (:,:,iblk), &
-                            Tbot    (:,:,iblk), Tsnic     (:,:,iblk), &
+                            Tbot    (:,:,iblk), Tsnice     (:,:,iblk), &
                             fresh   (:,:,iblk), fsalt     (:,:,iblk), &
                             fhocn   (:,:,iblk), fswthru   (:,:,iblk), &
                             melttn(:,:,n,iblk), meltsn  (:,:,n,iblk), &

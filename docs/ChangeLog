@@ -1,4 +1,21 @@
 ===============================================================
+cice5_20180913
+Originator: dbailey
+Date:  13 Sep 2018
+Version: 5.0
+One-line: Fix hobart NAG and CMIP variable changes.
+
+I changed the nodes for the hobart tests to 4 so the 
+NAG compiler tests would pass.
+I also made some updates for CMIP variables. (BFB)
+
+        modified:   cime_config/config_pes.xml
+        modified:   src/source/ice_flux.F90
+        modified:   src/source/ice_history.F90
+        modified:   src/source/ice_step_mod.F90
+        modified:   src/source/ice_therm_vertical.F90
+
+===============================================================
 cice5_20180808
 Originator: dbailey
 Date:  08 Aug 2018
