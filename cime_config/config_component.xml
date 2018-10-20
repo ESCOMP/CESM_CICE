@@ -5,8 +5,9 @@
 <entry_id version="3.0">
 
   <description>
-    <desc ice="CICE[%PRES]">Sea ICE (cice) model version 5</desc>
-    <desc option="PRES"> :prescribed cice</desc>
+    <desc ice="CICE[%PRES][%CMIP6]">Sea ICE (cice) model version 5</desc>
+    <desc option="PRES" > :prescribed cice</desc>
+    <desc option="CMIP6"> :with modifications appropriate for CMIP6 experiments</desc>
   </description>
 
   <entry id="COMP_ICE">
@@ -149,6 +150,18 @@
     </desc>
   </entry>
 
+  <entry id="CICE_USER_MODS">
+    <type>char</type>
+    <valid_values></valid_values>
+    <default_value></default_value>
+    <values match="last">
+      <value
+      compset="_CICE[^_]*%CMIP6">$SRCROOT/components/cice/cime_config/usermods_dirs/cmip6</value>
+    </values>
+    <group>run_component_cice</group>
+    <file>env_case.xml</file>
+    <desc>User mods to apply to specific compset matches. </desc>
+  </entry>
 
   <help>
     =========================================
