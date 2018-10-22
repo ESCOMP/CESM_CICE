@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20181008
+Originator: dbailey
+Date:  08 Oct 2018
+Version: 5.0
+One-line: Remove some print statements.
+
+        modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20180913
 Originator: dbailey
 Date:  13 Sep 2018

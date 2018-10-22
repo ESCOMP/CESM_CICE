@@ -1887,9 +1887,6 @@
            call accum_hist_field(n_fswup, iblk, worka(:,:), a2D)
          endif
 
-
-         print *,"alvdr_ai",maxval(maxval(alvdr_ai(:,:,iblk),1),1)
-
          if (f_albsni (1:1) /= 'x') &
              call accum_hist_field(n_albsni, iblk, &
                                   (awtvdr*alvdr(:,:,iblk) &
@@ -2608,10 +2605,6 @@
                     rho_ice = rho_ice / real(nilyr,kind=dbl_kind)
                  endif
                  worka(i,j) = ((rho_ocn-rho_ice)*vice(i,j,iblk) - rhos*vsno(i,j,iblk))/rho_ocn
-!                if (worka(i,j) < c0) then
-!                   write(nu_diag,*) 'negative fb',rho_ocn,rho_ice,rhos
-!                   write(nu_diag,*) vice(i,j,iblk),vsno(i,j,iblk)
-!                endif
               endif
            enddo
            enddo
