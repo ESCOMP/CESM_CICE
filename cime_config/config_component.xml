@@ -24,8 +24,7 @@
     <valid_values>prognostic,prescribed,thermo_only</valid_values>
     <default_value>prognostic</default_value>
     <values>
-      <value compset="CICE_">prognostic</value>
-      <value compset="CICE%PRES_">prescribed</value>
+      <value compset="_CICE[^_]*%PRES">prescribed</value>
     </values>
     <group>build_component_cice</group>
     <file>env_build.xml</file>
