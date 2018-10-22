@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20181022
+Originator: sacks
+Date:  22 Oct 2018
+Version: 5.0
+One-line: Add %CMIP6 qualifier.
+
+        modified:   cime_config/config_component.xml
+
+===============================================================
 cice5_20181008
 Originator: dbailey
 Date:  08 Oct 2018
