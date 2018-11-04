@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20181104
+Originator: dbailey
+Date:  04 Nov 2018
+Version: 5.0
+One-line: Fix threading with dfresh and dfsalt.
+
+        modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20181022
 Originator: sacks
 Date:  22 Oct 2018
