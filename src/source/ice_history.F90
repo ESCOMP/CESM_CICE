@@ -410,6 +410,7 @@
       call broadcast_scalar (f_frz_onset, master_task)
       call broadcast_scalar (f_aisnap, master_task)
       call broadcast_scalar (f_hisnap, master_task)
+      call broadcast_scalar (f_CMIP, master_task)
       call broadcast_scalar (f_sithick, master_task)
       call broadcast_scalar (f_siage, master_task)
       call broadcast_scalar (f_sisnthick, master_task)
