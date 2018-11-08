@@ -3006,6 +3006,7 @@
            enddo             ! i
            enddo             ! j
            endif
+           print *,'n_aicen(ns),n2D',n_aicen(ns),n2D
            if (n_aicen(ns) > n2D) then
            do k=1,ncat_hist
            do j = jlo, jhi
@@ -3587,6 +3588,9 @@
 
            do n = 1, num_avail_hist_fields_3Dc
               nn = n2D + n
+
+              if (avail_hist_fields(nn)%vhistfreq == histfreq(ns)) then 
+
               do k = 1, ncat_hist
               do j = jlo, jhi
               do i = ilo, ihi
@@ -3599,7 +3603,6 @@
               enddo             ! i
               enddo             ! j
               enddo             ! k
-              if (avail_hist_fields(nn)%vhistfreq == histfreq(ns)) then 
               if (index(avail_hist_fields(nn)%vname,'siitdthick') /= 0) then
                  if (f_siitdthick(1:1) /= 'x' .and. n_siitdthick(ns)-n2D /= 0) then
                     do k = 1, ncat_hist
@@ -3628,6 +3631,7 @@
                     enddo             ! k
                  endif
               endif
+
               endif
            enddo                ! n
 
