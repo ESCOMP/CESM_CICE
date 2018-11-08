@@ -1,4 +1,13 @@
 ===============================================================
+cice5_20181108
+Originator: dbailey
+Date:  08 Nov 2018
+Version: 5.0
+One-line: Fix bug with aicen in history.
+
+        modified:   src/source/ice_history.F90
+
+===============================================================
 cice5_20181107
 Originator: dbailey
 Date:  07 Nov 2018
