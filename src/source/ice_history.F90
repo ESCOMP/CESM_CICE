@@ -3006,7 +3006,7 @@
            enddo             ! i
            enddo             ! j
            endif
-           print *,'n_aicen(ns),n2D',n_aicen(ns),n2D
+
            if (n_aicen(ns) > n2D) then
            do k=1,ncat_hist
            do j = jlo, jhi
