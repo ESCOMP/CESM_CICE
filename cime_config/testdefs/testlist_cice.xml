@@ -49,6 +49,11 @@
       <machine name="cheyenne" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
+  <test name="ERS_Ld5" grid="T62_t061" compset="DTEST" testmods="cice/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_cice"/>
+    </machines>
+  </test>
   <test name="ERS_Ld5" grid="f09_g17" compset="ETEST" testmods="cice/default">
     <machines>
       <machine name="mira" compiler="ibm" category="prebeta"/>
