@@ -1,0 +1,9 @@
+tr_iage      = .false.
+tr_FY        = .false.
+tr_lvl       = .false.
+tr_pond_cesm = .true.
+tr_pond_topo = .false.
+tr_pond_lvl  = .false.
+tr_aero      = .true.
+rfracmax     = 0.7
+rfracmin     = 0.15
