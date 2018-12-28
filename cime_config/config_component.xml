@@ -72,6 +72,42 @@
       CICE_DECOMPTYPE, and CICE_DECOMPSETTING".</desc>
   </entry>
 
+  <entry id="ICE_NAERO">
+    <type>integer</type>
+    <valid_values></valid_values>
+    <default_value>3</default_value>
+    <group>build_component_cice</group>
+    <file>env_build.xml</file>
+    <desc>Number of aerosols
+      (DO NOT EDIT if CICE_AUTO_DECOMP is true).
+      This is for experts only - automatically set if CICE_AUTO_DECOMP
+      is true to set this value, must first set CICE_AUTO_DECOMP to false.</desc>
+  </entry>
+
+  <entry id="ICE_NILYR">
+    <type>integer</type>
+    <valid_values></valid_values>
+    <default_value>8</default_value>
+    <group>build_component_cice</group>
+    <file>env_build.xml</file>
+    <desc>Number of vertical levels in ice
+      (DO NOT EDIT if CICE_AUTO_DECOMP is true).
+      This is for experts only - automatically set if CICE_AUTO_DECOMP
+      is true to set this value, must first set CICE_AUTO_DECOMP to false.</desc>
+  </entry>
+
+  <entry id="ICE_NSLYR">
+    <type>integer</type>
+    <valid_values></valid_values>
+    <default_value>8</default_value>
+    <group>build_component_cice</group>
+    <file>env_build.xml</file>
+    <desc>Number of vertical levels in snow
+      (DO NOT EDIT if CICE_AUTO_DECOMP is true).
+      This is for experts only - automatically set if CICE_AUTO_DECOMP
+      is true to set this value, must first set CICE_AUTO_DECOMP to false.</desc>
+  </entry>
+
   <entry id="CICE_BLCKX">
     <type>integer</type>
     <valid_values></valid_values>

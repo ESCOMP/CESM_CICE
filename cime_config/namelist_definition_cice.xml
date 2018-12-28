@@ -32,15 +32,6 @@
   <!-- -Derived namelist input     -->
   <!-- =========================== -->
 
-  <entry id="ncat" modify_via_xml="ICE_NCAT">
-    <type>integer</type>
-    <group>derived</group>
-    <values>
-      <value>$ICE_NCAT</value>
-    </values>
-    <desc>Number of ice categories</desc>
-  </entry>
-
   <entry id="scam">
     <type>integer</type>
     <group>derived</group>
@@ -140,18 +131,6 @@
     </values>
   </entry>
 
-  <entry id="history_precision">
-    <type>integer</type>
-    <category>setup</category>
-    <group>setup_nml</group>
-    <desc>
-      history precision (4 or 8)
-    </desc>
-    <values>
-      <value>4</value>
-    </values>
-  </entry>
-
   <!-- <entry id="runtype" modify_via_xml="RUN_TYPE"> -->
   <!--   <type>char</type> -->
   <!--   <category>setup</category> -->
@@ -205,6 +184,30 @@
       <value>1</value>
       <value hgrid="tx0.1v2">3</value>
       <value hgrid="tx0.1v3">3</value>
+    </values>
+  </entry>
+
+  <entry id="numin">
+    <type>integer</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      Minimum number of units
+    </desc>
+    <values>
+      <value>11</value>
+    </values>
+  </entry>
+
+  <entry id="numax">
+    <type>integer</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      Maximum number of units
+    </desc>
+    <values>
+      <value>99</value>
     </values>
   </entry>
 
@@ -446,15 +449,30 @@
     </values>
   </entry>
 
-  <entry id="kcatbound">
-    <type>integer</type>
+  <entry id="bathymetry_file">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <input_pathname>abs</input_pathname>
+    <desc>
+      Bathymetry file name for basalstress formulation
+    </desc>
+    <values>
+      <value>UNSET</value>
+      <value hgrid="gx1v6">$DIN_LOC_ROOT/ice/cice/global_gx1.bathy.nc </value>
+      <value hgrid="gx3v7">$DIN_LOC_ROOT/ice/cice/global_gx3.bathy.nc </value>
+    </values>
+  </entry>
+
+  <entry id="use_bathymetry">
+    <type>logical</type>
     <category>grid</category>
     <group>grid_nml</group>
     <desc>
-      category boundary formula (0 = old, 1 = new)
+      Use bathmetry file for basalstress formulation
     </desc>
     <values>
-      <value>0</value>
+      <value>.false. </value>
     </values>
   </entry>
 
@@ -472,9 +490,163 @@
     </values>
   </entry>
 
+  <entry id="kcatbound">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      category boundary formula (0 = old, 1 = new)
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="dxrect">
+    <type>real</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      Rectangular domain dx
+    </desc>
+    <values>
+      <value>30.0e5</value>
+    </values>
+  </entry>
+
+  <entry id="dyrect">
+    <type>real</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      Rectangular domain dy
+    </desc>
+    <values>
+      <value>30.0e5</value>
+    </values>
+  </entry>
+
+  <entry id="close_boundaries">
+    <type>logical</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      Closed boundaries
+    </desc>
+    <values>
+      <value>.false. </value>
+    </values>
+  </entry>
+
+  <entry id="ncat" modify_via_xml="ICE_NCAT">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>Number of ice categories</desc>
+    <values>
+      <value>$ICE_NCAT</value>
+    </values>
+  </entry>
+
+  <entry id="nilyr" modify_via_xml="ICE_NILYR">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      number of vertical layers in ice
+    </desc>
+    <values>
+      <value>$ICE_NILYR</value>
+    </values>
+  </entry>
+
+  <entry id="nslyr" modify_via_xml="ICE_NSLYR">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      number of vertical layers in snow
+    </desc>
+    <values>
+      <value>$ICE_NSLYR</value>
+    </values>
+  </entry>
+
+  <entry id="nblyr">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      number of vertical layers in zbgc
+    </desc>
+    <values>
+      <value>1</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- Domain info -->
   <!-- =========================== -->
+
+  <entry id="nx_global" modify_via_xml="ICE_NX">
+    <type>integer</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      x-direction grid dimension
+    </desc>
+    <values>
+      <value>$ICE_NX</value>
+    </values>
+  </entry>
+
+  <entry id="ny_global" modify_via_xml="ICE_NY">
+    <type>integer</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      y-direction grid dimension
+    </desc>
+    <values>
+      <value>$ICE_NY</value>
+    </values>
+  </entry>
+
+  <entry id="block_size_x" modify_via_xml="CICE_BLCKX">
+    <type>integer</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      x-direction block size
+    </desc>
+    <values>
+      <value>$CICE_BLCKX</value>
+    </values>
+  </entry>
+
+  <entry id="block_size_y" modify_via_xml="CICE_BLCKY">
+    <type>integer</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      y-direction block size
+    </desc>
+    <values>
+      <value>$CICE_BLCKY</value>
+    </values>
+  </entry>
+
+  <entry id="max_blocks" modify_via_xml="CICE_MXBLCKS">
+    <type>integer</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      maximum blocks per processor
+    </desc>
+    <values>
+      <value>$CICE_MXBLCKS</value>
+    </values>
+  </entry>
 
   <entry id="processor_shape" modify_via_xml="CICE_DECOMPSETTING">
     <type>char</type>
@@ -585,6 +757,102 @@
   <!-- =========================== -->
   <!-- Tracer info -->
   <!-- =========================== -->
+
+  <entry id="n_aero" modify_via_xml="ICE_NAERO">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of aerosols
+    </desc>
+    <values>
+      <value>$ICE_NAERO</value>
+    </values>
+  </entry>
+
+  <entry id="n_zaero">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of vertical aerosols
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_algae">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of algae tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_doc">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of dissolved organic carbon tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_dic">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of dissolved inorganic carbon tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_don">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of DON tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_fed">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of FED tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_fep">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of FEP tracers
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
 
   <entry id="tr_iage">
     <type>logical</type>
@@ -777,31 +1045,6 @@
     </values>
   </entry>
 
-  <entry id="tr_iso">
-    <type>logical</type>
-    <category>tracers</category>
-    <group>tracer_nml</group>
-    <desc>
-      Aerosol tracers.
-    </desc>
-    <values>
-      <value>.true.</value>
-      <value ntriso="0">.false.</value>
-    </values>
-  </entry>
-
-  <entry id="restart_iso">
-    <type>logical</type>
-    <category>tracers</category>
-    <group>tracer_nml</group>
-    <desc>
-      Aerosol restart from file.
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
   <!-- =========================== -->
   <!-- Thermo_nml parameterizations -->
   <!-- =========================== -->
@@ -945,6 +1188,18 @@
     </values>
   </entry>
 
+  <entry id="ndte">
+    <type>integer</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      subcycles per dynamics timestep
+    </desc>
+    <values>
+      <value> 120 </value>
+    </values>
+  </entry>
+
   <entry id="revised_evp">
     <type>logical</type>
     <category>parameterizations</category>
@@ -959,15 +1214,27 @@
     </values>
   </entry>
 
-  <entry id="ndte">
-    <type>integer</type>
+  <entry id="arlx">
+    <type>real</type>
     <category>parameterizations</category>
     <group>dynamics_nml</group>
     <desc>
-      subcycles per dynamics timestep
+      Parameter for revised EVP
     </desc>
     <values>
-      <value> 120 </value>
+      <value>300.</value>
+    </values>
+  </entry>
+
+  <entry id="brlx">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Parameter for revised EVP
+    </desc>
+    <values>
+      <value>300.</value>
     </values>
   </entry>
 
@@ -1050,6 +1317,93 @@
       <value>17.0</value>
       <value hgrid="ar9v3">21.3</value>
       <value hgrid="ar9v4">21.3</value>
+    </values>
+  </entry>
+
+  <entry id="ktens">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Tensile strength
+    </desc>
+    <values>
+      <value>0.0</value>
+    </values>
+  </entry>
+
+  <entry id="e_ratio">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      EVP ellipse aspect ratio
+    </desc>
+    <values>
+      <value>2.0</value>
+    </values>
+  </entry>
+
+  <entry id="basalstress">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Landfast ice formulation of Lemieux et al
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="k1">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Free parameter for landfast ice
+    </desc>
+    <values>
+      <value>8.0</value>
+    </values>
+  </entry>
+
+  <entry id="coriolis">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Coriolis parameter dependence
+    </desc>
+    <valid_values>constant,zero,latitude</valid_values>
+    <values>
+      <value>latitude</value>
+    </values>
+  </entry>
+
+  <entry id="kridge">
+    <type>integer</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Turn on or off ridging
+    </desc>
+    <valid_values>0,1</valid_values>
+    <values>
+      <value>1</value>
+    </values>
+  </entry>
+
+  <entry id="ktransport">
+    <type>integer</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Turn on or off transport
+    </desc>
+    <valid_values>0,1</valid_values>
+    <values>
+      <value>1</value>
     </values>
   </entry>
 
@@ -1258,7 +1612,7 @@
       snow depth of transition to bare sea ice (m)
     </desc>
     <values>
-      <value> 0.03 </value>
+      <value> 0.00 </value>
     </values>
   </entry>
 
@@ -1655,48 +2009,36 @@
     </values>
   </entry>
 
-  <entry id="bgc_data_dir">
-    <type>char</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      data directory for bgc
-    </desc>
-    <values>
-      <value>unknown_bgc_data_dir</value>
-    </values>
-  </entry>
-
-  <entry id="sil_data_type">
-    <type>char</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      default forcing value for silicate (default, clim)
-    </desc>
-    <values>
-      <value>unknown</value>
-    </values>
-  </entry>
-
-  <entry id="nit_data_type">
-    <type>char</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      default forcing value for nitrate (default, clim, sss)
-    </desc>
-    <values>
-      <value>unknown</value>
-    </values>
-  </entry>
-
-  <entry id="restore_bgc">
+  <entry id="restart_hbrine">
     <type>logical</type>
     <category>parameterizations</category>
     <group>zbgc_nml</group>
     <desc>
-      restore nitrate/silicate to data
+      restart tracer values from file
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_zaero">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      vertical aerosols
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="modal_aero">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      modal aerosols
     </desc>
     <values>
       <value>.false.</value>
@@ -1708,91 +2050,31 @@
     <category>parameterizations</category>
     <group>zbgc_nml</group>
     <desc>
-      biogeochemistry
+      skeletal biogeochemistry
     </desc>
     <values>
       <value>.false.</value>
     </values>
   </entry>
 
-  <entry id="tr_bgc_c_sk">
+  <entry id="z_tracers">
     <type>logical</type>
     <category>parameterizations</category>
     <group>zbgc_nml</group>
     <desc>
-      algal carbon tracer
+      vertical tracers
     </desc>
     <values>
       <value>.false.</value>
     </values>
   </entry>
 
-  <entry id="tr_bgc_chl_sk">
+  <entry id="restore_bgc">
     <type>logical</type>
     <category>parameterizations</category>
     <group>zbgc_nml</group>
     <desc>
-      algal chlorophyll tracer
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_bgc_am_sk">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      ammonium tracer
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_bgc_sil_sk">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      silicate tracer
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_bgc_dmspp_sk">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      particular DMSP tracer
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_bgc_dmspd_sk">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      dissolved DMSP tracer
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_bgc_dms_sk">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      DMS tracer
+      restore nitrate/silicate to data
     </desc>
     <values>
       <value>.false.</value>
@@ -1811,30 +2093,6 @@
     </values>
   </entry>
 
-  <entry id="restart_hbrine">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      restart tracer values from file
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="phi_snow">
-    <type>real</type>
-    <category>parameterizations</category>
-    <group>zbgc_nml</group>
-    <desc>
-      snow prorosity for brine height tracer
-    </desc>
-    <values>
-      <value>0.5</value>
-    </values>
-  </entry>
-
   <entry id="bgc_flux_type">
     <type>char</type>
     <category>parameterizations</category>
@@ -1846,7 +2104,6 @@
       <value>Jin2006</value>
     </values>
   </entry>
-
 
   <!-- =========================== -->
   <!-- ice_prescribed_nml -->
@@ -3505,48 +3762,6 @@
     </values>
   </entry>
 
-  <entry id="f_fswsfcn">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>mxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-      <value hgrid="ar9v3">mxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fswintn">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>mxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-      <value hgrid="ar9v3">mxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fswthrun">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>mxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-      <value hgrid="ar9v3">mxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-    </values>
-  </entry>
-
   <entry id="f_snowfracn">
     <type>char</type>
     <category>history</category>
@@ -3736,144 +3951,6 @@
     </desc>
     <values>
       <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_a11">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_a12">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_e11">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_e12">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_e22">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_s11">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_s12">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_s22">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_yieldstress11">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_yieldstress12">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_yieldstress22">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value hgrid="ar9v4">mdhxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -4349,343 +4426,7 @@
     </values>
   </entry>
 
-  <entry id="f_fiso_atm">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fiso_ocn">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
   <entry id="f_aero">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_aeron">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_iso">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_ison">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fno">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fno_ai">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fnh">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fnh_ai">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fn">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fn_ai">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fsil">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fsil_ai">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_n_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_c_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_chl_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_nit_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_am_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_sil_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_dmspp_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_dmspd_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_dms_sk">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_sil_ml">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_nit_ml">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_am_ml">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_dmsp_ml">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_dms_ml">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_btin">
     <type>char</type>
     <category>history</category>
     <group>icefields_bgc_nml</group>
@@ -4709,31 +4450,7 @@
     </values>
   </entry>
 
-  <entry id="f_bgc_no">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
   <entry id="f_bgc_n">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_bgc_nh">
     <type>char</type>
     <category>history</category>
     <group>icefields_bgc_nml</group>
@@ -4818,30 +4535,6 @@
   </entry>
 
   <entry id="f_bgc_s">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_fbri">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_bgc_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>xxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
-  <entry id="f_hbri">
     <type>char</type>
     <category>history</category>
     <group>icefields_bgc_nml</group>

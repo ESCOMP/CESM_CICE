@@ -99,6 +99,7 @@ def buildcpp(case):
     else:
         ntr_aero = 3
     ntr_aero = set_nondefault_cpp(cice_config_opts, "ntr_aero", ntr_aero)
+    case.set_value("ICE_NAERO", ntr_aero)
 
     # set number of bgc tracers (valid values are 0->10)
     if cice_mode == 'prescribed':
@@ -142,12 +143,14 @@ def buildcpp(case):
         nicelyr = 7
     else:
         nicelyr = 8
+    case.set_value("ICE_NILYR", nicelyr)
 
     # set number of snow layers
     if phys == "cice4":
         nsnwlyr = 1
     else:
         nsnwlyr = 3
+    case.set_value("ICE_NSLYR", nsnwlyr)
 
     # set number of ice categories
     # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
@@ -179,6 +182,8 @@ def buildcpp(case):
 
     # determine cice_cppdefs used in build
     cice_cppdefs = cice_cppdefs + " -DBLCKX=%s -DBLCKY=%s -DMXBLCKS=%s"%(cice_blckx, cice_blcky, cice_mxblcks)
+
+    cice_cppdefs = " -DCESMCOUPLED -Dncdf "
 
     # update the xml variable CICE_CPPDEFS with the above definition
     case.set_value("CICE_CPPDEFS", cice_cppdefs)

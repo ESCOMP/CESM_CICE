@@ -98,6 +98,8 @@ def _create_namelists(case, confdir, infile, nmlgen):
     #----------------------------------------------------
     if nmlgen.get_value('gridcpl_file') == 'UNSET':
         nmlgen.set_value('gridcpl_file', value="unknown_gridcpl_file")
+    if nmlgen.get_value('bathymetry_file') == 'UNSET':
+        nmlgen.set_value('gridcpl_file', value="unknown_bathymetry_file")
 
     # note that CICE_DECOMPSETTING is set in call to buildcpp
     if case.get_value('CICE_DECOMPSETTING') == 'null':
