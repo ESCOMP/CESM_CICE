@@ -183,9 +183,9 @@ contains
    endif
    call release_fileunit(nu_nml)
    call broadcast_scalar(nml_error,master_task)
-   if (nml_error /= 0) then
-      call abort_ice (subname//' ERROR: Namelist read error in ice_prescribed_mod')
-   endif
+!  if (nml_error /= 0) then
+!     call abort_ice (subname//' ERROR: Namelist read error in ice_prescribed_mod')
+!  endif
 
    call broadcast_scalar(prescribed_ice,master_task)
 
