@@ -1,3 +1,0 @@
-maskhalo_dyn      = .true.
-maskhalo_remap    = .true.
-maskhalo_bound    = .true.
