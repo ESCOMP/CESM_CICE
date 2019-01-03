@@ -726,3 +726,10 @@ class GitRepository(Repository):
         if verbosity >= VERBOSITY_VERBOSE:
             printlog('    {0}'.format(' '.join(cmd)))
         execute_subprocess(cmd)
+
+        """Update submodules
+        """
+        cmd = ['git', 'submodule', 'update', '--init','--recursive']
+        if verbosity >= VERBOSITY_VERBOSE:
+            printlog('    {0}'.format(' '.join(cmd)))
+        execute_subprocess(cmd)
