@@ -17,7 +17,6 @@ from CIME.utils import run_cmd_no_fail, expect
 from CIME.utils import run_cmd
 from CIME.case import Case
 from CIME.buildnml import parse_input
-
 import glob, shutil
 logger = logging.getLogger(__name__)
 
@@ -46,6 +45,9 @@ def buildcpp(case):
     cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
 
     pts_mode = case.get_value("PTS_MODE")
+    # set cice mode and cice_config_opts
+    cice_mode = case.get_value("CICE_MODE")
+
     if pts_mode:
         # explicitl set values for single column mode
         nx = 1
@@ -79,11 +81,10 @@ def buildcpp(case):
             case.set_value("CICE_BLCKX", config[2])
             case.set_value("CICE_BLCKY", config[3])
             case.set_value("CICE_MXBLCKS",config[4])
-            case.set_value("CICE_DECOMPTYPE", config[5])
+            if cice_mode != 'prescribed':
+                case.set_value("CICE_DECOMPTYPE", config[5])
             case.set_value("CICE_DECOMPSETTING", config[6])
 
-    # set cice mode and cice_config_opts
-    cice_mode = case.get_value("CICE_MODE")
 
     # set cice physics
     if "cice5" in cice_config_opts:
@@ -91,19 +92,22 @@ def buildcpp(case):
     elif "cice4" in cice_config_opts:
         phys = "cice4"
 
-    if cice_mode == 'prescribed':
-         case.set_value("CICE_DECOMPTYPE", "roundrobin")
+    if cice_mode == 'prescribed' and not pts_mode:
+        case.set_value("CICE_DECOMPTYPE", "roundrobin")
 
     if cice_mode == 'prescribed':
+        ntr_aero = 0
+    elif "tx0.25" in hgrid:
         ntr_aero = 0
     else:
         ntr_aero = 3
     ntr_aero = set_nondefault_cpp(cice_config_opts, "ntr_aero", ntr_aero)
-    case.set_value("ICE_NAERO", ntr_aero)
 
-    # set number of bgc tracers (valid values are 0->10)
+    # set number of number of bio grid layers (valid values are 0->10)
     if cice_mode == 'prescribed':
         nbgclyr = 0
+    elif "tx0.25" in hgrid:
+        nbgclyr = 7
     else:
         nbgclyr = 3
     nbgclyr = set_nondefault_cpp(cice_config_opts, "nbgclyr", nbgclyr)
@@ -141,16 +145,18 @@ def buildcpp(case):
         nicelyr = 4
     elif "ar9v" in hgrid:
         nicelyr = 7
+    elif "tx0.25" in hgrid:
+        nicelyr = 7
     else:
         nicelyr = 8
-    case.set_value("ICE_NILYR", nicelyr)
 
     # set number of snow layers
     if phys == "cice4":
         nsnwlyr = 1
+    elif "tx0.25" in hgrid:
+        nsnwlyr = 1
     else:
         nsnwlyr = 3
-    case.set_value("ICE_NSLYR", nsnwlyr)
 
     # set number of ice categories
     # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
@@ -170,24 +176,26 @@ def buildcpp(case):
     cice_blcky   = case.get_value("CICE_BLCKY")
     cice_mxblcks = case.get_value("CICE_MXBLCKS")
 
-    cice_cppdefs = " -DCESMCOUPLED -Dncdf -DNUMIN=11 -DNUMAX=99 " \
+    comp_atm = case.get_value("COMP_ATM")
+    comp_ocn = case.get_value("COMP_OCN")
+    cice_cppdefs = " -Dncdf -DNUMIN=11 -DNUMAX=99 " \
                    " -DNICECAT=%s -DNXGLOB=%s -DNYGLOB=%s -DNTRAERO=%s -DNTRISO=%s" \
                    " -DNBGCLYR=%s -DNICELYR=%s -DNSNWLYR=%s"  \
                    " -DTRAGE=%s -DTRFY=%s -DTRLVL=%s -DTRPND=%s -DTRBRI=%s -DTRBGCS=%s" \
                    %(ncat,nx,ny,ntr_aero,ntr_iso,nbgclyr,nicelyr,nsnwlyr,trage,trfy,trlvl,trpnd,trbri,trbgcs)
 
+    if (comp_atm == 'fv3gfs' and comp_ocn == "mom"):
+        cice_cppdefs = cice_cppdefs + " -DNEMS_COUPLED"
+
     # trigger RASM options with ar9v grid, otherwise set CESM options
     if "ar9v" in hgrid:
-        cice_cppdefs = cice_cppdefs + "-DRASM_MODS"
+        cice_cppdefs = cice_cppdefs + " -DRASM_MODS"
 
     # determine cice_cppdefs used in build
     cice_cppdefs = cice_cppdefs + " -DBLCKX=%s -DBLCKY=%s -DMXBLCKS=%s"%(cice_blckx, cice_blcky, cice_mxblcks)
 
-    cice_cppdefs = " -DCESMCOUPLED -Dncdf "
-
     # update the xml variable CICE_CPPDEFS with the above definition
     case.set_value("CICE_CPPDEFS", cice_cppdefs)
-    case.flush()
 
     return cice_cppdefs
 
@@ -205,7 +213,7 @@ def set_nondefault_cpp(cice_config_opts, string, value):
 def _main_func():
 
     caseroot = parse_input(sys.argv)
-    with Case(caseroot) as case:
+    with Case(caseroot, read_only=False) as case:
         cice_cppdefs = buildcpp(case)
     logger.info("CICE_CPPDEFS: %s" %cice_cppdefs)
 
