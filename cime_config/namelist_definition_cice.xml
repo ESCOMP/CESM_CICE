@@ -549,14 +549,13 @@
     </values>
   </entry>
 
-  <entry id="ncat">
+  <entry id="ncat" modify_via_xml="ICE_NCAT">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
     <desc>Number of ice categories</desc>
     <values>
-      <value>5</value>
-      <value cice_mode='prescribed'>1</value>
+      <value>$ICE_NCAT</value>
     </values>
   </entry>
 
@@ -631,7 +630,7 @@
     </values>
   </entry>
 
-  <entry id="block_size_x" modify_via_xml="CICE_BLCKX">
+  <entry id="block_size_x">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -639,11 +638,11 @@
       x-direction block size
     </desc>
     <values>
-      <value>$CICE_BLCKX</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="block_size_y" modify_via_xml="CICE_BLCKY">
+  <entry id="block_size_y">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -651,11 +650,11 @@
       y-direction block size
     </desc>
     <values>
-      <value>$CICE_BLCKY</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="max_blocks" modify_via_xml="CICE_MXBLCKS">
+  <entry id="max_blocks">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -663,11 +662,11 @@
       maximum blocks per processor
     </desc>
     <values>
-      <value>$CICE_MXBLCKS</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="processor_shape" modify_via_xml="CICE_DECOMPSETTING">
+  <entry id="processor_shape">
     <type>char</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -675,12 +674,11 @@
       processor shape
     </desc>
     <values>
-      <value cice_decomp_setting="null">square-ice</value>
-      <value>$CICE_DECOMPSETTING</value>
+      <value>square-ice</value>
     </values>
   </entry>
 
-  <entry id="distribution_type" modify_via_xml="CICE_DECOMPTYPE">
+  <entry id="distribution_type">
     <type>char</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -688,7 +686,7 @@
       method to use for distributing blocks among processors
     </desc>
     <values>
-      <value>$CICE_DECOMPTYPE</value>
+      <value>cartesian</value>
     </values>
   </entry>
 

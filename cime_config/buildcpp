@@ -13,8 +13,8 @@ sys.path.append(os.path.join(CIMEROOT, "scripts", "Tools"))
 
 from standard_script_setup import *
 
-from CIME.utils import run_cmd_no_fail, expect
-from CIME.utils import run_cmd
+#from CIME.utils import run_cmd_no_fail, expect
+#from CIME.utils import run_cmd
 from CIME.case import Case
 from CIME.buildnml import parse_input
 import glob, shutil
@@ -26,12 +26,12 @@ def buildcpp(case):
 
 # tcraig, should move the decomposition stuff from buildcpp to buildnml
 #  the only thing needed here is the actual cpp stuff -Dncdf -DRASM -DCESMCOUPLED
-    # determine cice_config_opts
+#    # determine cice_config_opts
     cice_config_opts = case.get_value('CICE_CONFIG_OPTS')
 
-    # set ice grid settings
-    nx = case.get_value("ICE_NX")
-    ny = case.get_value("ICE_NY")
+#    # set ice grid settings
+#    nx = case.get_value("ICE_NX")
+#    ny = case.get_value("ICE_NY")
 
     ice_grid = case.get_value('ICE_GRID')
     if ice_grid == 'ar9v2':
@@ -41,51 +41,51 @@ def buildcpp(case):
     else:
         hgrid = ice_grid
 
-    # determine decomposition xml variables if CICE_AUTO_DECOMP is true
-    # - invoke generate_cice_decomp.pl and update env_build.xml settings to
-    # reflect changes in the configuration this will trigger
-    cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
-
-    pts_mode = case.get_value("PTS_MODE")
-    # set cice mode and cice_config_opts
+#    # determine decomposition xml variables if CICE_AUTO_DECOMP is true
+#    # - invoke generate_cice_decomp.pl and update env_build.xml settings to
+#    # reflect changes in the configuration this will trigger
+#    cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
+#
+#    pts_mode = case.get_value("PTS_MODE")
+#    # set cice mode and cice_config_opts
     cice_mode = case.get_value("CICE_MODE")
-
-    if pts_mode:
-        # explicitl set values for single column mode
-        nx = 1
-        ny = 1
-        cice_auto_decomp = False
-        case.set_value("CICE_BLCKX", 1)
-        case.set_value("CICE_BLCKY", 1)
-        case.set_value("CICE_MXBLCKS", 1)
-        case.set_value("CICE_DECOMPTYPE", "cartesian")
-        case.set_value("CICE_DECOMPSETTING", "square-ice")
-
-    if cice_auto_decomp:
-        nthrds_ice = case.get_value("NTHRDS_ICE")
-        ninst_ice = case.get_value("NINST_ICE")
-        ntasks = case.get_value("NTASKS_PER_INST_ICE")
-        srcroot = case.get_value("SRCROOT")
-
-        cmd = os.path.join(srcroot, "components", "cice", "bld", "generate_cice_decomp.pl")
-        command = "%s -ccsmroot %s -res %s -nx %s -ny %s -nproc %s -thrds %s -output %s "  \
-                  % (cmd, srcroot, hgrid, nx, ny, ntasks, nthrds_ice, "all")
-        rc, out, err = run_cmd(command)
-
-        expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
-        if out is not None:
-            logger.debug("     %s"%out)
-        if err is not None:
-            logger.debug("     %s"%err)
-
-        config = out.split()
-        if int(config[0]) > 0:
-            case.set_value("CICE_BLCKX", config[2])
-            case.set_value("CICE_BLCKY", config[3])
-            case.set_value("CICE_MXBLCKS",config[4])
-            if cice_mode != 'prescribed':
-                case.set_value("CICE_DECOMPTYPE", config[5])
-            case.set_value("CICE_DECOMPSETTING", config[6])
+#
+#    if pts_mode:
+#        # explicitl set values for single column mode
+#        nx = 1
+#        ny = 1
+#        cice_auto_decomp = False
+#        case.set_value("CICE_BLCKX", 1)
+#        case.set_value("CICE_BLCKY", 1)
+#        case.set_value("CICE_MXBLCKS", 1)
+#        case.set_value("CICE_DECOMPTYPE", "cartesian")
+#        case.set_value("CICE_DECOMPSETTING", "square-ice")
+#
+#    if cice_auto_decomp:
+#        nthrds_ice = case.get_value("NTHRDS_ICE")
+#        ninst_ice = case.get_value("NINST_ICE")
+#        ntasks = case.get_value("NTASKS_PER_INST_ICE")
+#        srcroot = case.get_value("SRCROOT")
+#
+#        cmd = os.path.join(srcroot, "components", "cice", "bld", "generate_cice_decomp.pl")
+#        command = "%s -ccsmroot %s -res %s -nx %s -ny %s -nproc %s -thrds %s -output %s "  \
+#                  % (cmd, srcroot, hgrid, nx, ny, ntasks, nthrds_ice, "all")
+#        rc, out, err = run_cmd(command)
+#
+#        expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
+#        if out is not None:
+#            logger.debug("     %s"%out)
+#        if err is not None:
+#            logger.debug("     %s"%err)
+#
+#        config = out.split()
+#        if int(config[0]) > 0:
+#            case.set_value("CICE_BLCKX", config[2])
+#            case.set_value("CICE_BLCKY", config[3])
+#            case.set_value("CICE_MXBLCKS",config[4])
+#            if cice_mode != 'prescribed':
+#                case.set_value("CICE_DECOMPTYPE", config[5])
+#            case.set_value("CICE_DECOMPSETTING", config[6])
 
 
 # tcraig, moved to namelist_definition_cice.xml
@@ -95,8 +95,8 @@ def buildcpp(case):
 #    elif "cice4" in cice_config_opts:
 #        phys = "cice4"
 
-    if cice_mode == 'prescribed' and not pts_mode:
-        case.set_value("CICE_DECOMPTYPE", "roundrobin")
+#    if cice_mode == 'prescribed' and not pts_mode:
+#        case.set_value("CICE_DECOMPTYPE", "roundrobin")
 
 # tcraig, moved to namelist_definition_cice.xml
 #    if cice_mode == 'prescribed':
@@ -162,18 +162,18 @@ def buildcpp(case):
 #    else:
 #        nsnwlyr = 3
 #
-#    # set number of ice categories
-#    # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
-#    # and as a result it is assumed that the cice buildcpp is called
-#    # BEFORE the pop buildcpp. This order is set by the xml variable
-#    # COMP_CLASSES in the driver config_component.xml file
-#    if cice_mode == 'prescribed':
-#        ncat = 1
-#    else:
-#        ncat = 5
-#    ncat = set_nondefault_cpp(cice_config_opts, "ncat", ncat)
-#    case.set_value("ICE_NCAT",ncat)
-#    logger.debug("cice: number of ice categories (ncat) is %s" %ncat)
+    # set number of ice categories
+    # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice
+    # and as a result it is assumed that the cice buildcpp is called
+    # BEFORE the pop buildcpp. This order is set by the xml variable
+    # COMP_CLASSES in the driver config_component.xml file
+    if cice_mode == 'prescribed':
+        ncat = 1
+    else:
+        ncat = 5
+    ncat = set_nondefault_cpp(cice_config_opts, "ncat", ncat)
+    case.set_value("ICE_NCAT",ncat)
+    logger.debug("cice: number of ice categories (ncat) is %s" %ncat)
 
 #    # set decomposition block sizes
 #    cice_blckx   = case.get_value("CICE_BLCKX")
