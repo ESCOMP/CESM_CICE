@@ -67,6 +67,9 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if cice_mode == 'prescribed':
         config['sstice_stream'] = case.get_value("SSTICE_STREAM")
 
+# tcraig, should move decomposition stuff from buildcpp to buildnml
+
+# tcraig, need to change this to cice_config_opts
     if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
         config['ntraero'] = "0"
 

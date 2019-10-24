@@ -549,17 +549,18 @@
     </values>
   </entry>
 
-  <entry id="ncat" modify_via_xml="ICE_NCAT">
+  <entry id="ncat">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
     <desc>Number of ice categories</desc>
     <values>
-      <value>$ICE_NCAT</value>
+      <value>5</value>
+      <value cice_mode='prescribed'>1</value>
     </values>
   </entry>
 
-  <entry id="nilyr" modify_via_xml="ICE_NILYR">
+  <entry id="nilyr">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
@@ -567,11 +568,14 @@
       number of vertical layers in ice
     </desc>
     <values>
-      <value>$ICE_NILYR</value>
+      <value>8</value>
+      <value phys="cice4">4</value>
+      <value hgrid="ar9v">7</value>
+      <value hgrid="tx0.25">7</value>
     </values>
   </entry>
 
-  <entry id="nslyr" modify_via_xml="ICE_NSLYR">
+  <entry id="nslyr">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
@@ -579,7 +583,9 @@
       number of vertical layers in snow
     </desc>
     <values>
-      <value>$ICE_NSLYR</value>
+      <value>3</value>
+      <value phys="cice4">1</value>
+      <value hgrid="tx0.25">1</value>
     </values>
   </entry>
 
@@ -591,7 +597,9 @@
       number of vertical layers in zbgc
     </desc>
     <values>
-      <value>1</value>
+      <value>3</value>
+      <value hgrid="tx0.25">7</value>
+      <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
 
@@ -769,7 +777,7 @@
   <!-- Tracer info -->
   <!-- =========================== -->
 
-  <entry id="n_aero" modify_via_xml="ICE_NAERO">
+  <entry id="n_aero">
     <type>integer</type>
     <category>tracers</category>
     <group>tracer_nml</group>
@@ -777,7 +785,9 @@
       Number of aerosols
     </desc>
     <values>
-      <value>$ICE_NAERO</value>
+      <value>3</value>
+      <value hgrid="tx0.25">0</value>
+      <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
 
