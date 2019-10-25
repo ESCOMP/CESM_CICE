@@ -191,7 +191,6 @@ def buildcpp(case):
 
     if (comp_atm == 'fv3gfs' and comp_ocn == "mom"):
         cice_cppdefs = cice_cppdefs + " -DNEMS_COUPLED"
-# tcraig, what about CESMCOUPLED?
 
     # trigger RASM options with ar9v grid, otherwise set CESM options
     if "ar9v" in hgrid:

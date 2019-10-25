@@ -882,7 +882,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrage="0">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
       <value cice_mode='prescribed'>.false.</value>
@@ -910,7 +909,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrfy="0">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
       <value cice_mode='prescribed'>.false.</value>
@@ -938,7 +936,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrlvl="0">.false.</value>
       <value phys="cice4">.false.</value>
       <value hgrid="ar9v4">.true.</value>
       <value hgrid="ar9v3">.true.</value>
@@ -966,7 +963,6 @@
     </desc>
     <values>
       <value>.false. </value>
-      <value ntrpnd="0">.false.</value>
       <value phys="cice4">.true. </value>
       <value hgrid="ar9v3">.false.</value>
       <value hgrid="ar9v4">.false.</value>
@@ -1020,7 +1016,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrpnd="0">.false.</value>
       <value phys="cice4">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
@@ -1048,7 +1043,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntraero="0">.false.</value>
     </values>
   </entry>
 

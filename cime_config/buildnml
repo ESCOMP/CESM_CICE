@@ -70,8 +70,27 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if cice_mode == 'prescribed':
         config['sstice_stream'] = case.get_value("SSTICE_STREAM")
 
-# tcraig, should move decomposition stuff from buildcpp to buildnml
-    # set ice grid settings
+#    if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntraero'] = "0"
+
+#    if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntriso'] = "0"
+
+#    if "DTRAGE=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntrage'] = "0"
+
+#    if "DTRFY=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntrfy'] = "0"
+
+#    if "DTRPND=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntrpnd'] = "0"
+
+#    if "DTRLVL=0" in case.get_value("CICE_CPPDEFS"):
+#        config['ntrlvl'] = "0"
+
+    #----------------------------------------------------
+    # Grid and Decomposition
+    #----------------------------------------------------
     nx = case.get_value("ICE_NX")
     ny = case.get_value("ICE_NY")
 
@@ -130,25 +149,6 @@ def _create_namelists(case, confdir, infile, nmlgen):
                  cice_decomptype = decompconfig[5]
              cice_decompsetting = decompconfig[6]
 
-# tcraig, need to change this to cice_config_opts
-    if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntraero'] = "0"
-
-    if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntriso'] = "0"
-
-    if "DTRAGE=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntrage'] = "0"
-
-    if "DTRFY=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntrfy'] = "0"
-
-    if "DTRPND=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntrpnd'] = "0"
-
-    if "DTRLVL=0" in case.get_value("CICE_CPPDEFS"):
-        config['ntrlvl'] = "0"
-
     #----------------------------------------------------
     # Initialize namelist defaults
     #----------------------------------------------------
@@ -163,12 +163,19 @@ def _create_namelists(case, confdir, infile, nmlgen):
     nmlgen.set_value('distribution_type', value=cice_decomptype)
     nmlgen.set_value('processor_shape', value=cice_decompsetting)
 
+#    if cice_decomptype == "spacecurve": 
+#        nmlgen.set_value('distribution_wght', value="erfc")
+
+    if nmlgen.get_value('n_aero') == '0':
+        nmlgen.set_value('tr_aero', value=".false.")
+#    if nmlgen.get_value('n_iso') > '0':
+#        nmlgen.set_value('tr_iso', value=".true.")
+
     if nmlgen.get_value('gridcpl_file') == 'UNSET':
         nmlgen.set_value('gridcpl_file', value="unknown_gridcpl_file")
     if nmlgen.get_value('bathymetry_file') == 'UNSET':
         nmlgen.set_value('bathymetry_file', value="unknown_bathymetry_file")
 
-    # note that CICE_DECOMPSETTING is set in call to buildcpp
     # tcraig, why is this here and what is it doing?
     if cice_decompsetting == 'null':
         config['cice_decomp_setting'] = 'null'
