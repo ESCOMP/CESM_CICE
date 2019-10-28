@@ -53,7 +53,6 @@
     <type>char</type>
     <category>setup</category>
     <group>setup_nml</group>
-    <input_pathname>abs</input_pathname>
     <desc>
       Method of ice cover initialization.
       'default'=>latitude and sst dependent, 'none'=>no ice, restart filename (must be a full path)
@@ -229,18 +228,6 @@
     </values>
   </entry>
 
-  <entry id="dumpfreq">
-    <type>char</type>
-    <category>setup</category>
-    <group>setup_nml</group>
-    <desc>
-      frequency of restart output (once per 1,h,d,m,y)
-    </desc>
-    <values>
-      <value>x</value>
-    </values>
-  </entry>
-
   <entry id="histfreq_n">
     <type>integer(5)</type>
     <category>setup</category>
@@ -250,6 +237,30 @@
     </desc>
     <values>
       <value>1,0,0,0,0</value>
+    </values>
+  </entry>
+
+  <entry id="dumpfreq">
+    <type>char</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      frequency of restart output (once per 1,h,d,m,y)
+    </desc>
+    <values>
+      <value>"m"</value>
+    </values>
+  </entry>
+
+  <entry id="dumpfreq_n">
+    <type>integer(5)</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      frequency of restart output (10 = once per 10 h,d,m,y)
+    </desc>
+    <values>
+      <value>1</value>
     </values>
   </entry>
 
@@ -317,15 +328,15 @@
     </values>
   </entry>
 
-  <entry id="bfbflag" modify_via_xml="BFBFLAG">
-    <type>logical</type>
+  <entry id="bfbflag">
+    <type>char</type>
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
       logical to control bit-for-bit computations
     </desc>
     <values>
-      <value>$BFBFLAG</value>
+      <value>off</value>
     </values>
   </entry>
 
@@ -548,7 +559,7 @@
     </values>
   </entry>
 
-  <entry id="nilyr" modify_via_xml="ICE_NILYR">
+  <entry id="nilyr">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
@@ -556,11 +567,14 @@
       number of vertical layers in ice
     </desc>
     <values>
-      <value>$ICE_NILYR</value>
+      <value>8</value>
+      <value phys="cice4">4</value>
+      <value hgrid="ar9v">7</value>
+      <value hgrid="tx0.25">7</value>
     </values>
   </entry>
 
-  <entry id="nslyr" modify_via_xml="ICE_NSLYR">
+  <entry id="nslyr">
     <type>integer</type>
     <category>grid</category>
     <group>grid_nml</group>
@@ -568,7 +582,9 @@
       number of vertical layers in snow
     </desc>
     <values>
-      <value>$ICE_NSLYR</value>
+      <value>3</value>
+      <value phys="cice4">1</value>
+      <value hgrid="tx0.25">1</value>
     </values>
   </entry>
 
@@ -580,7 +596,9 @@
       number of vertical layers in zbgc
     </desc>
     <values>
-      <value>1</value>
+      <value>3</value>
+      <value hgrid="tx0.25">7</value>
+      <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
 
@@ -612,7 +630,7 @@
     </values>
   </entry>
 
-  <entry id="block_size_x" modify_via_xml="CICE_BLCKX">
+  <entry id="block_size_x">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -620,11 +638,11 @@
       x-direction block size
     </desc>
     <values>
-      <value>$CICE_BLCKX</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="block_size_y" modify_via_xml="CICE_BLCKY">
+  <entry id="block_size_y">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -632,11 +650,11 @@
       y-direction block size
     </desc>
     <values>
-      <value>$CICE_BLCKY</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="max_blocks" modify_via_xml="CICE_MXBLCKS">
+  <entry id="max_blocks">
     <type>integer</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -644,11 +662,11 @@
       maximum blocks per processor
     </desc>
     <values>
-      <value>$CICE_MXBLCKS</value>
+      <value>0</value>
     </values>
   </entry>
 
-  <entry id="processor_shape" modify_via_xml="CICE_DECOMPSETTING">
+  <entry id="processor_shape">
     <type>char</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -656,12 +674,11 @@
       processor shape
     </desc>
     <values>
-      <value cice_decomp_setting="null">square-ice</value>
-      <value>$CICE_DECOMPSETTING</value>
+      <value>square-ice</value>
     </values>
   </entry>
 
-  <entry id="distribution_type" modify_via_xml="CICE_DECOMPTYPE">
+  <entry id="distribution_type">
     <type>char</type>
     <category>decomp</category>
     <group>domain_nml</group>
@@ -669,7 +686,7 @@
       method to use for distributing blocks among processors
     </desc>
     <values>
-      <value>$CICE_DECOMPTYPE</value>
+      <value>cartesian</value>
     </values>
   </entry>
 
@@ -758,7 +775,7 @@
   <!-- Tracer info -->
   <!-- =========================== -->
 
-  <entry id="n_aero" modify_via_xml="ICE_NAERO">
+  <entry id="n_aero">
     <type>integer</type>
     <category>tracers</category>
     <group>tracer_nml</group>
@@ -766,7 +783,9 @@
       Number of aerosols
     </desc>
     <values>
-      <value>$ICE_NAERO</value>
+      <value>3</value>
+      <value hgrid="tx0.25">0</value>
+      <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
 
@@ -863,7 +882,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrage="0">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
       <value cice_mode='prescribed'>.false.</value>
@@ -891,7 +909,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrfy="0">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
       <value cice_mode='prescribed'>.false.</value>
@@ -919,7 +936,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrlvl="0">.false.</value>
       <value phys="cice4">.false.</value>
       <value hgrid="ar9v4">.true.</value>
       <value hgrid="ar9v3">.true.</value>
@@ -947,7 +963,6 @@
     </desc>
     <values>
       <value>.false. </value>
-      <value ntrpnd="0">.false.</value>
       <value phys="cice4">.true. </value>
       <value hgrid="ar9v3">.false.</value>
       <value hgrid="ar9v4">.false.</value>
@@ -1001,7 +1016,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntrpnd="0">.false.</value>
       <value phys="cice4">.false.</value>
       <value hgrid="ar9v3">.true.</value>
       <value hgrid="ar9v4">.true.</value>
@@ -1029,7 +1043,6 @@
     </desc>
     <values>
       <value>.true.</value>
-      <value ntraero="0">.false.</value>
     </values>
   </entry>
 
@@ -1612,7 +1625,7 @@
       snow depth of transition to bare sea ice (m)
     </desc>
     <values>
-      <value> 0.03 </value>
+      <value> 0.00 </value>
     </values>
   </entry>
 

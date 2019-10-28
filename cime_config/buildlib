@@ -11,6 +11,7 @@ from standard_script_setup import *
 from CIME.case import Case
 from CIME.utils import expect, run_cmd
 from CIME.buildlib import parse_input
+from CIME.build import get_standard_makefile_args
 
 logger = logging.getLogger(__name__)
 
@@ -20,20 +21,24 @@ def _build_cice():
 
     caseroot, libroot, bldroot = parse_input(sys.argv)
 
-    with Case(caseroot) as case:
-        casetools = case.get_value("CASETOOLS")
-        gmake_j   = case.get_value("GMAKE_J")
-        gmake     = case.get_value("GMAKE")
+    with Case(caseroot, read_only=False) as case:
         srcroot   = case.get_value("SRCROOT")
+        driver    = case.get_value("COMP_INTERFACE")
 
         # call buildcpp  to set the cppdefs
         cmd = os.path.join(os.path.join(srcroot,"components","cice","cime_config","buildcpp"))
-        logger.info("     ...calling cice buildcpp to set build time options")
+        logger.info("     ... buildlib calling cice buildcpp to set build time options")
         try:
             mod = imp.load_source("buildcpp", cmd)
             cice_cppdefs = mod.buildcpp(case)
         except:
             raise
+
+    with Case(caseroot) as case:
+        casetools = case.get_value("CASETOOLS")
+        gmake_j   = case.get_value("GMAKE_J")
+        gmake     = case.get_value("GMAKE")
+        srcroot   = case.get_value("SRCROOT")
 
         # create Filepath file
         objroot = case.get_value("OBJROOT")
@@ -41,16 +46,20 @@ def _build_cice():
         if not os.path.isfile(filepath_file):
             srcroot = case.get_value("SRCROOT")
             caseroot = case.get_value("CASEROOT")
-            paths = [os.path.join(caseroot,"SourceMods","src.cice"), 
-                     os.path.join(srcroot,"components","cice","src","cicecore","drivers","cesm"),
+            paths = [os.path.join(caseroot,"SourceMods","src.cice"),
                      os.path.join(srcroot,"components","cice","src","cicecore","shared"),
                      os.path.join(srcroot,"components","cice","src","icepack","columnphysics"),
                      os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure","io","io_pio"),
+                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure","io","io_pio2"),
                      os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure","comm","mpi"),
                      os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","analysis"),
                      os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","dynamics"),
                      os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","general")]
+            if driver == 'nuopc':
+                paths.append(os.path.join(srcroot,"components","cice","src","cicecore","drivers","nuopc"))
+            if driver == 'mct':
+                paths.append(os.path.join(srcroot,"components","cice","src","cicecore","drivers","mct"))
+
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")
@@ -59,8 +68,8 @@ def _build_cice():
         complib = os.path.join(libroot,"libice.a")
         makefile = os.path.join(casetools, "Makefile")
 
-        cmd = "%s complib -j %d MODEL=cice COMPLIB=%s -f %s USER_CPPDEFS=\"%s\"" \
-            % (gmake, gmake_j, complib, makefile, cice_cppdefs )
+        cmd = "{} complib -j {} MODEL=cice COMPLIB={} -f {} USER_CPPDEFS=\"{}\" {} " \
+            .format(gmake, gmake_j, complib, makefile, cice_cppdefs, get_standard_makefile_args(case))
 
         rc, out, err = run_cmd(cmd, from_dir=bldroot)
         expect(rc == 0, "Command %s failed rc=%d\nout=%s\nerr=%s" % (cmd, rc, out, err))
