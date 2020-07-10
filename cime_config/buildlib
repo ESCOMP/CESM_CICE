@@ -24,16 +24,16 @@ def _build_cice():
     with Case(caseroot, read_only=False) as case:
         srcroot   = case.get_value("SRCROOT")
         driver    = case.get_value("COMP_INTERFACE")
-
+        comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
         # call buildcpp  to set the cppdefs
-        cmd = os.path.join(os.path.join(srcroot,"components","cice","cime_config","buildcpp"))
+        cmd = os.path.join(os.path.join(comp_root_dir_ice,"cime_config","buildcpp"))
         logger.info("     ... buildlib calling cice buildcpp to set build time options")
         try:
             mod = imp.load_source("buildcpp", cmd)
             cice_cppdefs = mod.buildcpp(case)
         except:
             raise
-
+    print("cice_cppdefs are {}".format(cice_cppdefs))
     with Case(caseroot) as case:
         casetools = case.get_value("CASETOOLS")
         gmake_j   = case.get_value("GMAKE_J")

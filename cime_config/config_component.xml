@@ -75,7 +75,7 @@
   <entry id="CICE_CPPDEFS">
     <type>char</type>
     <valid_values></valid_values>
-    <default_value>UNSET</default_value>
+    <default_value> -Dncdf -Dcoupled </default_value>
     <group>build_component_cice</group>
     <file>env_build.xml</file>
     <desc>CICE cpp definitions (setup automatically - DO NOT EDIT)</desc>

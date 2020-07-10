@@ -13,7 +13,8 @@
 use strict;
 use Getopt::Long;
 use English;
-
+use File::Basename;
+my $dirname = dirname(__FILE__);
 #-----------------------------------------------------------------------------------------------
 my $ProgName;
 ($ProgName = $PROGRAM_NAME) =~ s!(.*)/!!; # name of program
@@ -26,13 +27,13 @@ SYNOPSIS
 OPTIONS
      -ccsmroot <path>               Full pathname for ccsmroot
                                     (required)
-     -nproc <number>      (or -n)   Number of mpi tasks used.	
+     -nproc <number>      (or -n)   Number of mpi tasks used.
                                     (required)
-     -nx <number>                   number of lons 
+     -nx <number>                   number of lons
                                     (optional, default is 320)
      -ny <number>                   number of lats
                                     (optional, default is 384)
-     -res <resolution>    (or -r)   Horizontal resolution 
+     -res <resolution>    (or -r)   Horizontal resolution
                                     (optional, default gx1v6)
      -thrds <number>      (or -t)   Number of threads per mpi task
                                     (optional, default 1)
@@ -62,7 +63,7 @@ my %opts = (
                 spacecurve => 0,
            );
 
-GetOptions( 
+GetOptions(
               "ccsmroot=s"   => \$opts{'ccsmroot'},
               "r|res=s"      => \$opts{'res'},
               "nx=i"         => \$opts{'nx'},
@@ -109,7 +110,7 @@ my $nlon = $opts{'nx'};
 # Try to read from the xml file
 my $dcmp = Decomp::Config->new( \%opts );
 my %decomp = ( maxblocks=>0, bsize_x=>0, bsize_y=>0, decomptype=>"", decompset=>"" );
-my $file = "$cesmroot/components/cice/bld/generate_cice_decomp.xml";
+my $file = "$dirname/generate_cice_decomp.xml";
 my $matches = $dcmp->ReadXML( $file, \%decomp );
 
 # If no xml entry, try to generate something
@@ -125,7 +126,7 @@ if ( $decomp{'maxblocks'} == 0 ) {
 } else {
     if (      $opts{'output'} eq "all"       ) {
 	printf "%d %d %d %d %d %s %s", $nlon, $nlat,
-	$decomp{'bsize_x'}, $decomp{'bsize_y'}, 
+	$decomp{'bsize_x'}, $decomp{'bsize_y'},
 	$decomp{'maxblocks'}, $decomp{'decomptype'}, $decomp{'decompset'};
     } elsif ( $opts{'output'} eq "maxblocks" ) {
 	print $decomp{'maxblocks'};
@@ -305,8 +306,7 @@ sub CalcDecompInfo {
 sub clean
 {
     my ($name) = @_;
-    $name =~ s/^\s+//; # strip any leading whitespace 
+    $name =~ s/^\s+//; # strip any leading whitespace
     $name =~ s/\s+$//; # strip any trailing whitespace
     return ($name);
 }
-
