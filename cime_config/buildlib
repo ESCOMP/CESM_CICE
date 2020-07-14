@@ -24,16 +24,16 @@ def _build_cice():
     with Case(caseroot, read_only=False) as case:
         srcroot   = case.get_value("SRCROOT")
         driver    = case.get_value("COMP_INTERFACE")
-
+        comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
         # call buildcpp  to set the cppdefs
-        cmd = os.path.join(os.path.join(srcroot,"components","cice","cime_config","buildcpp"))
+        cmd = os.path.join(os.path.join(comp_root_dir_ice,"cime_config","buildcpp"))
         logger.info("     ... buildlib calling cice buildcpp to set build time options")
         try:
             mod = imp.load_source("buildcpp", cmd)
             cice_cppdefs = mod.buildcpp(case)
         except:
             raise
-
+    print("cice_cppdefs are {}".format(cice_cppdefs))
     with Case(caseroot) as case:
         casetools = case.get_value("CASETOOLS")
         gmake_j   = case.get_value("GMAKE_J")
@@ -47,18 +47,18 @@ def _build_cice():
             srcroot = case.get_value("SRCROOT")
             caseroot = case.get_value("CASEROOT")
             paths = [os.path.join(caseroot,"SourceMods","src.cice"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","shared"),
-                     os.path.join(srcroot,"components","cice","src","icepack","columnphysics"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure","io","io_pio2"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","infrastructure","comm","mpi"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","analysis"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","dynamics"),
-                     os.path.join(srcroot,"components","cice","src","cicecore","cicedynB","general")]
+                     os.path.join(comp_root_dir_ice,"src","cicecore","shared"),
+                     os.path.join(comp_root_dir_ice,"src","icepack","columnphysics"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","infrastructure"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","infrastructure","io","io_pio2"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","infrastructure","comm","mpi"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","analysis"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","dynamics"),
+                     os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","general")]
             if driver == 'nuopc':
-                paths.append(os.path.join(srcroot,"components","cice","src","cicecore","drivers","nuopc","cmeps"))
+                paths.append(os.path.join(comp_root_dir_ice,"src","cicecore","drivers","nuopc","cmeps"))
             if driver == 'mct':
-                paths.append(os.path.join(srcroot,"components","cice","src","cicecore","drivers","mct","cmeps"))
+                paths.append(os.path.join(comp_root_dir_ice,"src","cicecore","drivers","mct","cmeps"))
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
