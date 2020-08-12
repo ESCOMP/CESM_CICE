@@ -98,11 +98,11 @@
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      Restart file format. bin, nc, or pio
+      Restart file format. 
     </desc>
-    <valid_values>bin,nc,pio</valid_values>
+    <valid_values>default</valid_values>
     <values>
-      <value>pio</value>
+      <value>default</value>
     </values>
   </entry>
 
@@ -118,6 +118,19 @@
     </values>
   </entry>
 
+  <entry id="history_format">
+    <type>char</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      History file format.
+    </desc>
+    <valid_values>default</valid_values>
+    <values>
+      <value>default</value>
+    </values>
+  </entry>
+
   <entry id="history_file">
     <type>char</type>
     <category>setup</category>
@@ -127,6 +140,18 @@
     </desc>
     <values>
       <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="version_name">
+    <type>char</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      Code version
+    </desc>
+    <values>
+      <value>undefined_version_name</value>
     </values>
   </entry>
 
@@ -156,6 +181,18 @@
     </desc>
     <values>
       <value>365</value>
+    </values>
+  </entry>
+
+  <entry id="use_leap_years">
+    <type>logical</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      if true, use GREGORIAN calendar.
+    </desc>
+    <values>
+      <value>.false.</value>
     </values>
   </entry>
 
@@ -313,6 +350,18 @@
     </desc>
     <values>
       <value>.true.</value>
+    </values>
+  </entry>
+
+  <entry id="conserv_check">
+    <type>logical</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      logical to turn on conservation checks
+    </desc>
+    <values>
+      <value>.false.</value>
     </values>
   </entry>
 
@@ -588,6 +637,18 @@
     </values>
   </entry>
 
+  <entry id="nfsd">
+    <type>integer</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      number of floe size distribution categories
+    </desc>
+    <values>
+      <value>1</value>
+    </values>
+  </entry>
+
   <entry id="nblyr">
     <type>integer</type>
     <category>grid</category>
@@ -599,6 +660,18 @@
       <value>3</value>
       <value hgrid="tx0.25">7</value>
       <value cice_mode='prescribed'>0</value>
+    </values>
+  </entry>
+
+  <entry id="orca_halogrid">
+    <type>logical</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      For ORCA grid.
+    </desc>
+    <values>
+      <value>.false. </value>
     </values>
   </entry>
 
@@ -771,6 +844,18 @@
     </values>
   </entry>
 
+  <entry id="add_mpi_barriers">
+    <type>logical</type>
+    <category>decomp</category>
+    <group>domain_nml</group>
+    <desc>
+      Use mpi barriers.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- Tracer info -->
   <!-- =========================== -->
@@ -781,6 +866,20 @@
     <group>tracer_nml</group>
     <desc>
       Number of aerosols
+    </desc>
+    <values>
+      <value>3</value>
+      <value hgrid="tx0.25">0</value>
+      <value cice_mode='prescribed'>0</value>
+    </values>
+  </entry>
+
+  <entry id="n_iso">
+    <type>integer</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Number of water isotopes
     </desc>
     <values>
       <value>3</value>
@@ -1058,6 +1157,30 @@
     </values>
   </entry>
 
+  <entry id="tr_iso">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Water isotope tracers.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_iso">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Water isotope restart from file.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- Thermo_nml parameterizations -->
   <!-- =========================== -->
@@ -1177,6 +1300,42 @@
     </desc>
     <values>
       <value>0.85</value>
+    </values>
+  </entry>
+
+  <entry id="sw_redist">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      Turn on SW redistribution
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
+
+  <entry id="sw_frac">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      fraction of SW redistributed
+    </desc>
+    <values>
+      <value>1.0d0</value>
+    </values>
+  </entry>
+
+  <entry id="sw_dtemp">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      distance from melt to start SW redistribution
+    </desc>
+    <values>
+      <value>0.01d0</value>
     </values>
   </entry>
 
@@ -1319,6 +1478,30 @@
     </values>
   </entry>
 
+  <entry id="pstar">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Hibler strength constant
+    </desc>
+    <values>
+      <value>2.75d4</value>
+    </values>
+  </entry>
+
+  <entry id="cstar">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Hibler strength constant
+    </desc>
+    <values>
+      <value>20.0d0</value>
+    </values>
+  </entry>
+
   <entry id="cf">
     <type>real</type>
     <category>parameterizations</category>
@@ -1377,7 +1560,43 @@
       Free parameter for landfast ice
     </desc>
     <values>
-      <value>8.0</value>
+      <value>8.0d0</value>
+    </values>
+  </entry>
+
+  <entry id="k2">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Free parameter for landfast ice
+    </desc>
+    <values>
+      <value>15.0d0</value>
+    </values>
+  </entry>
+
+  <entry id="alphab">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Free parameter for landfast ice
+    </desc>
+    <values>
+      <value>20.0d0</value>
+    </values>
+  </entry>
+
+  <entry id="threshold_hw">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Free parameter for landfast ice
+    </desc>
+    <values>
+      <value>30.0d0</value>
     </values>
   </entry>
 
@@ -1417,6 +1636,19 @@
     <valid_values>0,1</valid_values>
     <values>
       <value>1</value>
+    </values>
+  </entry>
+
+  <entry id="ssh_stress">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      SSH stress calculation
+    </desc>
+    <valid_values>geostrophic,coupled</valid_values>
+    <values>
+      <value>coupled</value>
     </values>
   </entry>
 
@@ -1625,7 +1857,7 @@
       snow depth of transition to bare sea ice (m)
     </desc>
     <values>
-      <value> 0.00 </value>
+      <value> 0.03 </value>
     </values>
   </entry>
 
@@ -1712,236 +1944,77 @@
   <!-- forcing_nml -->
   <!-- =========================== -->
 
-  <!-- <entry id="atmbndy"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     stability based boundary layer (default, constant) -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>default</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="atmbndy">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      stability based boundary layer (default, constant)
+    </desc>
+    <values>
+      <value>default</value>
+    </values>
+  </entry>
 
-  <!-- <entry id="fyear_init"> -->
-  <!--   <type>integer</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     first year of atm forcing data -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>1900</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="rotate_wind">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      rotate wind components
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
 
-  <!-- <entry id="atm_data_format"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     atm input data format (bin, nc) -->
-  <!--   </desc> -->
-  <!--   <valid_values>bin,nc</valid_values> -->
-  <!--   <values> -->
-  <!--     <value>bin</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="calc_strair">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      calculate wind stress and speed from files
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
 
-  <!-- <entry id="ycycle"> -->
-  <!--   <type>integer</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     number of year of forcing data cycle -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>1</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="calc_tsfc">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      calculate surface temperature
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
 
-  <!-- <entry id="atm_data_type"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     atm forcing data type (default, LYq, monthly, ncar, oned) -->
-  <!--   </desc> -->
-  <!--   <valid_values>default, LYq, monthly, ncar, oned</valid_values> -->
-  <!--   <values> -->
-  <!--     <value>default</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="update_ocn_f">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      include frazil water/salt fluxes in ocean fluxes
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
 
-  <!-- <entry id="atm_data_dir"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     path to atmospheric forcing data directory -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>''</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="calc_strair"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     calculate wind stress and speed from files -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.true.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="calc_tsfc"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     calculate surface temperature -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.true.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="precip_units"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     liquid precip data units (mks, mm_per_month, mm_per_sec) -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>mks</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="update_ocn_f"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     include frazil water/salt fluxes in ocean fluxes -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.false.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="ustar_min"> -->
-  <!--   <type>real</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     minimum value of ocean friction velocity -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>0.005</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="oceanmixed_ice"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     active ocean mixed layer calculation -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.false.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="ocn_data_format"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     ocean forcing file format (bin, nc) -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>bin</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="sss_data_type"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     sss forcing type (default, clim, ncar) -->
-  <!--   </desc> -->
-  <!--   <valid_values>default,clim,ncar</valid_values> -->
-  <!--   <values> -->
-  <!--     <value>default</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="ocn_data_dir"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     path to ocean forcing data directory -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>''</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="oceanmixed_file"> -->
-  <!--   <type>char</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     data file containing ocean forcing data -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>unknown_oceanmixed_file</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="restore_sst"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     restore sst -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.false.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="trestore"> -->
-  <!--   <type>integer</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     sst restoring timescale in days -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>90</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
-
-  <!-- <entry id="restore_ice"> -->
-  <!--   <type>logical</type> -->
-  <!--   <category>forcing</category> -->
-  <!--   <group>forcing_nml</group> -->
-  <!--   <desc> -->
-  <!--     restore ice state along lateral boundaries -->
-  <!--   </desc> -->
-  <!--   <values> -->
-  <!--     <value>.false.</value> -->
-  <!--   </values> -->
-  <!-- </entry> -->
+  <entry id="ustar_min">
+    <type>real</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      minimum value of ocean friction velocity
+    </desc>
+    <values>
+      <value>0.005</value> 
+    </values>
+  </entry>
 
   <entry id="formdrag">
     <type>logical</type>
@@ -1994,6 +2067,30 @@
     </values>
   </entry>
 
+  <entry id="atmiter_conv">
+    <type>real</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      Convergence criteria for atmospheric boundary layer
+    </desc>
+    <values>
+      <value>0.0d0</value> 
+    </values>
+  </entry>
+
+  <entry id="emissivity">
+    <type>real</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      Longwave emissivity
+    </desc>
+    <values>
+      <value>0.95d0</value> 
+    </values>
+  </entry>
+
   <entry id="l_mpond_fresh">
     <type>logical</type>
     <category>forcing</category>
@@ -2003,6 +2100,68 @@
     </desc>
     <values>
       <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tfrz_option">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      freezing point calculation at base of ice
+    </desc>
+    <valid_values>minus1p8,linear_salt,mushy</valid_values>
+    <values>
+      <value>mushy</value>
+    </values>
+  </entry>
+
+  <entry id="restart_coszen">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      Save coszen to restart file.
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
+
+  <entry id="wave_spec_type">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      How waves are specified.
+    </desc>
+    <valid_values>none,profile,constant,random</valid_values>
+    <values>
+      <value>none</value>
+    </values>
+  </entry>
+
+  <entry id="wave_spec_file">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      File name for waves.
+    </desc>
+    <values>
+      <value>unknown_wave_spec_file</value>
+    </values>
+  </entry>
+
+  <entry id="nfreq">
+    <type>integer</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      number of wave frequencies
+    </desc>
+    <values>
+      <value>25</value>
     </values>
   </entry>
 
@@ -2082,6 +2241,30 @@
     </values>
   </entry>
 
+  <entry id="dEdd_algae">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      BGC feeds back on dEdd radiation.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="solve_bgc">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Full BGC solution.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <entry id="restore_bgc">
     <type>logical</type>
     <category>parameterizations</category>
@@ -2115,6 +2298,162 @@
     </desc>
     <values>
       <value>Jin2006</value>
+    </values>
+  </entry>
+
+  <entry id="scale_bgc">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Scaled BGC.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="solve_zsal">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Solve vertical salt.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_zsal">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Restart vertical salinity.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_Nit">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Nitrate tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_C">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Algal carbon tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_chl">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Algal chlorophyll tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_Am">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Ammonium tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_Sil">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Silicate tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_DMS">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      DMS tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_PON">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      PON tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_hum">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      hum tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_DON">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      DON tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_bgc_Fe">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>zbgc_nml</group>
+    <desc>
+      Iron tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
     </values>
   </entry>
 
