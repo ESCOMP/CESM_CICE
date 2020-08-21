@@ -118,6 +118,18 @@
     </values>
   </entry>
 
+  <entry id="use_restart_time">
+    <type>logical</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      Use restart file time on initial runs
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <entry id="history_file">
     <type>char</type>
     <category>setup</category>
