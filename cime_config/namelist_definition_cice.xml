@@ -671,7 +671,7 @@
     <values>
       <value>3</value>
       <value hgrid="tx0.25">7</value>
-      <value cice_mode='prescribed'>0</value>
+      <value cice_mode='prescribed'>1</value>
     </values>
   </entry>
 
@@ -1869,7 +1869,7 @@
       snow depth of transition to bare sea ice (m)
     </desc>
     <values>
-      <value> 0.03 </value>
+      <value> 0.0 </value>
     </values>
   </entry>
 
@@ -2265,7 +2265,7 @@
     </values>
   </entry>
 
-  <entry id="solve_bgc">
+  <entry id="solve_zbgc">
     <type>logical</type>
     <category>parameterizations</category>
     <group>zbgc_nml</group>
