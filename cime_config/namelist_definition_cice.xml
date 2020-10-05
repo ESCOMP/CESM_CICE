@@ -536,6 +536,22 @@
     </values>
   </entry>
 
+  <entry id="bathymetry_format">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      Bathymetry file name for basalstress formulation
+    </desc>
+    <valid_values>default,pop</valid_values>
+    <values>
+      <value>default</value>
+      <value hgrid="gx1v6">pop</value>
+      <value hgrid="gx1v7">pop</value>
+      <value hgrid="gx3v7">pop</value>
+    </values>
+  </entry>
+
   <entry id="use_bathymetry">
     <type>logical</type>
     <category>grid</category>
@@ -2473,20 +2489,62 @@
   <!-- ice_prescribed_nml -->
   <!-- =========================== -->
 
-  <entry id="prescribed_ice">
+  <entry id="prescribed_ice_mode">
     <type>logical</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
-    <desc>
-      use prescribed ice mode if true
-    </desc>
+    <desc> use prescribed ice mode if true </desc>
     <values>
       <value>.false.</value>
       <value cice_mode="prescribed">.true.</value>
     </values>
   </entry>
 
-  <entry id="stream_fldvarname">
+  <entry id="stream_meshfile">
+    <type>char</type>
+    <category>streams</category>
+    <group>ice_prescribed_nml</group>
+    <desc>stream mesh file</desc>
+    <values>
+      <value>
+        ''
+      </value>
+      <value cice_mode="prescribed">
+	$DIN_LOC_ROOT/atm/cam/sst/sst_HadOIBl_bc_1x1_clim_c101029_ESMFmesh_120520.nc
+      </value>
+      <value cice_mode="prescribed" hgrid="T31">
+	$DIN_LOC_ROOT/share/meshes/T31_040122_ESMFmesh.nc
+      </value>
+      <value cice_mode="prescribed" hgrid="1.9x2.5">
+	$DIN_LOC_ROOT/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
+      </value>
+      <value cice_mode="prescribed" hgrid="0.9x1.25">
+	$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
+      </value>
+      <value cice_mode="prescribed" hgrid="0.47x0.63">
+	$DIN_LOC_ROOT/share/meshes/fv0.47x0.63_141008_ESMFmesh.nc
+      </value>
+      <value cice_mode="prescribed" hrid="4x5">
+	$DIN_LOC_ROOT/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc
+      </value>
+    </values>
+  </entry>
+
+  <entry id="stream_mapalgo" >
+    <type>char</type>
+    <category>icepresc</category>
+    <group>ice_prescribed_nml</group>
+    <desc>
+      stream mesh to model mesh mapping type
+    </desc>
+    <valid_values>na,redist,bilinear,</valid_values>
+    <values>
+      <value>na</value>
+      <value cice_mode="prescribed">bilinear</value>
+    </values>
+  </entry>
+
+  <entry id="stream_varname">
     <type>char</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
@@ -2498,12 +2556,12 @@
     </values>
   </entry>
 
-  <entry id="stream_fldfilename" modify_via_xml="SSTICE_DATA_FILENAME">
+  <entry id="stream_datafiles" modify_via_xml="SSTICE_DATA_FILENAME">
     <type>char</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
     <desc>
-      file name containing sst/ifrac data
+      file name(s) containing sst/ifrac data
     </desc>
     <values>
       <value>''</value>
@@ -2511,99 +2569,7 @@
     </values>
   </entry>
 
-  <entry id="stream_domtvarname">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file: time-dim var name
-    </desc>
-    <values>
-      <value>''</value>
-      <value cice_mode="prescribed">time</value>
-    </values>
-  </entry>
-
-  <entry id="stream_domxvarname">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file: x-dim var name
-    </desc>
-    <values>
-      <value>''</value>
-      <value cice_mode="prescribed">lon</value>
-      <value cice_mode="prescribed" sstice_stream="CAMDATA">xc</value>
-      <value cice_mode="prescribed" sstice_stream="WRFDATA">xc</value>
-    </values>
-  </entry>
-
-  <entry id="stream_domyvarname">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file: y-dim varname
-    </desc>
-    <values>
-      <value>''</value>
-      <value cice_mode="prescribed">lat</value>
-      <value cice_mode="prescribed" sstice_stream="CAMDATA">yc</value>
-      <value cice_mode="prescribed" sstice_stream="WRFDATA">yc</value>
-    </values>
-  </entry>
-
-  <entry id="stream_domareaname">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file: area varname
-    </desc>
-    <values>
-      <value>area</value>
-    </values>
-  </entry>
-
-  <entry id="stream_dommaskname">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file: mask varname
-    </desc>
-    <values>
-      <value>mask</value>
-    </values>
-  </entry>
-
-  <entry id="stream_domfilename" modify_via_xml="SSTICE_GRID_FILENAME">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      domain file name
-    </desc>
-    <values>
-      <value>''</value>
-      <value cice_mode='prescribed'>$SSTICE_GRID_FILENAME</value>
-    </values>
-  </entry>
-
-  <entry id="stream_mapread">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      Map file to read to map stream data to domain data
-    </desc>
-    <values>
-      <value>NOT_SET</value>
-    </values>
-  </entry>
-
-  <entry id="stream_year_first" modify_via_xml="SSTICE_YEAR_START">
+  <entry id="stream_yearfirst" modify_via_xml="SSTICE_YEAR_START">
     <type>integer</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
@@ -2616,7 +2582,7 @@
     </values>
   </entry>
 
-  <entry id="stream_year_last" modify_via_xml="SSTICE_YEAR_END">
+  <entry id="stream_yearlast" modify_via_xml="SSTICE_YEAR_END">
     <type>integer</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
@@ -2629,7 +2595,7 @@
     </values>
   </entry>
 
-  <entry id="model_year_align" modify_via_xml="SSTICE_YEAR_ALIGN">
+  <entry id="stream_yearalign" modify_via_xml="SSTICE_YEAR_ALIGN">
     <type>integer</type>
     <category>icepresc</category>
     <group>ice_prescribed_nml</group>
@@ -2639,18 +2605,6 @@
     <values>
       <value>-999</value>
       <value cice_mode='prescribed'>$SSTICE_YEAR_ALIGN</value>
-    </values>
-  </entry>
-
-  <entry id="prescribed_ice_fill">
-    <type>logical</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      true => pice data fill required
-    </desc>
-    <values>
-      <value>.false.</value>
     </values>
   </entry>
 
