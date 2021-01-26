@@ -229,14 +229,13 @@ def _create_namelists(case, confdir, infile, nmlgen):
             'ponds_nml',
             'forcing_nml',
             'domain_nml',
+            'ice_prescribed_nml',
             'zbgc_nml',
             'icefields_bgc_nml',
             'icefields_drag_nml',
             'icefields_mechred_nml',
             'icefields_pond_nml',
             'icefields_nml']
-    if cice_mode == 'prescribed':
-        groups.append('ice_prescribed_nml')
 
     namelist_file = os.path.join(confdir, "ice_in")
     nmlgen.write_output_file(namelist_file, data_list_path, groups=groups, sorted_groups=False)
