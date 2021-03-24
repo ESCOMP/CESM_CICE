@@ -81,17 +81,6 @@
     <desc>CICE cpp definitions (setup automatically - DO NOT EDIT)</desc>
   </entry>
 
-  <entry id="ICE_PE_CHANGE_REQUIRES_REBUILD">
-    <type>logical</type>
-    <valid_values>true,false</valid_values>
-    <default_value>true</default_value>
-    <group>case_comp</group>
-    <file>env_case.xml</file>
-    <desc>This component requires a clean build if the pelayout changes, if this variable is
-          not defined for a component it is assumed false
-    </desc>
-  </entry>
-
   <entry id="CICE_USER_MODS">
     <type>char</type>
     <valid_values></valid_values>
