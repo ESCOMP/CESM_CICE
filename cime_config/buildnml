@@ -70,24 +70,6 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if cice_mode == 'prescribed':
         config['sstice_stream'] = case.get_value("SSTICE_STREAM")
 
-#    if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntraero'] = "0"
-
-#    if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntriso'] = "0"
-
-#    if "DTRAGE=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrage'] = "0"
-
-#    if "DTRFY=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrfy'] = "0"
-
-#    if "DTRPND=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrpnd'] = "0"
-
-#    if "DTRLVL=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrlvl'] = "0"
-
     #----------------------------------------------------
     # Grid and Decomposition
     #----------------------------------------------------
@@ -249,7 +231,7 @@ def buildnml(case, caseroot, compname):
     """Build the cice namelist """
 
     # Build the component namelist
-    if compname != "cice":
+    if compname != "cice6":
         raise AttributeError
     comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
     srcroot = case.get_value("SRCROOT")
@@ -283,7 +265,7 @@ def buildnml(case, caseroot, compname):
     # Construct the namelist generator
     #----------------------------------------------------
     # determine directory for user modified namelist_definitions.xml and namelist_defaults.xml
-    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice")
+    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice6")
     expect (os.path.isdir(user_xml_dir),
             "user_xml_dir %s does not exist " %user_xml_dir)
 
@@ -322,7 +304,7 @@ def buildnml(case, caseroot, compname):
             inst_string_label = "\"\""
 
         # create namelist_infile using user_nl_file as input
-        user_nl_file = os.path.join(caseroot, "user_nl_cice" + inst_string)
+        user_nl_file = os.path.join(caseroot, "user_nl_cice6" + inst_string)
         expect(os.path.isfile(user_nl_file),
                "Missing required user_nl_file %s " %(user_nl_file))
         infile = os.path.join(confdir, "namelist_infile")
@@ -350,12 +332,13 @@ def set_nondefault_nml(cice_config_opts, string, value):
         if match is not None:
             value = match.group(1)
     return value
+
 ###############################################################################
 def _main_func():
 
     caseroot = parse_input(sys.argv)
-    with Case(caseroot) as case:
-        buildnml(case, caseroot, "cice")
+    with Case(caseroot, read_only=False) as case:
+        buildnml(case, caseroot, "cice6")
 
 if __name__ == "__main__":
     _main_func()
