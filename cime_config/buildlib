@@ -21,24 +21,12 @@ def _build_cice():
 
     caseroot, libroot, bldroot = parse_input(sys.argv)
 
-    with Case(caseroot, read_only=False) as case:
-        srcroot   = case.get_value("SRCROOT")
-        driver    = case.get_value("COMP_INTERFACE")
-        comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
-        # call buildcpp  to set the cppdefs
-        cmd = os.path.join(os.path.join(comp_root_dir_ice,"cime_config","buildcpp"))
-        logger.info("     ... buildlib calling cice buildcpp to set build time options")
-        try:
-            mod = imp.load_source("buildcpp", cmd)
-            cice_cppdefs = mod.buildcpp(case)
-        except:
-            raise
-    print("cice_cppdefs are {}".format(cice_cppdefs))
     with Case(caseroot) as case:
         casetools = case.get_value("CASETOOLS")
         gmake_j   = case.get_value("GMAKE_J")
         gmake     = case.get_value("GMAKE")
         srcroot   = case.get_value("SRCROOT")
+        driver    = case.get_value("COMP_INTERFACE")
 
         # create Filepath file
         objroot = case.get_value("OBJROOT")
@@ -46,6 +34,7 @@ def _build_cice():
         if not os.path.isfile(filepath_file):
             srcroot = case.get_value("SRCROOT")
             caseroot = case.get_value("CASEROOT")
+            comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
             paths = [os.path.join(caseroot,"SourceMods","src.cice6"),
                      os.path.join(comp_root_dir_ice,"src","cicecore","shared"),
                      os.path.join(comp_root_dir_ice,"src","icepack","columnphysics"),
@@ -57,12 +46,21 @@ def _build_cice():
                      os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","general")]
             if driver == 'nuopc':
                 paths.append(os.path.join(comp_root_dir_ice,"src","cicecore","drivers","nuopc","cmeps"))
-            if driver == 'mct':
-                paths.append(os.path.join(comp_root_dir_ice,"src","cicecore","drivers","mct","cmeps"))
+            else:
+                expect(False, "only the CMEPS nuopc driver is current supported")
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")
+
+        # set the cice_cppdefs
+        cice_cppdefs = " -Dncdf"
+        if (case.get_value("COMP_ATM") == 'fv3gfs' and case.get_value("COMP_OCN") == "mom"):
+            # the following is only relevant if the UFS S2S uses CIME
+            cice_cppdefs = cice_cppdefs + " -DNEMS_COUPLED"
+        if "ar9v" in case.get_value('ICE_GRID'):
+            # trigger RASM options with ar9v grid, otherwise set CESM options
+            cice_cppdefs = cice_cppdefs + " -DRASM_MODS"
 
         # build the library
         complib = os.path.join(libroot,"libice.a")
@@ -75,8 +73,6 @@ def _build_cice():
         expect(rc == 0, "Command %s failed rc=%d\nout=%s\nerr=%s" % (cmd, rc, out, err))
 
         logger.info("Command %s completed with output %s\nerr %s" ,cmd, out, err)
-
-###############################################################################
 
 if __name__ == "__main__":
     _build_cice()
