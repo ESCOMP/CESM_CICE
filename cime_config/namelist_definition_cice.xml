@@ -2095,17 +2095,17 @@
     </values>
   </entry>
 
-  <entry id="atmiter_conv">
-    <type>real</type>
-    <category>forcing</category>
-    <group>forcing_nml</group>
-    <desc>
-      Convergence criteria for atmospheric boundary layer
-    </desc>
-    <values>
-      <value>0.0d0</value> 
-    </values>
-  </entry>
+  <!-- <entry id="atmiter_conv"> -->
+  <!--   <type>real</type> -->
+  <!--   <category>forcing</category> -->
+  <!--   <group>forcing_nml</group> -->
+  <!--   <desc> -->
+  <!--     Convergence criteria for atmospheric boundary layer -->
+  <!--   </desc> -->
+  <!--   <values> -->
+  <!--     <value>0.0d0</value>  -->
+  <!--   </values> -->
+  <!-- </entry> -->
 
   <entry id="emissivity">
     <type>real</type>
