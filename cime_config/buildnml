@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 ####################################################################################
 def _create_namelists(case, confdir, infile, nmlgen):
 ####################################################################################
+
     """Write out the namelist for this component.
 
     Most arguments are the same as those for `NamelistGenerator`.
@@ -70,30 +71,29 @@ def _create_namelists(case, confdir, infile, nmlgen):
     if cice_mode == 'prescribed':
         config['sstice_stream'] = case.get_value("SSTICE_STREAM")
 
-#    if "DNTRAERO=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntraero'] = "0"
+    #----------------------------------------------------
+    # Number of ice categories
+    #----------------------------------------------------
 
-#    if "DNTRISO=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntriso'] = "0"
+    # NOTE that ICE_NCAT is used by both cice and pop - but is set by cice!
+    # It is set in the driver config_component.xml and apears in the env_build.xml file 
+    # It is assumed that the cice buildnml is called BEFORE the pop buildcpp. 
+    # This order is set by the xml variable COMP_CLASSES in the driver config_component.xml file
 
-#    if "DTRAGE=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrage'] = "0"
-
-#    if "DTRFY=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrfy'] = "0"
-
-#    if "DTRPND=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrpnd'] = "0"
-
-#    if "DTRLVL=0" in case.get_value("CICE_CPPDEFS"):
-#        config['ntrlvl'] = "0"
+    cice_mode = case.get_value("CICE_MODE")
+    if cice_mode == 'prescribed':
+        ncat = 1
+    else:
+        ncat = 5
+    case.set_value("ICE_NCAT", ncat)
+    logger.debug("cice: number of ice categories (ncat) is %s" %ncat)
 
     #----------------------------------------------------
-    # Grid and Decomposition
+    # Set grid
     #----------------------------------------------------
+
     nx = case.get_value("ICE_NX")
     ny = case.get_value("ICE_NY")
-
     ice_grid = case.get_value('ICE_GRID')
     if ice_grid == 'ar9v2':
         hgrid = 'ar9v1'
@@ -102,16 +102,28 @@ def _create_namelists(case, confdir, infile, nmlgen):
     else:
         hgrid = ice_grid
 
-    # determine decomposition xml variables if CICE_AUTO_DECOMP is true
-    # - invoke generate_cice_decomp.pl and update env_build.xml settings to
-    # reflect changes in the configuration this will trigger
-    cice_auto_decomp = case.get_value("CICE_AUTO_DECOMP")
+    #----------------------------------------------------
+    # Initialize namelist defaults
+    #----------------------------------------------------
+    nmlgen.init_defaults(infile, config)
 
-    pts_mode = case.get_value("PTS_MODE")
-    # set cice mode and cice_config_opts
+    #----------------------------------------------------
+    # Set decomposition
+    #----------------------------------------------------
 
-    if pts_mode:
-        # explicitl set values for single column mode
+    driver = case.get_value("COMP_INTERFACE")
+    if driver == 'mct':
+        single_column = case.get_value("PTS_MODE")
+    elif driver == 'nuopc':
+        scol_lon = float(case.get_value('PTS_LON'))
+        scol_lat = float(case.get_value('PTS_LAT'))
+        if scol_lon > -999. and scol_lat > -999. and case.get_value("ATM_DOMAIN_FILE") != "UNSET":
+            single_column = True
+        else:
+            single_column = False
+
+    if single_column:
+        # explicitly set values for single column mode
         nx = 1
         ny = 1
         cice_auto_decomp = False
@@ -120,8 +132,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
         cice_mxblcks = 1
         cice_decomptype = "cartesian"
         cice_decompsetting = "square-ice"
-
-    if cice_auto_decomp:
+    else:
         nthrds_ice = case.get_value("NTHRDS_ICE")
         ninst_ice = case.get_value("NINST_ICE")
         ntasks = case.get_value("NTASKS_PER_INST_ICE")
@@ -150,34 +161,27 @@ def _create_namelists(case, confdir, infile, nmlgen):
                  cice_decomptype = decompconfig[5]
              cice_decompsetting = decompconfig[6]
 
-    #----------------------------------------------------
-    # Initialize namelist defaults
-    #----------------------------------------------------
-    nmlgen.init_defaults(infile, config)
-
-    #----------------------------------------------------
-    # Set values not obtained in the default settings
-    #----------------------------------------------------
     nmlgen.set_value('block_size_x', value=cice_blckx)
     nmlgen.set_value('block_size_y', value=cice_blcky)
     nmlgen.set_value('max_blocks', value=cice_mxblcks)
     nmlgen.set_value('distribution_type', value=cice_decomptype)
     nmlgen.set_value('processor_shape', value=cice_decompsetting)
 
-#    if cice_decomptype == "spacecurve":
-#        nmlgen.set_value('distribution_wght', value="erfc")
+    #----------------------------------------------------
+    # Set other values not obtained in the default settings
+    #----------------------------------------------------
 
     if nmlgen.get_value('n_aero') == '0':
         nmlgen.set_value('tr_aero', value=".false.")
-#    if nmlgen.get_value('n_iso') > '0':
-#        nmlgen.set_value('tr_iso', value=".true.")
+    # if nmlgen.get_value('n_iso') > '0':
+    #     nmlgen.set_value('tr_iso', value=".true.")
 
     if nmlgen.get_value('gridcpl_file') == 'UNSET':
         nmlgen.set_value('gridcpl_file', value="unknown_gridcpl_file")
     if nmlgen.get_value('bathymetry_file') == 'UNSET':
         nmlgen.set_value('bathymetry_file', value="unknown_bathymetry_file")
 
-    # tcraig, why is this here and what is it doing?
+    # TODO: tcraig, why is this here and what is it doing?
     if cice_decompsetting == 'null':
         config['cice_decomp_setting'] = 'null'
         processor_shape = nmlgen.get_default('processor_shape', config=config)
@@ -249,30 +253,12 @@ def buildnml(case, caseroot, compname):
     """Build the cice namelist """
 
     # Build the component namelist
-    if compname != "cice":
+    if compname != "cice6":
         raise AttributeError
     comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
     srcroot = case.get_value("SRCROOT")
     rundir = case.get_value("RUNDIR")
     ninst = case.get_value("NINST_ICE")
-
-    # call buildcpp to obtain cppdefs
-    call_buildcpp = False
-    if not os.path.exists(os.path.join(caseroot,"LockedFiles","env_build.xml")):
-        call_buildcpp = True
-    else:
-        file1 = os.path.join(caseroot,"env_build.xml")
-        file2 = os.path.join(caseroot,"LockedFiles","env_build.xml")
-        if not filecmp.cmp(file1, file2):
-            call_buildcpp = True
-    if call_buildcpp:
-        cmd = os.path.join(os.path.join(comp_root_dir_ice,"cime_config","buildcpp"))
-        logger.info("     ...calling cice buildcpp to set build time options")
-        try:
-            mod = imp.load_source("buildcpp", cmd)
-            mod.buildcpp(case)
-        except:
-            raise
 
     # determine the confdir directory
     confdir = os.path.join(caseroot,"Buildconf","ciceconf")
@@ -283,7 +269,7 @@ def buildnml(case, caseroot, compname):
     # Construct the namelist generator
     #----------------------------------------------------
     # determine directory for user modified namelist_definitions.xml and namelist_defaults.xml
-    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice")
+    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice6")
     expect (os.path.isdir(user_xml_dir),
             "user_xml_dir %s does not exist " %user_xml_dir)
 
@@ -322,7 +308,7 @@ def buildnml(case, caseroot, compname):
             inst_string_label = "\"\""
 
         # create namelist_infile using user_nl_file as input
-        user_nl_file = os.path.join(caseroot, "user_nl_cice" + inst_string)
+        user_nl_file = os.path.join(caseroot, "user_nl_cice6" + inst_string)
         expect(os.path.isfile(user_nl_file),
                "Missing required user_nl_file %s " %(user_nl_file))
         infile = os.path.join(confdir, "namelist_infile")
@@ -342,20 +328,11 @@ def buildnml(case, caseroot, compname):
             shutil.copy2(file1, file2)
 
 ###############################################################################
-def set_nondefault_nml(cice_config_opts, string, value):
-
-    # overwrite value if need be
-    if string in cice_config_opts:
-        match = re.search(r"\s*-%s\s*(\d+)\s*"%string, cice_config_opts)
-        if match is not None:
-            value = match.group(1)
-    return value
-###############################################################################
 def _main_func():
 
     caseroot = parse_input(sys.argv)
-    with Case(caseroot) as case:
-        buildnml(case, caseroot, "cice")
+    with Case(caseroot, read_only=False) as case:
+        buildnml(case, caseroot, "cice6")
 
 if __name__ == "__main__":
     _main_func()
