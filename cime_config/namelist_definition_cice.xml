@@ -1532,7 +1532,7 @@
     </values>
   </entry>
 
-  <entry id="basalstress">
+  <entry id="seabed_stress">
     <type>logical</type>
     <category>parameterizations</category>
     <group>dynamics_nml</group>
@@ -1541,6 +1541,18 @@
     </desc>
     <values>
       <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="seabed_stress_method">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      Landfast ice formulation of Lemieux et al
+    </desc>
+    <values>
+      <value>'LKD'</value>
     </values>
   </entry>
 
