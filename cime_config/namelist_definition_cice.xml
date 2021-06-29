@@ -1331,42 +1331,6 @@
     </values>
   </entry>
 
-  <entry id="sw_redist">
-    <type>logical</type>
-    <category>parameterizations</category>
-    <group>thermo_nml</group>
-    <desc>
-      Turn on SW redistribution
-    </desc>
-    <values>
-      <value>.true.</value>
-    </values>
-  </entry>
-
-  <entry id="sw_frac">
-    <type>real</type>
-    <category>parameterizations</category>
-    <group>thermo_nml</group>
-    <desc>
-      fraction of SW redistributed
-    </desc>
-    <values>
-      <value>1.0d0</value>
-    </values>
-  </entry>
-
-  <entry id="sw_dtemp">
-    <type>real</type>
-    <category>parameterizations</category>
-    <group>thermo_nml</group>
-    <desc>
-      distance from melt to start SW redistribution
-    </desc>
-    <values>
-      <value>0.01d0</value>
-    </values>
-  </entry>
-
   <!-- =========================== -->
   <!-- dynamics_nml parameterizations -->
   <!-- =========================== -->
@@ -1858,6 +1822,42 @@
     </desc>
     <values>
       <value>0.0</value>
+    </values>
+  </entry>
+
+  <entry id="sw_redist">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>shortwave_nml</group>
+    <desc>
+      Turn on SW redistribution
+    </desc>
+    <values>
+      <value>.true.</value>
+    </values>
+  </entry>
+
+  <entry id="sw_frac">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>shortwave_nml</group>
+    <desc>
+      fraction of SW redistributed
+    </desc>
+    <values>
+      <value>1.0d0</value>
+    </values>
+  </entry>
+
+  <entry id="sw_dtemp">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>shortwave_nml</group>
+    <desc>
+      distance from melt to start SW redistribution
+    </desc>
+    <values>
+      <value>0.01d0</value>
     </values>
   </entry>
 
