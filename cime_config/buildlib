@@ -66,7 +66,7 @@ def _build_cice():
         complib = os.path.join(libroot,"libice.a")
         makefile = os.path.join(casetools, "Makefile")
 
-        cmd = "{} complib -j {} MODEL=cice COMPLIB={} -f {} USER_CPPDEFS=\"{}\" {} " \
+        cmd = "{} complib -j {} COMP_NAME=cice COMPLIB={} -f {} USER_CPPDEFS=\"{}\" {} " \
             .format(gmake, gmake_j, complib, makefile, cice_cppdefs, get_standard_makefile_args(case))
 
         rc, out, err = run_cmd(cmd, from_dir=bldroot)
