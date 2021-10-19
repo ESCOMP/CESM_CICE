@@ -1209,6 +1209,54 @@
     </values>
   </entry>
 
+  <entry id="tr_fsd">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Floe size distribution
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_fsd">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      FSD restart from file
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_snow">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Snow tracers
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_snow">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      snow restart from file
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- Thermo_nml parameterizations -->
   <!-- =========================== -->
@@ -1977,6 +2025,247 @@
     </desc>
     <values>
       <value> 0.8 </value>
+    </values>
+  </entry>
+
+  <!-- =========================== -->
+  <!-- snow_nml -->
+  <!-- =========================== -->
+
+  <entry id="snwredist">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow redistribution
+    </desc>
+    <valid_values>none</valid_values>
+    <values>
+      <value>none</value>
+    </values>
+  </entry>
+
+  <entry id="snwgrain">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Snow grain
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="use_smliq_pnd">
+    <type>logical</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Pond liquid
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="rsnw_fall">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Falling snow grains
+    </desc>
+    <values>
+      <value> 100.0 </value>
+    </values>
+  </entry>
+
+  <entry id="rsnw_tmax">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Snow grains
+    </desc>
+    <values>
+      <value> 1500.0 </value>
+    </values>
+  </entry>
+
+  <entry id="rhosnew">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      New snow density
+    </desc>
+    <values>
+      <value> 100.0 </value>
+    </values>
+  </entry>
+
+  <entry id="rhosmin">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Minimum snow density
+    </desc>
+    <values>
+      <value> 100.0 </value>
+    </values>
+  </entry>
+
+  <entry id="rhosmax">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Maximum snow density
+    </desc>
+    <values>
+      <value> 450.0 </value>
+    </values>
+  </entry>
+
+  <entry id="windmin">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Minimum wind speed
+    </desc>
+    <values>
+      <value> 10.0 </value>
+    </values>
+  </entry>
+
+  <entry id="drhosdwind">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Change of snow density with wind
+    </desc>
+    <values>
+      <value> 27.3 </value>
+    </values>
+  </entry>
+
+  <entry id="snwlvlfac">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      Snow level factor
+    </desc>
+    <values>
+      <value> 0.3 </value>
+    </values>
+  </entry>
+
+  <entry id="snw_aging_table">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow aging table
+    </desc>
+    <valid_values>test</valid_values>
+    <values>
+      <value>test</value>
+    </values>
+  </entry>
+
+  <entry id="snw_filename">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_rhos_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_Tgrd_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_T_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_tau_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_kappa_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="snw_drdt0_fname">
+    <type>char</type>
+    <category>parameterizations</category>
+    <group>snow_nml</group>
+    <desc>
+      snow filename
+    </desc>
+    <valid_values>unknown</valid_values>
+    <values>
+      <value>unknown</value>
     </values>
   </entry>
 

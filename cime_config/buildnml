@@ -231,6 +231,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
             'dynamics_nml',
             'shortwave_nml',
             'ponds_nml',
+            'snow_nml',
             'forcing_nml',
             'domain_nml',
             'ice_prescribed_nml',
