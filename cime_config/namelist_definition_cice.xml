@@ -1568,7 +1568,19 @@
     </values>
   </entry>
 
-  <entry id="e_ratio">
+  <entry id="e_yieldcurve">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>dynamics_nml</group>
+    <desc>
+      EVP ellipse aspect ratio
+    </desc>
+    <values>
+      <value>2.0</value>
+    </values>
+  </entry>
+
+  <entry id="e_plasticpot">
     <type>real</type>
     <category>parameterizations</category>
     <group>dynamics_nml</group>
