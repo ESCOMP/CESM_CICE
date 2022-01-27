@@ -5,15 +5,15 @@
 <entry_id version="3.0">
 
   <description>
-    <desc ice="CICE6[%PRES][%CMIP6]">Sea ICE (cice) model version 6</desc>
+    <desc ice="CICE[%PRES][%CMIP6]">Sea ICE (cice) model version 6</desc>
     <desc option="PRES" > :prescribed cice</desc>
     <desc option="CMIP6"> :with modifications appropriate for CMIP6 experiments</desc>
   </description>
 
   <entry id="COMP_ICE">
     <type>char</type>
-    <valid_values>cice6</valid_values>
-    <default_value>cice6</default_value>
+    <valid_values>cice</valid_values>
+    <default_value>cice</default_value>
     <group>case_comp</group>
     <file>env_case.xml</file>
     <desc>Name of sea-ice component</desc>
@@ -24,7 +24,7 @@
     <valid_values>prognostic,prescribed,thermo_only</valid_values>
     <default_value>prognostic</default_value>
     <values>
-      <value compset="_CICE6[^_]*%PRES">prescribed</value>
+      <value compset="_CICE[^_]*%PRES">prescribed</value>
     </values>
     <group>build_component_cice</group>
     <file>env_run.xml</file>
@@ -35,7 +35,7 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <value compset="_CICE6[_%]"> -phys cice5 </value>
+      <value compset="_CICE[_%]"> -phys cice5 </value>
     </values>
     <group>build_component_cice</group>
     <file>env_run.xml</file>
@@ -64,7 +64,7 @@
     <default_value></default_value>
     <values match="last">
       <value
-      compset="_CICE6[^_]*%CMIP6">$SRCROOT/components/cice6/cime_config/usermods_dirs/cmip6</value>
+      compset="_CICE[^_]*%CMIP6">$SRCROOT/components/cice/cime_config/usermods_dirs/cmip6</value>
     </values>
     <group>run_component_cice</group>
     <file>env_case.xml</file>

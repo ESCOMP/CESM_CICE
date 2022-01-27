@@ -35,7 +35,7 @@ def _build_cice():
             srcroot = case.get_value("SRCROOT")
             caseroot = case.get_value("CASEROOT")
             comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
-            paths = [os.path.join(caseroot,"SourceMods","src.cice6"),
+            paths = [os.path.join(caseroot,"SourceMods","src.cice"),
                      os.path.join(comp_root_dir_ice,"src","cicecore","shared"),
                      os.path.join(comp_root_dir_ice,"src","icepack","columnphysics"),
                      os.path.join(comp_root_dir_ice,"src","cicecore","cicedynB","infrastructure"),

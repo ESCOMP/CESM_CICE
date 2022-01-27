@@ -253,7 +253,7 @@ def buildnml(case, caseroot, compname):
     """Build the cice namelist """
 
     # Build the component namelist
-    if compname != "cice6":
+    if compname != "cice":
         raise AttributeError
     comp_root_dir_ice = case.get_value("COMP_ROOT_DIR_ICE")
     srcroot = case.get_value("SRCROOT")
@@ -269,7 +269,7 @@ def buildnml(case, caseroot, compname):
     # Construct the namelist generator
     #----------------------------------------------------
     # determine directory for user modified namelist_definitions.xml and namelist_defaults.xml
-    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice6")
+    user_xml_dir = os.path.join(caseroot, "SourceMods", "src.cice")
     expect (os.path.isdir(user_xml_dir),
             "user_xml_dir %s does not exist " %user_xml_dir)
 
@@ -308,7 +308,7 @@ def buildnml(case, caseroot, compname):
             inst_string_label = "\"\""
 
         # create namelist_infile using user_nl_file as input
-        user_nl_file = os.path.join(caseroot, "user_nl_cice6" + inst_string)
+        user_nl_file = os.path.join(caseroot, "user_nl_cice" + inst_string)
         expect(os.path.isfile(user_nl_file),
                "Missing required user_nl_file %s " %(user_nl_file))
         infile = os.path.join(confdir, "namelist_infile")
@@ -332,7 +332,7 @@ def _main_func():
 
     caseroot = parse_input(sys.argv)
     with Case(caseroot, read_only=False) as case:
-        buildnml(case, caseroot, "cice6")
+        buildnml(case, caseroot, "cice")
 
 if __name__ == "__main__":
     _main_func()
