@@ -1,6 +1,6 @@
 <components version="2.0">
 
-  <comp_archive_spec compname="cice6" compclass="ice">
+  <comp_archive_spec compname="cice" compclass="ice">
     <rest_file_extension>[ri]</rest_file_extension>
     <hist_file_extension>h\d*.*\.nc$</hist_file_extension>
     <rest_history_varname>unset</rest_history_varname>
