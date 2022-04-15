@@ -2341,7 +2341,9 @@
       include frazil water/salt fluxes in ocean fluxes
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
+      <value ocn_comp='pop'>.false.</value>
+      <value ocn_comp='docn'>.false.</value>
     </values>
   </entry>
 
