@@ -166,9 +166,10 @@ def _create_namelists(case, confdir, infile, nmlgen):
     # For each of the following we need to assure that the user didn't set in
     # user_nl
     with open(infile[0], "r") as fh:
-        user_nl = join(" ".fh.readlines())
+        user_nls = _strip_comments(fh)
+        user_nl = "\n".join(usr_nl for usr_nl in user_nls)
 
-    if not "block_size_x" user_nl:
+    if not "block_size_x" in user_nl:
         nmlgen.set_value('block_size_x', value=cice_blckx)
     if not "block_size_y" in user_nl:
         nmlgen.set_value('block_size_y', value=cice_blcky)
@@ -340,6 +341,14 @@ def buildnml(case, caseroot, compname):
                 file2 += inst_string
             logger.debug("CICE namelist copy: file1 %s file2 %s " %(file1, file2))
             shutil.copy2(file1, file2)
+
+def _strip_comments(fh, token="!"):
+    ''' strip anything after token in each line of fh '''
+    for line in fh:
+        s = line.split(token, 1)[0].strip()
+        if s:
+            yield s
+
 
 ###############################################################################
 def _main_func():
