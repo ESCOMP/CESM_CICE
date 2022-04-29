@@ -105,11 +105,6 @@ def _create_namelists(case, confdir, infile, nmlgen):
         hgrid = ice_grid
 
     #----------------------------------------------------
-    # Initialize namelist defaults
-    #----------------------------------------------------
-    nmlgen.init_defaults(infile, config)
-
-    #----------------------------------------------------
     # Set decomposition
     #----------------------------------------------------
 
@@ -163,11 +158,26 @@ def _create_namelists(case, confdir, infile, nmlgen):
                  cice_decomptype = decompconfig[5]
              cice_decompsetting = decompconfig[6]
 
-    nmlgen.set_value('block_size_x', value=cice_blckx)
-    nmlgen.set_value('block_size_y', value=cice_blcky)
-    nmlgen.set_value('max_blocks', value=cice_mxblcks)
-    nmlgen.set_value('distribution_type', value=cice_decomptype)
-    nmlgen.set_value('processor_shape', value=cice_decompsetting)
+    #----------------------------------------------------
+    # Initialize namelist defaults
+    #----------------------------------------------------
+    nmlgen.init_defaults(infile, config)
+
+    # For each of the following we need to assure that the user didn't set in
+    # user_nl
+    with open(infile[0], "r") as fh:
+        user_nl = join(" ".fh.readlines())
+
+    if not "block_size_x" user_nl:
+        nmlgen.set_value('block_size_x', value=cice_blckx)
+    if not "block_size_y" in user_nl:
+        nmlgen.set_value('block_size_y', value=cice_blcky)
+    if not "max_blocks" in user_nl:
+        nmlgen.set_value('max_blocks', value=cice_mxblcks)
+    if not "distribution_type" in user_nl:
+        nmlgen.set_value('distribution_type', value=cice_decomptype)
+    if not "processor_shape" in user_nl:
+        nmlgen.set_value('processor_shape', value=cice_decompsetting)
 
     #----------------------------------------------------
     # Set other values not obtained in the default settings
