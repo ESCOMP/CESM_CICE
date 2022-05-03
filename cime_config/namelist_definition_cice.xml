@@ -5368,4 +5368,80 @@
     </values>
   </entry>
 
+  <!-- =========================== -->
+  <!-- icefields_fsd_nml -->
+  <!-- =========================== -->
+
+  <entry id="f_afsd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_dafsd_newi">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_dafsd_latg">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_dafsd_latm">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_dafsd_wave">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_dafsd_weld">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
 </entry_id>

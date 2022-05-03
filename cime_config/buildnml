@@ -251,6 +251,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
             'zbgc_nml',
             'icefields_bgc_nml',
             'icefields_drag_nml',
+            'icefields_fsd_nml',
             'icefields_mechred_nml',
             'icefields_pond_nml',
             'icefields_snow_nml',
