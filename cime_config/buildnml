@@ -114,7 +114,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
     elif driver == 'nuopc':
         scol_lon = float(case.get_value('PTS_LON'))
         scol_lat = float(case.get_value('PTS_LAT'))
-        if scol_lon > -999. and scol_lat > -999. and case.get_value("ATM_DOMAIN_FILE") != "UNSET":
+        if scol_lon > -999. and scol_lat > -999. and case.get_value("ATM_DOMAIN_MESH") != "UNSET":
             single_column = True
         else:
             single_column = False
