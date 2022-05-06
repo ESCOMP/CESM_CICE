@@ -108,13 +108,19 @@ def _create_namelists(case, confdir, infile, nmlgen):
     # Set decomposition
     #----------------------------------------------------
 
-    single_column = case.get_value("PTS_MODE")
+    driver = case.get_value("COMP_INTERFACE")
+    if driver == 'mct':
+        single_column = case.get_value("PTS_MODE")
+    elif driver == 'nuopc':
+        scol_lon = float(case.get_value('PTS_LON'))
+        scol_lat = float(case.get_value('PTS_LAT'))
+        if scol_lon > -999. and scol_lat > -999.:
+            single_column = True
+        else:
+            single_column = False
 
     if single_column:
         # explicitly set values for single column mode
-        nx = 1
-        ny = 1
-        cice_auto_decomp = False
         cice_blckx = 1
         cice_blcky = 1
         cice_mxblcks = 1
@@ -153,6 +159,11 @@ def _create_namelists(case, confdir, infile, nmlgen):
     # Initialize namelist defaults
     #----------------------------------------------------
     nmlgen.init_defaults(infile, config)
+
+    # overwrite nx_global and ny_global if single_column
+    if single_column:
+        nmlgen.set_value("nx_global", 1)
+        nmlgen.set_value("ny_global", 1)
 
     # For each of the following we need to assure that the user didn't set in
     # user_nl
