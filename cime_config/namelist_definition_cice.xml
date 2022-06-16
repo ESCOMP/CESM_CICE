@@ -2459,6 +2459,19 @@
     </values>
   </entry>
 
+  <entry id="saltflux_option">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      prognostic or 4 psu salinity
+    </desc>
+    <valid_values>4psu,prognostic</valid_values>
+    <values>
+      <value>4psu</value>
+    </values>
+  </entry>
+
   <entry id="restart_coszen">
     <type>logical</type>
     <category>forcing</category>
