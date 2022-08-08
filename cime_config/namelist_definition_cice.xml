@@ -2815,33 +2815,27 @@
     </values>
   </entry>
 
-  <entry id="stream_meshfile">
+  <entry id="stream_meshfile" modify_via_xml="SSTICE_MESH_FILENAME">
     <type>char</type>
     <category>streams</category>
     <group>ice_prescribed_nml</group>
     <desc>stream mesh file</desc>
     <values>
-      <value>
-        ''
-      </value>
-      <value cice_mode="prescribed">
-	$DIN_LOC_ROOT/atm/cam/sst/sst_HadOIBl_bc_1x1_clim_c101029_ESMFmesh_120520.nc
-      </value>
-      <value cice_mode="prescribed" hgrid="T31">
-	$DIN_LOC_ROOT/share/meshes/T31_040122_ESMFmesh.nc
-      </value>
-      <value cice_mode="prescribed" hgrid="1.9x2.5">
-	$DIN_LOC_ROOT/share/meshes/fv1.9x2.5_141008_ESMFmesh.nc
-      </value>
-      <value cice_mode="prescribed" hgrid="0.9x1.25">
-	$DIN_LOC_ROOT/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
-      </value>
-      <value cice_mode="prescribed" hgrid="0.47x0.63">
-	$DIN_LOC_ROOT/share/meshes/fv0.47x0.63_141008_ESMFmesh.nc
-      </value>
-      <value cice_mode="prescribed" hrid="4x5">
-	$DIN_LOC_ROOT/share/meshes/fv4x5_050615_polemod_ESMFmesh.nc
-      </value>
+      <value>''</value>
+      <value cice_mode="prescribed">$SSTICE_MESH_FILENAME</value>
+    </values>
+  </entry>
+
+  <entry id="stream_datafiles" modify_via_xml="SSTICE_DATA_FILENAME">
+    <type>char</type>
+    <category>icepresc</category>
+    <group>ice_prescribed_nml</group>
+    <desc>
+      file name(s) containing sst/ifrac data
+    </desc>
+    <values>
+      <value>''</value>
+      <value cice_mode="prescribed">$SSTICE_DATA_FILENAME</value>
     </values>
   </entry>
 
@@ -2868,19 +2862,6 @@
     </desc>
     <values>
       <value>ice_cov</value>
-    </values>
-  </entry>
-
-  <entry id="stream_datafiles" modify_via_xml="SSTICE_DATA_FILENAME">
-    <type>char</type>
-    <category>icepresc</category>
-    <group>ice_prescribed_nml</group>
-    <desc>
-      file name(s) containing sst/ifrac data
-    </desc>
-    <values>
-      <value>''</value>
-      <value cice_mode="prescribed">$SSTICE_DATA_FILENAME</value>
     </values>
   </entry>
 
