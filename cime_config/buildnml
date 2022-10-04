@@ -207,6 +207,7 @@ def _create_namelists(case, confdir, infile, nmlgen):
     # set initial conditions for branch of hybrid runs
     # TODO - need to implement multi-instance for these files - the following assumes single instance
     run_type = case.get_value("RUN_TYPE")
+    ice_ic = None
     if run_type == 'branch' or run_type == 'hybrid':
         run_refcase = case.get_value("RUN_REFCASE")
         run_refdate = case.get_value("RUN_REFDATE")
@@ -261,7 +262,10 @@ def _create_namelists(case, confdir, infile, nmlgen):
 
     namelist_file = os.path.join(confdir, "ice_in")
     nmlgen.write_output_file(namelist_file, data_list_path, groups=groups, sorted_groups=False)
-
+    if ice_ic:
+        with open(data_list_path, "a") as fd:
+            fd.write(f"ice_ic = {ice_ic}")
+    
     logger.debug("cice: grid is %s" %(hgrid))
     logger.debug("cice: physics is %s "%phys)
 
