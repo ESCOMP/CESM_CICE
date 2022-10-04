@@ -53,6 +53,7 @@
     <type>char</type>
     <category>setup</category>
     <group>setup_nml</group>
+    <input_pathname>abs</input_pathname>
     <desc>
       Method of ice cover initialization.
       'default'=>latitude and sst dependent, 'none'=>no ice, restart filename (must be a full path)
