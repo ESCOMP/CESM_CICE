@@ -475,6 +475,45 @@
     </values>
   </entry>
 
+  <entry id="grid_atm">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      grid staggering for atmosphere
+    </desc>
+    <valid_values>A,B,C</valid_values>
+    <values>
+      <value>A</value>
+    </values>
+  </entry>
+
+  <entry id="grid_ice">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      grid staggering for sea ice
+    </desc>
+    <valid_values>A,B,C</valid_values>
+    <values>
+      <value>B</value>
+    </values>
+  </entry>
+
+  <entry id="grid_ocn">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      grid staggering for ocean
+    </desc>
+    <valid_values>A,B,C</valid_values>
+    <values>
+      <value>A</value>
+    </values>
+  </entry>
+
   <entry id="grid_file">
     <type>char</type>
     <category>grid</category>
@@ -798,9 +837,9 @@
     <desc>
       method to use for distributing blocks
     </desc>
-    <valid_values>block,latitude,erfc,file</valid_values>
+    <valid_values>blockall,block,latitude,erfc,file</valid_values>
     <values>
-      <value>latitude</value>
+      <value>blockall</value>
       <value distribution_type='spacecurve'>erfc</value>
       <value hgrid="tx0.1v2" distribution_type='spacecurve'>file</value>
       <value hgrid="tx0.1v3" distribution_type='spacecurve'>file</value>
@@ -1075,33 +1114,6 @@
     <group>tracer_nml</group>
     <desc>
       lvl restart from file.
-    </desc>
-    <values>
-      <value>.false.</value>
-    </values>
-  </entry>
-
-  <entry id="tr_pond_cesm">
-    <type>logical</type>
-    <category>tracers</category>
-    <group>tracer_nml</group>
-    <desc>
-      Pond volume tracer.
-    </desc>
-    <values>
-      <value>.false. </value>
-      <value phys="cice4">.true. </value>
-      <value hgrid="ar9v3">.false.</value>
-      <value hgrid="ar9v4">.false.</value>
-    </values>
-  </entry>
-
-  <entry id="restart_pond_cesm">
-    <type>logical</type>
-    <category>tracers</category>
-    <group>tracer_nml</group>
-    <desc>
-      Pond volume restart from file.
     </desc>
     <values>
       <value>.false.</value>
