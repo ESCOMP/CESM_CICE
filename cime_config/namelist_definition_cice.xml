@@ -2476,11 +2476,12 @@
     <category>forcing</category>
     <group>forcing_nml</group>
     <desc>
-      prognostic or 4 psu salinity
+      prognostic or constant salinity
     </desc>
-    <valid_values>4psu,prognostic</valid_values>
+    <valid_values>constant,prognostic</valid_values>
     <values>
-      <value>4psu</value>
+      <value>constant</value>
+      <value ocn_comp='mom'>prognostic</value>
     </values>
   </entry>
 
