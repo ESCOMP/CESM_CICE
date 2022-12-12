@@ -2063,7 +2063,7 @@
     <desc>
       snow redistribution
     </desc>
-    <valid_values>none</valid_values>
+    <valid_values>none,bulk,snwITDrdg</valid_values>
     <values>
       <value>none</value>
     </values>
