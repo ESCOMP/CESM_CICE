@@ -686,7 +686,6 @@
       <value>8</value>
       <value phys="cice4">4</value>
       <value hgrid="ar9v">7</value>
-      <value hgrid="tx0.25">7</value>
     </values>
   </entry>
 
@@ -700,7 +699,6 @@
     <values>
       <value>3</value>
       <value phys="cice4">1</value>
-      <value hgrid="tx0.25">1</value>
     </values>
   </entry>
 
@@ -725,7 +723,6 @@
     </desc>
     <values>
       <value>3</value>
-      <value hgrid="tx0.25">7</value>
       <value cice_mode='prescribed'>1</value>
     </values>
   </entry>
@@ -936,7 +933,6 @@
     </desc>
     <values>
       <value>3</value>
-      <value hgrid="tx0.25">0</value>
       <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
@@ -950,7 +946,6 @@
     </desc>
     <values>
       <value>3</value>
-      <value hgrid="tx0.25">0</value>
       <value cice_mode='prescribed'>0</value>
     </values>
   </entry>
