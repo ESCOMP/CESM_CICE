@@ -2441,6 +2441,18 @@
     </values>
   </entry>
 
+  <entry id="ice_ref_salinity">
+    <type>real</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+       reference salinity for fluxes
+    </desc>
+    <values>
+      <value>4.0d0</value> 
+    </values>
+  </entry>
+
   <entry id="l_mpond_fresh">
     <type>logical</type>
     <category>forcing</category>
