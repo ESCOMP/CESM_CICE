@@ -314,14 +314,14 @@
   </entry>
 
   <entry id="hist_avg">
-    <type>logical</type>
+    <type>logical(5)</type>
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
       if true, write time-averages (not snapshots)
     </desc>
     <values>
-      <value>.true.</value>
+      <value>.true.,.true.,.true.,.true.,.true.</value>
     </values>
   </entry>
 
