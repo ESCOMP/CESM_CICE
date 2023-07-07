@@ -325,6 +325,19 @@
     </values>
   </entry>
 
+  <entry id="hist_time_axis">
+    <type>char</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      Position of history file time axis
+    </desc>
+    <valid_values>begin,middle,end</valid_values>
+    <values>
+      <value>middle</value>
+    </values>
+  </entry>
+
   <entry id="write_ic">
     <type>logical</type>
     <category>setup</category>
