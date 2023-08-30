@@ -290,14 +290,14 @@
   </entry>
 
   <entry id="dumpfreq">
-    <type>char</type>
+    <type>char(5)</type>
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
       frequency of restart output (once per 1,h,d,m,y)
     </desc>
     <values>
-      <value>x</value>
+      <value>y,x,x,x,x</value>
     </values>
   </entry>
 
@@ -309,7 +309,7 @@
       frequency of restart output (10 = once per 10 h,d,m,y)
     </desc>
     <values>
-      <value>1</value>
+      <value>1,1,1,1,1</value>
     </values>
   </entry>
 
