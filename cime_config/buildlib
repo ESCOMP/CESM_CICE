@@ -40,13 +40,13 @@ def _build_cice():
                 os.path.join(comp_root_dir_ice, "src", "cicecore", "shared"),
                 os.path.join(comp_root_dir_ice, "src", "icepack", "columnphysics"),
                 os.path.join(
-                    comp_root_dir_ice, "src", "cicecore", "cicedynB", "infrastructure"
+                    comp_root_dir_ice, "src", "cicecore", "cicedyn", "infrastructure"
                 ),
                 os.path.join(
                     comp_root_dir_ice,
                     "src",
                     "cicecore",
-                    "cicedynB",
+                    "cicedyn",
                     "infrastructure",
                     "io",
                     "io_pio2",
@@ -55,19 +55,19 @@ def _build_cice():
                     comp_root_dir_ice,
                     "src",
                     "cicecore",
-                    "cicedynB",
+                    "cicedyn",
                     "infrastructure",
                     "comm",
                     "mpi",
                 ),
                 os.path.join(
-                    comp_root_dir_ice, "src", "cicecore", "cicedynB", "analysis"
+                    comp_root_dir_ice, "src", "cicecore", "cicedyn", "analysis"
                 ),
                 os.path.join(
-                    comp_root_dir_ice, "src", "cicecore", "cicedynB", "dynamics"
+                    comp_root_dir_ice, "src", "cicecore", "cicedyn", "dynamics"
                 ),
                 os.path.join(
-                    comp_root_dir_ice, "src", "cicecore", "cicedynB", "general"
+                    comp_root_dir_ice, "src", "cicecore", "cicedyn", "general"
                 ),
             ]
             if driver == "nuopc":

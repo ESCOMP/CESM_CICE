@@ -1403,6 +1403,30 @@
     </values>
   </entry>
 
+  <entry id="Tliquidus_max">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      Maximum temperature for new frazil
+    </desc>
+    <values>
+      <value>-0.1</value>
+    </values>
+  </entry>
+
+  <entry id="hi_min">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      Minimum ice thickness allowed
+    </desc>
+    <values>
+      <value>0.01</value> 
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- dynamics_nml parameterizations -->
   <!-- =========================== -->
@@ -5415,6 +5439,18 @@
     </values>
   </entry>
 
+  <entry id="f_afsdn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
   <entry id="f_dafsd_newi">
     <type>char</type>
     <category>history</category>
@@ -5464,6 +5500,66 @@
   </entry>
 
   <entry id="f_dafsd_weld">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_wave_sig_ht">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_diam_ww">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_hice_ww">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_fsdrad">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_fsdperim">
     <type>char</type>
     <category>history</category>
     <group>icefields_fsd_nml</group>
