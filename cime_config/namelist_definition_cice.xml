@@ -264,7 +264,7 @@
   <!-- =========================== -->
 
   <entry id="histfreq">
-    <type>char(10)</type>
+    <type>char(5)</type>
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
@@ -286,6 +286,18 @@
     </desc>
     <values>
       <value>1,0,0,0,0</value>
+    </values>
+  </entry>
+
+  <entry id="hist_suffix">
+    <type>char(5)</type>
+    <category>setup</category>
+    <group>setup_nml</group>
+    <desc>
+      add string to h in filename
+    </desc>
+    <values>
+      <value>x,1,2,3,4</value>
     </values>
   </entry>
 
