@@ -5,60 +5,60 @@
   <!-- D TEST -->
   <!-- ================= -->
 
-  <test name="ERI_Vnuopc" grid="T62_g17" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERI_Vnuopc" grid="T62_g17" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
   </test>
-  <test name="ERI_Vnuopc" grid="f19_g17_rx1" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERI_Vnuopc" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="izumi" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERP_Vnuopc" grid="f19_g17_rx1" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERP_Vnuopc" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS_D_Ld5_Vnuopc" grid="T62_g17" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_D_Ld5_Vnuopc" grid="T62_g17" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
   </test>
-  <test name="ERS_IOP_Ld5_Vnuopc" grid="f19_g17_rx1" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_IOP_Ld5_Vnuopc" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="janus" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERS_Ld5_Vnuopc" grid="T62_g17" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_Ld5_Vnuopc" grid="T62_g17" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="hopper" compiler="pgi" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERS_Ld5_Vnuopc" grid="T62_g37" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_Ld5_Vnuopc" grid="T62_g37" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="eastwind" compiler="pgi" category="aux_rasm"/>
       <machine name="olympus" compiler="pgi" category="aux_rasm"/>
       <machine name="derecho" compiler="intel" category="aux_rasm"/>
     </machines>
   </test>
-  <!-- <test name="ERS_Ld5_Vnuopc" grid="T62_s11" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default"> -->
+  <!-- <test name="ERS_Ld5_Vnuopc" grid="T62_s11" compset="DTEST" testmods="cice/default"> -->
   <!--   <machines> -->
   <!--     <machine name="izumi" compiler="intel" category="prebeta"/> -->
   <!--     <machine name="derecho" compiler="intel" category="aux_cice"/> -->
   <!--   </machines> -->
   <!-- </test> -->
-  <test name="ERS_Ld5_Vnuopc" grid="T62_t061" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_Ld5_Vnuopc" grid="T62_t061" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET_Ld2_Vnuopc" grid="T62_g17" compset="2000_DATM%NYF_SLND_CICE_DOCN%SOM_DROF%NYF_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="PET_Ld2_Vnuopc" grid="T62_g17" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
@@ -68,48 +68,48 @@
   <!-- G TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Lm3_Vnuopc" grid="T62_g37" compset="2000_DATM%NYF_SLND_CICE_POP2_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="ERS_Lm3_Vnuopc" grid="T62_g37" compset="G" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI_Vnuopc" grid="f19_g17_rx1" compset="2000_DATM%NYF_SLND_CICE_POP2_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="ERI_Vnuopc" grid="f19_g17_rx1" compset="G" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET_Vnuopc" grid="f19_g17_rx1" compset="2000_DATM%NYF_SLND_CICE_POP2_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="PET_Vnuopc" grid="f19_g17_rx1" compset="G" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS_Vnuopc" grid="f19_g17_rx1" compset="1850_DATM%NYF_SLND_CICE_POP2%ECO_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="ERS_Vnuopc" grid="f19_g17_rx1" compset="G1850ECO" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERI_Vnuopc" grid="T62_g37" compset="2000_DATM%NYF_SLND_CICE_POP2_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="ERI_Vnuopc" grid="T62_g37" compset="G" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
   </test>
 
-  <test name="ERS_Vnuopc" grid="T62_g37" compset="2000_DATM%NYF_SLND_CICE_POP2_DROF%NYF_SGLC_WW3" testmods="pop/cice">
+  <test name="ERS_Vnuopc" grid="T62_g37" compset="G" testmods="pop/cice">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_cice"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
   </test>
 
-  <test name="ERS_Vnuopc" grid="T62_g17" compset="1850_DATM%NYF_SLND_CICE_POP2%ECO_DROF%NYF_SGLC_WW3" testmods="pop/cice_ecosys">
+  <test name="ERS_Vnuopc" grid="T62_g17" compset="G1850ECO" testmods="pop/cice_ecosys">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERS_Ld5_Vnuopc" grid="TL319_g17" compset="2000_DATM%JRA-1p4-2018_SLND_CICE_POP2_DROF%JRA-1p4-2018_SGLC_WW3" testmods="pop/5day_tavg">
+  <test name="ERS_Ld5_Vnuopc" grid="TL319_g17" compset="GIAF_JRA" testmods="pop/5day_tavg">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
@@ -119,7 +119,7 @@
   <!-- F TEST -->
   <!-- ================= -->
 
-  <test name="ERP_Ln9_Vnuopc" grid="f09_f09_mg17" compset="2000_CAM60_CLM50%SP_CICE%PRES_DOCN%DOM_MOSART_SGLC_SWAV" testmods="cam/outfrq9s">
+  <test name="ERP_Ln9_Vnuopc" grid="f09_f09_mg17" compset="F2000climo" testmods="cam/outfrq9s">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -128,7 +128,7 @@
       <option name="wallclock">00:10:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ln9_Vnuopc" grid="T42_T42" compset="2000_CAM60%SCAM_CLM50%SP_CICE%PRES_DOCN%DOM_SROF_SGLC_SWAV" testmods="cam/outfrq9s">
+  <test name="SMS_D_Ln9_Vnuopc" grid="T42_T42" compset="FSCAM" testmods="cam/outfrq9s">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
@@ -138,19 +138,19 @@
   <!-- E TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Ld5_Vnuopc" grid="f09_g17" compset="2000_CAM60_CLM50%SP_CICE_DOCN%SOM_MOSART_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_Ld5_Vnuopc" grid="f09_g17" compset="E1850TEST" testmods="cice/default">
     <machines>
       <machine name="mira" compiler="ibm" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERS_Ld5_Vnuopc" grid="f19_g17" compset="2000_CAM60_CLM50%SP_CICE_DOCN%SOM_MOSART_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="ERS_Ld5_Vnuopc" grid="f19_g17" compset="E1850TEST" testmods="cice/default">
     <machines>
       <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET_Vnuopc" grid="f19_g17" compset="2000_CAM60_CLM50%SP_CICE_DOCN%SOM_MOSART_SGLC_SWAV_TEST" testmods="cice/default">
+  <test name="PET_Vnuopc" grid="f19_g17" compset="E1850TEST" testmods="cice/default">
     <machines>
       <machine name="bluewaters" compiler="pgi" category="prebeta"/>
     </machines>
@@ -160,7 +160,7 @@
   <!-- B TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Ld7_Vnuopc" grid="f19_g17" compset="1850_CAM60_CLM50%BGC-CROP_CICE_POP2%ECO_MOSART_CISM2%NOEVOLVE_WW3_BGC%BDRD" testmods="cice/pop">
+  <test name="ERS_Ld7_Vnuopc" grid="f19_g17" compset="B1850" testmods="cice/pop">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
