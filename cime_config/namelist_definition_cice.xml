@@ -438,18 +438,6 @@
     </values>
   </entry>
 
-  <entry id="lcdf64">
-    <type>logical</type>
-    <category>setup</category>
-    <group>setup_nml</group>
-    <desc>
-      64 bit offset
-    </desc>
-    <values>
-      <value>.true. </value>
-    </values>
-  </entry>
-
   <!-- =========================== -->
   <!-- Grid info -->
   <!-- =========================== -->
