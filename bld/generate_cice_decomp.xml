@@ -111,11 +111,11 @@
   </decomp>
 
   <decomp nproc="256" res="gx1v[34567]" >
-    <maxblocks >1</maxblocks>
+    <maxblocks >2</maxblocks>
     <bsize_x   >5</bsize_x>
     <bsize_y   >96</bsize_y>
     <decomptype>cartesian</decomptype>
-    <decompset>slenderX2</decompset>
+    <decompset>square-ice</decompset>
   </decomp>
 
   <decomp nproc="320" res="gx1v[34567]" >
@@ -123,7 +123,15 @@
     <bsize_x   >2</bsize_x>
     <bsize_y   >96</bsize_y>
     <decomptype>cartesian</decomptype>
-    <decompset>slenderX2</decompset>
+    <decompset>square-ice</decompset>
+  </decomp>
+
+  <decomp nproc="512" res="gx1v[34567]" >
+    <maxblocks >2</maxblocks>
+    <bsize_x   >5</bsize_x>
+    <bsize_y   >48</bsize_y>
+    <decomptype>cartesian</decomptype>
+    <decompset>square-ice</decompset>
   </decomp>
 
   <decomp nproc="640" res="gx1v[34567]" >
@@ -131,7 +139,15 @@
     <bsize_x   >1</bsize_x>
     <bsize_y   >96</bsize_y>
     <decomptype>cartesian</decomptype>
-    <decompset>slenderX2</decompset>
+    <decompset>square-ice</decompset>
+  </decomp>
+
+  <decomp nproc="1024" res="gx1v[34567]" >
+    <maxblocks >2</maxblocks>
+    <bsize_x   >5</bsize_x>
+    <bsize_y   >24</bsize_y>
+    <decomptype>cartesian</decomptype>
+    <decompset>square-ice</decompset>
   </decomp>
 
   <decomp nproc="1280" res="gx1v[34567]" >
@@ -139,6 +155,14 @@
     <bsize_x   >8</bsize_x>
     <bsize_y   >6</bsize_y>
     <decomptype>spacecurve</decomptype>
+  </decomp>
+
+  <decomp nproc="2048" res="gx1v[34567]" >
+    <maxblocks >2</maxblocks>
+    <bsize_x   >5</bsize_x>
+    <bsize_y   >12</bsize_y>
+    <decomptype>cartesian</decomptype>
+    <decompset>square-ice</decompset>
   </decomp>
 
   <!-- gx3v? resolution -->
