@@ -1,0 +1,4 @@
+# Ignore non-source python files:
+__pycache__
+*.py[cod]
+
