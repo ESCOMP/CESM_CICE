@@ -309,7 +309,7 @@
       frequency of restart output (once per 1,h,d,m,y)
     </desc>
     <values>
-      <value>x,x,x,x,x</value>
+      <value>y,x,x,x,x</value>
     </values>
   </entry>
 
@@ -1179,6 +1179,30 @@
     <group>tracer_nml</group>
     <desc>
       Pond lvl restart from file.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="tr_pond_sealvl">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Sea level pond tracer.
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restart_pond_sealvl">
+    <type>logical</type>
+    <category>tracers</category>
+    <group>tracer_nml</group>
+    <desc>
+      Sea level pond restart from file.
     </desc>
     <values>
       <value>.false.</value>
@@ -2084,7 +2108,19 @@
       aspect ratio of pond changes (depth:area)
     </desc>
     <values>
-      <value> 0.8 </value>
+      <value> 0.8d0 </value>
+    </values>
+  </entry>
+
+  <entry id="tscale_pnd_drain">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>ponds_nml</group>
+    <desc>
+      time scale for macroscopic pond drainage
+    </desc>
+    <values>
+      <value> 0.5d0 </value>
     </values>
   </entry>
 
@@ -2516,6 +2552,19 @@
     <valid_values>minus1p8,linear_salt,mushy</valid_values>
     <values>
       <value>mushy</value>
+    </values>
+  </entry>
+
+  <entry id="congel_freeze">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      One step or two step congelation growth
+    </desc>
+    <valid_values>one-step,two-step</valid_values>
+    <values>
+      <value>two-step</value>
     </values>
   </entry>
 
@@ -4797,6 +4846,162 @@
     </desc>
     <values>
       <value>mxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_flpnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_expnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_frpnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_rfpnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_ilpnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_mipnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_rdpnd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_flpndn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_expndn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_frpndn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_rfpndn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_ilpndn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
       <value hgrid="ar9v4">mdhxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
