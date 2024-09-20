@@ -5,51 +5,46 @@
   <!-- D TEST -->
   <!-- ================= -->
 
-  <test name="ERI" grid="T62_g17" compset="DTEST" testmods="cice/default">
+  <test name="ERI" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
-    </machines>
-  </test>
-  <test name="ERI" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
-    <machines>
       <machine name="izumi" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERP" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
+  <test name="ERP" grid="ne30pg3_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS_D_Ld5" grid="T62_g17" compset="DTEST" testmods="cice/default">
+  <test name="ERS_D_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
   </test>
-  <test name="ERS_IOP_Ld5" grid="f19_g17_rx1" compset="DTEST" testmods="cice/default">
+  <test name="ERS_IOP_Ld5" grid="ne30pg3_t232" compset="DTEST" testmods="cice/default">
     <machines>
-      <machine name="janus" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERS_Ld5" grid="T62_g17" compset="DTEST" testmods="cice/default">
+  <test name="ERS_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="hopper" compiler="pgi" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERS_Ld5" grid="T62_t061" compset="DTEST" testmods="cice/default">
+  <test name="ERS_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET_Ld2" grid="T62_g17" compset="DTEST" testmods="cice/default">
+  <test name="PET_Ld2" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
@@ -60,32 +55,32 @@
   <!-- G TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Lm3" grid="T62_g37" compset="G" testmods="pop/cice">
+  <test name="ERS_Lm3" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI" grid="f19_g17_rx1" compset="G" testmods="pop/cice">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET" grid="f19_g17_rx1" compset="G" testmods="pop/cice">
+  <test name="PET" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS" grid="f19_g17_rx1" compset="G1850ECO" testmods="pop/cice">
+  <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERI" grid="T62_g37" compset="G" testmods="pop/cice">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
@@ -93,21 +88,21 @@
     </machines>
   </test>
 
-  <test name="ERS" grid="T62_g37" compset="G" testmods="pop/cice">
+  <test name="ERS" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_cice"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
   </test>
 
-  <test name="ERS" grid="T62_g17" compset="G1850ECO" testmods="pop/cice_ecosys">
+  <test name="ERS" grid="TL319_g17" compset="G1850MARBL_JRA" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERS_Ld5" grid="TL319_g17" compset="GIAF_JRA" testmods="pop/5day_tavg">
+  <test name="ERS_Ld5" grid="TL319_g17" compset="G_IAF" testmods="mom/bcompset">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
@@ -162,7 +157,7 @@
   <!-- B TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Ld7" grid="f19_g17" compset="B1850" testmods="cice/pop">
+  <test name="ERS_Ld7" grid="ne30pg3_t232" compset="BLT1850" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
