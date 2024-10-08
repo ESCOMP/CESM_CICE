@@ -14,7 +14,7 @@
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
   </test>
-  <test name="ERP" grid="ne30pg3_t232" compset="DTEST" testmods="cice/default">
+  <test name="ERP" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
@@ -27,7 +27,7 @@
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
   </test>
-  <test name="ERS_IOP_Ld5" grid="ne30pg3_t232" compset="DTEST" testmods="cice/default">
+  <test name="ERS_IOP_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
@@ -55,32 +55,32 @@
   <!-- G TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Lm3" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
+  <test name="ERS_Lm3" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
+  <test name="PET" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="mom/bcompset">
+  <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
@@ -88,21 +88,21 @@
     </machines>
   </test>
 
-  <test name="ERS" grid="TL319_t232" compset="G_JRA" testmods="mom/bcompset">
+  <test name="ERS" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_cice"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
   </test>
 
-  <test name="ERS" grid="TL319_g17" compset="G1850MARBL_JRA" testmods="mom/bcompset">
+  <test name="ERS" grid="TL319_g17" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERS_Ld5" grid="TL319_g17" compset="G_IAF" testmods="mom/bcompset">
+  <test name="ERS_Ld5" grid="TL319_g17" compset="G_IAF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
