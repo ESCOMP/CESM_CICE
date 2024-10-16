@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, shutil, sys, glob, imp
+import os, shutil, sys, glob
 
 CIMEROOT = os.environ.get("CIMEROOT")
 if CIMEROOT is None:
