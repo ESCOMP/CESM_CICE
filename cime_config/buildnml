@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
 ####################################################################################
-def _create_namelists(case, confdir, infile, nmlgen):
+def _create_namelists(case, confdir, infile, nmlgen, inst_string):
 ####################################################################################
 
     """Write out the namelist for this component.
@@ -237,6 +237,15 @@ def _create_namelists(case, confdir, infile, nmlgen):
         if sstice_year_end== 'UNSET':
             expect(False,  "%s must be set for cice prescribed mode" %sstice_year_end)
 
+    # Set timestamp pointer file
+    rundir = case.get_value("RUNDIR")
+    drv_ptr = case.get_value("DRV_RESTART_POINTER")
+    if drv_ptr:
+        cice_ptr = drv_ptr.replace("cpl","ice")
+        cice_ptr = cice_ptr.replace("_0001", inst_string)
+        if os.path.exists(os.path.join(rundir, cice_ptr)):
+            nmlgen.set_value('pointer_file', cice_ptr)
+            
     #----------------------------------------------------
     # Write out namelist groups
     #----------------------------------------------------
@@ -338,7 +347,7 @@ def buildnml(case, caseroot, compname):
         namelist_infile = [infile]
 
         # create namelist
-        _create_namelists(case, confdir, namelist_infile, nmlgen)
+        _create_namelists(case, confdir, namelist_infile, nmlgen, inst_string)
 
         # copy namelist files to rundir
         if os.path.isdir(rundir):
