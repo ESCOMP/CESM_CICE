@@ -243,9 +243,15 @@ def _create_namelists(case, confdir, infile, nmlgen, inst_string):
     if drv_ptr:
         cice_ptr = drv_ptr.replace("cpl","ice")
         cice_ptr = cice_ptr.replace("_0001", inst_string)
-        if os.path.exists(os.path.join(rundir, cice_ptr)):
-            nmlgen.set_value('pointer_file', cice_ptr)
-            
+    else:
+        # find the most recent file matching pattern
+        pattern = "rpointer.ice*"
+        files = glob.glob(pattern, root_dir=rundir)
+        files.sort(key=lambda x: os.path.getmtime(os.path.join(rundir,x)))
+        cice_ptr = files[-1]
+    if os.path.exists(os.path.join(rundir, cice_ptr)):
+        nmlgen.set_value('pointer_file', cice_ptr)
+
     #----------------------------------------------------
     # Write out namelist groups
     #----------------------------------------------------
