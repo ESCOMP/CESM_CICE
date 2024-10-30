@@ -95,14 +95,14 @@
     </machines>
   </test>
 
-  <test name="ERS" grid="TL319_g17" compset="G1850MARBL_JRA" testmods="cice/default">
+  <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERS_Ld5" grid="TL319_g17" compset="G_IAF" testmods="cice/default">
+  <test name="ERS_Ld5" grid="TL319_t232" compset="G_IAF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
