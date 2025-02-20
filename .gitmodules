@@ -1,7 +1,7 @@
 [submodule "src"]
 	path = src
 	url = https://github.com/ESCOMP/CICE
-        fxtag = cice6_6_0_20250106
+        fxtag = cice6_6_0_20250220
         fxrequired = AlwaysRequired
         fxDONOTUSEurl = https://github.com/ESCOMP/CICE
         
