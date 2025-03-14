@@ -50,6 +50,11 @@
       <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
+  <test name="ERI_C2" grid="T62_g17" compset="DTEST" testmods="cice/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_cice"/>
+    </machines>
+  </test>
 
   <!-- ================= -->
   <!-- G TEST -->
