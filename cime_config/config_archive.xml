@@ -2,7 +2,8 @@
 
   <comp_archive_spec compname="cice" compclass="ice">
     <rest_file_extension>[ri]</rest_file_extension>
-    <hist_file_extension>h\d*.*\.nc$</hist_file_extension>
+    <hist_file_extension>h\d*.*\.nc(\.gz)?$</hist_file_extension>
+    <hist_file_extension>e</hist_file_extension>
     <rest_history_varname>unset</rest_history_varname>
     <rpointer>
       <rpointer_file>rpointer.ice$NINST_STRING</rpointer_file>
