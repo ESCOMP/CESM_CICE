@@ -10,7 +10,6 @@
     </rpointer>
     <test_file_names>
       <tfile disposition="copy">rpointer.ice.1976-01-01-00000</tfile>
-      <tfile disposition="ignore">rpointer.ice.1976-01-01-08320</tfile>
       <tfile disposition="copy">rpointer.ice_9999.1976-01-01-00000</tfile>
       <tfile disposition="copy">casename.cice.r.1976-01-01-00000.nc</tfile>
       <tfile disposition="move">casename.cice.h.1976-01-01-00000.nc</tfile>
