@@ -4852,7 +4852,7 @@
     </values>
   </entry>
 
-  <entry id="f_flpnd">
+  <entry id="f_dpnd_flush">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4865,7 +4865,7 @@
     </values>
   </entry>
 
-  <entry id="f_expnd">
+  <entry id="f_dpnd_expon">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4878,7 +4878,7 @@
     </values>
   </entry>
 
-  <entry id="f_frpnd">
+  <entry id="f_dpnd_freebd">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4891,7 +4891,7 @@
     </values>
   </entry>
 
-  <entry id="f_rfpnd">
+  <entry id="f_dpnd_initial">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4904,7 +4904,7 @@
     </values>
   </entry>
 
-  <entry id="f_ilpnd">
+  <entry id="f_dpnd_dlid">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4917,7 +4917,7 @@
     </values>
   </entry>
 
-  <entry id="f_mipnd">
+  <entry id="f_dpnd_melt">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4930,7 +4930,7 @@
     </values>
   </entry>
 
-  <entry id="f_rdpnd">
+  <entry id="f_dpnd_ridge">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4943,7 +4943,7 @@
     </values>
   </entry>
 
-  <entry id="f_flpndn">
+  <entry id="f_dpnd_flushn">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4956,7 +4956,7 @@
     </values>
   </entry>
 
-  <entry id="f_expndn">
+  <entry id="f_dpnd_exponn">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4969,7 +4969,7 @@
     </values>
   </entry>
 
-  <entry id="f_frpndn">
+  <entry id="f_dpnd_freebdn">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4982,7 +4982,7 @@
     </values>
   </entry>
 
-  <entry id="f_rfpndn">
+  <entry id="f_dpnd_initialn">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
@@ -4995,7 +4995,7 @@
     </values>
   </entry>
 
-  <entry id="f_ilpndn">
+  <entry id="f_dpnd_dlidn">
     <type>char</type>
     <category>history</category>
     <group>icefields_pond_nml</group>
