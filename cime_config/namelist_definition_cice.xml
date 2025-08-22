@@ -1452,6 +1452,18 @@
     </values>
   </entry>
 
+  <entry id="tscale_pnd_drain">
+    <type>real</type>
+    <category>parameterizations</category>
+    <group>thermo_nml</group>
+    <desc>
+      time scale for macroscopic pond drainage
+    </desc>
+    <values>
+      <value> 0.5d0 </value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- dynamics_nml parameterizations -->
   <!-- =========================== -->
@@ -2110,18 +2122,6 @@
     </desc>
     <values>
       <value> 0.8d0 </value>
-    </values>
-  </entry>
-
-  <entry id="tscale_pnd_drain">
-    <type>real</type>
-    <category>parameterizations</category>
-    <group>ponds_nml</group>
-    <desc>
-      time scale for macroscopic pond drainage
-    </desc>
-    <values>
-      <value> 0.5d0 </value>
     </values>
   </entry>
 
