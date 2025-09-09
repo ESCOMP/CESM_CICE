@@ -9,7 +9,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
       <machine name="izumi" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -17,13 +16,11 @@
   <test name="ERP" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
   <test name="ERS_D_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
   </test>
@@ -41,16 +38,14 @@
   <test name="ERS_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
   <test name="PET_Ld2" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI_C2" grid="T62_g17" compset="DTEST" testmods="cice/default">
+  <test name="ERI_C2" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
@@ -60,40 +55,35 @@
   <!-- G TEST -->
   <!-- ================= -->
 
-  <test name="ERS_Lm3" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
+  <test name="ERS_Lm3" grid="TL319_t232" compset="G_JRA_RYF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA_RYF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
-  <test name="PET" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
+  <test name="PET" grid="TL319_t232" compset="G_JRA_RYF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
   <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
+  <test name="ERI" grid="TL319_t232" compset="G_JRA_RYF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
   </test>
 
-  <test name="ERS" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
+  <test name="ERS" grid="TL319_t232" compset="G_JRA_RYF" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_cice"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -103,14 +93,12 @@
   <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
-  <test name="ERS_Ld5" grid="TL319_t232" compset="G_IAF" testmods="cice/default">
+  <test name="ERS_Ld5" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
@@ -121,17 +109,15 @@
   <test name="ERP_Ln9" grid="f09_f09_mg17" compset="F2000climo" testmods="cam/outfrq9s">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ln9" grid="T42_T42" compset="FSCAM" testmods="cam/outfrq9s">
+  <test name="SMS_D_Ln9" grid="T42_T42" compset="FCSCAM" testmods="cam/outfrq9s">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
@@ -149,7 +135,6 @@
       <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
   <test name="PET" grid="f19_g17" compset="E1850TEST" testmods="cice/default">
@@ -165,7 +150,6 @@
   <test name="ERS_Ld7" grid="ne30pg3_t232" compset="BLT1850" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
-      <machine name="derecho" compiler="intel-oneapi" category="aux_cice"/>
     </machines>
   </test>
 
