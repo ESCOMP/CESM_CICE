@@ -221,7 +221,7 @@ def _create_namelists(case, confdir, infile, nmlgen, inst_string):
 
     # error checks for prescribed ice mode
     if cice_mode == 'prescribed':
-        sstice_grid_filename = case.get_value('SSTICE_GRID_FILENAME')
+        sstice_grid_filename = case.get_value('SSTICE_MESH_FILENAME')
         sstice_data_filename = case.get_value('SSTICE_DATA_FILENAME')
         sstice_year_align = case.get_value('SSTICE_YEAR_ALIGN')
         sstice_year_start = case.get_value('SSTICE_YEAR_START')
