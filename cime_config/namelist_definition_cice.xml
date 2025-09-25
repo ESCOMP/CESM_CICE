@@ -553,6 +553,20 @@
     </values>
   </entry>
 
+  <entry id="kmt_type">
+    <type>char</type>
+    <category>grid</category>
+    <group>grid_nml</group>
+    <desc>
+      type of grid
+    </desc>
+    <valid_values>none,file</valid_values>
+    <values>
+      <value>file</value>
+      <value cice_mode="prescribed">none</value>
+    </values>
+  </entry>
+
   <entry id="kmt_file">
     <type>char</type>
     <category>grid</category>
