@@ -741,7 +741,7 @@
       number of floe size distribution categories
     </desc>
     <values>
-      <value>1</value>
+      <value>12</value>
     </values>
   </entry>
 
@@ -1280,7 +1280,7 @@
       Floe size distribution
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -2618,7 +2618,7 @@
     </desc>
     <valid_values>none,profile,constant,random,alt</valid_values>
     <values>
-      <value>none</value>
+      <value>alt</value>
     </values>
   </entry>
 
@@ -5654,7 +5654,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5666,7 +5666,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5678,7 +5678,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5690,7 +5690,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5702,7 +5702,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5714,7 +5714,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5726,7 +5726,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5738,7 +5738,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5750,7 +5750,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5762,7 +5762,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5774,7 +5774,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
@@ -5786,7 +5786,7 @@
     <desc>
     </desc>
     <values>
-      <value>xxxxx</value>
+      <value>mxxxx</value>
       <value cice_mode='prescribed'>xxxxx</value>
     </values>
   </entry>
