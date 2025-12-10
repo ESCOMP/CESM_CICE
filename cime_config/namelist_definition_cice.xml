@@ -1929,7 +1929,7 @@
       tuning parameter for delta-eddington shortwave for broadband snow albedo
     </desc>
     <values>
-      <value> 1.25 </value>
+      <value> 1.00 </value>
       <value hgrid='gx3v7'> -2.00 </value>
       <value hgrid="ar9v3"> -1.00 </value>
       <value hgrid="ar9v4"> -1.00 </value>
