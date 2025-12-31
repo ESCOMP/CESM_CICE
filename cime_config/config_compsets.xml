@@ -19,7 +19,7 @@
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
     GLC  = [CISM1, CISM2, SGLC]
-    WAV  = [SWAV]
+    WAV  = [SWAV, WW3]
     BGC  = optional BGC scenario
 
     The OPTIONAL %phys attributes specify submodes of the given system

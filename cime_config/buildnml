@@ -50,6 +50,7 @@ def _create_namelists(case, confdir, infile, nmlgen, inst_string):
     config = {}
 
     config['ocn_comp'] = case.get_value("COMP_OCN")
+    config['wav_comp'] = case.get_value("COMP_WAV")
 
     cice_mode = case.get_value("CICE_MODE")
     hgrid = case.get_value('ICE_GRID')

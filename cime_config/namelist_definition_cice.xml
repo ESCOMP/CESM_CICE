@@ -742,6 +742,7 @@
     </desc>
     <values>
       <value>12</value>
+      <value wav_comp='swav'>1</value>
     </values>
   </entry>
 
@@ -1281,6 +1282,7 @@
     </desc>
     <values>
       <value>.true.</value>
+      <value wav_comp='swav'>.false.</value>
     </values>
   </entry>
 
@@ -2619,6 +2621,7 @@
     <valid_values>none,profile,constant,random,alt</valid_values>
     <values>
       <value>alt</value>
+      <value wav_comp='swav'>none</value>
     </values>
   </entry>
 
@@ -2643,6 +2646,7 @@
     </desc>
     <values>
       <value>25</value>
+      <value wav_comp='swav'>0</value>
     </values>
   </entry>
 
