@@ -5,9 +5,10 @@
 <entry_id version="3.0">
 
   <description>
-    <desc ice="CICE[%PRES][%CMIP6]">Sea ICE (cice) model version 6</desc>
+    <desc ice="CICE[%PRES][%CMIP6][%CMIP7]">Sea ICE (cice) model version 6</desc>
     <desc option="PRES" > :prescribed cice</desc>
     <desc option="CMIP6"> :with modifications appropriate for CMIP6 experiments</desc>
+    <desc option="CMIP7"> :with modifications appropriate for CMIP7 experiments</desc>
   </description>
 
   <entry id="COMP_ICE">
@@ -65,6 +66,8 @@
     <values match="last">
       <value
       compset="_CICE[^_]*%CMIP6">$SRCROOT/components/cice/cime_config/usermods_dirs/cmip6</value>
+      <value
+      compset="_CICE[^_]*%CMIP7">$SRCROOT/components/cice/cime_config/usermods_dirs/cmip7</value>
     </values>
     <group>run_component_cice</group>
     <file>env_case.xml</file>

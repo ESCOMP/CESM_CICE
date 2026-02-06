@@ -268,7 +268,7 @@
     <category>setup</category>
     <group>setup_nml</group>
     <desc>
-      frequency of history output (once per 1,h,d,m,y)
+      frequency of history output (per 1,h,d,m,y,n)
     </desc>
     <values>
       <value>m,d,x,x,x</value>
@@ -3319,6 +3319,19 @@
     </values>
   </entry>
 
+  <entry id="f_aice_init">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mdhxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
   <entry id="f_uvel">
     <type>char</type>
     <category>history</category>
@@ -3334,6 +3347,34 @@
   </entry>
 
   <entry id="f_vvel">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+      <value hgrid="ar9v3">mdhxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_icespd">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+      <value hgrid="ar9v3">mdhxx</value>
+      <value hgrid="ar9v4">mdhxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_icedir">
     <type>char</type>
     <category>history</category>
     <group>icefields_nml</group>
@@ -4711,7 +4752,876 @@
     </values>
   </entry>
 
-  <entry id="f_cmip">
+  <entry id="f_siage">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sifb">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflcondbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflcondtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sifllattop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sifllwdtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sifllwutop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflsensbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflsenstop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflswdbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflswdtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflswutop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sihc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siitdconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siitdsnconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siitdsnthick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siitdthick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_simpconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_simpeffconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_simprefrozen">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_simpthick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_pond_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sirdgconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_mechred_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sirdgthick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_mechred_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisali">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisaltmass">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisnhc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisnthick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sitempbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sitempsnic">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sitemptop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sithick">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sitimefrac">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siu">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siv">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sicompstren">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidconcdyn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidconcth">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidivvel">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassdyn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassevapsubl">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassgrowthbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassgrowthsi">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassgrowthwat">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassmeltbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassmeltlat">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassmelttop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmassth">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmasstranx">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidmasstrany">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidragbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sidragtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflfwbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflfwdrain">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siflsaltbot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforcecoriolx">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforcecorioly">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforceintstrx">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforceintstry">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforcetiltx">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_siforcetilty">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_simass">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sipr">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sishearvel">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisnconc">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmassdyn">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmassmelt">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmasssi">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmasssnf">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmasssubl">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisndmasswind">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_snow_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sisnmass">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sispeed">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistressave">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistressmax">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistrxdtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistrydtop">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistrxubot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sistryubot">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_sivol">
     <type>char</type>
     <category>history</category>
     <group>icefields_nml</group>
@@ -5033,7 +5943,7 @@
   <entry id="f_smassicen">
     <type>char</type>
     <category>history</category>
-    <group>icefields_snow_nml</group>
+    <group>istrxtopcefields_snow_nml</group>
     <desc>
     </desc>
     <values>
