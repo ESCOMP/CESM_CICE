@@ -2,10 +2,10 @@
 
   <comp_archive_spec compname="cice" compclass="ice">
     <rest_file_extension>[ri]</rest_file_extension>
-    <rest_file_extension>h\d*_r[mdh].*\.nc</rest_file_extension>
+    <rest_file_extension>h\d*_r[mdh]</rest_file_extension>
     <hist_file_extension>h\d*[^r]*\.nc(\.gz)?$</hist_file_extension>
     <hist_file_extension>e</hist_file_extension>
-    <rest_history_varname>unset</rest_history_varname>
+    <rest_history_varname>histrest</rest_history_varname>
     <rpointer>
       <rpointer_file>rpointer.ice$NINST_STRING.$DATENAME</rpointer_file>
       <rpointer_content>./$CASE.cice$NINST_STRING.r.$DATENAME.nc</rpointer_content>
