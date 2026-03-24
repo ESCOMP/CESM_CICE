@@ -215,6 +215,13 @@ def _create_namelists(case, confdir, infile, nmlgen, inst_string):
         run_tod     = case.get_value("RUN_REFTOD")
         ice_ic = "%s.cice%s.r.%s-%s.nc" %(run_refcase, inst_string, run_refdate, run_tod)
         nmlgen.add_default("ice_ic", value=ice_ic, ignore_abs_path=True)
+        nmlgen.set_value('restart_aero', value=".true.")
+        nmlgen.set_value('restart_age', value=".true.")
+        nmlgen.set_value('restart_fsd', value=".true.")
+        nmlgen.set_value('restart_fy', value=".true.")
+        nmlgen.set_value('restart_lvl', value=".true.")
+        nmlgen.set_value('restart_pond_sealvl', value=".true.")
+        nmlgen.set_value('restart_snow', value=".true.")
     else:
         nmlgen.add_default("ice_ic")
         if nmlgen.get_value('ice_ic') == 'UNSET':
