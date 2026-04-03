@@ -481,6 +481,7 @@
       <value>displaced_pole</value>
       <value hgrid="tx0.66v1">tripole</value>
       <value hgrid="tx2_3v2">tripole</value>
+      <value hgrid="tx2_3v3">tripole</value>
       <value hgrid="tx0.1v2">tripole</value>
       <value hgrid="tx0.1v3">tripole</value>
       <value hgrid="tx1v1">tripole</value>
@@ -544,6 +545,7 @@
       <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/horiz_grid_20030806.ieeer8</value>
       <value hgrid="tx0.66v1">$DIN_LOC_ROOT/ocn/mom/tx0.66v1/grid/horiz_grid_20190315.ieeer8</value>
       <value hgrid="tx2_3v2">$DIN_LOC_ROOT/ocn/mom/tx2_3v2/horiz_grid_20230416.ieeer8</value>
+      <value hgrid="tx2_3v3">$DIN_LOC_ROOT/ocn/mom/tx2_3v3/cice_grid_tx2_3v3_260305_cdf5.nc</value>
       <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/horiz_grid_200709.ieeer8</value>
       <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/horiz_grid_200709.ieeer8</value>
       <value hgrid="tx1v1">$DIN_LOC_ROOT/ocn/pop/tx1v1/grid/horiz_grid_20050510.ieeer8</value>
@@ -581,6 +583,7 @@
       <value hgrid="gx1v7">$DIN_LOC_ROOT/ocn/pop/gx1v7/grid/topography_20161215.ieeei4</value>
       <value hgrid="tx0.66v1">$DIN_LOC_ROOT/ocn/mom/tx0.66v1/grid/topography_20190315.ieeei4</value>
       <value hgrid="tx2_3v2">$DIN_LOC_ROOT/ocn/mom/tx2_3v2/topography_20230416.ieeei4</value>
+      <value hgrid="tx2_3v3">$DIN_LOC_ROOT/ocn/mom/tx2_3v3/cice_grid_tx2_3v3_260305_cdf5.nc</value>
       <value hgrid="gx3v7">$DIN_LOC_ROOT/ocn/pop/gx3v7/grid/topography_20100105.ieeei4</value>
       <value hgrid="tx0.1v2">$DIN_LOC_ROOT/ocn/pop/tx0.1v2/grid/topography_200709.ieeei4</value>
       <value hgrid="tx0.1v3">$DIN_LOC_ROOT/ocn/pop/tx0.1v3/grid/topography_20170718.ieeei4</value>
@@ -899,6 +902,7 @@
       <value>open</value>
       <value hgrid ='tx0.66v1'>tripole</value>
       <value hgrid ='tx2_3v2'>tripole</value>
+      <value hgrid ='tx2_3v3'>tripole</value>
       <value hgrid ='tx0.1v2'>tripole</value>
       <value hgrid ='tx0.1v3'>tripole</value>
       <value hgrid ='tx1v1'>tripole</value>
@@ -6646,6 +6650,18 @@
   </entry>
 
   <entry id="f_wave_sig_ht">
+    <type>char</type>
+    <category>history</category>
+    <group>icefields_fsd_nml</group>
+    <desc>
+    </desc>
+    <values>
+      <value>mxxxx</value>
+      <value cice_mode='prescribed'>xxxxx</value>
+    </values>
+  </entry>
+
+  <entry id="f_wave_period">
     <type>char</type>
     <category>history</category>
     <group>icefields_fsd_nml</group>
