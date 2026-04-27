@@ -6662,18 +6662,6 @@
     </values>
   </entry>
 
-  <entry id="f_wave_period">
-    <type>char</type>
-    <category>history</category>
-    <group>icefields_fsd_nml</group>
-    <desc>
-    </desc>
-    <values>
-      <value>mxxxx</value>
-      <value cice_mode='prescribed'>xxxxx</value>
-    </values>
-  </entry>
-
   <entry id="f_diam_ww">
     <type>char</type>
     <category>history</category>
