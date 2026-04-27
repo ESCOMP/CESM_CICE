@@ -466,6 +466,7 @@
     <values>
       <value>bin</value>
       <value cice_mode="prescribed">meshnc</value>
+      <value hgrid="tx2_3v2">nc</value>
     </values>
   </entry>
 
