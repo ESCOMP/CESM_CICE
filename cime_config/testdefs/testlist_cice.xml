@@ -12,43 +12,67 @@
       <machine name="izumi" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERP" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS_D_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS_IOP_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="edison" compiler="intel" category="prebeta"/>
       <machine name="hopper" compiler="pgi" category="prebeta"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS_Ld5" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="PET_Ld2" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERI_C2" grid="TL319_t232" compset="DTEST" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <!-- ================= -->
@@ -59,21 +83,33 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="PET" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <test name="ERI" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
@@ -81,6 +117,9 @@
       <machine name="derecho" compiler="intel" category="aux_cice"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <test name="ERS" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
@@ -88,18 +127,27 @@
       <machine name="derecho" compiler="gnu" category="aux_cice"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <test name="ERS" grid="TL319_t232" compset="G1850MARBL_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <test name="ERS_Ld5" grid="TL319_t232" compset="G_JRA" testmods="cice/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <!-- ================= -->
@@ -124,6 +172,9 @@
     <machines>
       <machine name="mira" compiler="ibm" category="prebeta"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="ERS_D_Ld5" grid="f19_g17" compset="E1850TEST" testmods="cice/default">
     <machines>
@@ -131,11 +182,17 @@
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
   <test name="PET" grid="f19_g17" compset="E1850TEST" testmods="cice/default">
     <machines>
       <machine name="bluewaters" compiler="pgi" category="prebeta"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
   <!-- ================= -->
@@ -146,6 +203,9 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_cice"/>
     </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+    </options>
   </test>
 
 </testlist>

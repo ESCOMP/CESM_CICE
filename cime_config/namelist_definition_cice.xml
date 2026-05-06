@@ -2152,9 +2152,9 @@
     <desc>
       snow redistribution
     </desc>
-    <valid_values>none,bulk,snwITDrdg</valid_values>
+    <valid_values>none,bulk,ITDrdg</valid_values>
     <values>
-      <value>snwITDrdg</value>
+      <value>none</value>
     </values>
   </entry>
 
