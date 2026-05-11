@@ -919,6 +919,7 @@
     </desc>
     <values>
       <value>.true.</value>
+      <value cice_mode='prescribed'>.false.</value>
     </values>
   </entry>
 
@@ -931,6 +932,7 @@
     </desc>
     <values>
       <value>.true.</value>
+      <value cice_mode='prescribed'>.false.</value>
     </values>
   </entry>
 
@@ -943,6 +945,7 @@
     </desc>
     <values>
       <value>.true.</value>
+      <value cice_mode='prescribed'>.false.</value>
     </values>
   </entry>
 
