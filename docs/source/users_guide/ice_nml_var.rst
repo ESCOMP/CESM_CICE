@@ -10,7 +10,7 @@ filenames. The ice namelists for the coupled model are now located in
 **$CASE/CaseDocs**. Some additional documentation on the CICE namelist
 is available here:
 
-http://www.cesm.ucar.edu/models/cesm2/component_settings/cice_nml.html
+http://www.cesm.ucar.edu/models/cesm3/component_settings/cice_nml.html
 
 A script reads the input namelist at runtime, and writes the namelist
 information to the file **ice\_in** in the directory where the model
@@ -95,7 +95,7 @@ which must be equvialent to the coupling interval (``NCPL_ICE`` and ``NCPL_ATM``
 set in the CESM configuration files **env\_run.xml**. One should only change the CICE
 timestep using the ``NCPL_ATM`` variable in **env\_run.xml**. For more on this see:
 
-http://www.cesm.ucar.edu/models/cesm2/component_settings/drv_input_cesm.html
+http://www.cesm.ucar.edu/models/cesm3/component_settings/drv_input_cesm.html
 
 .. _timestep:
 

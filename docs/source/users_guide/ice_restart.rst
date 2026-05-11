@@ -33,7 +33,7 @@ Changing the restart frequency is handled by the CESM driver in **env_run.xml**.
 The variables are ``REST_DATE``, ``REST_N`` and ``REST_OPTION``. See the CESM
 documentation here:
 
-http://www.cesm.ucar.edu/models/cesm2/component_settings/drv_input.html
+http://www.cesm.ucar.edu/models/cesm3/component_settings/drv_input.html
 
 Restart Pointer Files
 ---------------------

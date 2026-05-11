@@ -6,16 +6,16 @@ Configuring and Building CICE
 Overview
 --------
 
-The setup scripts for the coupled model are located in **cesm2/scripts**. 
+The setup scripts for the coupled model are located in **cesm3/cime/scripts**. 
 
-The directory structure of CICE5 within CESM is shown below.
+The directory structure of CICE6 within CESM is shown below.
 
 ::
 
-				       cesm2         (main directory)
+				       cesm3         (main directory)
                                          |
 				         |
-		      components --------+--------- scripts
+		      components --------+--------- cime/scripts
 			 |                        |
 			 |               * * * * * * * * * * 
 		        cice             *build scripts for*
@@ -28,21 +28,26 @@ The directory structure of CICE5 within CESM is shown below.
 		        and CIME config)    documentation)   |
            				  	             |
 	           				             |                  
-            	           		  drivers --- mpi ---+--- io_pio --- serial --- source
-			                     | 
-			                     |
-			                     |
-                            cesm --- cice ---+--- hadley
-
+            	           		        cicecore ----+---- icepack 
+			                           |                  |
+			                           |                  |
+			                           |  columnphysics --+-- configuration
+                                                   |
+                                     cicedyn ------+------ drivers ---- shared
+                                         |                    |
+                                         |                    |
+        analysis -- dynamics -- general -+- infrastructure    | 
+                                                              |
+                                                        nuopc / cmeps
 
 The CIME scripts generate a set of “resolved scripts” for a specific configuration
 determined by the user. The configuration includes components,
 resolution, run type, and machine. The run and setup scripts that were
 in the **/scripts** directory for previous versions are now generated
-automatically. See the CESM2 User’s Guide for information on how to
+automatically. See the CESM3 User’s Guide for information on how to
 use the new scripts.
 
-http://www.cesm.ucar.edu/models/cesm2
+http://www.cesm.ucar.edu/models/cesm3
 
 The file that contains the ice model namelist is now located in
 **$CASE/CaseDocs**. The file containing the environment variables
@@ -56,81 +61,72 @@ Building the CICE library
 The Build Environment
 ---------------------
 
-The **cime_config/build_cpp** script sets all compile time parameters, such
+The **cime_config/buildlib** script sets all compile time parameters, such
 as the horizontal grid, the sea ice mode (prognostic or prescribed),
 tracers, etc. However, to change the CPP variables, one needs to add these to
-the ``CICE_CONFIG_OPTS`` variable in the **env\_build.xml** file. Additional options
+the ``CICE_CONFIG_OPTS`` variable in the **env\_run.xml** file. Additional options
 can be set here, such as the decomposition and the number of tasks.
 
 CICE Preprocessor Flags
 ---------------------------
 
-Preprocessor flags are activated in the form -Doption in the
-**buildcpp** script. Only advanced users should change these
-options. See the CESM User’s Guide or the CICE reference guide for more
-information on these. The flags specific to the ice model are:
+Very few of the C Preprocessor flags are activated in the form -Doption in the
+**buildlib** script. The majority of these are now set in the CIME scripts.
+Only advanced users should change these
+options. See the CESM User’s Guide information on these. 
 
 ::
 
-    CPPDEFS :=  $(CPPDEFS) -DCESMCOUPLED -Dcoupled -Dncdf -DNICECAT=5 -DNXGLOB=$()
-    -DNYGLOB=$() -DNTRAERO=3 -DNTRISO=0 -DNBGCLYR=0 -DNICELYR=8 -DNSNWLYR=3
-    -DTRAGE=1 -DTRFY=1 -DTRLVL=1 -DTRPND=1 -DTRBRI=0 -DTRBGCS=0
-    -DBLCKX=$() -DBLCKY=$() -DMXBLCKS=$()
+    cice_cppdefs = "-Dncdf"
 
-The options ``-DCESMCOUPLED`` and ``-Dcoupled`` are set to activate the coupling
-interface. This will include the source code in **ice\_comp\_mct.F90**,
+The option ``-DCESMCOUPLED`` are set to activate the coupling
+interface. This will include the source code in **ice\_comp\_nuopc.F90**,
 for example. In coupled runs, the CESM coupler multiplies the fluxes by
 the ice area, so they are divided by the ice area in CICE to get the
 correct fluxes. Note that the **ice\_forcing.F90** module is not used in
 coupled runs.
 
-The options ``-DBLCKX=$(CICE_BLCKX)`` and ``-DBLCKY=$(CICE_BLCKY)`` set the
-block sizes used in each grid direction. These values are set
-automatically in the scripts for the coupled model. Note that ``CICE_BLCKX`` and
-``CICE_BLCKY`` must divide evenly into the grid, and are used only for MPI grid
-decomposition. If ``CICE_BLCKX`` or ``CICE_BLCKY`` do not divide evenly into the grid,
-which determines the number of blocks in each direction, the model setup
-will exit from the setup script and print an error message to the
-**ice.bldlog** (build log) file. To override these values, one must set
-the variable ``CICE_AUTO_DECOMP`` to ``false`` in **env\_build.xml** and 
-then the variables ``CICE_BLCKX``, ``CICE_BLCKY``, and ``CICE_MBLCKS`` 
-can be set manually. 
+The dimensions of all arrays in CICE are now declared dynamically. One can change
+the grid dimensions and block layout by modifying **user\_nl\_cice**. See the CICE
+Consortium User's Guide on these options.  
 
-The flag ``-DMXBLCKS`` is essentially the threading option. This controls
-the number of “blocks” per processor. This can describe the number of
-OpenMP threads on an MPI task, or can simply be that a single MPI task
-handles a number of blocks. This is set automatically, but can be changed
-as described above.
+https://cice-consortium-cice.readthedocs.io/en/main/
 
-The number of categories ``-DNICECAT`` can be changed at build time. There is
+::
+
+    block_size_x = 10
+    block_size_y = 10
+    max_blocks = 7
+    distribution_type = "sectrobin"
+    distribution_wght = "blockall"
+    processor_shape = 'square-ice'
+    nx_global = 540
+    ny_global = 480
+
+The number of categories ``ncat`` can be changed at run time also in **user\_nl\_cice**. There is
 a separate discussion of this in :ref:`ice-thickness-categories`.
 
-The number of ice and snow layers are set at compile time via the CPP
-flags. They can technically be changed via the ``CICE_CONFIG_OPTS``
-variable in **env\_build.xml**, but it this is not recommended. We have provided
-an option to use the older CICE4 physics, inluding 4 ice levels and 1 snow level.
-This option also turns on ``ktherm=1`` and ``tr_pond_cesm=.true.`` To use the
-older CICE4 physics options, one should add/change ``-phys cice4`` in the XML variable
-``CICE_CONFIG_OPTS``.
+The number of ice and snow layers are set at run time via the namelist flags 
+nilyr and nslyr. 
 
-The flag ``-DNTR\_AERO=n`` flag turns on the aerosol deposition physics in
-the sea ice where n is the number of tracer species and 0 turns off the
-tracers. More details on this are in the section on tracers. The default here
-is 3 and should only be changed when adding additional aerosol tracers. This can
-be turned off by setting ``CICE_CONFIG_OPTS`` to ``-ntr_aero=0`` in the
-**env\_build.xml** file.
+The namelist flags ``n\_aero`` and ``tr\_aero`` turn  on the aerosol deposition physics in
+the sea ice where ``n\_aero`` is the number of tracer species. More details on this 
+are in the section on tracers. The default here is 3 and should only be changed 
+when adding additional aerosol tracers.
 
-The flag ``-DNTR\_ISO=n`` flag turns on the isotopes and is not yet supported.
+The flags ``n\_iso`` and ``tr\_iso`` turn on the water isotopes in CICE only. These are currently not on
+for the whole CESM3.
 
-The flags ``-DBGCLYR``, ``-DTRBRI``, and ``-DTRBGCS`` are for the skeletal biogeochemistry.
-These have not been tested within CESM and more information can be found in the CICE
-reference guide :cite:`cice15`.
+The biogeochemisty has not been tested within CESM and more information can be found in the CICE
+reference guide https://cice-consortium-cice.readthedocs.io/en/main/.
 
-The other tracer flags, ``-DTRAGE``, ``-DTRFY``, ``-DTRLVL``, ``-DTRPND`` are for the age, first-year ice,
-level ice, and melt pond tracers. These are either on or off using 1 or 0. By default, all are
-turned on. More information on these can be found in the CICE reference guide :cite:`cice15`.
+The other tracer flags, ``tr\_iage``, ``tr\_fy``, ``tr\_lvl``, ``tr\_pond\_sealvl`` are for the age, first-year ice,
+level ice, and melt pond tracers. These are either on or off using ``.true.`` or ``.false.``. By default, all are
+turned on. More information on these can be found in the CICE reference guide: 
+
+https://cice-consortium-cice.readthedocs.io/en/main/
 
 More information on the compile settings for CICE can be found here:
 
-http://www.cesm.ucar.edu/models/cesm2/component_settings/cice_input.html
+http://www.cesm.ucar.edu/models/cesm3/component_settings/cice_input.html
 

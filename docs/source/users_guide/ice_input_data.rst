@@ -38,4 +38,4 @@ Restart or branch runs are discussed later.
 
 The input datasets are generally handled by the CESM driver.
 
-http://www.cesm.ucar.edu/models/cesm2
+http://www.cesm.ucar.edu/models/cesm3

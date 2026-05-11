@@ -20,7 +20,7 @@ The default value is 5 categories. ``$DNICECAT`` is used to determine the CPP
 variable setting ``NICECAT`` in **ice\_domain\_size.F90**. More information on the CPP variables can
 be found here:
 
-http://www.cesm.ucar.edu/models/cesm2/component_settings/cice_input.html
+http://www.cesm.ucar.edu/models/cesm3/component_settings/cice_input.html
 
 The information in the initial restart file is dependent on the number
 of ice thickness categories and the total number of layers in the ice
