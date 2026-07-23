@@ -890,7 +890,7 @@
     <desc>
       type of boundary in logical east-west dir
     </desc>
-    <valid_values>cyclic,closed</valid_values>
+    <valid_values>zero_gradient,linear_extrap,cyclic,closed</valid_values>
     <values>
       <value>cyclic</value>
     </values>
@@ -902,7 +902,7 @@
     <group>domain_nml</group>
     <desc>
     </desc>
-    <valid_values>open,closed,cyclic,tripole</valid_values>
+    <valid_values>open,closed,cyclic,tripole,zero_gradient,linear_extrap</valid_values>
     <values>
       <value>open</value>
       <value hgrid ='tx0.66v1'>tripole</value>
