@@ -2663,6 +2663,81 @@
     </values>
   </entry>
 
+  <entry id="restore_ice">
+    <type>logical</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      restore ice state to restore_flds
+    </desc>
+    <values>
+      <value>.false.</value>
+    </values>
+  </entry>
+
+  <entry id="restore_flds">
+    <type>char(10)</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      restore ice state to restore_flds
+    </desc>
+    <valid_values>none,state,aicen,vicen,vsnon,trcrn,velocity</valid_values>
+    <values>
+      <value>none</value>
+    </values>
+  </entry>
+
+  <entry id="restore_timescale">
+    <type>real</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      Timescale for restore_ice
+    </desc>
+    <values>
+      <value>0.</value>
+    </values>
+  </entry>
+
+  <entry id="restore_width">
+    <type>integer</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      Width of boundary restoring
+    </desc>
+    <values>
+      <value>0</value>
+    </values>
+  </entry>
+
+  <entry id="restore_mask">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      restore mask over domain
+    </desc>
+    <valid_values>unknown,none,all,constant,linear</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
+  <entry id="restore_data">
+    <type>char</type>
+    <category>forcing</category>
+    <group>forcing_nml</group>
+    <desc>
+      restore mask over domain
+    </desc>
+    <valid_values>unknown,initial,defined,restartfiles</valid_values>
+    <values>
+      <value>unknown</value>
+    </values>
+  </entry>
+
   <!-- =========================== -->
   <!-- zbgc_nml -->
   <!-- =========================== -->
