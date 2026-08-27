@@ -58,7 +58,6 @@ def _build_cice():
                     "cicedyn",
                     "infrastructure",
                     "comm",
-                    "mpi",
                 ),
                 os.path.join(
                     comp_root_dir_ice, "src", "cicecore", "cicedyn", "analysis"
