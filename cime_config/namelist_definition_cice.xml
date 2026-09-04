@@ -1103,7 +1103,7 @@
       Ice age restart from file.
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1130,7 +1130,7 @@
       FY area restart from file.
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1157,7 +1157,7 @@
       lvl restart from file.
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1234,7 +1234,7 @@
       Sea level pond restart from file.
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1258,7 +1258,7 @@
       Aerosol restart from file.
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1307,7 +1307,7 @@
       FSD restart from file
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
@@ -1331,7 +1331,7 @@
       snow restart from file
     </desc>
     <values>
-      <value>.false.</value>
+      <value>.true.</value>
     </values>
   </entry>
 
