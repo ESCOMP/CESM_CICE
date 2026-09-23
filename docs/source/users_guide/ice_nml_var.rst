@@ -45,36 +45,36 @@ CESM configuration files.
 
    "&setup_nml","","",""
    "``ice_ic``","character","default","Filename for initial and branch runs. Set by driver scripts"
-   "``pointer_file``","character","’rpointer.ice’","Pointer file that contains the name of the restart file"
+   "``pointer_file``","character","’./rpointer.ice’","Pointer file that contains the name of the restart file"
    "``restart_file``","character","none","Restart file prefix. Set by driver."
-   "``restart_format``","character","none","Restart file format. bin \= binary, nc \= netcdf, pio \= use pio library (default)."
+   "``restart_format``","character","'default'","Restart file format. bin \= binary, nc \= netcdf, 'default' \= use pio library."
    "``restart_ext``","logical",".false.","Write ghost cells as a part of restarts"
    "``history_file``","character","'unknown'","History file prefix. Set by driver. ’default’ uses default initialization. ’none’ initializes with no ice."  
    "``days_per_year``","integer","365","Standard number of days per year for calendar. Does interact with Gregorian calendar setting. Set by driver."
    "``year_init``","integer","1","Used in leap year calculation. Do not change"
    "``ndtd``","integer","1","Number of dynamic timesteps per thermodynamic timestep"
-   "``histfreq``","char array","’m’,’x’,’x’,’x’,’x’","Unit for frequency of output written to history streams" 
+   "``histfreq``","char array","’m’,’x’,’x’,’x’,’x’","Unit for frequency of output written to history streams"
    "","","","’H’ or ’h’ writes hourly data"
    "","","","’D’ or ’d’ writes daily data"
    "","","","’M’ or ’m’ writes monthly data"
    "","","","’Y’ or ’y’ writes yearly data"
    "","","","’1’ writes every timestep"
-   "","","","’x’ no history data is written"  
-   "``histfreq_n``","integer","1,1,1,1,1","Frequency of histfreq history data is written to each stream"
-   "``dumpfreq``","character","'x'","Unit for frequency of dump files. Set by driver."
-   "``dumpfreq_n``","integer","1","Frequency of dumpfreq dump files. Set by driver."
-   "``hist_avg``","logical",".true.","If true, averaged history information is written out at a frequency determined by histfreq. If false, instantaneous values are written in all streams."
-   "``write_ic``","logical",".true.","If true, write initial conditions"
+   "","","","’x’ no history data is written"
+   "``histfreq_n``","integer array","1,1,0,0,0","Frequency of histfreq history data is written to each stream"
+   "``dumpfreq``","char array","'x','x','x','x','x'","Unit for frequency of dump files, one per restart stream. Set by driver."
+   "``dumpfreq_n``","integer array","1,1,1,1,1","Frequency of dumpfreq dump files, one per restart stream. Set by driver."
+   "``hist_avg``","logical array","``.true.``,``.true.``,``.true.``,``.true.``,``.true.``","If true, averaged history information is written out at a frequency determined by histfreq, for each of the 5 history streams. If false, instantaneous values are written for that stream."
+   "``write_ic``","logical",".false.","If true, write initial conditions"
    "``diagfreq``","integer","24","Frequency of diagnostics written (min, max, hemispheric sums) to standard output."
    "","","","'24' = diagnostics written once every 24 timesteps"
    "","","","'1' = diagnostics written each timestep"
    "","","","'0' = no diagnostics written"
    "``print_global``","logical",".true.","Print global diagnostics"
-   "``print_points``","logical",".true.","Print diagnostics at latpnt and lonpnt"
+   "``print_points``","logical",".false.","Print diagnostics at latpnt and lonpnt"
    "``latpnt``","float arr","90.0, -65.0","Latitudes for diagnostic points (``print_points``)"
    "``lonpnt``","float arr","0.0, -45.0","Longitudes for diagnostic points (``print_points``)"
    "``lcdf64``","logical",".false.","Use 64-bit offset in netcdf files"
-   "``bfbflag``","logical",".false.","Require bit-for-bit global sums"
+   "``bfbflag``","character","'off'","Control bit-for-bit reproducibility of global sums. 'off' \= not bit-for-bit"
 
 
 Changing the timestep
@@ -133,9 +133,9 @@ written at the frequency set by ``histfreq``. If ``histfreq`` is set to ``1`` fo
 instantaneous output, ``hist_avg`` is set to ``.false.`` within the source code
 to avoid conflicts. The latest version of CICE allows for multiple
 history streams, currently set to a maximum of 5. The namelist
-variables, ``histfreq`` and ``histfreq_n`` are now arrays which allow for
-different frequency history file sets. More detail on this is available
-in :ref:`history-files`.
+variables ``histfreq``, ``histfreq_n``, and ``hist_avg`` are now arrays which
+allow for different frequency and averaging settings for each history
+file stream. More detail on this is available in :ref:`history-files`.
 
 The namelist variable ``pointer_file`` is set to the name of the pointer
 file containing the restart file name that will be read when model
@@ -220,13 +220,13 @@ scheme is only first order accurate.
    :widths: 20,12,12,60
 
    "&dynamics_nml","","",""
-   "``kdyn``","Integer","1","Determines ice dynamics, 0 = No ice dynamics, 1 = Elastic viscous plastic dynamics"
+   "``kdyn``","Integer","1","Determines ice dynamics, 0 = off, 1 = EVP, 2 = EAP"
    "``revised_evp``","Logical",".false.","Revised EVP formulation"
-   "``ndte``", "Integer", "1","Number of sub-cycles in EVP dynamics."
+   "``ndte``", "Integer", "120","Number of sub-cycles in EVP dynamics."
    "``advection``","Character","'remap'","Determines horizontal advection scheme. ’remap’ = incremental remapping, ’upwind’ = first order advection"
-   "``kstrength``","Integer","1","Determines pressure formulation, 0 = parameterization, 1 = parameterization"
-   "``krdg_partic``","Integer","1","Ridging participation function, 0 = Thorndike, 1 = Expontential"
-   "``krdg_redist``","Integer","1","Ridging distribution function, 0 = Hibler , 1 = Expontential"
+   "``kstrength``","Integer","1","Determines pressure formulation, 0 = Hibler (1979), 1 = Rothrock (1975)"
+   "``krdg_partic``","Integer","1","Ridging participation function, 0 = Thorndike, 1 = exponential"
+   "``krdg_redist``","Integer","1","Ridging distribution function, 0 = Hibler, 1 = exponential"
    "``mu_rdg``","Real","4.0","e-folding scale of ridged ice"
    "``cf``","Real","17.0","Ratio of ridging work to PE change"
 
@@ -245,9 +245,9 @@ There are several additional thermodynamic options not listed that go with
    :widths: 20,12,12,60
 
    "&thermo_nml","","",""
-   "``kitd``","Integer","1","Determines ITD conversion, 0 = delta scheme, 1=linear remapping"
-   "``ktherm``","Integer","1","Determines ice thermodynamics, 1 = BL99, 2 = mushy layer"
-   "``conduct``","Character","'MU71'","Determines conductivity formulation used with ktherm = 1, MU71, bubbly"
+   "``kitd``","Integer","1","Determines ITD conversion, 0 = delta scheme, 1 = linear remapping"
+   "``ktherm``","Integer","2","Determines ice thermodynamics, 1 = BL99, 2 = mushy layer"
+   "``conduct``","Character","'bubbly'","Determines conductivity formulation used with ktherm = 1, MU71, bubbly"
 
 For the newer delta-Eddington shortwave radiative transfer scheme ``shortwave = dEdd``, the
 base albedos are computed based on the inherent optical properties of
@@ -259,20 +259,21 @@ radiation scheme is still available through ``shortwave = default``.
 .. _shortwave:
 
 .. csv-table:: Table 5: Radiation Namelist Options
-   :header: "Variable Name","Type","Default: CESM-CAM4 gx3","Default: CESM-CAM4 gx1","Default: CESM-CAM5 gx1","Description"
-   :widths: 24,14,16,16,16,42
+   :header: "Variable Name","Type","Default: CESM3-CICE6","Description"
+   :widths: 24,14,18,42
 
-   "&shortwave_nml","","","","",""
-   "``shortwave``","Character","'dEdd'","'dEdd'","'dEdd'","Shortwave Radiative Transfer Scheme, ’dEdd’ = delta-Eddington Shortwave, ’default’ = CCSM3 Shortwave"
-   "``albicev``","Real",0.68,0.75,0.75,"Visible ice albedo (CCSM3)"
-   "``albicei``","Real",0.30,0.45,0.45,"Near-infrared ice albedo (CCSM3)"
-   "``albsnowv``","Real",0.91,0.98,0.98,"Visible snow albedo (CCSM3)"
-   "``albsnowi``","Real",0.63,0.73,0.73,"Near-infrared snow albedo (CCSM3)"
-   "``r_ice``","Real",0.0,0.0,0.0,"Base ice tuning parameter (dEdd)"
-   "``r_pnd``","Real",0.0,0.0,0.0,"Base pond tuning parameter (dEdd)"
-   "``r_snw``","Real",-2.0,1.5,1.75,"Base snow grain radius tuning parameter (dEdd)"
-   "``dt_mlt``","Real",2.0,1.5,1.0,"Snow melt onset temperature parameter (dEdd)"
-   "``rsnw_mlt``","Real",2000.,1500.,1000.,"Snow melt maximum radius (dEdd)"
+   "&shortwave_nml","","",""
+   "``shortwave``","Character","'dEdd'","Shortwave radiative transfer scheme, ’dEdd’ = delta-Eddington shortwave; ’default’ = CCSM3 shortwave"
+   "``albedo_type``","Character","'ccsm3'","Albedo parameterization used when the shortwave scheme is active"
+   "``albicev``","Real",0.78,"Visible ice albedo for cold bare ice"
+   "``albicei``","Real",0.36,"Near-infrared ice albedo for cold bare ice"
+   "``albsnowv``","Real",0.98,"Visible snow albedo for cold snow"
+   "``albsnowi``","Real",0.70,"Near-infrared snow albedo for cold snow"
+   "``r_ice``","Real",0.0,"Base ice tuning parameter (dEdd)"
+   "``r_pnd``","Real",0.0,"Base pond tuning parameter (dEdd)"
+   "``r_snw``","Real",1.5,"Base snow grain radius tuning parameter (dEdd)"
+   "``dt_mlt``","Real",1.5,"Snow melt onset temperature parameter (dEdd)"
+   "``rsnw_mlt``","Real",1500.,"Snow melt maximum radius (dEdd)"
 
 Tracer Namelist
 ---------------
@@ -294,14 +295,35 @@ driver scripts via the ``CICE_CONFIG_OPTS`` variable.
    "``restart_age``","Logical",".false.","Initialize iage to zero or from file."
    "``tr_FY``","Logical",".true.","First-year ice area passive tracer"
    "``restart_FY``","Logical",".false.","Initialize first-year ice to zero or from file."
-   "``tr_lvl``","Logical",".false.","Level ice area passive tracer"
+   "``tr_lvl``","Logical",".true.","Level ice area passive tracer"
    "``restart_lvl``","Logical",".false.","Initialize level ice to zero or from file."
    "``tr_pond_cesm``","Logical",".false.","The older CESM melt pond option."
    "``restart_pond_cesm``","Logical",".false.","Initialize CESM ponds to zero or from file."
-   "``tr_pond_lvl``","Logical",".true.","The Hunke et al. level ice pond formulation"
+   "``tr_pond_lvl``","Logical",".false.","The Hunke et al. level ice pond formulation"
    "``restart_pond_lvl``","Logical",".false.","Initialize level ponds to zero or from file."
-   "``tr_pond_topo``","Logical",".true.","The Felthem et al. topographic pond formulation"
-   "``restart_pond_topo``","Logical",".false.","Initialize topgraphic ponds to zero or from file."
+   "``tr_pond_sealvl``","Logical",".true.","The sea-level melt pond formulation used in CESM3, with drainage and hypsometry-based pond evolution."
+   "``restart_pond_sealvl``","Logical",".false.","Initialize sea-level ponds to zero or from file."
+   "``tr_pond_topo``","Logical",".false.","The Felthem et al. topographic pond formulation"
+   "``restart_pond_topo``","Logical",".false.","Initialize topographic ponds to zero or from file."
+   "``tr_fsd``","Logical",".false.","Prognostic floe-size distribution for lateral melt, growth, welding, and wave fracture."
+   "``restart_fsd``","Logical",".false.","Initialize the floe-size distribution from file or zero values."
+   "``nfsd``","Integer","1","Number of floe-size bins used by the FSD tracer. Supported values are 1, 12, 16, and 24."
+
+The sea-level pond parameterization (``tr_pond_sealvl``) represents
+meltwater pooling near the local sea level within each thickness
+category. In CESM3 it is the default pond scheme and is intended to
+capture pond drainage through permeability and macroscopic flaws while
+preserving a realistic pond-depth/area relationship. This option is best
+used with the mushy-layer thermodynamics and the Delta-Eddington shortwave
+scheme.
+
+The prognostic floe-size distribution (``tr_fsd``) tracks the lateral size
+of floes as they evolve through lateral growth, lateral melt, wave-driven
+fracture, and floe welding. The number of floe-size classes is controlled
+by ``nfsd`` and the wave-fracture behavior can be modified through
+``wave_spec_type`` when wave forcing is available. This option is useful
+for applications where sea-ice breakup and lateral melt are important,
+including wave-sea-ice interaction studies.
 
 Prescribed Ice Namelist
 -----------------------
@@ -315,14 +337,16 @@ option as used in AMIP and F compset (standalone CAM) runs [prescribed].
    :header: "Variable Name","Type","Default","Description"
    :widths: 28,12,12,48
 
-   "``prescribed_ice``","Logical",".false.","Flag to turn on prescribed ice"
-   "``prescribed_ice_fill``","Logical",".false.","Flag to turn fill option"
-   "``stream_year_first``","Integer","1","First year of prescribed ice data"
-   "``stream_year_last``","Integer","1","Last year of prescribed ice data"
-   "``model_year_align``","Integer","1","Year in model run that aligns with stream\_year\_first"
-   "``stream_domfilename``","Character","'none'","Prescribed ice stream data file"
-   "``stream_fldfilename``","Character","'none'","Prescribed ice stream data file"
-   "``stream_fldvarname``","Character","'ice\_cov'","Ice fraction field name"
+   "&ice_prescribed_nml","","",""
+   "``prescribed_ice_mode``","Logical",".false.","Flag to turn on prescribed ice mode"
+   "``stream_meshfile``","Character","' '","ESMF mesh file for the prescribed ice stream data. Set by driver (``SSTICE_MESH_FILENAME``)."
+   "``stream_datafiles``","Character array","' '","Prescribed ice stream data file(s). Set by driver (``SSTICE_DATA_FILENAME``)."
+   "``stream_mapalgo``","Character","'bilinear'","Stream mesh to model mesh mapping type"
+   "``stream_varname``","Character","'ice\_cov'","Ice fraction field name"
+   "``stream_taxmode``","Character","'cycle'","Stream time axis interpolation mode"
+   "``stream_yearfirst``","Integer","1","First year of prescribed ice data to use. Set by driver (``SSTICE_YEAR_START``)."
+   "``stream_yearlast``","Integer","1","Last year of prescribed ice data to use. Set by driver (``SSTICE_YEAR_END``)."
+   "``stream_yearalign``","Integer","1","Year in model run that aligns with ``stream\_yearfirst``. Set by driver (``SSTICE_YEAR_ALIGN``)."
 
 Grid Namelist
 -------------

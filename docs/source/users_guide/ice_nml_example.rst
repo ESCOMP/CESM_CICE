@@ -33,7 +33,7 @@ Note that modifications to the CICE namelist go in **$CASE/user\_nl\_cice**.
     days_per_year = 365
     diagfreq = 24
     dumpfreq = "x"
-    hist_avg = .true.
+    hist_avg = .true., .true., .true., .true., .true.
     histfreq = "m", "x", "x", "x", "x"
     histfreq_n = 1, 0, 0, 0, 0
     history_file = "unknown"
@@ -68,6 +68,7 @@ Note that modifications to the CICE namelist go in **$CASE/user\_nl\_cice**.
     restart_lvl = .false.
     restart_pond_cesm = .false.
     restart_pond_lvl = .false.
+    restart_pond_sealvl = .false.
     restart_pond_topo = .false.
     tr_aero = .true.
     tr_fy = .true.
@@ -75,13 +76,14 @@ Note that modifications to the CICE namelist go in **$CASE/user\_nl\_cice**.
     tr_iso = .false.
     tr_lvl = .true.
     tr_pond_cesm = .false.
-    tr_pond_lvl = .true.
+    tr_pond_lvl = .false.
+    tr_pond_sealvl = .true.
     tr_pond_topo = .false.
   /
   &thermo_nml
     a_rapid_mode = 0.5e-03
     aspect_rapid_mode = 1.0
-    conduct = "MU71"
+    conduct = "bubbly"
     dsdt_slow_mode = -1.5e-07
     kitd = 1
     ktherm = 2
@@ -102,16 +104,16 @@ Note that modifications to the CICE namelist go in **$CASE/user\_nl\_cice**.
   /
   &shortwave_nml
     ahmax = 0.3
-    albedo_type = "default"
-    albicei = 0.45
-    albicev = 0.75
-    albsnowi = 0.73
+    albedo_type = "ccsm3"
+    albicei = 0.36
+    albicev = 0.78
+    albsnowi = 0.70
     albsnowv = 0.98
     dt_mlt = 1.50
     kalg = 0.0
     r_ice = 0.0
     r_pnd = 0.0
-    r_snw = 1.25
+    r_snw = 0.75
     rsnw_mlt = 1500.
     shortwave = "dEdd"
   /

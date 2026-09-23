@@ -168,8 +168,8 @@ history file, add
     /
 
 to the namelist. An incomplete list of history variables is available in
-:ref:`history`. Note that there is a new flag ``f_CMIP`` that will turn on
-all of the SIMIP variables.
+:ref:`history`. SIMIP variables used for CMIP experiments are controlled
+separately, as described in :ref:`cmip-history`.
 
 .. _history:
 
@@ -269,3 +269,172 @@ all of the SIMIP variables.
    ``f_aicen`` , ice concentration (category), 1
    ``f_vicen`` , ice volume (category) , m
    ``f_vsnon`` , snow volume (category) , m
+
+.. _cmip-history:
+
+SIMIP Variables and CMIP Experiments
+----------------------------------------
+
+Beginning with CICE v6, additional history variables requested by the Sea
+Ice Model Intercomparison Project (SIMIP) are available as history output.
+These variables use the standardized SIMIP/CMIP field names (for example
+``sithick``, ``siconc``, ``sidmassgrowthbot``) rather than the native CICE
+names, and are intended to make CESM output directly comparable to other
+models participating in CMIP. The full list of monthly and daily SIMIP
+variables, along with their formal definitions, is part of the CMIP data
+request; the CICE implementation has been updated to match the
+`CMIP7 data request <https://wcrp-cmip.org/cmip7-data-request-v1-0/>`_.
+
+Each SIMIP variable is controlled by its own ``f_si*`` logical history
+flag (see :ref:`cmip-table` below), using the same ``'m'``, ``'d'``,
+``'h'``, ``'1'``, ``'x'`` stream-selection syntax as the other history
+flags described in :ref:`history`. The older ``f_CMIP`` flag, which
+previously turned on a fixed bundle of CMIP-related output, has been
+**deprecated** and no longer has any effect; a warning is written to the
+diagnostic output if it is set to anything other than its default. SIMIP
+output is now controlled entirely through the individual ``f_si*`` flags
+(and the standard flags such as ``f_aice``, ``f_apond``, ``f_alvl``,
+``f_ardg`` that some SIMIP quantities reuse), which can be enabled or
+disabled independently in **user\_nl\_cice**.
+
+Turning on SIMIP output for a CMIP6 or CMIP7 case
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In CESM, the recommended way to turn on the SIMIP variable set is to
+append ``%CMIP6`` or ``%CMIP7`` to the ice component of the compset
+longname (for example ``...CICE%CMIP7_...``) when creating a case. This
+sets ``CICE_USER_MODS`` to point at a ``usermods_dirs/cmip6`` or
+``usermods_dirs/cmip7`` directory that is automatically applied to the
+case and contains a pre-built **user\_nl\_cice** with:
+
+- ``histfreq``, ``histfreq_n``, and ``hist_avg`` configured to produce
+  the monthly, daily, and (for CMIP7) sub-daily streams expected by the
+  CMIP data request, and
+
+- the appropriate ``f_si*`` flags (and related flags such as ``f_aice``,
+  ``f_apond``, ``f_alvl``, ``f_ardg``) set to ``'md'`` or ``'m'`` to write
+  those variables to the monthly and/or daily history streams.
+
+The CMIP7 usermods set is the more complete and current of the two, and
+is kept in sync with the SIMIP flag list shown in :ref:`cmip-table`. The
+contents of both usermods directories can be found under
+**components/cice/cime\_config/usermods\_dirs/**.
+
+Turning on SIMIP output manually
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For compsets that do not include the ``%CMIP6``/``%CMIP7`` modifier, or
+to customize which SIMIP variables are written, users can copy the
+namelist settings from
+**components/cice/cime\_config/usermods\_dirs/cmip7/user\_nl\_cice**
+(or the CMIP6 equivalent) directly into their own **$CASE/user\_nl\_cice**
+file, then remove or edit individual ``f_si*`` lines as needed. As with
+any other history flag, setting an entry to ``'xxxxx'`` removes that
+field from all streams, for example:
+
+::
+
+    &icefields_nml
+        f_sidmasstranx =  'xxxxx'
+      , f_sidmasstrany =  'xxxxx'
+    /
+
+Caveats
+~~~~~~~~
+
+Several SIMIP quantities (for example ``sithick``, ``sisnthick``,
+``simpthick``) are defined per unit *ice area* rather than per unit grid
+cell area, and are computed by dividing by the local ice (or melt pond,
+or ridged ice) fraction. Where that fraction is very small, the divided
+quantity can appear unphysically large; these fields should be
+interpreted with care, particularly near the ice edge or in
+low-concentration regions. Increasing the precision of the history file
+output from 4 bytes to 8 bytes, via the ``history_precision`` namelist
+flag, can also help when debugging these fields.
+
+.. _cmip-table:
+
+.. csv-table:: Table 13: SIMIP History Variables
+   :header: "Logical Variable","Description","Units"
+   :widths: 24,60,16
+
+   ``f_siage`` , sea ice age , s
+   ``f_siconc`` , sea-ice area percentage (ocean grid) , %
+   ``f_sifb`` , sea-ice freeboard , m
+   ``f_sihc`` , sea-ice heat content , J m\ :math:`^{-2}`
+   ``f_simass`` , sea-ice mass per area , kg m\ :math:`^{-2}`
+   ``f_sisali`` , sea-ice salinity , ppt
+   ``f_sisaltmass`` , mass of salt in sea ice per area , kg m\ :math:`^{-2}`
+   ``f_sispeed`` , sea-ice speed , m s\ :math:`^{-1}`
+   ``f_sithick`` , sea-ice thickness (volume / area) , m
+   ``f_sitimefrac`` , fraction of time steps with sea ice present , 1
+   ``f_siu`` , x-component of sea-ice velocity , m s\ :math:`^{-1}`
+   ``f_siv`` , y-component of sea-ice velocity , m s\ :math:`^{-1}`
+   ``f_sivol`` , sea-ice volume per area , m
+   ``f_sicompstren`` , compressive sea-ice strength , N m\ :math:`^{-1}`
+   ``f_sidragbot`` , oceanic drag coefficient , 1
+   ``f_sidragtop`` , atmospheric drag coefficient , 1
+   ``f_sidivvel`` , divergence of the sea-ice velocity field , s\ :math:`^{-1}`
+   ``f_sishearvel`` , maximum shear of the sea-ice velocity field , s\ :math:`^{-1}`
+   ``f_sistressave`` , average normal stress in sea ice , N m\ :math:`^{-1}`
+   ``f_sistressmax`` , maximum shear stress in sea ice , N m\ :math:`^{-1}`
+   ``f_sidconcdyn`` , sea-ice area fraction tendency due to dynamics , s\ :math:`^{-1}`
+   ``f_sidconcth`` , sea-ice area fraction tendency due to thermodynamics , s\ :math:`^{-1}`
+   ``f_sidmassdyn`` , sea-ice mass change from dynamics , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassth`` , sea-ice mass change from thermodynamics , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassevapsubl`` , sea-ice mass change through evaporation/sublimation , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassgrowthbot`` , sea-ice mass change through basal growth , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassgrowthsi`` , sea-ice mass change from snow-to-ice conversion , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassgrowthwat`` , sea-ice mass change through frazil growth , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassmeltbot`` , sea-ice mass change through bottom melting , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassmeltlat`` , sea-ice mass change through lateral melting , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmassmelttop`` , sea-ice mass change through surface melting , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sidmasstranx`` , x-component of sea-ice mass transport , kg s\ :math:`^{-1}`
+   ``f_sidmasstrany`` , y-component of sea-ice mass transport , kg s\ :math:`^{-1}`
+   ``f_siflcondbot`` , net conductive heat flux at the ice base , W m\ :math:`^{-2}`
+   ``f_siflcondtop`` , net conductive heat flux at the ice surface , W m\ :math:`^{-2}`
+   ``f_siflfwbot`` , freshwater flux from sea ice to ocean , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_siflfwdrain`` , freshwater flux from sea-ice surface drainage , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sifllattop`` , net latent heat flux over sea ice , W m\ :math:`^{-2}`
+   ``f_sifllwdtop`` , downwelling longwave flux over sea ice , W m\ :math:`^{-2}`
+   ``f_sifllwutop`` , upwelling longwave flux over sea ice , W m\ :math:`^{-2}`
+   ``f_siflsaltbot`` , salt flux from sea ice to ocean , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_siflsensbot`` , net upward sensible heat flux under sea ice , W m\ :math:`^{-2}`
+   ``f_siflsenstop`` , net downward sensible heat flux over sea ice , W m\ :math:`^{-2}`
+   ``f_siflswdbot`` , downwelling shortwave flux underneath sea ice , W m\ :math:`^{-2}`
+   ``f_siflswdtop`` , downwelling shortwave flux over sea ice , W m\ :math:`^{-2}`
+   ``f_siflswutop`` , upwelling shortwave flux over sea ice , W m\ :math:`^{-2}`
+   ``f_siforcecoriolx`` , Coriolis force term in force balance (x) , N m\ :math:`^{-2}`
+   ``f_siforcecorioly`` , Coriolis force term in force balance (y) , N m\ :math:`^{-2}`
+   ``f_siforceintstrx`` , internal stress force term in force balance (x) , N m\ :math:`^{-2}`
+   ``f_siforceintstry`` , internal stress force term in force balance (y) , N m\ :math:`^{-2}`
+   ``f_siforcetiltx`` , sea-surface tilt term in force balance (x) , N m\ :math:`^{-2}`
+   ``f_siforcetilty`` , sea-surface tilt term in force balance (y) , N m\ :math:`^{-2}`
+   ``f_sipr`` , rainfall rate over sea ice , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sistrxdtop`` , x-component of atmospheric stress on sea ice , N m\ :math:`^{-2}`
+   ``f_sistrydtop`` , y-component of atmospheric stress on sea ice , N m\ :math:`^{-2}`
+   ``f_sistrxubot`` , x-component of ocean stress on sea ice , N m\ :math:`^{-2}`
+   ``f_sistryubot`` , y-component of ocean stress on sea ice , N m\ :math:`^{-2}`
+   ``f_sitempbot`` , temperature at ice-ocean interface , K
+   ``f_sitempsnic`` , temperature at snow-ice interface , K
+   ``f_sitemptop`` , surface temperature of sea ice , K
+   ``f_siitdconc`` , sea-ice area percentage by thickness category , %
+   ``f_siitdsnconc`` , snow area percentage by thickness category , %
+   ``f_siitdsnthick`` , snow thickness by thickness category , m
+   ``f_siitdthick`` , sea-ice (floe) thickness by thickness category , m
+   ``f_simpconc`` , percentage of sea ice covered by melt ponds , %
+   ``f_simpeffconc`` , percentage of sea ice covered by effective (open) melt ponds , %
+   ``f_simprefrozen`` , thickness of refrozen ice on melt ponds , m
+   ``f_simpthick`` , melt pond depth , m
+   ``f_sirdgconc`` , percentage of ridged sea ice , %
+   ``f_sirdgthick`` , ridged ice thickness , m
+   ``f_sisnconc`` , snow area percentage , %
+   ``f_sisndmassdyn`` , snow mass change through advection by sea-ice dynamics , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisndmassmelt`` , snow mass change through melt , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisndmasssi`` , snow mass change through snow-to-ice conversion , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisndmasssnf`` , snow mass change through snowfall , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisndmasssubl`` , snow mass change through evaporation/sublimation , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisndmasswind`` , snow mass change through wind drift of snow , kg m\ :math:`^{-2}` s\ :math:`^{-1}`
+   ``f_sisnhc`` , snow heat content , J m\ :math:`^{-2}`
+   ``f_sisnmass`` , snow mass per area , kg m\ :math:`^{-2}`
+   ``f_sisnthick`` , snow thickness (volume / area) , m
