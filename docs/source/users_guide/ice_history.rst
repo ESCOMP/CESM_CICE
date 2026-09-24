@@ -275,8 +275,8 @@ separately, as described in :ref:`cmip-history`.
 SIMIP Variables and CMIP Experiments
 ----------------------------------------
 
-Beginning with CICE v6, additional history variables requested by the Sea
-Ice Model Intercomparison Project (SIMIP) are available as history output.
+Beginning with CICE v5, additional history variables requested by the Sea
+Ice Model Intercomparison Project (SIMIP) were available as history output.
 These variables use the standardized SIMIP/CMIP field names (for example
 ``sithick``, ``siconc``, ``sidmassgrowthbot``) rather than the native CICE
 names, and are intended to make CESM output directly comparable to other

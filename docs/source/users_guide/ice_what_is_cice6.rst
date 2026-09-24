@@ -90,7 +90,8 @@ ice permeability and macroscopic flaws. In CESM3 this option is enabled by
 setting ``tr_pond_sealvl = .true.``. It parameterizes pond depth and pond
 area using a hypsometric curve for each thickness category and is designed
 for use with the mushy thermodynamics option (``ktherm = 2``) and the
-Delta-Eddington shortwave scheme (``shortwave = 'dEdd'``).
+Delta-Eddington shortwave scheme (``shortwave = 'dEdd'``). This is work
+led by David Clemens-Sewall (unpublished).
 
 The floe-size distribution (FSD) is an optional prognostic tracer that
 tracks the distribution of floe sizes within each thickness category. When
@@ -100,6 +101,10 @@ and area evolution. The number of floe-size bins is controlled by
 ``nfsd`` and may be set to 1, 12, 16, or 24 depending on the desired
 resolution. When wave forcing is provided, the FSD can interact with
 surface wave spectra through the ``wave_spec_type`` namelist option.
+When CICE with the FSD is active and WW3 is active, this sets a mediator
+flag ``wav_coupling_to_cice``. This means that the ice concentration, ice
+thickness, and floe diameter are sent to the mediator and WW3 sends the
+elevation spectrum. (:cite:'Roach19`, Tremblay and Roach, 2026, in review).
 
 The CICE source code used in the CESM is based on the CICE Consortium
 Sea Ice Model version 6. The main source code is very similar
